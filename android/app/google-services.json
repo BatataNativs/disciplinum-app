@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1018797432640",
+    "project_id": "disciplinex-479114",
+    "storage_bucket": "disciplinex-479114.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018797432640:android:d24339da5c59de379e64a5",
+        "android_client_info": {
+          "package_name": "com.disciplinum.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018797432640-f0tarjosekgcpai144jgh8vttorbk7tj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_6PQhHLqd7sCnIWnmj2Au8EaDOI_5xKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018797432640-f0tarjosekgcpai144jgh8vttorbk7tj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

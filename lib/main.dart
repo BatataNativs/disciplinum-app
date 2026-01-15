@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // kIsWeb
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Restaurado
+
+import 'services/gamification/gamification_service.dart'; // Restaurado
+import 'services/auth/auth_service.dart'; // Restaurado
+import 'services/iap/iap_service.dart'; // Restaurado
+import 'services/review/review_service.dart';
+import 'services/user_privacy/privacy_service.dart';
+import 'misc/system_stuff/theme_controller.dart';
+import 'app.dart';
+import 'app_router.dart';
+import 'config/app_config.dart';
+import 'services/ads/ad_service.dart'; // Import AdService
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// Mantido para compatibilidade com arquivos que possam usar isso.
+class AppRuntimeConfig {
+  static String get bannerAdUnitId => AppConfig.admobBannerUnitId;
+}
+
+// _Ads e _Tracking removidos/movidos
+class _Ads {
+  static bool _initialized = false;
+  static Future<void> initAtStartup() async {
+    if (kIsWeb) return;
+    if (_initialized) return;
+    try {
+      final testDeviceId = AppConfig.admobTestDeviceId;
+      final testDevices =
+          testDeviceId.isNotEmpty ? <String>[testDeviceId] : <String>[];
+      if (testDevices.isNotEmpty) {
+        await MobileAds.instance.updateRequestConfiguration(
+            RequestConfiguration(testDeviceIds: testDevices));
+      }
+      MobileAds.instance.initialize();
+      _initialized = true;
+    } catch (e) {
+      debugPrint("Erro ao inicializar AdMob: $e");
+    }
+  }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+
+  // 🔴🔴🔴 ATENÇÃO: DESCOMENTE A LINHA ABAIXO, RODE O APP UMA VEZ, E DEPOIS COMENTE DE NOVO 🔴🔴🔴
+  // Isso é necessário porque o Android restaura o backup mesmo se você desinstalar.
+  // Precisamos forçar o 'seen_onboarding' a ser falso para testar se a permissão sumiu.
+
+  //await prefs.clear(); // <--- TIRE O // DESTA LINHA PARA O TESTE LIMPO
+
+  final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+  final String initialRoute =
+      seenOnboarding ? AppRouter.authWrapper : AppRouter.onboarding;
+
+  if (AppConfig.supabaseUrl.isEmpty || AppConfig.supabaseAnonKey.isEmpty) {
+    throw Exception(
+      'SUPABASE_URL/SUPABASE_ANON_KEY não foram definidos. '
+      'Use --dart-define ou --dart-define-from-file.',
+    );
+  }
+
+  // Ads sempre (mobile), independente do consentimento.
+  await _Ads.initAtStartup();
+
+  await Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
+  );
+
+  // Inicializa Privacidade (sem UI, apenas background)
+  await PrivacyService.initAtStartup();
+
+  // Verifica se deve pedir review (não bloqueia app)
+  ReviewService.checkRequestReview();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeController()),
+
+        // GamificationService é criado aqui. Graças à "blindagem" no arquivo dele,
+        // ele não vai pedir permissão se seenOnboarding for false.
+        ChangeNotifierProvider(create: (_) => GamificationService()),
+
+        // AdService instanciado diretamente aqui (mantido para futuros anúncios globais)
+        ChangeNotifierProvider(create: (_) => AdService()),
+
+        ChangeNotifierProvider(
+          create: (context) {
+            final authService = AuthService();
+
+            // LÓGICA DE CALLBACK MELHORADA (Sua solicitação)
+            // Define o callback, mas busca o Provider apenas na hora da execução.
+            authService.onLogoutCallback = () {
+              try {
+                // listen: false é crucial aqui para não recriar widgets
+                Provider.of<GamificationService>(context, listen: false)
+                    .stopMonitoringApps();
+              } catch (e) {
+                debugPrint('Erro seguro ao tentar parar monitoramento: $e');
+              }
+            };
+
+            return authService;
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) => IapService()..initialize(),
+        ),
+      ],
+      child: DisciplinumApp(initialRoute: initialRoute),
+    ),
+  );
+}
