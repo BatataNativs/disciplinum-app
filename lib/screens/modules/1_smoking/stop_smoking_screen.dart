@@ -107,7 +107,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
         messenger.showSnackBar(
-          const SnackBar(content: Text("Metas salvas com sucesso! 🚀")),
+          const SnackBar(content: Text("Dados de consumo salvos com sucesso! ✔")),
         );
       }
     } catch (e) {
@@ -129,7 +129,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text("Tive uma recaída?"),
         content: const Text(
-          "Isso vai apagar seus dados e o módulo será desativado até que você preencha e ative novamente.\n\n"
+          "Isso vai apagar seu progresso e o módulo será desativado até que você preencha e ative novamente.\n\n"
           "Deseja realmente resetar e desativar?",
         ),
         actions: [
@@ -140,7 +140,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, resetar e desativar"),
+            child: const Text("Sim, resetar (Zerar progresso) e desativar (Desativar módulo)"),
           ),
         ],
       ),

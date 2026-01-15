@@ -63,10 +63,11 @@ class DisciplinumBottomNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final bgColor = isDark ? Colors.white : const Color(0xFF171717);
-    final activeIconColor = isDark ? Colors.black : Colors.white;
+    final activeCircleColor = isDark ? Colors.black : Colors.white;
+    final activeIconColor = isDark ? Colors.white : Colors.black;
     final inactiveIconColor = isDark
-        ? Colors.black.withValues(alpha: 0.4)
-        : Colors.white.withValues(alpha: 0.4);
+        ? const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.4)
+        : const Color.fromARGB(255, 255, 255, 255);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 64, right: 64),
@@ -77,38 +78,48 @@ class DisciplinumBottomNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.3),
+              color: isDark ? const Color.fromARGB(255, 245, 245, 245).withValues(alpha: 0.7) : const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.8),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 0),
             ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildIconItem(
-              context,
-              index: 0,
-              icon: Icons.home_rounded,
-              isActive: currentIndex == 0,
-              activeColor: activeIconColor,
-              inactiveColor: inactiveIconColor,
+            Expanded(
+              child: _buildIconItem(
+                context,
+                index: 0,
+                icon: Icons.home_rounded,
+                isActive: currentIndex == 0,
+                activeCircleColor: activeCircleColor,
+                activeIconColor: activeIconColor,
+                inactiveColor: inactiveIconColor,
+              ),
             ),
-            _buildIconItem(
-              context,
-              index: 1,
-              icon: Icons.person_rounded,
-              isActive: currentIndex == 1,
-              activeColor: activeIconColor,
-              inactiveColor: inactiveIconColor,
+            Expanded(
+              child: _buildIconItem(
+                context,
+                index: 1,
+                icon: Icons.person_rounded,
+                isActive: currentIndex == 1,
+                activeCircleColor: activeCircleColor,
+                activeIconColor: activeIconColor,
+                inactiveColor: inactiveIconColor,
+              ),
             ),
-            _buildIconItem(
-              context,
-              index: 2,
-              icon: Icons.settings_rounded,
-              isActive: currentIndex == 2,
-              activeColor: activeIconColor,
-              inactiveColor: inactiveIconColor,
+            Expanded(
+              child: _buildIconItem(
+                context,
+                index: 2,
+                icon: Icons.settings_rounded,
+                isActive: currentIndex == 2,
+                activeCircleColor: activeCircleColor,
+                activeIconColor: activeIconColor,
+                inactiveColor: inactiveIconColor,
+              ),
             ),
           ],
         ),
@@ -121,26 +132,27 @@ class DisciplinumBottomNavBar extends StatelessWidget {
     required int index,
     required IconData icon,
     required bool isActive,
-    required Color activeColor,
+    required Color activeCircleColor,
+    required Color activeIconColor,
     required Color inactiveColor,
   }) {
-    return GestureDetector(
-      onTap: () => _onItemTap(context, index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 48,
-        width: 48,
-        alignment: Alignment.center,
-        decoration: isActive
-            ? BoxDecoration(
-                color: activeColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              )
-            : null,
-        child: Icon(
-          icon,
-          color: isActive ? activeColor : inactiveColor,
-          size: 24,
+    return Center(
+      child: GestureDetector(
+        onTap: () => _onItemTap(context, index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: 48,
+          width: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive ? activeCircleColor : Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: isActive ? activeIconColor : inactiveColor,
+            size: 24,
+          ),
         ),
       ),
     );

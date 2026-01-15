@@ -103,10 +103,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const TextSpan(
-                text:
-                    ', leia até o final. Há avisos importantes sobre o propósito do app e seu funcionamento.\n\n'
-                    'Deseja mesmo pular?',
+              TextSpan(
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark ? const Color(0xFFB0B0B0) : const Color(0xFF424242),
+                ),
+                children: [
+                  TextSpan(
+                    text: ', leia até o final. \nHá avisos importantes sobre o propósito do app e seu funcionamento.\n\n',
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Deseja mesmo pular?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -121,6 +135,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, false),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 0, 0, 0), // Altere esta cor conforme necessário
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Ok, continuar vendo'),
           ),
         ],
@@ -168,13 +186,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const Spacer(flex: 1),
                         // --- ÁREA DO ASSET (Expandida) ---
                         Expanded(
-                          flex: 5,
+                          flex: 7,
                           child: Center(
                             child: Builder(builder: (context) {
                               if (index == 0) {
-                                return Image.asset(
-                                  'assets/disciplinado.png',
-                                  fit: BoxFit.contain,
+                                return UnconstrainedBox(
+                                  child: Image.asset(
+                                    'assets/disciplinado.png',
+                                    height: 270,
+                                    width: 270,
+                                    fit: BoxFit.contain,
+                                  ),
                                 );
                               } else if (index == 1) {
                                 return Center(
@@ -202,6 +224,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               } else {
                                 return Image.asset(
                                   'assets/warning1.png',
+                                  height: 250,
+                                  width: 250,
                                   fit: BoxFit.contain,
                                 );
                               }
@@ -219,9 +243,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (index == 0) {
                               pageTitle = 'Disciplina e Foco';
                             } else if (index == 1) {
-                              pageTitle = 'Incentivo ao seu progresso';
+                              pageTitle = 'Gamificação de incentivo ao seu progresso';
                             } else {
-                              pageTitle = 'Atenção';
+                              pageTitle = 'Atenção!';
                             }
 
                             return Text(
@@ -272,10 +296,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   children: [
                                     const TextSpan(
-                                      text: 'Conquiste medalhas e insígnias ',
+                                      text: 'Conquiste medalhas, insígnias e troféus ',
                                     ),
                                     const TextSpan(
-                                      text: 'FICTÍCIAS',
+                                      text: '(FICTÍCIOS)',
                                       style: TextStyle(
                                         color: Colors.red,
                                         fontWeight: FontWeight.bold,
@@ -283,7 +307,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                                     const TextSpan(
                                       text:
-                                          ' ao atingir suas metas. Uma forma lúdica de se motivar e evoluir.',
+                                          ' ao atingir metas e marcos de progresso. Uma forma lúdica de se motivar e evoluir.',
                                     ),
                                   ],
                                 ),
@@ -298,10 +322,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     const TextSpan(
                                       text:
                                           'Este app é uma ferramenta de apoio à disciplina, não substitui acompanhamento profissional.\n\n'
-                                          'Saiba mais em ',
+                                          'E, caso queira saber um pouco mais sobre como funciona antes de continuar,\nclique ',
                                     ),
                                     TextSpan(
-                                      text: 'como funciona',
+                                      text: 'aqui',
                                       style: const TextStyle(
                                         color: Colors.blueAccent,
                                         fontWeight: FontWeight.bold,
@@ -426,7 +450,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               : const Color.fromARGB(255, 32, 32, 32),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(36),
                           ),
                         ),
                         child: Row(

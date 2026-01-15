@@ -1,0 +1,149 @@
+[1mdiff --git a/lib/screens/modules/2_bingeEating/binge_eating_screen.dart b/lib/screens/modules/2_bingeEating/binge_eating_screen.dart[m
+[1mindex a9d9af1..5b9267e 100644[m
+[1m--- a/lib/screens/modules/2_bingeEating/binge_eating_screen.dart[m
+[1m+++ b/lib/screens/modules/2_bingeEating/binge_eating_screen.dart[m
+[36m@@ -560,7 +560,7 @@[m [mclass _BingeEatingScreenState extends State<BingeEatingScreen> {[m
+                   color: isSelected[m
+                       ? (isDark[m
+                           ? const Color.fromARGB(255, 57, 92, 208)[m
+[31m-                          : const Color.fromARGB(255, 31, 19, 198))[m
+[32m+[m[32m                          : const Color.fromARGB(255, 18, 189, 211))[m
+                       : Colors.transparent,[m
+                   borderRadius: BorderRadius.circular(21),[m
+                   boxShadow: isSelected[m
+[36m@@ -568,10 +568,9 @@[m [mclass _BingeEatingScreenState extends State<BingeEatingScreen> {[m
+                           BoxShadow([m
+                             color: (isDark[m
+                                     ? const Color.fromARGB(255, 57, 92, 208)[m
+[31m-                                    : const Color.fromARGB(255, 31, 19, 198))[m
+[32m+[m[32m                                    : const Color.fromARGB(255, 10, 223, 219))[m
+                                 .withValues(alpha: 0.3),[m
+                             blurRadius: 10,[m
+[31m-                            offset: const Offset(0, 4),[m
+                           )[m
+                         ][m
+                       : [],[m
+[1mdiff --git a/lib/screens/modules/3_diet/diet_settings_screen.dart b/lib/screens/modules/3_diet/diet_settings_screen.dart[m
+[1mindex c4f226d..9e37068 100644[m
+[1m--- a/lib/screens/modules/3_diet/diet_settings_screen.dart[m
+[1m+++ b/lib/screens/modules/3_diet/diet_settings_screen.dart[m
+[36m@@ -14,7 +14,6 @@[m [mimport 'package:disciplinum/widgets/home/neon_card.dart';[m
+ import 'package:disciplinum/widgets/profile/lojinha.dart';[m
+ import 'package:disciplinum/widgets/niche_details/niche_header.dart';[m
+ import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';[m
+[31m-import 'package:disciplinum/widgets/niche_details/niche_content_schedule.dart';[m
+ [m
+ class DietSettingsScreen extends StatefulWidget {[m
+   const DietSettingsScreen({super.key});[m
+[36m@@ -29,6 +28,7 @@[m [mclass _DietSettingsScreenState extends State<DietSettingsScreen> {[m
+   bool _gamificationRunning = false;[m
+   bool _loadingData = true;[m
+   bool _isLoadingData = false;[m
+[32m+[m[32m  int _selectedIndex = 0; // 0=Como Funciona, 1=Horários, 2=Ativar[m
+ [m
+   @override[m
+   void initState() {[m
+[36m@@ -348,11 +348,223 @@[m [mclass _DietSettingsScreenState extends State<DietSettingsScreen> {[m
+     );[m
+   }[m
+ [m
+[32m+[m[32m  Widget _buildSegmentedControl() {[m
+[32m+[m[32m    final isDark = Theme.of(context).brightness == Brightness.dark;[m
+[32m+[m[32m    final List<String> options = ['Como Funciona', 'Horários', 'Ativar'];[m
+[32m+[m
+[32m+[m[32m    return Container([m
+[32m+[m[32m      height: 50,[m
+[32m+[m[32m      padding: const EdgeInsets.all(4),[m
+[32m+[m[32m      decoration: BoxDecoration([m
+[32m+[m[32m        color: isDark[m
+[32m+[m[32m            ? Colors.white.withValues(alpha: 0.05)[m
+[32m+[m[32m            : Colors.black.withValues(alpha: 0.05),[m
+[32m+[m[32m        borderRadius: BorderRadius.circular(25),[m
+[32m+[m[32m      ),[m
+[32m+[m[32m      child: Row([m
+[32m+[m[32m        children: List.generate(options.length, (index) {[m
+[32m+[m[32m          final isSelected = _selectedIndex == index;[m
+[32m+[m[32m          return Expanded([m
+[32m+[m[32m            child: GestureDetector([m
+[32m+[m[32m              onTap: () {[m
+[32m+[m[32m                HapticFeedback.selectionClick();[m
+[32m+[m[32m                setState(() => _selectedIndex = index);[m
+[32m+[m[32m              },[m
+[32m+[m[32m              child: AnimatedContainer([m
+[32m+[m[32m                duration: const Duration(milliseconds: 100),[m
+[32m+[m[32m                curve: Curves.easeOutQuart,[m
+[32m+[m[32m                alignment: Alignment.center,[m
+[32m+[m[32m                decoration: BoxDecoration([m
+[32m+[m[32m                  color: isSelected[m
+[32m+[m[32m                      ? (isDark[m
+[32m+[m[32m                          ? const Color.fromARGB(255, 57, 92, 208)[m
+[32m+[m[32m                          : const Color.fromARGB(255, 18, 189, 211))[m
+[32m+[m[32m                      : Colors.transparent,[m
+[32m+[m[32m                  borderRadius: BorderRadius.circular(21),[m
+[32m+[m[32m                  boxShadow: isSelected[m
+[32m+[m[32m                      ? [[m
+[32m+[m[32m                          BoxShadow([m
+[32m+[m[32m                            color: (isDark[m
+[32m+[m[32m                                    ? const Color.fromARGB(255, 57, 92, 208)[m
+[32m+[m[32m                                    : const Color.fromARGB(255, 10, 223, 219))[m
+[32m+[m[32m                                .withValues(alpha: 0.3),[m
+[32m+[m[32m                            blurRadius: 10,[m
+[32m+[m[32m                          )[m
+[32m+[m[32m                        ][m
+[32m+[m[32m                      : [],[m
+[32m+[m[32m                ),[m
+[32m+[m[32m                child: Text([m
+[32m+[m[32m                  options[index],[m
+[32m+[m[32m                  style: TextStyle([m
+[32m+[m[32m                    fontSize: 13,[m
+[32m+[m[32m                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,[m
+[32m+[m[32m                    color: isSelected[m
+[32m+[m[32m                        ? Colors.white[m
+[32m+[m[32m                        : (isDark ? Colors.white60 : Colors.black54),[m
+[32m+[m[32m                  ),[m
+[32m+[m[32m                ),[m
+[32m+[m[32m              ),[m
+[32m+[m[32m            ),[m
+[32m+[m[32m          );[m
+[32m+[m[32m        }),[m
+[32m+[m[32m      ),[m
+[32m+[m[32m    );[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  Widget _buildTabContent() {[m
+[32m+[m[32m    final gamification = Provider.of<GamificationService>(context);[m
+[32m+[m[32m    final medalAsset = gamification.currentMedalAsset(_niche.id);[m
+[32m+[m[32m    final isDark = Theme.of(context).brightness == Brightness.dark;[m
+[32m+[m
+[32m+[m[32m    switch (_selectedIndex) {[m
+[32m+[m[32m      case 0:[m
+[32m+[m[32m        return Column([m
+[32m+[m[32m          key: const ValueKey('content_how_it_works'),[m
+[32m+[m[32m          children: [[m
+[32m+[m[32m            NicheInfoSection(hintText: _getModuleHintText()),[m
+[32m+[m[32m            const SizedBox(height: 24),[m
+[32m+[m[32m            _buildNotificationMessageSection(context),[m
+[32m+[m[32m          ],[m
+[32m+[m[32m        );[m
+[32m+[m[32m      case 1:[m
+[32m+[m[32m        return Column([m
+[32m+[m[32m          key: const ValueKey('content_schedule'),[m
+[32m+[m[32m          crossAxisAlignment: CrossAxisAlignment.start,[m
+[32m+[m[32m          children: [[m
+[32m+[m[32m            Text([m
+[32m+[m[32m              'Horários de Refeição:',[m
+[32m+[m[32m              style: TextStyle([m
+[32m+[m[32m                fontSize: 14,[m
+[32m+[m[32m                fontWeight: FontWeight.bold,[m
+[32m+[m[32m                color: Theme.of(context).textTheme.bodyLarge?.color,[m
+[32m+[m[32m              ),[m
+[32m+[m[32m            ),[m
+[32m+[m[32m            const SizedBox(height: 12),[m
+[32m+[m[32m            if (_times.isEmpty)[m
+[32m+[m[32m              NeonCard([m
+[32m+[m[32m                padding: const EdgeInsets.all(12),[m
+[32m+[m[32m                child: Center([m
+[32m+[m[32m                  child: Text([m
+[32m+[m[32m                    'Nenhum horário definido ainda.',[m
+[32m+[m[32m                    style: TextStyle([m
+[32m+[m[32m                  

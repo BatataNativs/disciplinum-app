@@ -53,13 +53,15 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'A disciplina é a mãe do sucesso.',
+                    'Te ajudando a ser mais disciplinado.',
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(
                       color: isDark
                           ? Colors.grey[400]
-                          : const Color.fromARGB(255, 32, 32, 32),
+                          : const Color.fromARGB(255, 249, 249, 249),
                       fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
 
@@ -91,7 +93,7 @@ class WelcomeScreen extends StatelessWidget {
                         elevation: 4,
                       ),
                       child: const Text(
-                        'Começar Agora',
+                        'Começar Agora (Criar Conta)',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -128,7 +130,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Já tenho uma conta',
+                        'Já tenho uma conta (Login)',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),

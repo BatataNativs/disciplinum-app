@@ -62,23 +62,16 @@ class PermissionService {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.bar_chart, color: Colors.blueAccent),
-            SizedBox(width: 10),
-            Text("Acesso necessário"),
+            Text("⚙️ Acesso necessário"),
           ],
         ),
         content: const Text(
-          "Para o Disciplinum funcionar corretamente, "
-          "o Android exige que você ative manualmente o 'Acesso a dados de uso'.\n\n"
-          "Na próxima tela, procure pelo Disciplinum (caso veja mais apps) e ative a chave.",
+          "Para o app funcionar corretamente, "
+          "o Android exige que você ative manualmente o:\n'Acesso a dados de uso'.\n\n"
+          "Clique no botão abaixo e, na próxima tela, ative a chave.",
           style: TextStyle(fontSize: 15),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child:
-                const Text("Agora não", style: TextStyle(color: Colors.grey)),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
@@ -88,6 +81,11 @@ class PermissionService {
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text("Ir para Configurações"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                const Text("Agora não (app não funcionará)", style: TextStyle(color: Colors.grey)),
           ),
         ],
       ),

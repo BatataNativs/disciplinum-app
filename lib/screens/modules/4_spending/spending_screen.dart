@@ -332,7 +332,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
                   color: isSelected
                       ? (isDark
                           ? const Color.fromARGB(255, 57, 92, 208)
-                          : const Color.fromARGB(255, 31, 19, 198))
+                          : const Color.fromARGB(255, 18, 189, 211))
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(21),
                   boxShadow: isSelected
@@ -340,10 +340,9 @@ class _SpendingScreenState extends State<SpendingScreen> {
                           BoxShadow(
                             color: (isDark
                                     ? const Color.fromARGB(255, 57, 92, 208)
-                                    : const Color.fromARGB(255, 31, 19, 198))
+                                    : const Color.fromARGB(255, 10, 223, 219))
                                 .withValues(alpha: 0.3),
                             blurRadius: 10,
-                            offset: const Offset(0, 4),
                           )
                         ]
                       : [],

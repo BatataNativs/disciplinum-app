@@ -14,7 +14,6 @@ import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
-import 'package:disciplinum/widgets/niche_details/niche_content_schedule.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   const DietSettingsScreen({super.key});
@@ -29,6 +28,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
+  int _selectedIndex = 0; // 0=Como Funciona, 1=Horários, 2=Ativar
 
   @override
   void initState() {
@@ -348,11 +348,223 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     );
   }
 
+  Widget _buildSegmentedControl() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final List<String> options = ['Como Funciona', 'Horários', 'Ativar'];
+
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        children: List.generate(options.length, (index) {
+          final isSelected = _selectedIndex == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _selectedIndex = index);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.easeOutQuart,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark
+                          ? const Color.fromARGB(255, 57, 92, 208)
+                          : const Color.fromARGB(255, 18, 189, 211))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(21),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: (isDark
+                                    ? const Color.fromARGB(255, 57, 92, 208)
+                                    : const Color.fromARGB(255, 10, 223, 219))
+                                .withValues(alpha: 0.3),
+                            blurRadius: 10,
+                          )
+                        ]
+                      : [],
+                ),
+                child: Text(
+                  options[index],
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTabContent() {
+    final gamification = Provider.of<GamificationService>(context);
+    final medalAsset = gamification.currentMedalAsset(_niche.id);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    switch (_selectedIndex) {
+      case 0:
+        return Column(
+          key: const ValueKey('content_how_it_works'),
+          children: [
+            NicheInfoSection(hintText: _getModuleHintText()),
+            const SizedBox(height: 24),
+            _buildNotificationMessageSection(context),
+          ],
+        );
+      case 1:
+        return Column(
+          key: const ValueKey('content_schedule'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Horários de Refeição:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_times.isEmpty)
+              NeonCard(
+                padding: const EdgeInsets.all(12),
+                child: Center(
+                  child: Text(
+                    'Nenhum horário definido ainda.',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _times.map((time) {
+                  return InputChip(
+                    visualDensity: VisualDensity.compact,
+                    label: Text(
+                      _formatTime(time),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? Colors.white
+                            : const Color(0xFF6366F1),
+                      ),
+                    ),
+                    onDeleted: () => _removeSchedule(time),
+                    deleteIconColor: isDark
+                        ? Colors.white70
+                        : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                    backgroundColor: (isDark
+                            ? Colors.white
+                            : const Color(0xFF6366F1))
+                        .withValues(alpha: 0.1),
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        );
+      case 2:
+        return Column(
+          key: const ValueKey('content_activate'),
+          children: [
+            if (_gamificationRunning) ...[
+              _buildMedalProgress(
+                primaryColor: isDark
+                    ? const Color.fromARGB(255, 99, 102, 241)
+                    : const Color(0xFF6366F1),
+                secondaryColor: isDark
+                    ? Colors.white70.withValues(alpha: 0.8)
+                    : const Color(0xFF6366F1).withValues(alpha: 0.6),
+              ),
+              if (medalAsset != null) ...[
+                const SizedBox(height: 24),
+                Center(
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Conquista Atual',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
+                      Image.asset(medalAsset, height: 80),
+                    ],
+                  ),
+                ),
+              ],
+            ] else
+              const SizedBox(height: 100),
+          ],
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildTabActions() {
+    switch (_selectedIndex) {
+      case 0:
+        return const SizedBox(height: 55, key: ValueKey('action_none'));
+      case 1:
+        return SizedBox(
+          key: const ValueKey('action_schedule'),
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Adicionar horários',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: _openSchedule,
+            borderRadius: 18,
+          ),
+        );
+      case 2:
+        return SizedBox(
+          key: const ValueKey('action_activate'),
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: _gamificationRunning ? 'Desativar Módulo' : 'Ativar Módulo',
+            color: _gamificationRunning
+                ? const Color.fromARGB(255, 239, 68, 68)
+                : const Color.fromARGB(255, 16, 185, 129),
+            onPressed: _gamificationRunning
+                ? _desativarNichoMonitoramento
+                : _ativarNichoMonitoramento,
+            borderRadius: 18,
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final gamification = Provider.of<GamificationService>(context);
-    final medalAsset = gamification.currentMedalAsset(_niche.id);
     final isDark = theme.brightness == Brightness.dark;
 
     if (_loadingData) {
@@ -390,13 +602,6 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       );
     }
 
-    // Specific content for Diet (Schedule)
-    Widget content = NicheContentSchedule(
-      times: _times,
-      onAdd: _openSchedule,
-      onRemove: _removeSchedule,
-    );
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -404,22 +609,27 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+              isDark
+                  ? const Color.fromARGB(255, 0, 0, 0)
+                  : const Color.fromARGB(255, 230, 235, 255),
+              isDark
+                  ? const Color.fromARGB(255, 10, 15, 30)
+                  : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
+              // Header Custom
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
@@ -441,61 +651,19 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      NicheHeader(niche: _niche),
-                      const SizedBox(height: 24),
-                      _buildNotificationMessageSection(context),
-                      const SizedBox(height: 12),
-                      content,
-                      const SizedBox(height: 16),
-                      Center(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: GlowingButton(
-                            text: _gamificationRunning
-                                ? 'Desativar Monitoramento'
-                                : 'Ativar Monitoramento',
-                            color: _gamificationRunning
-                                ? Colors.redAccent
-                                : const Color.fromARGB(255, 16, 165, 53),
-                            onPressed: _gamificationRunning
-                                ? _desativarNichoMonitoramento
-                                : _ativarNichoMonitoramento,
-                            borderRadius: 18,
-                          ),
-                        ),
+                      NicheHeader(
+                        niche: _niche,
+                        showBackground: false,
                       ),
-                      const SizedBox(height: 12),
-                      if (_gamificationRunning) ...[
-                        _buildMedalProgress(
-                          primaryColor:
-                              isDark ? Colors.white70 : const Color(0xFF6366F1),
-                          secondaryColor: isDark
-                              ? Colors.white70.withValues(alpha: 0.8)
-                              : const Color(0xFF6366F1).withValues(alpha: 0.6),
-                        ),
-                        if (medalAsset != null)
-                          Center(
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Conquista Atual',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: Colors.grey),
-                                ),
-                                const SizedBox(height: 12),
-                                Image.asset(medalAsset, height: 80),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: 32),
-                      ],
-                      NicheInfoSection(hintText: _getModuleHintText()),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
+                      _buildSegmentedControl(),
+                      const SizedBox(height: 32),
+                      // Top Content Zone (Static)
+                      _buildTabContent(),
+                      const SizedBox(height: 24),
+                      // Bottom Action Zone (Static)
+                      _buildTabActions(),
                       const SizedBox(height: 40),
                     ],
                   ),
