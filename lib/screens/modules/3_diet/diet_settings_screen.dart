@@ -463,19 +463,16 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                       _formatTime(time),
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark
-                            ? Colors.white
-                            : const Color(0xFF6366F1),
+                        color: isDark ? Colors.white : const Color(0xFF6366F1),
                       ),
                     ),
                     onDeleted: () => _removeSchedule(time),
                     deleteIconColor: isDark
                         ? Colors.white70
                         : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                    backgroundColor: (isDark
-                            ? Colors.white
-                            : const Color(0xFF6366F1))
-                        .withValues(alpha: 0.1),
+                    backgroundColor:
+                        (isDark ? Colors.white : const Color(0xFF6366F1))
+                            .withValues(alpha: 0.1),
                     side: BorderSide.none,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -697,7 +694,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Mensagem de Alerta',
+                'Texto da notificação',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

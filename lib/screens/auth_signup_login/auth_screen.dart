@@ -1,4 +1,3 @@
-import 'package:disciplinum/services/user_privacy/legal_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -451,11 +450,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                 .withValues(alpha: 0.3))),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 _buildGoogleButton(isDark, authService.isLoading),
-                const SizedBox(height: 20),
-                const LegalFooter(),
-                const SizedBox(height: 10),
               ],
             ),
           ),

@@ -679,7 +679,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Mensagem de Alerta',
+                'Texto da notificação',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
