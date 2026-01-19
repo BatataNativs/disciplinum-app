@@ -52,7 +52,7 @@ class HealthTimelineCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Recuperação do Corpo",
+            Text("Melhorias na Saúde",
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
