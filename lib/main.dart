@@ -16,6 +16,7 @@ import 'app.dart';
 import 'app_router.dart';
 import 'config/app_config.dart';
 import 'services/ads/ad_service.dart'; // Import AdService
+import 'services/permissions/notifications/notification_service.dart'; // Import NotificationService
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -70,6 +71,9 @@ Future<void> main() async {
 
   // Ads sempre (mobile), independente do consentimento.
   await _Ads.initAtStartup();
+
+  // Inicializa sistema de notificações locais (CRÍTICO para módulos funcionarem)
+  await initNotifications();
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,

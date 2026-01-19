@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/app_router.dart';
-import 'package:disciplinum/services/user_privacy/legal_footer.dart'; //
+import 'package:disciplinum/widgets/user_privacy_and_terms/legal_footer.dart'; //
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -66,6 +66,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
 
                   const Spacer(),
+                  const SizedBox(height: 16),
 
                   // BOTÕES DE AÇÃO
 
@@ -93,7 +94,7 @@ class WelcomeScreen extends StatelessWidget {
                         elevation: 4,
                       ),
                       child: const Text(
-                        'Começar Agora (Criar Conta)',
+                        'Começar Agora - Criar Conta',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -130,7 +131,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Já tenho uma conta (Login)',
+                        'Já tenho uma conta - Login',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),
@@ -149,7 +150,7 @@ class WelcomeScreen extends StatelessWidget {
                           context, AppRouter.homeGuest);
                     },
                     child: Text(
-                      'Experimentar sem conta',
+                      'Experimentar sem conta\n    (sem salvamentos)',
                       style: TextStyle(
                         color: isDark
                             ? Colors.grey[500]
