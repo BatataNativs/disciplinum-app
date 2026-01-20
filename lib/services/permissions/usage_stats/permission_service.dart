@@ -6,28 +6,41 @@ import '../notifications/notification_service.dart';
 class PermissionService {
   static bool _isChecking = false;
   static bool _shouldVerifySuccess = false;
+  static DateTime? _lastCheckTime;
 
   /// Garante que as permissões de Notificação e Status de Uso sejam verificadas.
   /// No launch, pede ambas sequencialmente apenas UMA vez.
   static Future<void> ensurePermissions(BuildContext context,
       {bool forceUsage = false}) async {
+    final now = DateTime.now();
+
+    // LOCK & THROTTLING: Impede re-entrada e evita chamadas duplicadas por
+    // lógicas de rebuild rápido (piscadas) nos primeiros 2 segundos.
     if (_isChecking && !forceUsage) return;
+    if (_lastCheckTime != null &&
+        now.difference(_lastCheckTime!) < const Duration(seconds: 2) &&
+        !forceUsage) {
+      return;
+    }
+
     _isChecking = true;
+    _lastCheckTime = now;
 
     try {
-      // 1. Notificação (Bloqueante - espera resposta do usuário)
+      // 1. Notificação
       await NotificationService.requestPermission();
 
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
 
-      // 2. Status de Uso - Regra: Pedir apenas uma vez no launch (Onboarding)
+      // 2. Status de Uso
       final prefs = await SharedPreferences.getInstance();
       bool alreadyAsked =
           prefs.getBool('asked_usage_permission_onboarding') ?? false;
 
       bool usageGranted = await hasUsagePermission();
 
-      // Se já tiver a permissão, marcamos como "asked" para garantir consistência
       if (usageGranted) {
         if (!alreadyAsked) {
           await prefs.setBool('asked_usage_permission_onboarding', true);
@@ -35,26 +48,25 @@ class PermissionService {
         return;
       }
 
-      // Só pede se não tiver permissão E (não foi pedido ainda OU é forçado)
       if (!usageGranted && (forceUsage || !alreadyAsked)) {
-        if (!context.mounted) return;
-
-        // MARCA COMO PEDIDO ANTES de mostrar o diálogo para evitar que
-        // reconstruções durante o retorno do app disparem outro diálogo.
-        if (!forceUsage) {
-          await prefs.setBool('asked_usage_permission_onboarding', true);
+        if (!context.mounted) {
+          return;
         }
 
-        if (!context.mounted) return;
-        await _showUsagePermissionDialog(context);
+        final bool result = await _showUsagePermissionDialog(context);
+
+        if (!forceUsage && result) {
+          await prefs.setBool('asked_usage_permission_onboarding', true);
+        }
       }
     } finally {
       _isChecking = false;
     }
   }
 
-  /// Exibe o diálogo de permissão de uso e gerencia o fluxo
-  static Future<void> _showUsagePermissionDialog(BuildContext context) async {
+  /// Exibe o diálogo de permissão de uso e gerencia o fluxo.
+  /// Retorna true se o usuário interagiu com o diálogo (mesmo que clicando em "Agora não").
+  static Future<bool> _showUsagePermissionDialog(BuildContext context) async {
     final bool? wentToSettings = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -84,24 +96,22 @@ class PermissionService {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child:
-                const Text("Agora não (app não funcionará)", style: TextStyle(color: Colors.grey)),
+            child: const Text("Agora não (app não funcionará)",
+                style: TextStyle(color: Colors.grey)),
           ),
         ],
       ),
     );
 
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      return false;
+    }
 
     if (wentToSettings == true) {
-      // Abre as configurações de permissão.
-      // O Android abre uma Activity externa. Não é awaitable de forma síncrona real.
       _shouldVerifySuccess = true;
       await UsageStats.grantUsagePermission();
-
-      // O fluxo de verificação real ocorrerá na HomeScreen via didChangeAppLifecycleState (resumed).
-    } else {
-      // Usuário clicou "Agora não"
+      return true;
+    } else if (wentToSettings == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:
@@ -111,7 +121,9 @@ class PermissionService {
           duration: Duration(seconds: 4),
         ),
       );
+      return true;
     }
+    return false;
   }
 
   /// Método para ser chamado quando o app volta do background (resumed)
