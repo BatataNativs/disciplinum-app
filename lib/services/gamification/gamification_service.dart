@@ -5,7 +5,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:typed_data';
 import 'dart:async';
+import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/models/user_module_status.dart';
 import '../cloud/cloud_sync_service.dart';
 import '../iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
@@ -94,6 +97,8 @@ class GamificationService extends ChangeNotifier {
   static const int _foregroundServiceId = 888;
   // Chave para persistência local do nicho ativo
   static const String _prefsActiveNicheKey = 'active_niche_id';
+  // Prefixo para o status de cada módulo (Local-First)
+  static const String _prefsModuleStatusPrefix = 'module_status_';
 
   // Controle de monitoramento
   bool _isModuleActive = false;
@@ -155,12 +160,16 @@ class GamificationService extends ChangeNotifier {
   }
 
   Future<void> _restoreAllActiveModules() async {
-    bool hasActiveSchedule = false;
-    for (final nicheId in NicheId.values) {
-      final status = await CloudSyncService.loadModuleStatus(nicheId);
-      if (status != null && status.isActive) {
-        await _syncWithCloud(nicheId);
+    final prefs = await SharedPreferences.getInstance();
+    final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+    if (!seenOnboarding) return;
 
+    for (final nicheId in NicheId.values) {
+      // 1. Tenta Reconciliar (Local vs Nuvem)
+      await _syncWithCloud(nicheId);
+
+      // 2. Se o módulo estiver ativo (pode ter sido restaurado do Local ou Nuvem)
+      if (isModuleActive(nicheId)) {
         // Carrega horários (necessário para o monitoramento de check-in rodar)
         final userTimes =
             await CloudSyncService.loadUserNicheTimes(nicheId: nicheId.id);
@@ -175,8 +184,6 @@ class GamificationService extends ChangeNotifier {
             focusIntervalByModule[nicheId] =
                 TimeOfDayRange(start: times[0], end: times[1]);
           }
-
-          hasActiveSchedule = true;
         }
 
         // CARREGA MOTIVAÇÕES (ID Virtual: nicheId + 100)
@@ -195,16 +202,12 @@ class GamificationService extends ChangeNotifier {
           if (cloudPhrases.isNotEmpty) {
             _customPhrases[nicheId] = cloudPhrases;
           }
-
-          hasActiveSchedule = true;
         }
       }
     }
 
-    if (hasActiveSchedule && !_isModuleActive) {
-      // Inicia o timer global se houver horários ativos
-      startMonitoringApps();
-    }
+    // O monitoramento será iniciado exclusivamente pela UI (HomeScreen)
+    // após garantir as permissões de acesso ao monitoramento.
   }
 
   Map<NicheId, List<TimeOfDay>> scheduleByModule = {};
@@ -285,10 +288,8 @@ class GamificationService extends ChangeNotifier {
             .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
             .toList();
 
-        await startMonitoringApps(
-          nicheId: nicheId,
-          horarios: scheduleByModule[nicheId],
-        );
+        debugPrint(
+            '✅ Sessão carregada para ${nicheId.name}. Aguardando gatilho da UI para iniciar monitoramento.');
       } catch (e) {
         debugPrint('Erro ao restaurar sessão de monitoramento: $e');
         await prefs.remove(_prefsActiveNicheKey);
@@ -547,24 +548,27 @@ class GamificationService extends ChangeNotifier {
               }
             }
           } else if (isForegroundOther) {
-            debugPrint('✅ Saída definitiva (App): $foregroundApp');
+            debugPrint('✅ Saída definitiva (App Real): $foregroundApp');
             _violationStartByApp.clear();
-            _warnedApps.clear();
+            _warnedApps
+                .clear(); // Só limpamos os avisos se mudou para outro APP REAL
             _lastSeenMonitoredApp.clear();
           } else {
-            // Caso seja Ignore (Launcher/Bixby/Sistema) ou NULL
-            // Verificamos se já faz tempo que o app monitorado não aparece
+            // Caso seja Ignore (Launcher/Bixby/Sistema) ou NULL (Silêncio do SO)
+            // Verificamos se já faz tempo que nenhum app monitorado aparece
             final activeKeys = _violationStartByApp.keys.toList();
             for (final key in activeKeys) {
               final lastSeen = _lastSeenMonitoredApp[key];
-              if (lastSeen == null) continue; // Segurança extra
+              if (lastSeen == null) continue;
 
               final diff = now.difference(lastSeen).inSeconds;
-              if (diff >= 20) {
-                // Aumentado para 20s para evitar falsos salvamentos por delay do OS
-                debugPrint('✅ Saída definitiva (Timeout após ${diff}s): $key');
+              // Aumentado para 60s de "silêncio" antes de considerar saída.
+              // Isso garante que Bixby ou lags do Android não quebrem a lógica.
+              if (diff >= 60) {
+                debugPrint('✅ Saída definitiva (Inatividade de 60s): $key');
                 _violationStartByApp.remove(key);
-                _warnedApps.remove(key);
+                // NOTA: NUNCA limpamos _warnedApps aqui para evitar loop de notificações
+                // se o usuário apenas foi na Home e voltou rápido demais.
                 _lastSeenMonitoredApp.remove(key);
               }
             }
@@ -697,26 +701,57 @@ class GamificationService extends ChangeNotifier {
   }
 
   Future<void> _syncWithCloud(NicheId nicheId) async {
-    final status = await CloudSyncService.loadModuleStatus(nicheId);
-    if (status != null) {
-      if (!status.isActive) {
-        // Se o módulo está inativo na nuvem, garante que não está no cache local
+    final cloudStatus = await CloudSyncService.loadModuleStatus(nicheId);
+    final localStatus = await _getLocalStatus(nicheId);
+
+    UserModuleStatus? finalStatus;
+
+    if (cloudStatus != null && localStatus != null) {
+      // RECONCILIAÇÃO: Quem tem o timestamp mais recente vence
+      final cloudDate = cloudStatus.lastUpdated ?? DateTime(2000);
+      final localDate = localStatus.lastUpdated ?? DateTime(2000);
+
+      if (localDate.isAfter(cloudDate)) {
+        debugPrint('🏠 Sincronização: Local é mais recente para $nicheId');
+        finalStatus = localStatus;
+        // Tenta atualizar a nuvem com o estado local mais recente (ex: reset offline)
+        CloudSyncService.saveModuleStatus(
+          nicheId: nicheId,
+          isActive: localStatus.isActive,
+          consecutiveDays: localStatus.consecutiveDays,
+          maxMedal: localStatus.maxMedal,
+        ).catchError((e) => debugPrint('Erro ao atualizar nuvem atrasada: $e'));
+      } else {
+        debugPrint('☁️ Sincronização: Nuvem é mais recente para $nicheId');
+        finalStatus = cloudStatus;
+        // Atualiza local com os dados da nuvem
+        _saveLocalStatus(nicheId);
+      }
+    } else {
+      finalStatus = cloudStatus ?? localStatus;
+      if (finalStatus != null && cloudStatus != null) {
+        _saveLocalStatus(nicheId);
+      }
+    }
+
+    if (finalStatus != null) {
+      if (!finalStatus.isActive) {
         _diasConsecutivosByModule.remove(nicheId);
         _maxMedalByModule.remove(nicheId);
         _moduleStartDates.remove(nicheId);
       } else {
-        _diasConsecutivosByModule[nicheId] = status.consecutiveDays;
+        _diasConsecutivosByModule[nicheId] = finalStatus.consecutiveDays;
 
-        if (status.lastUpdated != null) {
-          final lastUpdate = status.lastUpdated!;
-          final days = status.consecutiveDays;
+        if (finalStatus.lastUpdated != null) {
+          final lastUpdate = finalStatus.lastUpdated!;
+          final days = finalStatus.consecutiveDays;
           _moduleStartDates[nicheId] =
               lastUpdate.subtract(Duration(days: days));
         } else {
           _moduleStartDates[nicheId] = DateTime.now();
         }
 
-        final medalString = status.maxMedal;
+        final medalString = finalStatus.maxMedal;
         if (medalString != null) {
           _maxMedalByModule[nicheId] = GamificationMedal.values.firstWhere(
             (e) => e.toString().split('.').last == medalString,
@@ -727,7 +762,6 @@ class GamificationService extends ChangeNotifier {
         _checkTimeBasedMedals(nicheId);
       }
     } else {
-      // Se não tem status, considera inativo/zerado
       _diasConsecutivosByModule.remove(nicheId);
       _moduleStartDates.remove(nicheId);
     }
@@ -744,6 +778,10 @@ class GamificationService extends ChangeNotifier {
 
     if ((_diasConsecutivosByModule[nicheId] ?? 0) == 0) {
       _moduleStartDates[nicheId] = DateTime.now();
+
+      // Persistência Local-First
+      _saveLocalStatus(nicheId);
+
       CloudSyncService.saveModuleStatus(
         nicheId: nicheId,
         isActive: true,
@@ -755,6 +793,10 @@ class GamificationService extends ChangeNotifier {
   void stopModuleCycle({required NicheId nicheId}) async {
     _diasConsecutivosByModule.remove(nicheId);
     scheduleByModule.remove(nicheId);
+
+    // Persistência Local-First
+    _saveLocalStatus(nicheId);
+
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: false,
@@ -780,6 +822,10 @@ class GamificationService extends ChangeNotifier {
 
   void _updateStatus(NicheId nicheId, int dias) {
     _diasConsecutivosByModule[nicheId] = dias;
+
+    // Persistência Local-First
+    _saveLocalStatus(nicheId);
+
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: true,
@@ -805,6 +851,11 @@ class GamificationService extends ChangeNotifier {
     if (newMedal != null) {
       if (current == null || newMedal.index > current.index) {
         _maxMedalByModule[nicheId] = newMedal;
+
+        // 1. Salva Local
+        _saveLocalStatus(nicheId);
+
+        // 2. Tenta Nuvem (Background)
         CloudSyncService.saveModuleStatus(
           nicheId: nicheId,
           isActive: true,
@@ -875,7 +926,10 @@ class GamificationService extends ChangeNotifier {
       _maxMedalByModule.remove(nicheId);
     }
 
-    // 2. SINCRONIZAÇÃO (Pode falhar sem quebrar o local)
+    // 2. PERSISTÊNCIA LOCAL (Essencial para resets offline)
+    _saveLocalStatus(nicheId);
+
+    // 3. SINCRONIZAÇÃO (Pode falhar sem quebrar o local)
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: !deactivate,
@@ -995,6 +1049,41 @@ class GamificationService extends ChangeNotifier {
       return minsNow >= minsIni || minsNow <= minsFim;
     } else {
       return minsNow >= minsIni && minsNow <= minsFim;
+    }
+  }
+
+  Future<void> _saveLocalStatus(NicheId nicheId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+
+      final status = UserModuleStatus(
+        userId: user.id,
+        nicheId: nicheId.id,
+        isActive: isModuleActive(nicheId),
+        consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
+        maxMedal: _maxMedalByModule[nicheId]?.toString().split('.').last,
+        lastUpdated: DateTime.now(),
+      );
+
+      await prefs.setString('$_prefsModuleStatusPrefix${nicheId.id}',
+          jsonEncode(status.toJson()));
+      debugPrint('💾 Status local salvo para $nicheId');
+    } catch (e) {
+      debugPrint('Erro ao salvar status local: $e');
+    }
+  }
+
+  Future<UserModuleStatus?> _getLocalStatus(NicheId nicheId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = prefs.getString('$_prefsModuleStatusPrefix${nicheId.id}');
+      if (json == null) return null;
+      return UserModuleStatus.fromJson(jsonDecode(json));
+    } catch (e) {
+      debugPrint('Erro ao carregar status local: $e');
+      return null;
     }
   }
 

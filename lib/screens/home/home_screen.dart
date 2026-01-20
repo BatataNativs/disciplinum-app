@@ -54,6 +54,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final route = ModalRoute.of(context);
       if (route != null && route.isCurrent) {
         _permissionsChecked = true;
+
+        // AGUARDA ESTABILIZAÇÃO: Evita que rebuilds rápidos do AuthWrapper
+        // ou transições de rota causem "piscada" do diálogo de permissão.
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
+
         await PermissionService.ensurePermissions(context);
 
         if (mounted) {
