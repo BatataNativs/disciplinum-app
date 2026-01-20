@@ -14,6 +14,7 @@ import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
+import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 
 import 'package:disciplinum/utils/app_info_helper.dart';
 
@@ -368,83 +369,6 @@ class _FocusScreenState extends State<FocusScreen> {
     }
   }
 
-  Widget _buildMedalProgress(
-      {required Color primaryColor, required Color secondaryColor}) {
-    final gamification = Provider.of<GamificationService>(context);
-    final nicheId = _niche.id;
-    final diasConsecutivos =
-        gamification.diasConsecutivosByModule[nicheId] ?? 0;
-
-    String text;
-    Color color = primaryColor;
-
-    if (diasConsecutivos >= 10) {
-      text = 'Parabéns! Você alcançou a medalha de Diamante (Nível Máximo)! 💎';
-      color = Colors.blueAccent;
-    } else if (diasConsecutivos >= 7) {
-      final faltam = 10 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Ouro 🥇. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Diamante 💎.';
-    } else if (diasConsecutivos >= 5) {
-      final faltam = 7 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Prata 🥈. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Ouro 🥇.';
-    } else if (diasConsecutivos >= 3) {
-      final faltam = 5 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Bronze 🥉. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Prata 🥈.';
-    } else {
-      final faltam = 3 - diasConsecutivos;
-      text =
-          'Sem medalhas ainda. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Bronze 🥉.';
-    }
-
-    return NeonCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.military_tech_outlined, color: color, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Como anda seu progresso:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: color.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: (diasConsecutivos % 3) / 3,
-              backgroundColor: secondaryColor.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-              minHeight: 6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final List<String> options = ['Como Funciona', 'Apps', 'Tempo', 'Ativar'];
@@ -651,17 +575,43 @@ class _FocusScreenState extends State<FocusScreen> {
         );
       case 3:
       default:
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Column(
           children: [
             if (_gamificationRunning) ...[
-              _buildMedalProgress(
-                primaryColor: isDark ? Colors.white70 : const Color(0xFF6366F1),
-                secondaryColor: isDark
-                    ? Colors.white70.withValues(alpha: 0.8)
-                    : const Color(0xFF6366F1).withValues(alpha: 0.6),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyProgressFocus()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF395CC8),
+                    borderRadius: BorderRadius.circular(21),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF395CC8).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Ver meu progresso',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
             _buildNotificationMessageSection(context),
             const SizedBox(height: 24),

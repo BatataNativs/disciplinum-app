@@ -3,8 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
 
-import 'package:disciplinum/widgets/home/neon_card.dart';
+// Import das telas de progresso de cada módulo
+import 'package:disciplinum/widgets/1_smoking/my_progress_smoking.dart';
+import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
+import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
+import 'package:disciplinum/widgets/4_spending/my_progress_spending.dart';
+import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
+import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
 
 class MyProgressScreen extends StatelessWidget {
   const MyProgressScreen({super.key});
@@ -37,208 +44,188 @@ class MyProgressScreen extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 121, 148, 222)
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // SAUDAÇÃO
-              Text(
-                'Olá, $firstName! 📊📈',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Aqui é mostrado o quão disciplinado você está:',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // LISTA DE PROGRESSO POR MÓDULO
-              ...niches.map((niche) {
-                final dias =
-                    gamification.diasConsecutivosByModule[niche.id] ?? 0;
-                final maxMedal =
-                    gamification.medalsByModule[niche.id] ?? 'Sem medalha';
-                final isActive = gamification.isModuleActive(niche.id);
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: NeonCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.grey[800]
-                                    : Colors.grey[200],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Image.asset(
-                                niche.iconPath,
-                                height: 30,
-                                width: 30,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    niche.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    isActive
-                                        ? '🔥 $dias dias consecutivos'
-                                        : '⏸️ Módulo pausado',
-                                    style: TextStyle(
-                                      color: isActive
-                                          ? (isDark
-                                              ? Colors.greenAccent
-                                              : Colors.green)
-                                          : Colors.grey,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (maxMedal.contains('Ouro') ||
-                                maxMedal.contains('Prata') ||
-                                maxMedal.contains('Bronze') ||
-                                maxMedal.contains('Diamante'))
-                              Tooltip(
-                                message: 'Sua maior conquista: $maxMedal',
-                                child: Text(
-                                  _getMedalEmoji(maxMedal),
-                                  style: const TextStyle(fontSize: 32),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        if (isActive) ...[
-                          // Barra de progresso para a próxima medalha
-                          _buildNextMedalProgress(context, dias, isDark),
-                        ],
-                      ],
-                    ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // SAUDAÇÃO
+                Text(
+                  'Olá, $firstName! 📊',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                   ),
-                );
-              }),
-            ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Acompanhe seu progresso em cada módulo:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // GRID DE CARDS
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: niches.length,
+                    itemBuilder: (context, index) {
+                      final niche = niches[index];
+                      final dias =
+                          gamification.diasConsecutivosByModule[niche.id] ?? 0;
+                      final isActive = gamification.isModuleActive(niche.id);
+
+                      return _buildProgressCard(
+                        context: context,
+                        niche: niche,
+                        dias: dias,
+                        isActive: isActive,
+                        isDark: isDark,
+                        onTap: () => _navigateToProgressDetail(context, niche),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNextMedalProgress(BuildContext context, int dias, bool isDark) {
-    int target = 0;
-    String nextMedal = '';
-    Color color = Colors.grey;
-
-    if (dias < 3) {
-      target = 3;
-      nextMedal = 'Bronze';
-      color = const Color(0xFFCD7F32);
-    } else if (dias < 5) {
-      target = 5;
-      nextMedal = 'Prata';
-      color = const Color(0xFFC0C0C0);
-    } else if (dias < 7) {
-      target = 7;
-      nextMedal = 'Ouro';
-      color = const Color(0xFFFFD700);
-    } else if (dias < 10) {
-      target = 10;
-      nextMedal = 'Diamante';
-      color = const Color(0xFFB9F2FF);
-    } else {
-      return Text(
-        'Você é uma lenda! 💎 Nível Máximo!',
-        style: TextStyle(
-            color: isDark ? Colors.blueAccent : Colors.blue,
-            fontWeight: FontWeight.bold),
-      );
-    }
-
-    final int previousTarget = _getPreviousTarget(target);
-    final double progress = (dias - previousTarget) / (target - previousTarget);
-    final int diasRestantes = target - dias;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Próxima: $nextMedal',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
-            ),
-            Text(
-              'Faltam $diasRestantes dias',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+  Widget _buildProgressCard({
+    required BuildContext context,
+    required Niche niche,
+    required int dias,
+    required bool isActive,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
-            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 8,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Ícone do módulo
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.grey[800]!.withValues(alpha: 0.5)
+                    : Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                niche.iconPath,
+                height: 28,
+                width: 28,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Nome do módulo (truncado)
+            Text(
+              niche.name,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            // Dias ou status
+            Text(
+              isActive ? '$dias dias' : 'Pausado',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: isActive
+                    ? (isDark ? Colors.greenAccent : Colors.green)
+                    : Colors.grey,
+              ),
+            ),
+            // Emoji de medalha
+            if (isActive && dias >= 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  _getMedalEmoji(dias),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  int _getPreviousTarget(int target) {
-    if (target == 3) return 0;
-    if (target == 5) return 3;
-    if (target == 7) return 5;
-    if (target == 10) return 7;
-    return 0;
+  void _navigateToProgressDetail(BuildContext context, Niche niche) {
+    Widget? detailScreen;
+
+    switch (niche.id) {
+      case NicheId.smoking:
+        detailScreen = const MyProgressSmoking();
+        break;
+      case NicheId.bingeEating:
+        detailScreen = const MyProgressBingeEating();
+        break;
+      case NicheId.diet:
+        detailScreen = const MyProgressDiet();
+        break;
+      case NicheId.spending:
+        detailScreen = const MyProgressSpending();
+        break;
+      case NicheId.focus:
+        detailScreen = const MyProgressFocus();
+        break;
+      case NicheId.adultContent:
+        detailScreen = const MyProgressAdultContent();
+        break;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => detailScreen!),
+    );
   }
 
-  String _getMedalEmoji(String medalName) {
-    if (medalName.contains('Diamante')) return '💎';
-    if (medalName.contains('Ouro')) return '🥇';
-    if (medalName.contains('Prata')) return '🥈';
-    if (medalName.contains('Bronze')) return '🥉';
+  String _getMedalEmoji(int dias) {
+    if (dias >= 10) return '💎';
+    if (dias >= 7) return '🥇';
+    if (dias >= 5) return '🥈';
+    if (dias >= 3) return '🥉';
     return '';
   }
 }
