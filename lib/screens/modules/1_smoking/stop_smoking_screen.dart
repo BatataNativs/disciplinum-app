@@ -4,9 +4,7 @@ import 'package:disciplinum/services/1_smoking/smoking_service.dart';
 import 'package:disciplinum/widgets/1_smoking/savings_dashboard.dart';
 import 'package:disciplinum/widgets/1_smoking/health_compact_card.dart';
 import 'package:disciplinum/screens/modules/1_smoking/health_detail_screen.dart';
-import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
-
-import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/widgets/1_smoking/my_progress_smoking.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
@@ -14,13 +12,13 @@ import 'package:disciplinum/services/permissions/notifications/notification_serv
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
+import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
-
 import 'package:flutter/services.dart';
 
 class StopSmokingScreen extends StatefulWidget {
@@ -137,10 +135,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Tive uma recaída?"),
+        title: const Text("Poxa, teve uma recaída?"),
         content: const Text(
-          "Isso vai apagar seu progresso e o módulo será desativado até que você preencha e ative novamente.\n\n"
-          "Deseja realmente resetar e desativar?",
+          "Que pena!\nÉ difícil, mas não desista!\n\n"
+          "Tente novamente quando se sentir pronto!\n(espero que em breve).\n\n"
+          "Ao registrar a recaída, isso vai apagar seu progresso atual e o módulo será desativado até que você preencha novos dados de consumo e o ative novamente.\n\n"
+          "Deseja registrar a recaída?",
         ),
         actions: [
           TextButton(
@@ -148,10 +148,11 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             child: const Text("Cancelar"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-                "Sim, resetar (Zerar progresso) e desativar (Desativar módulo)"),
+            child: const Text("Sim, infelizmente.."),
           ),
         ],
       ),
@@ -166,9 +167,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         // 2. Reseta gamificação e desativa module
         gamification.resetMedals(
           NicheId.smoking,
-          notificationTitle: 'Módulo de Fumar Reiniciado',
+          notificationTitle: 'Módulo de Parar de Fumar Reiniciado',
           notificationBody:
-              'Seu progresso foi zerado e o módulo desativado. Confira no app o quanto economizou nessa tentativa!',
+              'Seu progresso foi zerado e o módulo desativado. Como estímulo, confira no app o quanto economizou nessa tentativa!',
           deactivate: true,
         );
 
@@ -255,7 +256,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Desativar e Zerar?"),
+        title: const Text("Desativar módulo?"),
         content: const Text(
           "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
           "Deseja continuar?",
@@ -266,7 +267,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             child: const Text("Cancelar"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text("Sim, desativar e zerar"),
           ),
@@ -780,8 +783,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   }
 
   Widget _buildTabContent() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     switch (_selectedIndex) {
       case 0:
         return Column(
@@ -839,13 +840,38 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildMedalProgress(
-                primaryColor: isDark
-                    ? const Color.fromARGB(255, 99, 102, 241)
-                    : const Color.fromARGB(255, 57, 92, 208),
-                secondaryColor: isDark
-                    ? const Color.fromARGB(255, 139, 92, 246)
-                    : const Color.fromARGB(255, 99, 102, 241),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const MyProgressSmoking()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF395CC8), // Azul escut padrão do app
+                    borderRadius: BorderRadius.circular(21),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF395CC8).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Ver meu progresso',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               _buildNotificationMessageSection(context),
@@ -927,83 +953,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  Widget _buildMedalProgress(
-      {required Color primaryColor, required Color secondaryColor}) {
-    final gamification = Provider.of<GamificationService>(context);
-    final nicheId = _niche.id;
-    final diasConsecutivos =
-        gamification.diasConsecutivosByModule[nicheId] ?? 0;
-
-    String text;
-    Color color = primaryColor;
-
-    if (diasConsecutivos >= 10) {
-      text = 'Parabéns! Você alcançou a medalha de Diamante (Nível Máximo)! 💎';
-      color = const Color.fromARGB(255, 33, 150, 243);
-    } else if (diasConsecutivos >= 7) {
-      final faltam = 10 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Ouro 🥇. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Diamante 💎.';
-    } else if (diasConsecutivos >= 5) {
-      final faltam = 7 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Prata 🥈. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Ouro 🥇.';
-    } else if (diasConsecutivos >= 3) {
-      final faltam = 5 - diasConsecutivos;
-      text =
-          'Sua medalha atual é de Bronze 🥉. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Prata 🥈.';
-    } else {
-      final faltam = 3 - diasConsecutivos;
-      text =
-          'Sem medalhas ainda. Faltam $faltam ${faltam == 1 ? 'dia' : 'dias'} para a medalha de Bronze 🥉.';
-    }
-
-    return NeonCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.military_tech_outlined, color: color, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Como anda seu progresso:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: color.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: (diasConsecutivos % 3) / 3,
-              backgroundColor: secondaryColor.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-              minHeight: 6,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildNotificationMessageSection(BuildContext context) {

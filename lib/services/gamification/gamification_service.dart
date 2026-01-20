@@ -30,7 +30,7 @@ final Map<NicheId, String> moduleMessages = {
 String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
   if (allowCustom) {
     if (IapService().isCustomNotifUnlocked) {
-      final custom = GamificationService().customMessages[nicheId];
+      final custom = GamificationService.instance.customMessages[nicheId];
       if (custom != null && custom.isNotEmpty) return custom;
     }
   }
@@ -68,6 +68,17 @@ extension GamificationMedalExtension on GamificationMedal {
 }
 
 class GamificationService extends ChangeNotifier {
+  // Singleton pattern
+  static final GamificationService _instance = GamificationService._internal();
+  static GamificationService get instance => _instance;
+
+  factory GamificationService() => _instance;
+
+  GamificationService._internal() {
+    _loadPreferences();
+    NotificationService.onRelapseDetected = _handleRelapseFromNotification;
+  }
+
   // Cache local das medalhas e dias
   final Map<NicheId, GamificationMedal> _maxMedalByModule = {};
   final Map<NicheId, int> _diasConsecutivosByModule = {};
@@ -93,12 +104,8 @@ class GamificationService extends ChangeNotifier {
   final Map<String, DateTime> _notifiedSchedules = {};
   final Map<String, DateTime> _violationStartByApp = {};
   final Map<String, DateTime> _warnedApps = {};
+  final Map<String, DateTime> _lastSeenMonitoredApp = {};
   NicheId? currentNicheId;
-
-  GamificationService() {
-    _loadPreferences();
-    NotificationService.onRelapseDetected = _handleRelapseFromNotification;
-  }
 
   void _handleRelapseFromNotification(String? payload) {
     NicheId? nicheId;
@@ -307,7 +314,9 @@ class GamificationService extends ChangeNotifier {
       await prefs.setInt(_prefsActiveNicheKey, nicheId.id);
     }
 
-    _monitorTimer?.cancel();
+    _violationStartByApp.clear();
+    _warnedApps.clear();
+    _lastSeenMonitoredApp.clear();
 
     await _startForegroundService();
 
@@ -315,9 +324,7 @@ class GamificationService extends ChangeNotifier {
       await _checkRetroactiveViolations(nicheId);
     }
 
-    _monitorTimer?.cancel();
-
-    _monitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _monitorTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       try {
         if (!_isModuleActive) {
           timer.cancel();
@@ -447,16 +454,27 @@ class GamificationService extends ChangeNotifier {
         }
 
         // 2. LÓGICA DE APPS PROIBIDOS
-        if (monitoredApps.isNotEmpty && currentNicheId != null) {
+        final activeNicheId = currentNicheId;
+        final apps = List<String>.from(monitoredApps);
+
+        if (apps.isNotEmpty && activeNicheId != null) {
           final nowMs = now.millisecondsSinceEpoch;
           final usageApps = await UsageStats.queryUsageStats(
             now.subtract(const Duration(seconds: 60)),
             now,
           );
 
-          String? foregroundApp;
-          int lastUsedMs = 0;
+          final systemIgnoreList = [
+            'com.disciplinum.app',
+            'com.android.systemui',
+            'android',
+            'com.sec.android.app.launcher', // Samsung Home
+            'com.google.android.apps.nexuslauncher', // Pixel Home
+            'com.miui.home', // Xiaomi Home
+            'com.huawei.android.launcher', // Huawei Home
+          ];
 
+          String? foregroundApp;
           if (usageApps.isNotEmpty) {
             usageApps.sort((a, b) {
               final lastA = int.tryParse(a.lastTimeUsed ?? '0') ?? 0;
@@ -464,59 +482,62 @@ class GamificationService extends ChangeNotifier {
               return lastB.compareTo(lastA);
             });
 
-            lastUsedMs = int.parse(usageApps.first.lastTimeUsed!);
-            if (lastUsedMs > nowMs - 20000) {
-              foregroundApp = usageApps.first.packageName;
+            // ESTRATÉGIA DO ÚLTIMO APP REAL:
+            // Buscamos o app mais recente que NÃO seja do sistema/launcher.
+            // Isso evita que o Samsung Launcher "roube" o foco e cause timeouts falsos.
+            for (final app in usageApps) {
+              final pkg = app.packageName!;
+              final lastUsedMs = int.tryParse(app.lastTimeUsed ?? '0') ?? 0;
+
+              // Se o app é muito antigo (mais de 60s), ignoramos
+              if (lastUsedMs < nowMs - 60000) continue;
+
+              if (!systemIgnoreList.contains(pkg)) {
+                foregroundApp = pkg;
+                break;
+              }
             }
           }
 
-          if (foregroundApp != null && monitoredApps.contains(foregroundApp)) {
-            if (currentNicheId == NicheId.focus &&
-                historyFocusInterval(currentNicheId, now) == false) {
-              _violationStartByApp.remove(foregroundApp);
-              _warnedApps.remove(foregroundApp);
-              return;
-            }
+          bool isForegroundMonitored =
+              foregroundApp != null && apps.contains(foregroundApp);
+          bool isForegroundIgnore =
+              foregroundApp != null && systemIgnoreList.contains(foregroundApp);
+          bool isForegroundOther = foregroundApp != null &&
+              !isForegroundMonitored &&
+              !isForegroundIgnore;
 
+          if (isForegroundMonitored) {
             final key = foregroundApp;
+            _lastSeenMonitoredApp[key] = now;
 
             if (!_violationStartByApp.containsKey(key)) {
-              final startTime = DateTime.fromMillisecondsSinceEpoch(lastUsedMs);
-              _violationStartByApp[key] = startTime;
-
               if (!_warnedApps.containsKey(key)) {
-                final niche = NicheRepository.getById(currentNicheId!);
-                final baseMessage = getModuleMessage(currentNicheId!);
-                final body =
-                    '$baseMessage\n\n⚠️ Saia do app em até 30s para não perder seu progresso.';
+                final niche = NicheRepository.getById(activeNicheId);
+                final baseMessage = getModuleMessage(activeNicheId);
                 await sendModuleNotification(
-                  body,
+                  '$baseMessage\n\n⚠️ Saia do app em até 30s para não perder seu progresso.',
                   title: 'Disciplinum: ${niche.name}',
                   iconPath: niche.iconPath,
                 );
                 _warnedApps[key] = now;
+                _violationStartByApp[key] = DateTime.now();
+                debugPrint('🏁 Contagem iniciada para $key');
               }
             } else {
               final start = _violationStartByApp[key]!;
-              final currentUsageTime =
-                  DateTime.fromMillisecondsSinceEpoch(lastUsedMs);
-              final duration = currentUsageTime.difference(start).inSeconds;
+              final duration = now.difference(start).inSeconds;
+              debugPrint('⏳ $key: ${duration}s / 30s');
 
               if (duration >= 30) {
-                debugPrint('Violação confirmada por 30s em $key');
-                final niche = NicheRepository.getById(currentNicheId!);
+                debugPrint('🛑 Limite de 30s atingido em $key');
+                final niche = NicheRepository.getById(activeNicheId);
 
-                final bodySuffix = currentNicheId == NicheId.smoking
-                    ? ' Confira no app o quanto economizou nessa tentativa!'
-                    : '';
-
-                // Reinicia o progresso E DESATIVA o módulo (Solicitação do usuário)
-                // Isso interrompe o loop de detecção para este nicho até que o usuário reative.
                 resetMedals(
-                  currentNicheId!,
+                  activeNicheId,
                   notificationTitle: 'Progresso Zerado 😢',
                   notificationBody:
-                      'Você usou o app proibido por mais de 30s. Módulo desativado.$bodySuffix',
+                      'Você utilizou o app monitorado por 30 segundos ou mais. Progresso reiniciado.',
                   iconPath: niche.iconPath,
                   deactivate: true,
                 );
@@ -525,12 +546,28 @@ class GamificationService extends ChangeNotifier {
                 _warnedApps.remove(key);
               }
             }
+          } else if (isForegroundOther) {
+            debugPrint('✅ Saída definitiva (App): $foregroundApp');
+            _violationStartByApp.clear();
+            _warnedApps.clear();
+            _lastSeenMonitoredApp.clear();
           } else {
-            // Se saiu do app ou não é app proibido, limpamos o estado para este app específico
-            _violationStartByApp.remove(foregroundApp);
-            // NÃO removemos do _warnedApps aqui se quisermos evitar avisos constantes se o app piscar,
-            // mas o usuário pediu para avisar "caso ele agora abra... chega notificação", então vamos limpar.
-            _warnedApps.remove(foregroundApp);
+            // Caso seja Ignore (Launcher/Bixby/Sistema) ou NULL
+            // Verificamos se já faz tempo que o app monitorado não aparece
+            final activeKeys = _violationStartByApp.keys.toList();
+            for (final key in activeKeys) {
+              final lastSeen = _lastSeenMonitoredApp[key];
+              if (lastSeen == null) continue; // Segurança extra
+
+              final diff = now.difference(lastSeen).inSeconds;
+              if (diff >= 20) {
+                // Aumentado para 20s para evitar falsos salvamentos por delay do OS
+                debugPrint('✅ Saída definitiva (Timeout após ${diff}s): $key');
+                _violationStartByApp.remove(key);
+                _warnedApps.remove(key);
+                _lastSeenMonitoredApp.remove(key);
+              }
+            }
           }
         }
       } catch (e) {
@@ -574,14 +611,19 @@ class GamificationService extends ChangeNotifier {
   void stopMonitoringApps() async {
     _isModuleActive = false;
     _monitorTimer?.cancel();
+    _monitorTimer = null;
     _violationStartByApp.clear();
+    _warnedApps.clear();
+    _lastSeenMonitoredApp.clear();
+    monitoredApps.clear();
+    currentNicheId = null;
     notificationsPaused = false;
     _lastScheduleNotificationTime = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefsActiveNicheKey);
 
-    _stopForegroundService();
+    await _stopForegroundService();
   }
 
   Future<void> _startForegroundService() async {
@@ -809,26 +851,39 @@ class GamificationService extends ChangeNotifier {
     String? notificationBody,
     bool sendNotification = true,
     String? iconPath,
-    bool deactivate = false, // Novo parâmetro
+    bool deactivate = false,
   }) {
+    // 1. LIMPEZA LOCAL IMEDIATA (Crítico para parar o loop)
+    _violationStartByApp.clear();
+    _warnedApps.clear();
+    _lastSeenMonitoredApp.clear();
+
     if (deactivate) {
+      debugPrint('🛑 Desativando módulo localmente: $nicheId');
       _diasConsecutivosByModule.remove(nicheId);
       scheduleByModule.remove(nicheId);
       _moduleStartDates.remove(nicheId);
       _maxMedalByModule.remove(nicheId);
+
+      // Se era o nicho atual, paramos o monitoramento global
+      if (currentNicheId == nicheId) {
+        stopMonitoringApps();
+      }
     } else {
       _diasConsecutivosByModule[nicheId] = 0;
       _moduleStartDates[nicheId] = DateTime.now();
       _maxMedalByModule.remove(nicheId);
     }
 
+    // 2. SINCRONIZAÇÃO (Pode falhar sem quebrar o local)
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
-      isActive: !deactivate, // Usa a flag para decidir se continua ativo
+      isActive: !deactivate,
       consecutiveDays: 0,
       forceClearMedal: true,
-    );
+    ).catchError((e) => debugPrint('Erro ao sincronizar reset: $e'));
 
+    // 3. NOTIFICAÇÃO
     if (sendNotification) {
       final title = notificationTitle ?? 'Contagem Reiniciada ⚠️';
       final body = notificationBody ??
