@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'app_router.dart';
-import 'misc/system_stuff/app_themes.dart';
-import 'misc/system_stuff/theme_controller.dart';
-import 'main.dart'; // Import para acessar o navigatorKey
+import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/misc/system_stuff/app_themes.dart';
+import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
+import 'package:disciplinum/main.dart';
 
 class DisciplinumApp extends StatelessWidget {
   final String initialRoute; // Novo parâmetro

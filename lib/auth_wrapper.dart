@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
-import 'screens/home/home_screen.dart';
-import 'screens/auth_signup_login/reset_password_screen.dart';
-import 'screens/opening/welcome_screen.dart'; // Importe a WelcomeScreen
+import 'package:disciplinum/screens/home/home_screen.dart';
+import 'package:disciplinum/screens/auth_signup_login/reset_password_screen.dart';
+import 'package:disciplinum/screens/opening/welcome_screen.dart';
 
 class AuthWrapperWithoutHomeValues extends StatelessWidget {
   const AuthWrapperWithoutHomeValues({super.key});

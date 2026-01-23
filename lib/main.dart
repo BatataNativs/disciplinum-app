@@ -4,19 +4,19 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // Restaurado
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import 'services/gamification/gamification_service.dart'; // Restaurado
-import 'services/auth/auth_service.dart'; // Restaurado
-import 'services/iap/iap_service.dart'; // Restaurado
-import 'services/review/review_service.dart';
-import 'services/user_privacy/privacy_service.dart';
-import 'misc/system_stuff/theme_controller.dart';
-import 'app.dart';
-import 'app_router.dart';
-import 'config/app_config.dart';
-import 'services/ads/ad_service.dart'; // Import AdService
-import 'services/permissions/notifications/notification_service.dart'; // Import NotificationService
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/auth/auth_service.dart';
+import 'package:disciplinum/services/iap/iap_service.dart';
+import 'package:disciplinum/services/review/review_service.dart';
+import 'package:disciplinum/services/user_privacy/privacy_service.dart';
+import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
+import 'package:disciplinum/app.dart';
+import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/config/app_config.dart';
+import 'package:disciplinum/services/ads/ad_service.dart';
+import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

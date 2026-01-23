@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:usage_stats/usage_stats.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../notifications/notification_service.dart';
+import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/main.dart'; // Para acessar o navigatorKey
 
 class PermissionService {
   static bool _isChecking = false;
@@ -30,9 +31,7 @@ class PermissionService {
       // 1. Notificação
       await NotificationService.requestPermission();
 
-      if (!context.mounted) {
-        return;
-      }
+      if (!context.mounted) return;
 
       // 2. Status de Uso
       final prefs = await SharedPreferences.getInstance();
@@ -49,9 +48,7 @@ class PermissionService {
       }
 
       if (!usageGranted && (forceUsage || !alreadyAsked)) {
-        if (!context.mounted) {
-          return;
-        }
+        if (!context.mounted) return;
 
         final bool result = await _showUsagePermissionDialog(context);
 
@@ -64,11 +61,42 @@ class PermissionService {
     }
   }
 
+  /// Verifica se a permissão foi concedida após o retorno do usuário das configurações.
+  static Future<void> verifyPermissionAfterReturn(BuildContext context) async {
+    if (!_shouldVerifySuccess) return;
+    _shouldVerifySuccess = false;
+
+    bool granted = await hasUsagePermission();
+
+    // Tenta obter o contexto mais atualizado (global) ou usa o local se ainda montado
+    final effectiveContext = navigatorKey.currentContext ?? context;
+    if (!effectiveContext.mounted) return;
+
+    if (granted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('asked_usage_permission_onboarding', true);
+
+      if (effectiveContext.mounted) {
+        ScaffoldMessenger.of(effectiveContext).showSnackBar(
+          const SnackBar(
+            content: Text(
+                '✅ Permissão de uso detectada! O app agora pode monitorar seus hábitos.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
   /// Exibe o diálogo de permissão de uso e gerencia o fluxo.
   /// Retorna true se o usuário interagiu com o diálogo (mesmo que clicando em "Agora não").
   static Future<bool> _showUsagePermissionDialog(BuildContext context) async {
+    // Tenta usar o Contexto Global (Navigator) para evitar que o diálogo suma
+    // se o HomeScreen for unmounted/remounted durante a inicialização.
+    final dialogContext = navigatorKey.currentContext ?? context;
+
     final bool? wentToSettings = await showDialog<bool>(
-      context: context,
+      context: dialogContext,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -103,56 +131,35 @@ class PermissionService {
       ),
     );
 
-    if (!context.mounted) {
-      return false;
-    }
-
     if (wentToSettings == true) {
       _shouldVerifySuccess = true;
       await UsageStats.grantUsagePermission();
       return true;
     } else if (wentToSettings == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('⚠️ Sem essa permissão, o app não funcionará corretamente. '
-                  'Você precisará ativá-la ao usar os módulos.'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 4),
-        ),
-      );
+      // Usa o context global para o SnackBar também
+      final scaffoldContext = navigatorKey.currentContext ?? context;
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          const SnackBar(
+            content: Text(
+                '⚠️ Sem essa permissão, o app não funcionará corretamente. '
+                'Você precisará ativá-la ao usar os módulos.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
       return true;
     }
     return false;
   }
 
-  /// Método para ser chamado quando o app volta do background (resumed)
-  /// para verificar se a permissão foi concedida após o retorno das configurações.
-  static Future<void> verifyPermissionAfterReturn(BuildContext context) async {
-    if (!_shouldVerifySuccess) return;
-
-    bool granted = await hasUsagePermission();
-    if (!context.mounted) return;
-
-    if (granted) {
-      _shouldVerifySuccess = false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✔ Permissão concedida com sucesso'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-    // Não mostramos erro aqui se não foi concedida para não ser irritante,
-    // já que o diálogo inicial já avisou.
-  }
-
+  /// Atalho para verificar se tem a permissão de uso (sem pedir).
   static Future<bool> hasUsagePermission() async {
     try {
       final bool? granted = await UsageStats.checkUsagePermission();
       return granted ?? false;
-    } catch (_) {
+    } catch (e) {
       return false;
     }
   }

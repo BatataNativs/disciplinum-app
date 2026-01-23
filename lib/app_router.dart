@@ -1,26 +1,26 @@
 import 'package:disciplinum/screens/home/home_screen_guest.dart';
 import 'package:flutter/material.dart';
-import 'screens/home/home_screen.dart';
-import 'screens/settings/settings_screen.dart';
-import 'screens/profile/profile_screen.dart';
-import 'screens/schedule_screen.dart';
-import 'screens/select_apps_screen.dart';
-import 'screens/opening/welcome_screen.dart';
-import 'screens/auth_signup_login/auth_screen.dart'; // NOVA TELA UNIFICADA
-import 'screens/auth_signup_login/reset_password_screen.dart';
-import 'screens/opening/onboarding_screen.dart';
-import 'models/niche.dart';
-import 'auth_wrapper.dart';
-import 'screens/profile/my_progress_screen.dart';
+import 'package:disciplinum/screens/home/home_screen.dart';
+import 'package:disciplinum/screens/settings/settings_screen.dart';
+import 'package:disciplinum/screens/profile/profile_screen.dart';
+import 'package:disciplinum/screens/schedule_screen.dart';
+import 'package:disciplinum/screens/select_apps_screen.dart';
+import 'package:disciplinum/screens/opening/welcome_screen.dart';
+import 'package:disciplinum/screens/auth_signup_login/auth_screen.dart'; // NOVA TELA UNIFICADA
+import 'package:disciplinum/screens/auth_signup_login/reset_password_screen.dart';
+import 'package:disciplinum/screens/opening/onboarding_screen.dart';
+import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/auth_wrapper.dart';
+import 'package:disciplinum/screens/profile/my_progress_screen.dart';
 import 'package:disciplinum/misc/system_stuff/fast_page_transitions.dart';
-import 'models/niche_id.dart';
-import 'screens/modules/1_smoking/stop_smoking_screen.dart';
-import 'screens/modules/2_bingeEating/binge_eating_screen.dart';
-import 'screens/modules/3_diet/diet_settings_screen.dart';
-import 'screens/modules/4_spending/spending_screen.dart';
-import 'screens/modules/5_focus/focus_screen.dart';
-import 'screens/modules/6_adultContent/avoid_adult_content_screen.dart';
-import 'screens/modules/1_smoking/smoking_notifications_screen.dart';
+import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/screens/modules/1_smoking/stop_smoking_screen.dart';
+import 'package:disciplinum/screens/modules/2_bingeEating/binge_eating_screen.dart';
+import 'package:disciplinum/screens/modules/3_diet/diet_settings_screen.dart';
+import 'package:disciplinum/screens/modules/4_spending/spending_screen.dart';
+import 'package:disciplinum/screens/modules/5_focus/focus_screen.dart';
+import 'package:disciplinum/screens/modules/6_adultContent/avoid_adult_content_screen.dart';
+import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 
 class AppRouter {
   static const homeGuest = '/home_guest';

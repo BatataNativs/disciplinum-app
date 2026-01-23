@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/app_router.dart';
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/misc/system_stuff/installed_app_service.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
 
 class HomeScreenGuest extends StatefulWidget {
   const HomeScreenGuest({super.key});
@@ -16,7 +19,58 @@ class HomeScreenGuest extends StatefulWidget {
   State<HomeScreenGuest> createState() => _HomeScreenGuestState();
 }
 
-class _HomeScreenGuestState extends State<HomeScreenGuest> {
+class _HomeScreenGuestState extends State<HomeScreenGuest>
+    with WidgetsBindingObserver {
+  bool _permissionsChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      InstalledAppService().preload();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      PermissionService.verifyPermissionAfterReturn(context);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_permissionsChecked) return;
+      final route = ModalRoute.of(context);
+      if (route != null && route.isCurrent) {
+        _permissionsChecked = true;
+
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
+
+        await PermissionService.ensurePermissions(context);
+
+        if (mounted) {
+          bool isUsageGranted = await PermissionService.hasUsagePermission();
+          if (isUsageGranted && mounted) {
+            final gamification =
+                Provider.of<GamificationService>(context, listen: false);
+            await gamification.restoreMonitoringSession();
+          }
+        }
+      }
+    });
+  }
+
   void _mostrarDialogoLoja() {
     showDialog(
       context: context,
@@ -64,11 +118,15 @@ class _HomeScreenGuestState extends State<HomeScreenGuest> {
 
     if (!mounted) return;
 
-    Navigator.pushNamed(
-      context,
-      AppRouter.nicheDetail,
-      arguments: niche,
-    );
+    if (niche.id == NicheId.smoking) {
+      Navigator.pushNamed(context, AppRouter.stopSmoking);
+    } else {
+      Navigator.pushNamed(
+        context,
+        AppRouter.nicheDetail,
+        arguments: niche,
+      );
+    }
   }
 
   Widget _buildNicheCard(Niche niche, bool isDark, TextTheme textTheme) {
@@ -86,6 +144,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest> {
           const SizedBox(height: 8),
           Text(
             niche.name,
+            textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleSmall?.copyWith(
@@ -153,14 +212,15 @@ class _HomeScreenGuestState extends State<HomeScreenGuest> {
             ),
             Column(
               children: [
-                const SizedBox(height: 0),
                 SizedBox(height: MediaQuery.of(context).padding.top + 12),
                 Center(
                   child: Column(
                     children: [
-                      Image.asset(
-                        'assets/logo.png',
-                        height: 60,
+                      RepaintBoundary(
+                        child: Image.asset(
+                          'assets/logo.png',
+                          height: 60,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Stack(
@@ -247,16 +307,18 @@ class _HomeScreenGuestState extends State<HomeScreenGuest> {
               top: MediaQuery.of(context).padding.top + 10,
               right: 10,
               child: Consumer<ThemeController>(
-                builder: (context, theme, _) {
+                builder: (context, themeController, child) {
+                  final isDark = themeController.isDarkMode;
                   return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {
-                      final iap =
-                          Provider.of<IapService>(context, listen: false);
-                      if (theme.isDarkMode) {
-                        theme.toggleTheme();
+                      if (isDark) {
+                        themeController.toggleTheme();
                       } else {
-                        if (iap.isDarkModeUnlocked) {
-                          theme.toggleTheme();
+                        final iapService =
+                            Provider.of<IapService>(context, listen: false);
+                        if (iapService.isDarkModeUnlocked) {
+                          themeController.toggleTheme();
                         } else {
                           _mostrarDialogoLoja();
                         }
@@ -267,7 +329,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest> {
                       height: 40,
                       child: FittedBox(
                         child: Icon(
-                          theme.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                          isDark ? Icons.light_mode : Icons.dark_mode,
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),

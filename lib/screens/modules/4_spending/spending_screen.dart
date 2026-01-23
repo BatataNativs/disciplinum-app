@@ -233,6 +233,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
       notificationBody:
           'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
           'seu progresso começará novamente do zero.',
+      deactivate: true,
     );
 
     setState(() => _gamificationRunning = false);
@@ -256,6 +257,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
     String? notificationTitle,
     String? notificationBody,
     bool sendNotification = true,
+    bool deactivate = false,
   }) {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
@@ -264,6 +266,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
+      deactivate: deactivate,
     );
   }
 
@@ -488,8 +491,26 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
               const SizedBox(height: 16),
             ],
-            _buildNotificationMessageSection(context),
-            const SizedBox(height: 24),
+            if (!_gamificationRunning) ...[
+              const Icon(Icons.do_not_disturb_on_rounded,
+                  size: 80, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text("Módulo desativado",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey)),
+              const SizedBox(height: 8),
+              const Text(
+                "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+            ] else ...[
+              _buildNotificationMessageSection(context),
+              const SizedBox(height: 24),
+            ],
           ],
         );
     }

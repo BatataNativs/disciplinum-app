@@ -193,63 +193,93 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
     }
   }
 
+  Future<void> _loadingBar(
+      {String label = "loading system", int width = 20, int speed = 50}) async {
+    await _typeText(">> $label [", speed: 5);
+    int startIndex = _terminalText.length;
+    setState(() {
+      _terminalText += "." * width + "]";
+    });
+
+    for (int i = 0; i < width; i++) {
+      if (!mounted) return;
+      await Future.delayed(Duration(milliseconds: speed));
+      setState(() {
+        List<String> chars = _terminalText.split('');
+        chars[startIndex + i] = "|";
+        _terminalText = chars.join('');
+      });
+      HapticFeedback.lightImpact();
+    }
+    await _typeText(" 100%\n", speed: 5);
+  }
+
   Future<void> _runTerminalSequence() async {
     // Parte 1: Conexão
-    await _typeText(">> connection lost; error #mip test \n", speed: 5);
-    await _typeText(">> reconnecting user account...\n", speed: 5);
-    await _typeText(">> connection expired\n", speed: 5);
-    await _typeText(">> trying random connection...\n", speed: 5);
+    await _loadingBar(label: "loading system", width: 25, speed: 30);
+    await _typeText(">> language detected: PT-BR | Translating ...\n",
+        speed: 5);
+    await _typeText(">> 모 Falha na conexão | reconectando usuário...\n",
+        speed: 5);
+    await _typeText(">> \n", speed: 5);
+    await _typeText(
+        ">> 모 redes encontradas:\n  - luciano_2.4G\n  - luciano_5G\n  - army-663725bH2t\n",
+        speed: 5);
+    await _typeText(
+        ">> 모 rede mais estável: army-663725bH2t | conectando (autoconnect)...\n",
+        speed: 5);
+    await _typeText(">> 🖧 conectado com sucesso!\n", speed: 5);
     await _spinnerEffect(loops: 4);
 
     // Parte 2: Conta encontrada
-    await _typeText(">> new network found! as user: Army-663725bH\n", speed: 5);
-    await _typeText(">> reading OTA messages....\n", speed: 5);
-    await _spinnerEffect(loops: 2);
-    await _typeText(">> found: textFile 11082025 military chat\n", speed: 5);
-    await _typeText(
-        ">> ### sys dump decrypt: using 'TextFileReader.pitLock' .......\n",
+    await _typeText("\n** sistema militar de mensagens criptografadas **\n",
         speed: 5);
-    await _typeText(">> wait sys token ..........\n", speed: 5);
-    await _typeText(">> (dense21.dll) auto load credentials...\n", speed: 5);
+    await _typeText(">> somente pessoal autorizado.\n", speed: 5);
+    await _typeText(
+        ">> Atenção!\nVocê está acessando área confidencial militar de comunicação.\nNecessário credencial estratégica.\n\n",
+        speed: 5);
+    // Parte 3: Acesso
+    await _typeText(">> apresente sua credencial nível 'Aura3':\n\n", speed: 5);
+    await _typeText(">> credential from file: autoload_inject_dense21.ddl\n",
+        speed: 5);
+    await _typeText(">> instalando: autoload_inject_dense21.ddl /s\n",
+        speed: 5);
+    await _spinnerEffect(loops: 2);
+    await _typeText(">> credencial instalada com sucesso!\n", speed: 5);
+    await _typeText(">> acesso permitido .:.\n\n", speed: 5);
+    // Parte 4: Mensagem
+    await _typeText(">> checando mensagens ...\n", speed: 5);
+    await _spinnerEffect(loops: 2);
+    await _typeText(
+        ">> 1 mensagem não lida:\n LRO_OCORRENCIA_11082025\n TextExtractor.copy) \n",
+        speed: 5);
+    await _typeText(">> TextExtractor.copy /decrypt\n", speed: 5);
+
     await _spinnerEffect(loops: 4);
 
     await Future.delayed(const Duration(seconds: 2));
-
-    // Parte 3: Acesso
-    await _typeText(">> access granted .:.\n\n", speed: 5);
-    await _typeText(">> message classification: top secret\n\n", speed: 5);
-    await _typeText("** Military encrypted messages system **\n", speed: 5);
-    await _typeText(">> set language: pt-br\n", speed: 5);
-    await _typeText(
-        ">> Atenção!\nVocê está acessando área confidencial militar de comunicação. Necessário credencial estratégica.\n\n",
-        speed: 5);
-
-    await _typeText(">> apresente sua credencial nível 'Aura3':\n\n", speed: 5);
-    await _spinnerEffect(loops: 2);
-    await _typeText(">> password_Autoload/anonymousGuest.:dense21.dll\n",
-        speed: 5);
-
-    await _typeText("senha: ", speed: 30);
+    await _typeText("modo somente leitura.\n\ndigite a senha: ", speed: 30);
     await _typeText("**********\n\n", speed: 60);
 
-    await _typeText(">> checando credenciais............\n", speed: 5);
+    await _loadingBar(label: "checando credenciais", width: 20, speed: 60);
     await _spinnerEffect(loops: 5);
-    await _typeText(">> acesso permitido! <...>\n\n", speed: 5);
+    await _typeText(">> acesso permitido.\nBem-vindo, senhor! <...>\n\n",
+        speed: 5);
 
     await _typeText(">> transcrição de mensagem autorizada:\n\n", speed: 5);
 
-    // Parte 4: A História
+    // Parte 5: A História
     String messageBody = """
-// Boa tarde, Cel Machado.
-Informo que a missão de exploração da caverna da Colina Alta, do interior do estado, precisou ser interrompida, pois quatro dos nossos soldados morreram subitamente, causas ainda não determinadas pelos legistas. 
+// Boa tarde, Cel. Machado.
+Informo que a missão de exploração da caverna da Colina Alta, do interior do estado, precisou ser interrompida, pois quatro dos nossos soldados morreram subitamente. Causas ainda não determinadas pelos legistas. 
 
-Eles, em depoimento colhido pelo Oficial-de-Dia na tarde do dia 11 de agosto de 2025, às 1809Z, horas após retornarem do nível baixo da gruta, relataram ter segurado com as mãos, sem luvas, uma criatura de cerca de 1,20m - estatura semelhante a de uma criança, mas com braços e dedos bem longos, e bastante força física - e cabeça desproporcionalmente grande. 
+Eles, em depoimento colhido pelo Oficial-de-Dia, às 1809Z da tarde de 11 de agosto de 2025, horas após retornarem do nível baixo da gruta, relataram ter entrado em luta corporal com uma criatura humanoide de cerca de 1,20m - estatura semelhante a de uma criança, mas com braços e dedos longos, cabeça desproporcionalmente grande e bastante força física. 
 
-A criatura emitiu um tipo de zumbido, como uma abelha, causando-lhes tontura e certa confusão mental em três deles. No dia seguinte, à noite, os quatro vieram a óbito. E, segundo familiares próximos, eles chegaram a gravar fitas de áudio que podem conter detalhes sobre a criatura e sobre o caso. Coletaremos o material hoje à noite, para que não precisemos "conversar" com a mídia sobre não tocar no assunto. Designaremos os agentes Número #02 e Número #37, em veículo descaracterizado da divisão de abordagem de testemunhas, e em trajes visualmente intimidatórios (terno e chapéu pretos), respeitando as normas da publicação de linguagem corporal e sugestividade. Aguardo parecer do senhor para demais diligências necessárias. 
+A criatura emitiu um tipo de zumbido, como uma abelha, que causou tontura e certa confusão mental em três deles. Estes não sabiam nem dizer qual era a equipe de serviço ou a data do dia. 2 dias depois, à noite, os quatro vieram a óbito. E, segundo familiares próximos, um deles (o soldado Wallace) chegou a gravar uma fita de áudio que pode conter detalhes sobre a criatura e sobre o caso. Coletaremos o material hoje à noite, para que não precisemos "conversar" com a mídia local para não tocarem no assunto. Mas, caso necessário, iniciaremos protocolo de desinformação e descredibilidade via chacota sobre os familiares e terceiros envolvidos. Designaremos os agentes Número #02 e Número #37, em veículo descaracterizado da divisão de abordagem de testemunhas, e em trajes visualmente intimidatórios (terno e chapéu pretos), respeitando as normas da publicação de linguagem corporal e sugestividade. Aguardo parecer do senhor para demais diligências necessárias. 
 
 Respeitosamente, 
 Maj P. Herivelto
-Chefe da Seção Regional de Criptozoologia (CSRC-BR)
+Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
 """;
 
     await _typeText(messageBody, speed: 2);
