@@ -8,6 +8,8 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/services/1_smoking/smoking_service.dart';
 
 class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
@@ -135,6 +137,17 @@ class AuthService extends ChangeNotifier {
           hour: t.hour,
           minute: t.minute,
         );
+      }
+
+      // Migrar dados de cigarro (NOVO)
+      final smokingData = guestData['smoking'];
+      if (smokingData != null) {
+        try {
+          final settings = SmokingSettingsModel.fromJson(smokingData);
+          await SmokingService().saveSettings(settings);
+        } catch (e) {
+          debugPrint('Erro ao migrar dados de cigarro: $e');
+        }
       }
 
       await PreferencesService.clearAll();

@@ -9,8 +9,8 @@ import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/models/user_module_status.dart';
-import '../cloud/cloud_sync_service.dart';
-import '../iap/iap_service.dart';
+import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/niche.dart';
 

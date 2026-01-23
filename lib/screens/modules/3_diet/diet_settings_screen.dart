@@ -238,6 +238,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       notificationBody:
           'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
           'seu progresso começará novamente do zero.',
+      deactivate: true,
     );
 
     setState(() => _gamificationRunning = false);
@@ -261,6 +262,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     String? notificationTitle,
     String? notificationBody,
     bool sendNotification = true,
+    bool deactivate = false,
   }) {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
@@ -269,6 +271,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
+      deactivate: deactivate,
     );
   }
 
@@ -444,7 +447,20 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               ),
               const SizedBox(height: 16),
             ] else
-              const SizedBox(height: 100),
+              const Icon(Icons.do_not_disturb_on_rounded,
+                  size: 80, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text("Módulo desativado",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
+            const SizedBox(height: 8),
+            const Text(
+              "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         );
       default:
@@ -624,7 +640,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Texto da notificação',
+                'Texto da notificação do módulo',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

@@ -577,7 +577,20 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               ),
               const SizedBox(height: 16),
             ] else
-              const SizedBox(height: 100),
+              const Icon(Icons.do_not_disturb_on_rounded,
+                  size: 80, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text("Módulo desativado",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
+            const SizedBox(height: 8),
+            const Text(
+              "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         );
       default:

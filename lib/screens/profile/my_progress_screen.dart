@@ -81,7 +81,7 @@ class MyProgressScreen extends StatelessWidget {
                       crossAxisCount: 3,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.65,
                     ),
                     itemCount: niches.length,
                     itemBuilder: (context, index) {
@@ -120,7 +120,7 @@ class MyProgressScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -137,7 +137,7 @@ class MyProgressScreen extends StatelessWidget {
           children: [
             // Ícone do módulo
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isDark
                     ? Colors.grey[800]!.withValues(alpha: 0.5)
@@ -151,23 +151,29 @@ class MyProgressScreen extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             // Nome do módulo (truncado)
-            Text(
-              niche.name,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black87,
+            SizedBox(
+              height: 32,
+              child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  niche.name,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             // Dias ou status
             Text(
-              isActive ? '$dias dias' : 'Pausado',
+              isActive ? '$dias dias' : 'Desativado',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -176,15 +182,18 @@ class MyProgressScreen extends StatelessWidget {
                     : Colors.grey,
               ),
             ),
-            // Emoji de medalha
-            if (isActive && dias >= 3)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  _getMedalEmoji(dias),
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
+            // Espaço reservado para Medalha (para manter alinhamento)
+            SizedBox(
+              height: 24,
+              child: (isActive && dias >= 3)
+                  ? Center(
+                      child: Text(
+                        _getMedalEmoji(dias),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    )
+                  : null,
+            ),
           ],
         ),
       ),

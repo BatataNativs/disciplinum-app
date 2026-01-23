@@ -4,10 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 
 class PreferencesService {
   static const String _appsKey = 'guest_user_niche_apps';
   static const String _timesKey = 'guest_user_niche_times';
+  static const String _smokingKey = 'guest_smoking_settings';
   static const String _guestFlagKey = 'guest_mode_enabled';
 
   static Future<SharedPreferences> _prefs() async =>
@@ -230,6 +232,36 @@ class PreferencesService {
   }
 
   // ============================================================
+  // ======================  SMOKING  ===========================
+  // ============================================================
+
+  static Future<void> saveSmokingSettings(SmokingSettingsModel settings) async {
+    final prefs = await _prefs();
+    try {
+      await prefs.setString(_smokingKey, jsonEncode(settings.toJson()));
+    } catch (e) {
+      debugPrint('❌ Erro ao salvar configurações de cigarro locais: $e');
+    }
+  }
+
+  static Future<SmokingSettingsModel?> getSmokingSettings() async {
+    final prefs = await _prefs();
+    try {
+      final jsonString = prefs.getString(_smokingKey);
+      if (jsonString == null) return null;
+      return SmokingSettingsModel.fromJson(jsonDecode(jsonString));
+    } catch (e) {
+      debugPrint('❌ Erro ao carregar configurações de cigarro locais: $e');
+      return null;
+    }
+  }
+
+  static Future<void> removeSmokingSettings() async {
+    final prefs = await _prefs();
+    await prefs.remove(_smokingKey);
+  }
+
+  // ============================================================
   // ================== EXPORT / CLEAR ===========================
   // ============================================================
 
@@ -239,14 +271,16 @@ class PreferencesService {
     try {
       final apps = prefs.getString(_appsKey);
       final times = prefs.getString(_timesKey);
+      final smoking = prefs.getString(_smokingKey);
 
       return {
         'apps': apps != null ? jsonDecode(apps) : [],
         'times': times != null ? jsonDecode(times) : [],
+        'smoking': smoking != null ? jsonDecode(smoking) : null,
       };
     } catch (e) {
       debugPrint('❌ Erro ao exportar dados locais: $e');
-      return {'apps': [], 'times': []};
+      return {'apps': [], 'times': [], 'smoking': null};
     }
   }
 
@@ -254,6 +288,7 @@ class PreferencesService {
     final prefs = await _prefs();
     await prefs.remove(_appsKey);
     await prefs.remove(_timesKey);
+    await prefs.remove(_smokingKey);
     await prefs.remove(_guestFlagKey);
   }
 }

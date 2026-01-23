@@ -36,10 +36,24 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   int _selectedIndex = 0;
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
+  final TextEditingController _priceController =
+      TextEditingController(text: '0,00');
+  final TextEditingController _packsController =
+      TextEditingController(text: '0');
+  DateTime _selectedDate = DateTime.now();
+  String _selectedCurrency = 'R\$';
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    _packsController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -54,10 +68,48 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       });
 
       if (settings != null) {
+        // Pre-fill controllers
+        _priceController.text =
+            settings!.packPrice.toStringAsFixed(2).replaceAll('.', ',');
+        _packsController.text = settings!.packsPerDay.toString();
+        _selectedDate = settings!.quitDate;
+        _selectedCurrency = settings!.currency;
+
         // Sincroniza e restaura o ciclo se já estiver ativo
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
       }
     }
+  }
+
+  void _formatCurrencyInput(String value) {
+    if (value.isEmpty) {
+      _priceController.value = TextEditingValue(
+        text: '0,00',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      return;
+    }
+
+    String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (numbers.isEmpty) {
+      _priceController.value = TextEditingValue(
+        text: '0,00',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      return;
+    }
+
+    double val = double.parse(numbers) / 100;
+    String formatted =
+        val.toStringAsFixed(2).replaceAll('.', ',').replaceAllMapped(
+              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+              (Match m) => '${m[1]}.',
+            );
+
+    _priceController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 
   Future<void> _syncCheckInWithGamification(
@@ -343,270 +395,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     );
   }
 
-  void _showSetupDialog() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final priceController = TextEditingController();
-    final packsController = TextEditingController();
-
-    if (settings != null) {
-      // Formatar o preço inicial com 2 casas
-      priceController.text =
-          settings!.packPrice.toStringAsFixed(2).replaceAll('.', ',');
-      packsController.text = settings!.packsPerDay.toString();
-    }
-
-    DateTime selectedDate = settings?.quitDate ?? DateTime.now();
-    String selectedCurrency = settings?.currency ?? 'R\$';
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) {
-          return AlertDialog(
-            scrollable: true,
-            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-            ),
-            title: Text(
-              "Adicione esses dados para começar!",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: isDark ? Colors.white : Colors.indigo[900],
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Linha 1: Preço (Ocupa tudo)
-                TextField(
-                  controller: priceController,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                  decoration: InputDecoration(
-                    labelText: "Preço médio do maço:",
-                    prefixIcon: Container(
-                      width: 80,
-                      alignment: Alignment.centerLeft,
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedCurrency,
-                          isDense: true,
-                          icon: const Icon(Icons.arrow_drop_down, size: 18),
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          items: [
-                            {'val': 'R\$', 'label': 'R\$ (Real)'},
-                            {'val': 'US\$', 'label': 'US\$ (Dólar)'},
-                            {'val': '€', 'label': '€ (Euro)'},
-                            {'val': '\$', 'label': '\$ (Peso)'},
-                          ]
-                              .map((c) => DropdownMenuItem(
-                                    value: c['val'] as String,
-                                    child: Text(c['label'] as String),
-                                  ))
-                              .toList(),
-                          selectedItemBuilder: (context) {
-                            return [
-                              'R\$',
-                              'US\$',
-                              '€',
-                              '\$',
-                            ].map((symbol) {
-                              return Center(
-                                child: Text(
-                                  symbol,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        isDark ? Colors.white : Colors.indigo,
-                                  ),
-                                ),
-                              );
-                            }).toList();
-                          },
-                          onChanged: (v) {
-                            if (v != null) {
-                              setStateDialog(() => selectedCurrency = v);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    labelStyle: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.indigo),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    String formatted = _formatCurrency(value, selectedCurrency);
-                    if (priceController.text != formatted) {
-                      priceController.value = TextEditingValue(
-                        text: formatted,
-                        selection:
-                            TextSelection.collapsed(offset: formatted.length),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Linha 2: Maços/dia e Data (Lado a lado)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Coluna 1: Maços
-                    Expanded(
-                      flex: 4,
-                      child: TextField(
-                        controller: packsController,
-                        style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black),
-                        decoration: InputDecoration(
-                          labelText: "Maços por dia:",
-                          labelStyle: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.indigo),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // Coluna 2: Data
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Data que parou de fumar\n(hoje ou anterior):",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.white60 : Colors.indigo,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          SizedBox(
-                            width: double.infinity,
-                            height:
-                                48, // Altura para alinhar visualmente com o TextField
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
-                                side: BorderSide(
-                                  color: isDark
-                                      ? Colors.white24
-                                      : Colors
-                                          .grey, // Cor mais suave como borda de input
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      4), // Borda padrão MDL
-                                ),
-                              ),
-                              onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: selectedDate,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime.now(),
-                                  locale: const Locale('pt', 'BR'),
-                                );
-                                if (picked != null) {
-                                  setStateDialog(() {
-                                    selectedDate = picked;
-                                  });
-                                }
-                              },
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color:
-                                          isDark ? Colors.white : Colors.black,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.calendar_today,
-                                    size: 16,
-                                    color:
-                                        isDark ? Colors.white54 : Colors.indigo,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-            actionsPadding:
-                const EdgeInsets.only(bottom: 20, right: 20, left: 20),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancelar",
-                  style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black54),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo[700],
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 4,
-                ),
-                onPressed: () {
-                  if (priceController.text.isNotEmpty &&
-                      packsController.text.isNotEmpty) {
-                    // Remove R$, US$, etc and convert comma
-                    String cleanPrice = priceController.text
-                        .replaceAll(RegExp(r'[^\d,]'), '')
-                        .replaceAll(',', '.');
-
-                    _saveSettings(
-                      double.parse(cleanPrice),
-                      int.parse(packsController.text),
-                      selectedDate,
-                      selectedCurrency,
-                    );
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text("Salvar"),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // Helper para formatar moeda
-  String _formatCurrency(String value, String currencySymbol) {
-    String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
-    if (numbers.isEmpty) return '0,00';
-
-    double val = double.parse(numbers) / 100;
-    return val.toStringAsFixed(2).replaceAll('.', ',').replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -721,7 +509,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Info de Consumo', 'Ativar'];
+    final List<String> options = ['Como funciona', 'Info de Consumo', 'Ativar'];
 
     return Container(
       height: 50,
@@ -786,16 +574,210 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     switch (_selectedIndex) {
       case 0:
         return Column(
-          key: const ValueKey('content_info'),
-          children: const [
-            NicheInfoSection(
+          key: const ValueKey('content_how_it_works'),
+          children: [
+            const NicheInfoSection(
               hintText:
-                  "No botão abaixo, antes de ativar o módulo, informe o preço médio do maço que você costuma (ou costumava) pagar, o número de maços que você costuma (ou costumava) fumar por dia e a data de parada (hoje ou anterior).\n\nCaso ainda esteja fumando, essa é uma boa oportunidade para uma tentativa de parar!\n\nFaça isso e veja, entre outras coisas, o quanto você pode economizar ao largar esse hábito. Força!",
+                  "Este módulo ajuda você a parar de fumar, monitorando seus dados e economia. \n\nInforme o preço médio do maço e quantos cigarros fuma por dia para calcular sua economia de dinheiro e melhorias na sua saúde.",
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
+            _buildNotificationMessageSection(context),
           ],
         );
       case 1:
+        return Column(
+          key: const ValueKey('content_consumption_info'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Últimas informações de consumo:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white10
+                      : Colors.grey[300]!,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Price Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Preço do maço:"),
+                      SizedBox(
+                        width: 160,
+                        height: 40,
+                        child: TextField(
+                          controller: _priceController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.black),
+                          decoration: InputDecoration(
+                            prefixIcon: Container(
+                              margin: const EdgeInsets.only(left: 4, right: 4),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedCurrency,
+                                  isDense: true,
+                                  icon: const Icon(Icons.arrow_drop_down,
+                                      size: 16),
+                                  alignment: Alignment.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _selectedCurrency = newValue;
+                                      });
+                                    }
+                                  },
+                                  items: ['R\$', 'US\$', '€', '\$']
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                            prefixIconConstraints: const BoxConstraints(
+                                minWidth: 50, maxWidth: 80),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade400),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade400),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                  color: Colors.indigo, width: 2),
+                            ),
+                          ),
+                          onChanged: (val) {
+                            _formatCurrencyInput(val);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  // Packs Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Maços por dia:"),
+                      SizedBox(
+                        width: 80,
+                        height: 40,
+                        child: TextField(
+                          controller: _packsController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.black),
+                          onChanged: (val) {
+                            if (val.isEmpty) {
+                              _packsController.value = TextEditingValue(
+                                text: '0',
+                                selection: TextSelection.collapsed(offset: 1),
+                              );
+                            }
+                          },
+                          decoration: InputDecoration(
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade400),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade400),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                  color: Colors.indigo, width: 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  // Date Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Data de parada:"),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
+                            locale: const Locale('pt', 'BR'),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _selectedDate = picked;
+                            });
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade400),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        );
+      case 2:
         return Column(
           key: const ValueKey('content_activate'),
           children: [
@@ -879,14 +861,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               const Icon(Icons.do_not_disturb_on_rounded,
                   size: 80, color: Colors.grey),
               const SizedBox(height: 16),
-              const Text("Módulo Inativo",
+              const Text("Módulo desativado",
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey)),
               const SizedBox(height: 8),
               const Text(
-                "Ative o módulo para começar a monitorar seu progresso e economia.",
+                "Ative o módulo para começar a usá-lo e para criar seu progresso.",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
@@ -901,20 +883,34 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   Widget _buildTabActions() {
     switch (_selectedIndex) {
       case 0:
+        return const SizedBox(height: 55, key: ValueKey('action_none'));
+      case 1:
         return SizedBox(
-          key: const ValueKey('action_setup'),
+          key: const ValueKey('action_save_settings'),
           width: double.infinity,
           height: 55,
           child: GlowingButton(
-            text: settings == null
-                ? 'Configurar metas e datas'
-                : 'Editar informações de consumo',
+            text: 'Salvar',
             color: const Color.fromARGB(255, 57, 92, 208),
-            onPressed: _showSetupDialog,
+            onPressed: () {
+              if (_priceController.text.isNotEmpty &&
+                  _packsController.text.isNotEmpty) {
+                String cleanPrice = _priceController.text
+                    .replaceAll(RegExp(r'[^\d,]'), '')
+                    .replaceAll(',', '.');
+
+                _saveSettings(
+                  double.tryParse(cleanPrice) ?? 0.0,
+                  int.tryParse(_packsController.text) ?? 0,
+                  _selectedDate,
+                  _selectedCurrency,
+                );
+              }
+            },
             borderRadius: 18,
           ),
         );
-      case 1:
+      case 2:
         return Column(
           key: const ValueKey('action_activate'),
           children: [
@@ -976,7 +972,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Texto da notificação',
+                'Texto da notificação do módulo',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

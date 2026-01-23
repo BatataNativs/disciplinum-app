@@ -508,7 +508,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: isDark
                                     ? const Color(0xFF94A3B8)
-                                    : const Color.fromARGB(255, 255, 255, 255),
+                                    : const Color.fromARGB(255, 44, 45, 47),
                               ),
                             ),
                           ),
@@ -527,7 +527,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: isDark
                                     ? Colors.grey[400]
-                                    : const Color.fromARGB(255, 255, 255, 255),
+                                    : const Color.fromARGB(255, 44, 45, 47),
                               ),
                             ),
                           ),
@@ -569,12 +569,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     .withValues(alpha: 0.1),
                             foregroundColor: isDark
                                 ? const Color(0xFF6366F1)
-                                : const Color.fromARGB(255, 255, 255, 255),
+                                : const Color(0xFF4F46E5),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: BorderSide(
                               color: isDark
                                   ? const Color(0xFF6366F1)
-                                  : const Color.fromARGB(255, 255, 255, 255),
+                                  : const Color(0xFF4F46E5),
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(

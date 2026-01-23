@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
 
 class SmokingService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -9,7 +10,9 @@ class SmokingService {
   Future<SmokingSettingsModel?> getSettings() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return null;
+      if (userId == null) {
+        return await PreferencesService.getSmokingSettings();
+      }
 
       final response = await _supabase
           .from('user_module_settings')
@@ -30,7 +33,10 @@ class SmokingService {
   // Salvar ou Atualizar configurações
   Future<void> saveSettings(SmokingSettingsModel settings) async {
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception("Usuário não logado");
+    if (userId == null) {
+      await PreferencesService.saveSmokingSettings(settings);
+      return;
+    }
 
     // Prepara o JSON para o banco
     final data = {
