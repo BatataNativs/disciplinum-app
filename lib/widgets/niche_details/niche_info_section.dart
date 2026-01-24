@@ -41,7 +41,7 @@ class NicheInfoSection extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             hintText,
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.start,
             style: TextStyle(
               fontSize: 12,
               height: 1.5,
