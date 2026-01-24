@@ -784,7 +784,7 @@ class _FocusScreenState extends State<FocusScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Texto da notificação',
+                'Texto da notificação do módulo',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

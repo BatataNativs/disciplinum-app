@@ -656,7 +656,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Texto da notificação',
+                'Texto da notificação do módulo',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

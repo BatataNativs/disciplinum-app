@@ -578,7 +578,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           children: [
             const NicheInfoSection(
               hintText:
-                  "Este módulo ajuda você a parar de fumar, monitorando seus dados e economia. \n\nInforme o preço médio do maço e quantos cigarros fuma por dia para calcular sua economia de dinheiro e melhorias na sua saúde.",
+                  "Este módulo ajuda você a parar de fumar. Esse hábito nocivo pode prejudicar sua saúde, suas finanças, sua qualidade de vida e sua família. \n\nNa próxima tela, informe o preço médio do maço e quantos maços fuma por dia para calcular sua economia de dinheiro e melhorias na sua saúde\n\n(caso seja menos de 1 maço, informe, aproximadamente, em decimal. Ex: 0,5 maços).",
             ),
             const SizedBox(height: 24),
             _buildNotificationMessageSection(context),
