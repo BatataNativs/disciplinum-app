@@ -15,11 +15,10 @@ import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
-import 'package:disciplinum/widgets/profile/lojinha.dart';
-import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
+import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   const StopSmokingScreen({super.key});
@@ -581,7 +580,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                   "Este módulo ajuda você a parar de fumar. Esse hábito nocivo pode prejudicar sua saúde, suas finanças, sua qualidade de vida e sua família. \n\nNa próxima tela, informe o preço médio do maço e quantos maços fuma por dia para calcular sua economia de dinheiro e melhorias na sua saúde\n\n(caso seja menos de 1 maço, informe, aproximadamente, em decimal. Ex: 0,5 maços).",
             ),
             const SizedBox(height: 24),
-            _buildNotificationMessageSection(context),
           ],
         );
       case 1:
@@ -822,41 +820,86 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const MyProgressSmoking()),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF395CC8), // Azul escut padrão do app
-                    borderRadius: BorderRadius.circular(21),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF395CC8).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MyProgressSmoking()),
+                        );
+                      },
+                      child: Container(
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF395CC8),
+                          borderRadius: BorderRadius.circular(21),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF395CC8)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Meu progresso',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: const Text(
-                    'Ver meu progresso',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  const SmokingNotificationsScreen()),
+                        );
+                      },
+                      child: Container(
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(21),
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white24
+                                    : Colors.grey[400]!,
+                          ),
+                        ),
+                        child: Text(
+                          'Notificações',
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _buildNotificationMessageSection(context),
             ] else ...[
               const Icon(Icons.do_not_disturb_on_rounded,
                   size: 80, color: Colors.grey),
@@ -949,138 +992,5 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  Widget _buildNotificationMessageSection(BuildContext context) {
-    final iap = Provider.of<IapService>(context);
-    final gamification = Provider.of<GamificationService>(context);
-    final currentMsg = getModuleMessage(_niche.id);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF171717), // Anthracite
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white12,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Texto da notificação do módulo',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-              if (!iap.isCustomNotifUnlocked)
-                const Icon(Icons.lock_outline, size: 16, color: Colors.white),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            currentMsg,
-            style: const TextStyle(
-              fontSize: 15,
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                if (iap.isCustomNotifUnlocked) {
-                  _openEditMessageDialog(context, gamification);
-                } else {
-                  _showPremiumFeatureDialog();
-                }
-              },
-              label: Text(
-                iap.isCustomNotifUnlocked
-                    ? 'Editar Mensagem'
-                    : 'Personalizar 🔓',
-                style: const TextStyle(color: Colors.white),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.white),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPremiumFeatureDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Recurso pago 💰'),
-        content: const Text(
-          'A personalização de mensagens é um recurso pago. '
-          '\nDeseja conhecer nossa lojinha?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Agora não'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              showDialog(
-                context: context,
-                builder: (_) => const Lojinha(),
-              );
-            },
-            child: const Text('Ir para Lojinha'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openEditMessageDialog(
-      BuildContext context, GamificationService gamification) {
-    final controller = TextEditingController(text: getModuleMessage(_niche.id));
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Mensagem da Notificação'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Digite a mensagem...',
-          ),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await gamification.setCustomMessage(_niche.id, controller.text);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
   }
 }
