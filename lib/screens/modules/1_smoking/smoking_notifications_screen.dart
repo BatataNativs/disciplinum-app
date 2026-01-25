@@ -7,6 +7,7 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import '../../../screens/schedule_screen.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'frases_motivacionais.dart';
+import 'package:disciplinum/widgets/notifications/notification_message_editor.dart';
 
 class SmokingNotificationsScreen extends StatefulWidget {
   const SmokingNotificationsScreen({super.key});
@@ -75,6 +76,8 @@ class _SmokingNotificationsScreenState
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
+                    NotificationMessageEditor(nicheId: _niche.id),
+                    const SizedBox(height: 24),
                     _buildSettingsCard(
                       title: 'Check-in Diário',
                       description: Text.rich(
