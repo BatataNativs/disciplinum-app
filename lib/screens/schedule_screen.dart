@@ -174,7 +174,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Remover'),
+                child: const Text(
+                  'Remover',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -264,6 +267,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
+                        // Alterei para garantir contraste, mas mantendo seu estilo
                         color: isDark ? Colors.grey[900] : Colors.black,
                         child: ListTile(
                           onTap: () => _pickTime(index),
@@ -272,11 +276,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
+                              fontSize: 18, // Aumentei um pouco a fonte
                             ),
                           ),
+                          // --- AQUI ESTÁ A MUDANÇA ---
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.white),
+                            tooltip: 'Excluir horário',
+                            // Ícone de lixeira mais evidente e VERMELHO
+                            icon: const Icon(
+                              Icons.delete_forever_rounded,
+                              color: Colors.redAccent,
+                              size: 28,
+                            ),
                             onPressed: () => _removeTimeWithConfirm(index),
                           ),
                         ),

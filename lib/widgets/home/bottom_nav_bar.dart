@@ -1,8 +1,9 @@
+import 'dart:ui'; // Necessário para o ImageFilter
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart'; // Import necessário para o AuthService
+import 'package:provider/provider.dart';
 import 'package:disciplinum/app_router.dart';
-import 'package:disciplinum/services/auth/auth_service.dart'; // Import do seu serviço de auth
+import 'package:disciplinum/services/auth/auth_service.dart';
 
 class DisciplinumBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -16,11 +17,6 @@ class DisciplinumBottomNavBar extends StatelessWidget {
     HapticFeedback.lightImpact();
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
-    // Lógica padronizada:
-    // 0 = Home
-    // 1 = Profile (com verificação de Auth)
-    // 2 = Settings
-
     if (index == 0 && currentRoute != AppRouter.home) {
       Navigator.pushNamedAndRemoveUntil(
         context,
@@ -28,28 +24,33 @@ class DisciplinumBottomNavBar extends StatelessWidget {
         (route) => route.isFirst,
       );
     } else if (index == 1) {
-      // --- ALTERAÇÃO AQUI: Verificação de Login ---
-
-      // Se já estamos na tela de perfil, não faz nada
       if (currentRoute == AppRouter.profile) return;
-
       final authService = Provider.of<AuthService>(context, listen: false);
-
       if (authService.isAuthenticated) {
-        // Usuário logado -> Vai para o Perfil
         Navigator.pushNamedAndRemoveUntil(
           context,
           AppRouter.profile,
           (route) => route.isFirst,
         );
       } else {
-        // Usuário NÃO logado -> Vai para Login/Criar Conta
-        Navigator.pushNamed(
-          context,
-          AppRouter.auth, // Redireciona para a nova tela unificada
-        );
+        Navigator.pushNamed(context, AppRouter.auth);
       }
-    } else if (index == 2 && currentRoute != AppRouter.settings) {
+    } else if (index == 2) {
+      // --- NOVO: Rota da Lojinha ---
+      // Verifique se a rota 'AppRouter.shop' existe ou use o nome string direto por enquanto
+      // Exemplo: Navigator.pushNamed(context, '/lojinha');
+      if (currentRoute != '/lojinha') {
+        // Ajuste para a constante do seu AppRouter se tiver
+        // Como ainda vamos criar a tela, estou assumindo que você criará a rota '/lojinha' ou similar
+        // Se quiser navegar direto sem rota nomeada enquanto não cria:
+        // Navigator.push(context, MaterialPageRoute(builder: (_) => const LojinhaScreen()));
+
+        // Mas seguindo seu padrão de rotas nomeadas:
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRouter.shop, (route) => route.isFirst);
+      }
+    } else if (index == 3 && currentRoute != AppRouter.settings) {
+      // Configurações agora é índice 3
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRouter.settings,
@@ -62,66 +63,91 @@ class DisciplinumBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final bgColor = isDark ? Colors.white : const Color(0xFF171717);
-    final activeCircleColor = isDark ? Colors.black : Colors.white;
-    final activeIconColor = isDark ? Colors.white : Colors.black;
-    final inactiveIconColor = isDark
-        ? const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.4)
+    // Cores ajustadas para Glassmorphism
+    final glassColor = isDark
+        ? const Color(0xFF171717).withValues(alpha: 0.85)
+        : const Color.fromARGB(255, 222, 222, 222).withValues(alpha: 0.85);
+
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.7)
+        : Colors.black.withValues(alpha: 0.7);
+
+    final activeIconColor = isDark
+        ? const Color.fromARGB(255, 0, 0, 0)
         : const Color.fromARGB(255, 255, 255, 255);
+    final inactiveIconColor = isDark ? Colors.white54 : Colors.black45;
+
+    final activeIndicatorColor = isDark
+        ? Colors.white.withValues(alpha: 0.9)
+        : const Color.fromARGB(255, 36, 36, 36).withValues(alpha: 0.9);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12, left: 64, right: 64),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? const Color.fromARGB(255, 245, 245, 245).withValues(alpha: 0.7) : const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.8),
-              blurRadius: 20,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: _buildIconItem(
-                context,
-                index: 0,
-                icon: Icons.home_rounded,
-                isActive: currentIndex == 0,
-                activeCircleColor: activeCircleColor,
-                activeIconColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
+      padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: glassColor,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: borderColor,
+                width: 1.0,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            Expanded(
-              child: _buildIconItem(
-                context,
-                index: 1,
-                icon: Icons.person_rounded,
-                isActive: currentIndex == 1,
-                activeCircleColor: activeCircleColor,
-                activeIconColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildIconItem(
+                  context,
+                  index: 0,
+                  icon: Icons.home_rounded,
+                  isActive: currentIndex == 0,
+                  activeIndicatorColor: activeIndicatorColor,
+                  activeIconColor: activeIconColor,
+                  inactiveIconColor: inactiveIconColor,
+                ),
+                _buildIconItem(
+                  context,
+                  index: 1,
+                  icon: Icons.person_rounded,
+                  isActive: currentIndex == 1,
+                  activeIndicatorColor: activeIndicatorColor,
+                  activeIconColor: activeIconColor,
+                  inactiveIconColor: inactiveIconColor,
+                ),
+                // --- NOVO ÍCONE: LOJINHA ---
+                _buildIconItem(
+                  context,
+                  index: 2,
+                  icon: Icons.shopping_bag_rounded, // ou local_mall_rounded
+                  isActive: currentIndex == 2,
+                  activeIndicatorColor: activeIndicatorColor,
+                  activeIconColor: activeIconColor,
+                  inactiveIconColor: inactiveIconColor,
+                ),
+                // --- FIM NOVO ÍCONE ---
+                _buildIconItem(
+                  context,
+                  index: 3, // Configurações agora é 3
+                  icon: Icons.settings_rounded,
+                  isActive: currentIndex == 3,
+                  activeIndicatorColor: activeIndicatorColor,
+                  activeIconColor: activeIconColor,
+                  inactiveIconColor: inactiveIconColor,
+                ),
+              ],
             ),
-            Expanded(
-              child: _buildIconItem(
-                context,
-                index: 2,
-                icon: Icons.settings_rounded,
-                isActive: currentIndex == 2,
-                activeCircleColor: activeCircleColor,
-                activeIconColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -132,26 +158,31 @@ class DisciplinumBottomNavBar extends StatelessWidget {
     required int index,
     required IconData icon,
     required bool isActive,
-    required Color activeCircleColor,
+    required Color activeIndicatorColor,
     required Color activeIconColor,
-    required Color inactiveColor,
+    required Color inactiveIconColor,
   }) {
-    return Center(
+    return Expanded(
       child: GestureDetector(
         onTap: () => _onItemTap(context, index),
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 48,
-          width: 48,
+          height: double.infinity,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isActive ? activeCircleColor : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: isActive ? activeIconColor : inactiveColor,
-            size: 24,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOutQuart,
+            height: 48,
+            width: isActive ? 64 : 48,
+            decoration: BoxDecoration(
+              color: isActive ? activeIndicatorColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              icon,
+              color: isActive ? activeIconColor : inactiveIconColor,
+              size: 26,
+            ),
           ),
         ),
       ),

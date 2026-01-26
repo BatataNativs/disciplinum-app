@@ -131,7 +131,7 @@ class Lojinha extends StatelessWidget {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
                                     child: Image.asset(
-                                      'assets/screenshots/screenshot1.png',
+                                      'assets/screenshots/print_tela_escura.jpg',
                                       fit: BoxFit.contain,
                                     ),
                                   ),

@@ -517,7 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (authService.userProfile?['bio'] != null &&
                           authService.userProfile!['bio'].toString().isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
+                          padding: const EdgeInsets.only(top: 12.0),
                           child: Center(
                             child: Text(
                               authService.userProfile!['bio'],
@@ -525,8 +525,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: TextStyle(
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
                                 color: isDark
-                                    ? Colors.grey[400]
+                                    ? const Color.fromARGB(255, 255, 255, 255)
                                     : const Color.fromARGB(255, 44, 45, 47),
                               ),
                             ),
@@ -564,17 +565,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isDark
-                                ? const Color(0xFF6366F1).withValues(alpha: 0.2)
-                                : const Color(0xFF4F46E5)
-                                    .withValues(alpha: 0.1),
+                                ? const Color.fromARGB(255, 78, 77, 77)
+                                    .withValues(alpha: 0.7)
+                                : const Color.fromARGB(255, 24, 24, 24)
+                                    .withValues(alpha: 0.7),
                             foregroundColor: isDark
-                                ? const Color(0xFF6366F1)
-                                : const Color(0xFF4F46E5),
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : const Color.fromARGB(255, 255, 255, 255),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: BorderSide(
                               color: isDark
-                                  ? const Color(0xFF6366F1)
-                                  : const Color(0xFF4F46E5),
+                                  ? const Color.fromARGB(255, 255, 255, 255)
+                                  : const Color.fromARGB(255, 255, 255, 255),
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
@@ -629,12 +631,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? Colors.red.withValues(alpha: 0.2)
                   : Colors.red.withValues(alpha: 0.1))
               : (isDark
-                  ? const Color(0xFF1E3A8A)
+                  ? const Color.fromARGB(255, 255, 255, 255)
                   : const Color.fromARGB(255, 85, 87, 90)),
           foregroundColor: isDestructive
               ? Colors.red
               : (isDark
-                  ? const Color(0xFFDBEAFE)
+                  ? const Color.fromARGB(255, 0, 0, 0)
                   : const Color.fromARGB(255, 239, 240, 241)),
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 16),

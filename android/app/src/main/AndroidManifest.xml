@@ -1,20 +1,39 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.disciplinum.app">
 
-    <!-- PERMISSÕES -->
+    <!-- ========================================================= -->
+    <!-- PERMISSÕES GERAIS -->
+    <!-- ========================================================= -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Necessária para Android 13+ exibir notificações -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Necessária para monitorar quais apps estão abertos (UsageStats) -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <!-- Necessária para listar apps instalados (Android 11+) -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Mantém a CPU ativa para processar o timer de monitoramento -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Permite reagendar alarmes após reinicialização do dispositivo -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Permissões de Mídia/Arquivos (Legacy e Scoped Storage) -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     
-    <!-- PERMISSÕES PARA FOREGROUND SERVICE (notificação persistente) -->
+    <!-- ========================================================= -->
+    <!-- PERMISSÕES DE ALARME EXATO (CRITICO PARA ANDROID 12+) -->
+    <!-- ========================================================= -->
+    <!-- Sem isso, o botão de permissão fica esmaecido no Android 14 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Opcional: Permite exibir notificações de tela cheia se necessário -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <!-- ========================================================= -->
+    <!-- PERMISSÕES DE FOREGROUND SERVICE -->
+    <!-- ========================================================= -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
@@ -56,7 +75,7 @@
 
         </activity>
 
-        <!-- Receivers de notificação -->
+        <!-- Receivers de notificação (Plugin flutter_local_notifications) -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
             android:exported="false">
@@ -64,6 +83,8 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <!-- Correção para alguns dispositivos HTC/Xiaomi -->
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
 
@@ -71,7 +92,7 @@
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
 
-        <!-- !!! CRUCIAL: Declaração do Serviço Foreground Special Use !!! -->
+        <!-- Serviço Foreground (Special Use para monitoramento) -->
         <service
             android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
             android:exported="false"

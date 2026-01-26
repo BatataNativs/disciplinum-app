@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/models/user_module_status.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
@@ -87,8 +88,7 @@ class GamificationService extends ChangeNotifier {
   final Map<NicheId, int> _diasConsecutivosByModule = {};
   final Map<NicheId, DateTime> _moduleStartDates = {};
   final Map<NicheId, String> _customMessages = {};
-  final Map<NicheId, List<String>> _customPhrases =
-      {}; // Novas frases múltiplas
+  final Map<NicheId, List<String>> _customPhrases = {};
 
   Map<NicheId, String> get customMessages => _customMessages;
   Map<NicheId, List<String>> get customPhrases => _customPhrases;
@@ -105,8 +105,10 @@ class GamificationService extends ChangeNotifier {
   Timer? _monitorTimer;
   List<String> monitoredApps = [];
   bool notificationsPaused = false;
-  DateTime? _lastScheduleNotificationTime;
+
+  // Mantido para _checkDailyMotivation
   final Map<String, DateTime> _notifiedSchedules = {};
+
   final Map<String, DateTime> _violationStartByApp = {};
   final Map<String, DateTime> _warnedApps = {};
   final Map<String, DateTime> _lastSeenMonitoredApp = {};
@@ -131,7 +133,7 @@ class GamificationService extends ChangeNotifier {
         notificationBody:
             'Sua contagem foi zerada e o módulo desativado. Confira no app o quanto economizou nessa tentativa!',
         iconPath: niche.iconPath,
-        deactivate: true, // Desativa ao ter recaída (Solicitação do usuário)
+        deactivate: true,
       );
     }
   }
@@ -170,7 +172,7 @@ class GamificationService extends ChangeNotifier {
 
       // 2. Se o módulo estiver ativo (pode ter sido restaurado do Local ou Nuvem)
       if (isModuleActive(nicheId)) {
-        // Carrega horários (necessário para o monitoramento de check-in rodar)
+        // Carrega horários base (Check-ins)
         final userTimes =
             await CloudSyncService.loadUserNicheTimes(nicheId: nicheId.id);
         if (userTimes.isNotEmpty) {
@@ -186,28 +188,37 @@ class GamificationService extends ChangeNotifier {
           }
         }
 
-        // CARREGA MOTIVAÇÕES (ID Virtual: nicheId + 100)
+        // --- CARREGA E AGENDA FRASES MOTIVACIONAIS ---
         final motivationTimes = await CloudSyncService.loadUserNicheTimes(
             nicheId: nicheId.id + 100);
+
         if (motivationTimes.isNotEmpty) {
+          debugPrint(
+              '📝 Encontrados ${motivationTimes.length} horários motivacionais para $nicheId');
           motivationSchedulesByModule[nicheId] = motivationTimes
               .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
               .toList();
 
-          // Sincroniza as frases da nuvem para o cache local
+          // Sincroniza frases salvas na nuvem com o cache local
           final cloudPhrases = motivationTimes
-              .map((t) => t.phrase ?? '')
-              .where((p) => p.isNotEmpty)
+              .map((t) => t.phrase ?? '') // Garante string vazia se null
+              .where((p) => p.isNotEmpty) // Remove vazias
               .toList();
+
+          // Se a nuvem tem frases salvas, atualiza o cache local
           if (cloudPhrases.isNotEmpty) {
+            // Opcional: só sobrescreve se local estiver vazio ou se quiser forçar nuvem
             _customPhrases[nicheId] = cloudPhrases;
+          } else {
+            // Se nuvem só tem horários sem frase (legado), usa a padrão
+            // (Isso será tratado no getMotivationalPhrase)
           }
         }
+
+        // --- Agendamento Nativo (Ambos: Check-in + Motivação) ---
+        await _scheduleNativeNotifications(nicheId);
       }
     }
-
-    // O monitoramento será iniciado exclusivamente pela UI (HomeScreen)
-    // após garantir as permissões de acesso ao monitoramento.
   }
 
   Map<NicheId, List<TimeOfDay>> scheduleByModule = {};
@@ -225,38 +236,30 @@ class GamificationService extends ChangeNotifier {
     return _diasConsecutivosByModule.containsKey(nicheId);
   }
 
-  /// Chamado pela tela de configurações para pausar/retomar notificações
   void setNotificationsPaused(bool value) async {
     notificationsPaused = value;
-
     if (value) {
       _violationStartByApp.clear();
       _warnedApps.clear();
     }
-
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('settings_notifications_paused', value);
   }
 
-  /// Restaura a sessão de monitoramento se o app foi morto pelo sistema
   Future<void> restoreMonitoringSession() async {
-    if (_isModuleActive) return; // Já está rodando
+    // Mesmo se já estiver ativo, forçamos o reagendamento para garantir atualizações de frases
+    // if (_isModuleActive) return;
 
     final prefs = await SharedPreferences.getInstance();
 
-    // --- BLINDAGEM DE SEGURANÇA (NOVO) ---
-    // Impede que o monitoramento tente iniciar se o usuário ainda está no Onboarding.
-    // Isso evita o pop-up de permissão prematuro.
     final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
     if (!seenOnboarding) {
       debugPrint(
           '🛡️ GamificationService: Bloqueando restauração (Onboarding pendente).');
       return;
     }
-    // -------------------------------------
 
-    // CORREÇÃO: Usamos getInt pois salvamos o ID numérico do enum
     final savedId = prefs.getInt(_prefsActiveNicheKey);
 
     if (savedId != null) {
@@ -273,27 +276,277 @@ class GamificationService extends ChangeNotifier {
             '🔄 Restaurando sessão de monitoramento para: ${nicheId.name}');
 
         await _syncWithCloud(nicheId);
+
+        // Carrega Apps Monitorados
         final userApps =
             await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
+        monitoredApps = userApps.map((a) => a.appPackage).toList();
+
+        // Carrega Horários Check-in
         final userTimes =
             await CloudSyncService.loadUserNicheTimes(nicheId: nicheId.id);
-        final motivationTimes = await CloudSyncService.loadUserNicheTimes(
-            nicheId: nicheId.id + 100);
-
-        monitoredApps = userApps.map((a) => a.appPackage).toList();
         scheduleByModule[nicheId] = userTimes
             .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
             .toList();
+
+        // Carrega Horários Motivação
+        final motivationTimes = await CloudSyncService.loadUserNicheTimes(
+            nicheId: nicheId.id + 100);
         motivationSchedulesByModule[nicheId] = motivationTimes
             .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
             .toList();
 
-        debugPrint(
-            '✅ Sessão carregada para ${nicheId.name}. Aguardando gatilho da UI para iniciar monitoramento.');
+        // Atualiza cache de frases vindas do banco
+        final cloudPhrases = motivationTimes
+            .map((t) => t.phrase ?? '')
+            .toList(); // Mantemos vazias para respeitar o índice do array
+
+        if (cloudPhrases.any((p) => p.isNotEmpty)) {
+          _customPhrases[nicheId] = cloudPhrases;
+        }
+
+        // Reagenda tudo
+        await _scheduleNativeNotifications(nicheId);
+
+        // Se o monitor não estiver rodando, inicia
+        if (!_isModuleActive) {
+          _isModuleActive = true;
+          await _startForegroundService();
+          _monitorTimer =
+              Timer.periodic(const Duration(seconds: 2), (timer) async {
+            // ... Lógica do timer mantida (será chamada abaixo) ...
+            _monitorLoop(timer);
+          });
+        }
+
+        currentNicheId = nicheId; // Garante que o ID atual está setado
+
+        debugPrint('✅ Sessão carregada e agendada para ${nicheId.name}.');
       } catch (e) {
         debugPrint('Erro ao restaurar sessão de monitoramento: $e');
         await prefs.remove(_prefsActiveNicheKey);
       }
+    }
+  }
+
+  // --- LOOP DO TIMER EXTRAÍDO PARA REUSO ---
+  void _monitorLoop(Timer timer) async {
+    try {
+      if (!_isModuleActive) {
+        timer.cancel();
+        return;
+      }
+
+      await _saveHeartbeat();
+
+      final activeNiches = _diasConsecutivosByModule.keys.toList();
+      for (final activeNicheId in activeNiches) {
+        try {
+          _checkMidnightUpdate(activeNicheId);
+          _checkDailyMotivation(activeNicheId);
+        } catch (e) {
+          debugPrint('Erro no loop de progresso para $activeNicheId: $e');
+        }
+      }
+
+      if (notificationsPaused) {
+        _violationStartByApp.clear();
+        _warnedApps.clear();
+        return;
+      }
+
+      final now = DateTime.now();
+
+      // 2. LÓGICA DE APPS PROIBIDOS (Mantida)
+      final activeNicheId = currentNicheId;
+      final apps = List<String>.from(monitoredApps);
+
+      if (apps.isNotEmpty && activeNicheId != null) {
+        final nowMs = now.millisecondsSinceEpoch;
+        final usageApps = await UsageStats.queryUsageStats(
+          now.subtract(const Duration(seconds: 60)),
+          now,
+        );
+
+        final systemIgnoreList = [
+          'com.disciplinum.app',
+          'com.android.systemui',
+          'android',
+          'com.sec.android.app.launcher',
+          'com.google.android.apps.nexuslauncher',
+          'com.miui.home',
+          'com.huawei.android.launcher',
+        ];
+
+        String? foregroundApp;
+        if (usageApps.isNotEmpty) {
+          usageApps.sort((a, b) {
+            final lastA = int.tryParse(a.lastTimeUsed ?? '0') ?? 0;
+            final lastB = int.tryParse(b.lastTimeUsed ?? '0') ?? 0;
+            return lastB.compareTo(lastA);
+          });
+
+          for (final app in usageApps) {
+            final pkg = app.packageName!;
+            final lastUsedMs = int.tryParse(app.lastTimeUsed ?? '0') ?? 0;
+
+            if (lastUsedMs < nowMs - 60000) continue;
+
+            if (!systemIgnoreList.contains(pkg)) {
+              foregroundApp = pkg;
+              break;
+            }
+          }
+        }
+
+        bool isForegroundMonitored =
+            foregroundApp != null && apps.contains(foregroundApp);
+        bool isForegroundIgnore =
+            foregroundApp != null && systemIgnoreList.contains(foregroundApp);
+        bool isForegroundOther = foregroundApp != null &&
+            !isForegroundMonitored &&
+            !isForegroundIgnore;
+
+        if (isForegroundMonitored) {
+          final key = foregroundApp;
+          _lastSeenMonitoredApp[key] = now;
+
+          if (!_violationStartByApp.containsKey(key)) {
+            if (!_warnedApps.containsKey(key)) {
+              final niche = NicheRepository.getById(activeNicheId);
+              final baseMessage = getModuleMessage(activeNicheId);
+              await sendModuleNotification(
+                '$baseMessage\n\n⚠️ Saia do app em até 30s para não perder seu progresso.',
+                title: 'Disciplinum: ${niche.name}',
+                iconPath: niche.iconPath,
+              );
+              _warnedApps[key] = now;
+              _violationStartByApp[key] = DateTime.now();
+              debugPrint('🏁 Contagem iniciada para $key');
+            }
+          } else {
+            final start = _violationStartByApp[key]!;
+            final duration = now.difference(start).inSeconds;
+            debugPrint('⏳ $key: ${duration}s / 30s');
+
+            if (duration >= 30) {
+              debugPrint('🛑 Limite de 30s atingido em $key');
+              final niche = NicheRepository.getById(activeNicheId);
+
+              resetMedals(
+                activeNicheId,
+                notificationTitle: 'Progresso Zerado 😢',
+                notificationBody:
+                    'Você utilizou o app monitorado por 30 segundos ou mais. Progresso reiniciado.',
+                iconPath: niche.iconPath,
+                deactivate: true,
+              );
+
+              _violationStartByApp.remove(key);
+              _warnedApps.remove(key);
+            }
+          }
+        } else if (isForegroundOther) {
+          debugPrint('✅ Saída definitiva (App Real): $foregroundApp');
+          _violationStartByApp.clear();
+          _warnedApps.clear();
+          _lastSeenMonitoredApp.clear();
+        } else {
+          final activeKeys = _violationStartByApp.keys.toList();
+          for (final key in activeKeys) {
+            final lastSeen = _lastSeenMonitoredApp[key];
+            if (lastSeen == null) continue;
+
+            final diff = now.difference(lastSeen).inSeconds;
+            if (diff >= 60) {
+              debugPrint('✅ Saída definitiva (Inatividade de 60s): $key');
+              _violationStartByApp.remove(key);
+              _lastSeenMonitoredApp.remove(key);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro no loop de monitoramento: $e');
+    }
+  }
+
+  // --- AGENDAMENTO NATIVO ---
+  Future<void> _scheduleNativeNotifications(NicheId nicheId) async {
+    debugPrint('📅 Configurando alarmes nativos para: ${nicheId.name}');
+
+    // 1. Agendar Check-ins (Mantido)
+    final checkIns = scheduleByModule[nicheId];
+    if (checkIns != null) {
+      for (int i = 0; i < checkIns.length; i++) {
+        final time = checkIns[i];
+        final notifId = (nicheId.id * 1000) + 100 + i;
+        final niche = NicheRepository.getById(nicheId);
+
+        // Define ações (botões)
+        List<AndroidNotificationAction>? actions;
+        String? payload;
+
+        if (nicheId == NicheId.smoking) {
+          payload = nicheId.id.toString();
+          // Como actionIdSim agora é 'const' e foi importado, isso funciona
+          actions = [
+            const AndroidNotificationAction(actionIdSim, 'Sim!',
+                showsUserInterface: true, cancelNotification: true),
+            const AndroidNotificationAction(actionIdNao, 'Não, tive recaída',
+                showsUserInterface: true, cancelNotification: true),
+          ];
+        }
+
+        String body = _getModuleMessage(nicheId);
+        if (nicheId == NicheId.smoking) {
+          body =
+              'Manteve-se disciplinado hoje? \n\nLembre-se de conferir seu progresso no app 🚀.';
+        }
+
+        TimeOfDay finalTime = time;
+        if (nicheId == NicheId.diet) {
+          final dt = DateTime(2024, 1, 1, time.hour, time.minute)
+              .subtract(const Duration(minutes: 30));
+          finalTime = TimeOfDay(hour: dt.hour, minute: dt.minute);
+        }
+
+        await NotificationService.scheduleDailyNotification(
+          id: notifId,
+          time: finalTime,
+          title: 'Check-in Diário: ${niche.name}',
+          body: body,
+          actions: actions,
+          payload: payload,
+        );
+      }
+    }
+
+    // 2. Agendar Motivações (Frases) - REVISADO E FORÇADO
+    final motivations = motivationSchedulesByModule[nicheId];
+    if (motivations != null) {
+      debugPrint(
+          '📝 Agendando ${motivations.length} frases motivacionais para ${nicheId.name}');
+      for (int i = 0; i < motivations.length; i++) {
+        final time = motivations[i];
+        // IDs únicos diferentes dos check-ins (ex: 1500, 1501...)
+        final notifId = (nicheId.id * 1000) + 500 + i;
+        final niche = NicheRepository.getById(nicheId);
+        final phrase = getMotivationalPhrase(nicheId, time);
+
+        debugPrint(
+            '🔔 Agendando frase "$phrase" para ${time.hour}:${time.minute}');
+
+        await NotificationService.scheduleDailyNotification(
+          id: notifId,
+          time: time,
+          title: 'Disciplinum: ${niche.name}',
+          body: phrase,
+        );
+      }
+    } else {
+      debugPrint(
+          '⚠️ Nenhuma lista de motivação encontrada para ${nicheId.name} no momento do agendamento.');
     }
   }
 
@@ -310,9 +563,11 @@ class GamificationService extends ChangeNotifier {
       if (horarios != null) scheduleByModule[nicheId] = horarios;
       if (intervaloFoco != null) focusIntervalByModule[nicheId] = intervaloFoco;
 
-      // Persistência: Salva o ID (int) nas prefs
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_prefsActiveNicheKey, nicheId.id);
+
+      // Reagenda tudo (Check-ins e Motivações)
+      await _scheduleNativeNotifications(nicheId);
     }
 
     _violationStartByApp.clear();
@@ -325,259 +580,9 @@ class GamificationService extends ChangeNotifier {
       await _checkRetroactiveViolations(nicheId);
     }
 
-    _monitorTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      try {
-        if (!_isModuleActive) {
-          timer.cancel();
-          return;
-        }
-
-        await _saveHeartbeat();
-
-        // Iterar por todos os nichos que possuem progresso ativo
-        final activeNiches = _diasConsecutivosByModule.keys.toList();
-        for (final activeNicheId in activeNiches) {
-          try {
-            _checkMidnightUpdate(activeNicheId);
-            _checkDailyMotivation(activeNicheId);
-          } catch (e) {
-            debugPrint('Erro no loop de progresso para $activeNicheId: $e');
-          }
-        }
-
-        if (notificationsPaused) {
-          _violationStartByApp.clear();
-          _warnedApps.clear();
-          return;
-        }
-
-        final now = DateTime.now();
-
-        // 1. LÓGICA DE HORÁRIOS (Para todos os módulos cadastrados)
-        if (_lastScheduleNotificationTime == null ||
-            now.difference(_lastScheduleNotificationTime!).inSeconds >= 5) {
-          final moduleKeys = scheduleByModule.keys.toList();
-          for (final nId in moduleKeys) {
-            final horarios = scheduleByModule[nId];
-            if (horarios != null && horarios.isNotEmpty) {
-              for (final t in horarios) {
-                DateTime tempoAlvo =
-                    DateTime(now.year, now.month, now.day, t.hour, t.minute);
-                if (nId == NicheId.diet) {
-                  tempoAlvo = tempoAlvo.subtract(const Duration(minutes: 30));
-                }
-
-                if (_isSameMinute(now, tempoAlvo)) {
-                  final key = '${nId.id}_${t.hour}_${t.minute}';
-                  if (!_hasNotifiedToday(key)) {
-                    try {
-                      final niche = NicheRepository.getAll()
-                          .firstWhere((n) => n.id == nId);
-
-                      debugPrint('🔔 Disparando notificação de check-in: $key');
-
-                      if (nId == NicheId.smoking) {
-                        debugPrint(
-                            '🔔 [Check-in] Enviando check-in para Smoking...');
-                        await sendModuleNotification(
-                          'Manteve-se disciplinado hoje? \n\nLembre-se de conferir seu progresso no app 🚀.',
-                          title: 'Check-in Diário: ${niche.name}',
-                          iconPath: niche.iconPath,
-                          actions: [
-                            const AndroidNotificationAction(actionIdSim, 'Sim!',
-                                showsUserInterface: true,
-                                cancelNotification: true),
-                            const AndroidNotificationAction(
-                                actionIdNao, 'Não, tive recaída',
-                                showsUserInterface: true,
-                                cancelNotification: true),
-                          ],
-                          payload: nId.id.toString(),
-                          id: nId.id + 2000,
-                        );
-                      } else {
-                        debugPrint(
-                            '🔔 [Check-in] Enviando notice para ${nId.name}...');
-                        await sendModuleNotification(
-                          _getModuleMessage(nId),
-                          title: 'Disciplinum: ${niche.name}',
-                          iconPath: niche.iconPath,
-                          id: nId.id + 2000,
-                        );
-                      }
-
-                      _markAsNotified(key);
-                      _lastScheduleNotificationTime = now;
-                    } catch (e) {
-                      debugPrint('Erro ao enviar notificação de horário: $e');
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          // 1.2 LÓGICA DE MOTIVAÇÃO (VIRTUAL ID)
-          final motivationKeys = motivationSchedulesByModule.keys.toList();
-          for (final nId in motivationKeys) {
-            final motivHorarios = motivationSchedulesByModule[nId];
-            if (motivHorarios != null && motivHorarios.isNotEmpty) {
-              for (final t in motivHorarios) {
-                DateTime tempoAlvo =
-                    DateTime(now.year, now.month, now.day, t.hour, t.minute);
-
-                if (_isSameMinute(now, tempoAlvo)) {
-                  final key = 'motiv_${nId.id}_${t.hour}_${t.minute}';
-                  if (!_hasNotifiedToday(key)) {
-                    try {
-                      final niche = NicheRepository.getAll()
-                          .firstWhere((n) => n.id == nId);
-
-                      debugPrint('🔔 Disparando motivação: $key');
-
-                      final frase = getMotivationalPhrase(nId, t);
-                      await sendModuleNotification(
-                        frase,
-                        title: 'Disciplinum: ${niche.name}',
-                        iconPath: niche.iconPath,
-                        id: nId.id + 3000, // Offset diferente para motivação
-                      );
-
-                      _markAsNotified(key);
-                    } catch (e) {
-                      debugPrint('Erro ao enviar notificação de motivação: $e');
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        // 2. LÓGICA DE APPS PROIBIDOS
-        final activeNicheId = currentNicheId;
-        final apps = List<String>.from(monitoredApps);
-
-        if (apps.isNotEmpty && activeNicheId != null) {
-          final nowMs = now.millisecondsSinceEpoch;
-          final usageApps = await UsageStats.queryUsageStats(
-            now.subtract(const Duration(seconds: 60)),
-            now,
-          );
-
-          final systemIgnoreList = [
-            'com.disciplinum.app',
-            'com.android.systemui',
-            'android',
-            'com.sec.android.app.launcher', // Samsung Home
-            'com.google.android.apps.nexuslauncher', // Pixel Home
-            'com.miui.home', // Xiaomi Home
-            'com.huawei.android.launcher', // Huawei Home
-          ];
-
-          String? foregroundApp;
-          if (usageApps.isNotEmpty) {
-            usageApps.sort((a, b) {
-              final lastA = int.tryParse(a.lastTimeUsed ?? '0') ?? 0;
-              final lastB = int.tryParse(b.lastTimeUsed ?? '0') ?? 0;
-              return lastB.compareTo(lastA);
-            });
-
-            // ESTRATÉGIA DO ÚLTIMO APP REAL:
-            // Buscamos o app mais recente que NÃO seja do sistema/launcher.
-            // Isso evita que o Samsung Launcher "roube" o foco e cause timeouts falsos.
-            for (final app in usageApps) {
-              final pkg = app.packageName!;
-              final lastUsedMs = int.tryParse(app.lastTimeUsed ?? '0') ?? 0;
-
-              // Se o app é muito antigo (mais de 60s), ignoramos
-              if (lastUsedMs < nowMs - 60000) continue;
-
-              if (!systemIgnoreList.contains(pkg)) {
-                foregroundApp = pkg;
-                break;
-              }
-            }
-          }
-
-          bool isForegroundMonitored =
-              foregroundApp != null && apps.contains(foregroundApp);
-          bool isForegroundIgnore =
-              foregroundApp != null && systemIgnoreList.contains(foregroundApp);
-          bool isForegroundOther = foregroundApp != null &&
-              !isForegroundMonitored &&
-              !isForegroundIgnore;
-
-          if (isForegroundMonitored) {
-            final key = foregroundApp;
-            _lastSeenMonitoredApp[key] = now;
-
-            if (!_violationStartByApp.containsKey(key)) {
-              if (!_warnedApps.containsKey(key)) {
-                final niche = NicheRepository.getById(activeNicheId);
-                final baseMessage = getModuleMessage(activeNicheId);
-                await sendModuleNotification(
-                  '$baseMessage\n\n⚠️ Saia do app em até 30s para não perder seu progresso.',
-                  title: 'Disciplinum: ${niche.name}',
-                  iconPath: niche.iconPath,
-                );
-                _warnedApps[key] = now;
-                _violationStartByApp[key] = DateTime.now();
-                debugPrint('🏁 Contagem iniciada para $key');
-              }
-            } else {
-              final start = _violationStartByApp[key]!;
-              final duration = now.difference(start).inSeconds;
-              debugPrint('⏳ $key: ${duration}s / 30s');
-
-              if (duration >= 30) {
-                debugPrint('🛑 Limite de 30s atingido em $key');
-                final niche = NicheRepository.getById(activeNicheId);
-
-                resetMedals(
-                  activeNicheId,
-                  notificationTitle: 'Progresso Zerado 😢',
-                  notificationBody:
-                      'Você utilizou o app monitorado por 30 segundos ou mais. Progresso reiniciado.',
-                  iconPath: niche.iconPath,
-                  deactivate: true,
-                );
-
-                _violationStartByApp.remove(key);
-                _warnedApps.remove(key);
-              }
-            }
-          } else if (isForegroundOther) {
-            debugPrint('✅ Saída definitiva (App Real): $foregroundApp');
-            _violationStartByApp.clear();
-            _warnedApps
-                .clear(); // Só limpamos os avisos se mudou para outro APP REAL
-            _lastSeenMonitoredApp.clear();
-          } else {
-            // Caso seja Ignore (Launcher/Bixby/Sistema) ou NULL (Silêncio do SO)
-            // Verificamos se já faz tempo que nenhum app monitorado aparece
-            final activeKeys = _violationStartByApp.keys.toList();
-            for (final key in activeKeys) {
-              final lastSeen = _lastSeenMonitoredApp[key];
-              if (lastSeen == null) continue;
-
-              final diff = now.difference(lastSeen).inSeconds;
-              // Aumentado para 60s de "silêncio" antes de considerar saída.
-              // Isso garante que Bixby ou lags do Android não quebrem a lógica.
-              if (diff >= 60) {
-                debugPrint('✅ Saída definitiva (Inatividade de 60s): $key');
-                _violationStartByApp.remove(key);
-                // NOTA: NUNCA limpamos _warnedApps aqui para evitar loop de notificações
-                // se o usuário apenas foi na Home e voltou rápido demais.
-                _lastSeenMonitoredApp.remove(key);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint('Erro no loop de monitoramento: $e');
-      }
-    });
+    // Reinicia o timer se necessário
+    _monitorTimer?.cancel();
+    _monitorTimer = Timer.periodic(const Duration(seconds: 2), _monitorLoop);
   }
 
   String _getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
@@ -590,25 +595,29 @@ class GamificationService extends ChangeNotifier {
     return moduleMessages[nicheId] ?? 'Conquista em progresso!';
   }
 
-  /// Retorna a frase motivacional para um horário específico
+  // --- BUSCA FRASE CORRETA (Free ou Premium) ---
   String getMotivationalPhrase(NicheId nicheId, TimeOfDay time) {
+    // 1. Tenta pegar a lista de horários
+    final schedules = motivationSchedulesByModule[nicheId];
+
+    // 2. Se for Premium, tenta pegar a frase customizada correspondente ao índice
     if (IapService().isMotivationPhrasesUnlocked) {
       final phrases = _customPhrases[nicheId];
-      final schedules = motivationSchedulesByModule[nicheId];
-
       if (phrases != null && schedules != null && phrases.isNotEmpty) {
-        // Encontra o índice do horário na lista (ordenada de preferência)
+        // Encontra qual "slot" é esse horário
         final index = schedules.indexOf(time);
         if (index >= 0 && index < phrases.length) {
-          return phrases[index];
+          final customPhrase = phrases[index];
+          if (customPhrase.isNotEmpty) return customPhrase;
         }
       }
 
-      // Fallback para a mensagem customizada única se não houver lista
-      final custom = _customMessages[nicheId];
-      if (custom != null && custom.isNotEmpty) return custom;
+      // Fallback para mensagem única customizada (legado)
+      final customSingle = _customMessages[nicheId];
+      if (customSingle != null && customSingle.isNotEmpty) return customSingle;
     }
 
+    // 3. Fallback Padrão (Free ou se não tiver custom)
     return moduleMessages[nicheId] ?? 'Mantenha o foco e a disciplina!';
   }
 
@@ -622,7 +631,6 @@ class GamificationService extends ChangeNotifier {
     monitoredApps.clear();
     currentNicheId = null;
     notificationsPaused = false;
-    _lastScheduleNotificationTime = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefsActiveNicheKey);
@@ -707,14 +715,12 @@ class GamificationService extends ChangeNotifier {
     UserModuleStatus? finalStatus;
 
     if (cloudStatus != null && localStatus != null) {
-      // RECONCILIAÇÃO: Quem tem o timestamp mais recente vence
       final cloudDate = cloudStatus.lastUpdated ?? DateTime(2000);
       final localDate = localStatus.lastUpdated ?? DateTime(2000);
 
       if (localDate.isAfter(cloudDate)) {
         debugPrint('🏠 Sincronização: Local é mais recente para $nicheId');
         finalStatus = localStatus;
-        // Tenta atualizar a nuvem com o estado local mais recente (ex: reset offline)
         CloudSyncService.saveModuleStatus(
           nicheId: nicheId,
           isActive: localStatus.isActive,
@@ -724,7 +730,6 @@ class GamificationService extends ChangeNotifier {
       } else {
         debugPrint('☁️ Sincronização: Nuvem é mais recente para $nicheId');
         finalStatus = cloudStatus;
-        // Atualiza local com os dados da nuvem
         _saveLocalStatus(nicheId);
       }
     } else {
@@ -778,10 +783,7 @@ class GamificationService extends ChangeNotifier {
 
     if ((_diasConsecutivosByModule[nicheId] ?? 0) == 0) {
       _moduleStartDates[nicheId] = DateTime.now();
-
-      // Persistência Local-First
       _saveLocalStatus(nicheId);
-
       CloudSyncService.saveModuleStatus(
         nicheId: nicheId,
         isActive: true,
@@ -793,10 +795,7 @@ class GamificationService extends ChangeNotifier {
   void stopModuleCycle({required NicheId nicheId}) async {
     _diasConsecutivosByModule.remove(nicheId);
     scheduleByModule.remove(nicheId);
-
-    // Persistência Local-First
     _saveLocalStatus(nicheId);
-
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: false,
@@ -822,10 +821,7 @@ class GamificationService extends ChangeNotifier {
 
   void _updateStatus(NicheId nicheId, int dias) {
     _diasConsecutivosByModule[nicheId] = dias;
-
-    // Persistência Local-First
     _saveLocalStatus(nicheId);
-
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: true,
@@ -851,11 +847,7 @@ class GamificationService extends ChangeNotifier {
     if (newMedal != null) {
       if (current == null || newMedal.index > current.index) {
         _maxMedalByModule[nicheId] = newMedal;
-
-        // 1. Salva Local
         _saveLocalStatus(nicheId);
-
-        // 2. Tenta Nuvem (Background)
         CloudSyncService.saveModuleStatus(
           nicheId: nicheId,
           isActive: true,
@@ -882,9 +874,6 @@ class GamificationService extends ChangeNotifier {
     _notifiedSchedules[key] = DateTime.now();
   }
 
-  bool _isSameMinute(DateTime a, DateTime b) =>
-      a.hour == b.hour && a.minute == b.minute;
-
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
@@ -904,7 +893,6 @@ class GamificationService extends ChangeNotifier {
     String? iconPath,
     bool deactivate = false,
   }) {
-    // 1. LIMPEZA LOCAL IMEDIATA (Crítico para parar o loop)
     _violationStartByApp.clear();
     _warnedApps.clear();
     _lastSeenMonitoredApp.clear();
@@ -916,7 +904,6 @@ class GamificationService extends ChangeNotifier {
       _moduleStartDates.remove(nicheId);
       _maxMedalByModule.remove(nicheId);
 
-      // Se era o nicho atual, paramos o monitoramento global
       if (currentNicheId == nicheId) {
         stopMonitoringApps();
       }
@@ -926,10 +913,8 @@ class GamificationService extends ChangeNotifier {
       _maxMedalByModule.remove(nicheId);
     }
 
-    // 2. PERSISTÊNCIA LOCAL (Essencial para resets offline)
     _saveLocalStatus(nicheId);
 
-    // 3. SINCRONIZAÇÃO (Pode falhar sem quebrar o local)
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
       isActive: !deactivate,
@@ -937,7 +922,6 @@ class GamificationService extends ChangeNotifier {
       forceClearMedal: true,
     ).catchError((e) => debugPrint('Erro ao sincronizar reset: $e'));
 
-    // 3. NOTIFICAÇÃO
     if (sendNotification) {
       final title = notificationTitle ?? 'Contagem Reiniciada ⚠️';
       final body = notificationBody ??
@@ -1020,6 +1004,7 @@ class GamificationService extends ChangeNotifier {
     await flutterLocalNotificationsPlugin.show(id, title, body, details);
   }
 
+  // Função para salvar mensagem personalizada única (legado)
   Future<void> setCustomMessage(NicheId nicheId, String message) async {
     _customMessages[nicheId] = message;
     final prefs = await SharedPreferences.getInstance();
@@ -1027,6 +1012,7 @@ class GamificationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Função para salvar lista de frases (novo sistema)
   Future<void> setCustomPhrases(NicheId nicheId, List<String> phrases) async {
     _customPhrases[nicheId] = phrases;
     final prefs = await SharedPreferences.getInstance();

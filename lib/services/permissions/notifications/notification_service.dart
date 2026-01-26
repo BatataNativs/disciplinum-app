@@ -1,15 +1,20 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// Mantive o alias 'fln' para segurança
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
+
+final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    fln.FlutterLocalNotificationsPlugin();
 
 const String actionIdSim = 'CHECKIN_SIM';
 const String actionIdNao = 'CHECKIN_NAO';
@@ -17,80 +22,88 @@ const String actionIdNao = 'CHECKIN_NAO';
 Future<void> initNotifications() async {
   if (kIsWeb) return;
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/launcher_icon');
+  tz.initializeTimeZones();
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+  try {
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+  } catch (e) {
+    debugPrint('Erro ao configurar timezone: $e');
+    tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
+  }
+
+  const fln.AndroidInitializationSettings initializationSettingsAndroid =
+      fln.AndroidInitializationSettings('@mipmap/launcher_icon');
+
+  const fln.InitializationSettings initializationSettings =
+      fln.InitializationSettings(android: initializationSettingsAndroid);
 
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse response) {
+    onDidReceiveNotificationResponse: (fln.NotificationResponse response) {
       if (response.actionId == actionIdNao) {
-        // Handle relapse via global handler
         NotificationService.onRelapseDetected?.call(response.payload);
       }
     },
   );
 
-  // Load implementation
   final prefs = await SharedPreferences.getInstance();
   NotificationService.soundEnabled =
       prefs.getBool('settings_sound_enabled') ?? true;
 }
 
-/// Solicita permissão SOMENTE quando ativar o módulo de notificações!
 Future<bool> requestNotificationPermissionIfNeeded() async {
   if (kIsWeb) return false;
 
   final androidPlugin =
       flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+          fln.AndroidFlutterLocalNotificationsPlugin>();
+
   if (androidPlugin != null) {
     final granted = await androidPlugin.requestNotificationsPermission();
+    await androidPlugin.requestExactAlarmsPermission();
     return granted ?? false;
   }
   return false;
 }
 
-/// Envia uma notificação local imediata (ex: quando o módulo é ativado)
 Future<void> sendModuleNotification(String body,
     {String title = 'Atenção',
     String? iconPath,
-    List<AndroidNotificationAction>? actions,
+    List<fln.AndroidNotificationAction>? actions,
     String? payload,
     int id = 0}) async {
   if (kIsWeb) return;
 
-  AndroidBitmap<Uint8List>? largeIcon;
+  fln.AndroidBitmap<Uint8List>? largeIcon;
   if (iconPath != null) {
     try {
       final ByteData data = await rootBundle.load(iconPath);
-      largeIcon = ByteArrayAndroidBitmap(data.buffer.asUint8List());
+      largeIcon = fln.ByteArrayAndroidBitmap(data.buffer.asUint8List());
     } catch (e) {
       debugPrint('Erro ao carregar ícone da notificação: $e');
     }
   }
 
-  final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+  final androidPlatformChannelSpecifics = fln.AndroidNotificationDetails(
     'disciplinum_channel',
     'Disciplinum Notificações',
     channelDescription: 'Notificações de disciplina e monitoramento',
-    importance: Importance.max,
-    priority: Priority.high,
+    importance: fln.Importance.max,
+    priority: fln.Priority.high,
     showWhen: true,
     playSound: NotificationService.soundEnabled,
     enableVibration: true,
-    largeIcon: largeIcon, // Adiciona o ícone do nicho
-    styleInformation: BigTextStyleInformation(body),
+    largeIcon: largeIcon,
+    styleInformation: fln.BigTextStyleInformation(body),
     actions: actions,
   );
 
   final platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
+      fln.NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await flutterLocalNotificationsPlugin.show(
-    id, // Usa o ID passado ou 0 (default)
+    id,
     title,
     body,
     platformChannelSpecifics,
@@ -102,7 +115,6 @@ class NotificationService {
   static bool soundEnabled = true;
   static void Function(String?)? onRelapseDetected;
 
-  /// Inicializa o plugin (se quiser chamar via classe)
   static Future<void> init() async => initNotifications();
 
   static Future<bool> requestPermission() async =>
@@ -118,9 +130,58 @@ class NotificationService {
     required int id,
     required TimeOfDay time,
     required String body,
+    String title = 'Lembrete Diário',
+    String? payload,
+    List<fln.AndroidNotificationAction>? actions,
   }) async {
     if (kIsWeb) return;
-    // Futuro: implementar agendamento com zonedSchedule
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    final androidPlatformChannelSpecifics = fln.AndroidNotificationDetails(
+      'disciplinum_scheduled',
+      'Lembretes Agendados',
+      channelDescription: 'Notificações agendadas (Frases, Check-in)',
+      importance: fln.Importance.max,
+      priority: fln.Priority.high,
+      playSound: soundEnabled,
+      styleInformation: fln.BigTextStyleInformation(body),
+      actions: actions,
+    );
+
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+        androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+        // REMOVIDO: uiLocalNotificationDateInterpretation
+        // Motivo: Não é necessário para Android e estava causando erro de compilação
+        // Se precisar dar suporte a iOS no futuro, precisaremos verificar a versão do plugin
+
+        matchDateTimeComponents: fln.DateTimeComponents.time,
+        payload: payload,
+      );
+      debugPrint('Agendado: $title para $scheduledDate (ID: $id)');
+    } catch (e) {
+      debugPrint('ERRO ao agendar notificação: $e');
+      // Dica: Se der erro dizendo que precisa do uiLocalNotificationDateInterpretation em tempo de execução
+      // (o que é raro no Android), avise-me. Mas a compilação vai passar agora.
+    }
   }
 
   static Future<void> cancelNotification(int id) async {
@@ -128,14 +189,12 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.cancel(id);
   }
 
-  /// Abre as configurações de notificações do app Android
   static Future<void> openNotificationSettings() async {
     if (kIsWeb || !Platform.isAndroid) return;
 
     const packageName = 'com.disciplinum.app';
 
     try {
-      // Android 8.0+ – tela de notificações do app
       final intent = AndroidIntent(
         action: 'android.settings.APP_NOTIFICATION_SETTINGS',
         arguments: <String, dynamic>{
@@ -145,7 +204,6 @@ class NotificationService {
       );
       await intent.launch();
     } catch (_) {
-      // Fallback garantido: tela de detalhes do app
       final fallback = AndroidIntent(
         action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
         data: 'package:$packageName',
