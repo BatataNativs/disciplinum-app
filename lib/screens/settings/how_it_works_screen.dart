@@ -197,7 +197,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
         break;
 
       case 1:
-        title = 'Seu progresso';
+        title = 'Incentivo ao seu progresso';
         // Linha com as medalhas
         visualContent = SizedBox(
           height: 100,
@@ -350,10 +350,16 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Dentro de cada módulo, você pode ver seu progresso atual e quanto falta para alcançar um próximo nível ou marco, tudo pra te incentivar a continuar disciplinado!.',
+              'Há também diversas insígnias e troféus que você pode receber ao longo do tempo, cumprindo objetivos e marcos menores. '
+              'Tudo pra você se sentir motivado a continuar disciplinado!\n\n',
               style: styleBase,
               textAlign: TextAlign.justify,
             ),
+            // colocar assets de algumas insígnias e troféus aqui
+            Text(
+                '\n\nAcesse seu progresso em "Meu progresso", na tela de Perfil.',
+                style: styleBase,
+                textAlign: TextAlign.justify),
           ],
         );
       case 2: // Regras
@@ -389,7 +395,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               child: Column(
                 children: [
                   Text(
-                    '➜ Em caso de uso de um app selecionado por você para ter o uso monitorado, você terá 30 segundos para fechá-lo. Se permanecer por mais tempo, o seu progresso reinicia! (a gamificação das medalhas, insígnias, troféus, etc, serão resetada)',
+                    '➜ Em caso de uso de um app selecionado por você para ter o uso monitorado, você terá 30 segundos para fechá-lo. Se permanecer por mais tempo, o seu progresso reinicia! (a gamificação das medalhas, insígnias, troféus, etc, será resetada)',
                     style: styleBase?.copyWith(fontSize: 15),
                     textAlign: TextAlign.center,
                   ),
