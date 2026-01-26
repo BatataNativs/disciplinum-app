@@ -530,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: isDark
                             ? const Color(0xFFFFFFFF)
                             : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Pagar um "café" (Pix, por enquanto, somente)',
+                subtitle: Text('Pagar um "café" (Pix)',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
