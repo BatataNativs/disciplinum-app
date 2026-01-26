@@ -36,16 +36,8 @@ class DisciplinumBottomNavBar extends StatelessWidget {
         Navigator.pushNamed(context, AppRouter.auth);
       }
     } else if (index == 2) {
-      // --- NOVO: Rota da Lojinha ---
-      // Verifique se a rota 'AppRouter.shop' existe ou use o nome string direto por enquanto
-      // Exemplo: Navigator.pushNamed(context, '/lojinha');
-      if (currentRoute != '/lojinha') {
-        // Ajuste para a constante do seu AppRouter se tiver
-        // Como ainda vamos criar a tela, estou assumindo que você criará a rota '/lojinha' ou similar
-        // Se quiser navegar direto sem rota nomeada enquanto não cria:
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => const LojinhaScreen()));
-
-        // Mas seguindo seu padrão de rotas nomeadas:
+      // --- Rota da Lojinha ---
+      if (currentRoute != AppRouter.shop) {
         Navigator.pushNamedAndRemoveUntil(
             context, AppRouter.shop, (route) => route.isFirst);
       }
@@ -65,21 +57,22 @@ class DisciplinumBottomNavBar extends StatelessWidget {
 
     // Cores ajustadas para Glassmorphism
     final glassColor = isDark
-        ? const Color(0xFF171717).withValues(alpha: 0.85)
+        ? const Color.fromARGB(255, 38, 38, 38).withValues(alpha: 0.85)
         : const Color.fromARGB(255, 222, 222, 222).withValues(alpha: 0.85);
 
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.7)
-        : Colors.black.withValues(alpha: 0.7);
+        ? const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.7)
+        : const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.7);
 
     final activeIconColor = isDark
         ? const Color.fromARGB(255, 0, 0, 0)
-        : const Color.fromARGB(255, 255, 255, 255);
-    final inactiveIconColor = isDark ? Colors.white54 : Colors.black45;
+        : const Color.fromARGB(255, 0, 0, 0);
+    final inactiveIconColor =
+        isDark ? Colors.white54 : const Color.fromARGB(136, 16, 16, 16);
 
     final activeIndicatorColor = isDark
         ? Colors.white.withValues(alpha: 0.9)
-        : const Color.fromARGB(255, 36, 36, 36).withValues(alpha: 0.9);
+        : const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.9);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
@@ -125,11 +118,12 @@ class DisciplinumBottomNavBar extends StatelessWidget {
                   activeIconColor: activeIconColor,
                   inactiveIconColor: inactiveIconColor,
                 ),
-                // --- NOVO ÍCONE: LOJINHA ---
+                // --- NOVO ÍCONE: LOJINHA (COM ASSET) ---
                 _buildIconItem(
                   context,
                   index: 2,
-                  icon: Icons.shopping_bag_rounded, // ou local_mall_rounded
+                  // Ajuste o caminho conforme sua estrutura de pastas (ex: assets/images/...)
+                  assetPath: 'assets/icons/icone_carrinho_compra.png',
                   isActive: currentIndex == 2,
                   activeIndicatorColor: activeIndicatorColor,
                   activeIconColor: activeIconColor,
@@ -138,7 +132,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
                 // --- FIM NOVO ÍCONE ---
                 _buildIconItem(
                   context,
-                  index: 3, // Configurações agora é 3
+                  index: 3,
                   icon: Icons.settings_rounded,
                   isActive: currentIndex == 3,
                   activeIndicatorColor: activeIndicatorColor,
@@ -156,7 +150,8 @@ class DisciplinumBottomNavBar extends StatelessWidget {
   Widget _buildIconItem(
     BuildContext context, {
     required int index,
-    required IconData icon,
+    IconData? icon,
+    String? assetPath,
     required bool isActive,
     required Color activeIndicatorColor,
     required Color activeIconColor,
@@ -178,10 +173,23 @@ class DisciplinumBottomNavBar extends StatelessWidget {
               color: isActive ? activeIndicatorColor : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
             ),
-            child: Icon(
-              icon,
-              color: isActive ? activeIconColor : inactiveIconColor,
-              size: 26,
+            child: Center(
+              // Verifica se tem assetPath, senão usa o Icon
+              child: assetPath != null
+                  ? Image.asset(
+                      assetPath,
+                      width: 24, // Tamanho similar ao do Icon padrão
+                      height: 24,
+                      // PNG obedece ao tema (branco/preto)
+                      // Se o PNG for colorido e quiser manter as cores originais, remova esta linha:
+                      color: isActive ? activeIconColor : inactiveIconColor,
+                      fit: BoxFit.contain,
+                    )
+                  : Icon(
+                      icon,
+                      color: isActive ? activeIconColor : inactiveIconColor,
+                      size: 26,
+                    ),
             ),
           ),
         ),

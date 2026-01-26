@@ -229,6 +229,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                             'Disciplinum',
                             style: textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w900,
+                              fontSize: 24,
                               letterSpacing: 1.3,
                               foreground: Paint()
                                 ..style = PaintingStyle.stroke
@@ -248,6 +249,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                               'Disciplinum',
                               style: textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w900,
+                                fontSize: 24,
                                 letterSpacing: 1.3,
                                 color: Colors.white,
                               ),
