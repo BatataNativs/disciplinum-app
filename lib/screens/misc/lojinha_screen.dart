@@ -52,7 +52,7 @@ class LojinhaScreen extends StatelessWidget {
                 Text(
                   "Funcionalidades",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     // Título fora do card continua branco no dark mode
                     color: isDark ? Colors.white : Colors.black87,
@@ -97,7 +97,7 @@ class LojinhaScreen extends StatelessWidget {
             _buildProductItem(
               context,
               title: "AdFree (Vitalício)",
-              description: "Remova anúncios para sempre.",
+              description: "Remova anúncios do app permanentemente.",
               price: iap.isAdFreePermanent ? "Adquirido" : "R\$ 19,90",
               icon: Icons.block_flipped,
               color: Colors.redAccent,
@@ -126,7 +126,7 @@ class LojinhaScreen extends StatelessWidget {
             _buildProductItem(
               context,
               title: "Dark Mode 🌙",
-              description: "Desbloqueie o tema escuro elegante.",
+              description: "Desbloqueie o tema escuro.",
               price: iap.isDarkModeUnlocked ? "Adquirido" : "R\$ 9,90",
               icon: Icons.dark_mode_rounded,
               color: Colors.indigoAccent,
@@ -190,7 +190,7 @@ class LojinhaScreen extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Text("🤝", style: TextStyle(fontSize: 20)),
+                child: const Text("🤝", style: TextStyle(fontSize: 18)),
               ),
               const SizedBox(width: 8),
               const Text(
@@ -206,7 +206,7 @@ class LojinhaScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            "Gosta do App?\nPague um Café! ☕",
+            "Gosta do App? Pague um Café! ☕",
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,

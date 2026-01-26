@@ -230,6 +230,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             'Disciplinum',
                             style: textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w900,
+                              fontSize: 24,
                               letterSpacing: 1.3,
                               foreground: Paint()
                                 ..style = PaintingStyle.stroke
@@ -249,6 +250,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               'Disciplinum',
                               style: textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w900,
+                                fontSize: 24,
                                 letterSpacing: 1.3,
                                 color: Colors.white,
                               ),

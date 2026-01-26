@@ -52,8 +52,7 @@ class Lojinha extends StatelessWidget {
                       _buildShopItem(
                         context,
                         title: '🚫 AdFree (Sem anúncios)',
-                        description:
-                            'Remova todos os anúncios do app permanentemente.',
+                        description: 'Remova anúncios do app permanentemente.',
                         isAcquired: iap.isAdFreePermanent,
                         titleColor: isDark
                             ? const Color(0xFFFFFFFF)
@@ -101,8 +100,7 @@ class Lojinha extends StatelessWidget {
                       _buildShopItem(
                         context,
                         title: '🌙 Dark Mode (Tema escuro)',
-                        description:
-                            'Você poderá usar o app no incrível tema escuro! Podendo usar modo claro e modo escuro.',
+                        description: 'Desbloqueie o tema escuro. ',
                         isAcquired: iap.isDarkModeUnlocked,
                         titleColor: isDark
                             ? const Color(0xFFFFFFFF)
