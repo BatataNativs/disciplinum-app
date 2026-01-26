@@ -46,6 +46,7 @@ class SmokingService {
       'smoking_packs_per_day': settings.packsPerDay,
       'smoking_quit_date': settings.quitDate.toUtc().toIso8601String(),
       'smoking_currency': settings.currency,
+      // Preserva o histórico ao salvar novas configurações
       'last_pack_price': settings.lastPackPrice,
       'last_packs_per_day': settings.lastPacksPerDay,
       'last_quit_date': settings.lastQuitDate?.toIso8601String(),
@@ -55,14 +56,14 @@ class SmokingService {
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
-    // Upsert com tratamento de conflito
     await _supabase.from('user_module_settings').upsert(
           data,
           onConflict: 'user_id, module_id',
         );
   }
 
-  // Novo método para arquivar a tentativa atual e resetar
+  // --- CORREÇÃO IMPORTANTE AQUI ---
+  // Arquiva a tentativa atual E reseta os dados vigentes para um estado "limpo"
   Future<void> archiveAndReset() async {
     final current = await getSettings();
     if (current == null) return;
@@ -70,18 +71,33 @@ class SmokingService {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;
 
-    // Move os dados atuais para os campos de "last"
+    // Data de "agora" para ser o novo início (zerado)
+    final now = DateTime.now().toUtc();
+
     final archivedData = {
       'user_id': userId,
       'module_id': 'smoking',
-      // Novos valores de histórico baseados no que era o "atual"
+
+      // 1. Move dados para o histórico (LAST)
       'last_pack_price': current.packPrice,
       'last_packs_per_day': current.packsPerDay,
       'last_quit_date': current.quitDate.toIso8601String(),
       'last_currency': current.currency,
-      'last_saved_total': current.moneySavedTotal,
-      'last_end_date': DateTime.now().toUtc().toIso8601String(),
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      'last_saved_total':
+          current.moneySavedTotal, // Calcula o total economizado até agora
+      'last_end_date': now.toIso8601String(), // Data do reset
+
+      // 2. RESETA os dados atuais para o padrão (para não puxar velharia na tela)
+      // Mantemos preço e maços para facilitar nova tentativa, mas a data vira "agora"
+      // Se quiser forçar o usuário a redigitar tudo, pode zerar preço/maços também.
+      'smoking_quit_date':
+          now.toIso8601String(), // Reseta o contador de dias para 0
+
+      // Opcional: Se quiser zerar inputs, descomente:
+      // 'smoking_pack_price': 0.0,
+      // 'smoking_packs_per_day': 0,
+
+      'updated_at': now.toIso8601String(),
     };
 
     await _supabase.from('user_module_settings').upsert(
@@ -90,7 +106,7 @@ class SmokingService {
         );
   }
 
-  // Deletar configurações (Resetar módulo para estado inicial)
+  // Deletar configurações (Resetar módulo para estado inicial absoluto)
   Future<void> deleteSettings() async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;

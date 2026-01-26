@@ -14,7 +14,8 @@ class IapService extends ChangeNotifier {
   // IDs dos produtos
   static const String productIdDarkMode = 'dark_mode_unlock';
   static const String productIdAdFree = 'ad_free_unlock';
-  static const String productIdAdFreeLite = 'ad_free_lite'; // Produto 7 dias
+  static const String productIdAdFreeLite =
+      'ad_free_lite'; // Produto 7 dias (Consumível)
   static const String productIdCustomNotif = 'custom_notifications_unlock';
   static const String productIdMotivationPhrases = 'motivation_phrases_unlock';
 
@@ -68,14 +69,11 @@ class IapService extends ChangeNotifier {
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    _darkModeUnlocked =
-        prefs.getBool(_kPrefsDarkMode) ?? false; // mudar para true para testes
-    _adFreePermanent =
-        prefs.getBool(_kPrefsAdFree) ?? false; // mudar para true para testes
-    _customNotifUnlocked = prefs.getBool(_kPrefsCustomNotif) ??
-        false; // mudar para true para testes
-    _motivationPhrasesUnlocked = prefs.getBool(_kPrefsMotivationPhrases) ??
-        false; // mudar para true para testes
+    _darkModeUnlocked = prefs.getBool(_kPrefsDarkMode) ?? false;
+    _adFreePermanent = prefs.getBool(_kPrefsAdFree) ?? false;
+    _customNotifUnlocked = prefs.getBool(_kPrefsCustomNotif) ?? false;
+    _motivationPhrasesUnlocked =
+        prefs.getBool(_kPrefsMotivationPhrases) ?? false;
 
     // Carrega a expiração do Lite
     final liteExpMillis = prefs.getInt(_kPrefsAdFreeLiteExp);
@@ -152,8 +150,14 @@ class IapService extends ChangeNotifier {
 
     final param = PurchaseParam(productDetails: product);
 
-    // Usamos NonConsumable para simplificar a lógica de compra única por período
-    _iap.buyNonConsumable(purchaseParam: param);
+    // --- CORREÇÃO AQUI: Lógica diferenciada para Consumível vs Não Consumível ---
+    if (productId == productIdAdFreeLite) {
+      // O Lite é consumível (pode comprar de novo quando acabar)
+      _iap.buyConsumable(purchaseParam: param);
+    } else {
+      // Os outros são permanentes (compra única)
+      _iap.buyNonConsumable(purchaseParam: param);
+    }
   }
 
   void restorePurchases() {
@@ -175,8 +179,15 @@ class IapService extends ChangeNotifier {
 
     // Lógica do AdFree Lite (7 Dias)
     if (productId == productIdAdFreeLite) {
-      // Define a data de agora + 7 dias
-      final newExpiration = DateTime.now().add(const Duration(days: 7));
+      // Se já tiver uma expiração válida futura, soma +7 dias a ela.
+      // Senão, começa de agora + 7 dias.
+      DateTime baseDate = DateTime.now();
+      if (_adFreeLiteExpiration != null &&
+          _adFreeLiteExpiration!.isAfter(baseDate)) {
+        baseDate = _adFreeLiteExpiration!;
+      }
+
+      final newExpiration = baseDate.add(const Duration(days: 7));
       _adFreeLiteExpiration = newExpiration;
 
       // Salva em millis

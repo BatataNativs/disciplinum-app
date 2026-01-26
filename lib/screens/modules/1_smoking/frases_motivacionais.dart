@@ -1,3 +1,4 @@
+import 'package:disciplinum/widgets/notifications/notification_message_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/niche_id.dart';
@@ -41,33 +42,32 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     setState(() {
       _slots = [];
 
-      // Se não for premium, sempre mostra apenas 1 slot com a frase padrão
-      if (!iap.isMotivationPhrasesUnlocked) {
+      if (serverTimes.isEmpty) {
+        // Se não tiver nada salvo, inicia com 1 slot padrão (para não ficar vazio)
+        // Mas o usuário pode apagar se quiser depois.
         _slots.add(PhraseSlot(
-          text: moduleMessages[_niche.id] ?? '',
-          time: serverTimes.isNotEmpty
-              ? TimeOfDay(
-                  hour: serverTimes[0].hour, minute: serverTimes[0].minute)
-              : const TimeOfDay(hour: 9, minute: 0),
+          text: getModuleMessage(_niche.id),
+          time: const TimeOfDay(hour: 9, minute: 0),
         ));
       } else {
-        if (serverTimes.isEmpty) {
-          _slots.add(PhraseSlot(
-            text: customPhrases.isNotEmpty
-                ? customPhrases[0]
-                : getModuleMessage(_niche.id),
-            time: const TimeOfDay(hour: 9, minute: 0),
-          ));
-        } else {
-          for (int i = 0; i < serverTimes.length; i++) {
-            final t = serverTimes[i];
-            _slots.add(PhraseSlot(
-              text: (i < customPhrases.length)
-                  ? customPhrases[i]
-                  : getModuleMessage(_niche.id),
-              time: TimeOfDay(hour: t.hour, minute: t.minute),
-            ));
+        for (int i = 0; i < serverTimes.length; i++) {
+          final t = serverTimes[i];
+
+          String phraseText;
+          if (iap.isMotivationPhrasesUnlocked) {
+            // Se for premium, tenta pegar a frase customizada salva
+            phraseText = (i < customPhrases.length)
+                ? customPhrases[i]
+                : getModuleMessage(_niche.id);
+          } else {
+            // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
+            phraseText = getModuleMessage(_niche.id);
           }
+
+          _slots.add(PhraseSlot(
+            text: phraseText,
+            time: TimeOfDay(hour: t.hour, minute: t.minute),
+          ));
         }
       }
       _isLoading = false;
@@ -82,35 +82,32 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     setState(() => _isLoading = true);
     final nicheIdMotivation = _niche.id.id + 100;
 
-    // Se não é premium, salva apenas o horário da frase padrão (slot 0)
-    final List<PhraseSlot> finalSlots =
-        iap.isMotivationPhrasesUnlocked ? _slots : [_slots.first];
-
     // 1. Limpa horários antigos no Supabase
     await CloudSyncService.removeAllTimesForNiche(nicheId: nicheIdMotivation);
 
-    // 2. Salva novos horários
-    for (final slot in finalSlots) {
+    // 2. Salva novos horários e frases
+    for (final slot in _slots) {
       await CloudSyncService.addUserNicheTime(
         nicheId: nicheIdMotivation,
         hour: slot.time.hour,
         minute: slot.time.minute,
+        // Salva o texto que está no slot (seja o padrão ou editado)
         phrase: slot.text,
       );
     }
 
-    // 3. Salva frases no GamificationService (se for premium ou para compatibilidade)
-    final phrases = finalSlots.map((s) => s.text).toList();
+    // 3. Salva cache de frases no GamificationService
+    final phrases = _slots.map((s) => s.text).toList();
     if (iap.isMotivationPhrasesUnlocked) {
       await gamification.setCustomPhrases(_niche.id, phrases);
     }
 
-    // Também sincroniza a primeira frase com o sistema de mensagem única para compatibilidade
+    // Compatibilidade: Salva a primeira frase como mensagem principal customizada
     if (phrases.isNotEmpty) {
       await gamification.setCustomMessage(_niche.id, phrases.first);
     }
 
-    // 4. Recarrega sessões de monitoramento
+    // 4. Recarrega sessões de monitoramento (Reagendar notificações)
     await gamification.restoreMonitoringSession();
 
     if (mounted) {
@@ -133,7 +130,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   void _removeSlot(int index) {
-    if (_slots.length <= 1) return;
+    // SEM restrição de mínimo. Pode zerar a lista.
     setState(() {
       _slots.removeAt(index);
     });
@@ -163,6 +160,9 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final iap = Provider.of<IapService>(context);
+
+    // Define se o usuário pode EDITAR O TEXTO
+    final bool canEditText = iap.isMotivationPhrasesUnlocked;
 
     return Container(
       decoration: BoxDecoration(
@@ -217,15 +217,27 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Seção de Compra (se não for premium)
-                    if (!iap.isMotivationPhrasesUnlocked)
-                      _buildPurchaseCard(isDark),
+                    // Card de aviso/upsell (Só mostra se não for Premium)
+                    if (!canEditText) _buildPurchaseCard(isDark),
 
                     const SizedBox(height: 16),
 
+                    if (_slots.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Text(
+                            "Nenhum horário definido.\nToque em '+' para adicionar.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.black45,
+                            ),
+                          ),
+                        ),
+                      ),
+
                     ...List.generate(_slots.length, (index) {
                       final slot = _slots[index];
-                      final isLocked = !iap.isMotivationPhrasesUnlocked;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -237,19 +249,26 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                                 children: [
                                   Expanded(
                                     child: TextFormField(
+                                      // --- CORREÇÃO AQUI ---
                                       key: ValueKey(
-                                          'phrase_${slot.text}_$isLocked'),
+                                          'phrase_${index}_$canEditText'),
                                       initialValue: slot.text,
-                                      enabled: !isLocked,
+                                      // Se não for premium, fica ReadOnly (não abre teclado)
+                                      readOnly: !canEditText,
                                       maxLines: 2,
                                       onChanged: (val) => slot.text = val,
+                                      // Se tocar no campo ReadOnly (Free), abre o dialog
+                                      onTap: !canEditText
+                                          ? _showPremiumFeatureDialog
+                                          : null,
                                       style: TextStyle(
                                         fontSize: 15,
-                                        fontStyle:
-                                            isLocked ? FontStyle.italic : null,
-                                        color: isLocked
+                                        fontStyle: !canEditText
+                                            ? FontStyle.italic
+                                            : null,
+                                        color: !canEditText
                                             ? (isDark
-                                                ? Colors.white54
+                                                ? Colors.white60
                                                 : Colors.black54)
                                             : (isDark
                                                 ? Colors.white
@@ -258,10 +277,11 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                                       decoration: InputDecoration(
                                         hintText: 'Digite sua frase...',
                                         border: InputBorder.none,
-                                        hintStyle: TextStyle(
-                                            color: isDark
-                                                ? Colors.white24
-                                                : Colors.black26),
+                                        // Ícone de cadeado discreto no campo se for Free
+                                        suffixIcon: !canEditText
+                                            ? const Icon(Icons.lock_outline,
+                                                size: 16, color: Colors.grey)
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -269,6 +289,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                                   Column(
                                     children: [
                                       IconButton(
+                                        tooltip: "Alterar horário",
                                         icon: Icon(
                                           Icons.access_time_rounded,
                                           color: colorScheme.primary,
@@ -287,13 +308,13 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                                       ),
                                     ],
                                   ),
-                                  if (index > 0 &&
-                                      iap.isMotivationPhrasesUnlocked)
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline,
-                                          color: Colors.redAccent),
-                                      onPressed: () => _removeSlot(index),
-                                    ),
+                                  // --- LIXEIRA LIVRE PARA TODOS ---
+                                  IconButton(
+                                    tooltip: "Remover horário",
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.redAccent),
+                                    onPressed: () => _removeSlot(index),
+                                  ),
                                 ],
                               ),
                             ],
@@ -302,7 +323,8 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                       );
                     }),
 
-                    if (iap.isMotivationPhrasesUnlocked && _slots.length < 8)
+                    // --- BOTÃO ADICIONAR LIVRE PARA TODOS (até 8) ---
+                    if (_slots.length < 8)
                       Center(
                         child: TextButton.icon(
                           onPressed: _addSlot,
@@ -341,60 +363,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   Widget _buildPurchaseCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF171717), // Anthracite
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white12,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.lock_outline, size: 18, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'Personalização Não Disponível',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Desbloqueie para editar suas frases e adicionar até 8 horários personalizados.',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: _showPremiumFeatureDialog,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.white),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                '✏️ Personalizar 🔓',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return NotificationMessageEditor(nicheId: _niche.id);
   }
 
   void _showPremiumFeatureDialog() {

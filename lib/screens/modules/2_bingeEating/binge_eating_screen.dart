@@ -32,10 +32,21 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
   bool _loadingData = true;
   bool _isLoadingData = false;
 
+  // --- CONTROLADOR DE PÁGINA ---
+  late PageController _pageController;
+  int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // --- HARDCODED TEXTS AND LOGIC FOR BINGE EATING ---
@@ -50,8 +61,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
   String _getIntroText() {
     return 'Escolha seus apps de delivery:';
   }
-
-  int _selectedIndex = 0;
 
   Future<void> _loadAllPersistentData() async {
     if (_isLoadingData) return;
@@ -339,7 +348,19 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         ),
       ),
     );
-    setState(() {});
+
+    // Se tiver apps e o controller estiver ok, avança para ativar
+    if (_selectedApps.isNotEmpty) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      } else {
+        setState(() => _selectedIndex = 2);
+      }
+    } else {
+      setState(() {});
+    }
   }
 
   @override
@@ -423,26 +444,72 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      NicheHeader(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
                       ),
-                      const SizedBox(height: 32),
-                      _buildSegmentedControl(),
-                      const SizedBox(height: 32),
-                      // Top Content Zone (Static)
-                      _buildTabContent(),
-                      const SizedBox(height: 24),
-                      // Bottom Action Zone (Static)
-                      _buildTabActions(),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildSegmentedControl(),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
+                          // 0: Como Funciona
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 24),
+                                _buildTabActions(0),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 1: Apps
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(1),
+                                const SizedBox(height: 24),
+                                _buildTabActions(1),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 2: Ativar
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(2),
+                                const SizedBox(height: 24),
+                                _buildTabActions(2),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -472,7 +539,14 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
-                setState(() => _selectedIndex = index);
+                // Verificação de segurança + Animação rápida (250ms)
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() => _selectedIndex = index);
+                }
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
@@ -515,11 +589,10 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     );
   }
 
-  Widget _buildTabContent() {
-    switch (_selectedIndex) {
+  Widget _buildTabContent(int index) {
+    switch (index) {
       case 0:
         return Column(
-          key: const ValueKey('content_how_it_works'),
           children: [
             NicheInfoSection(hintText: _getModuleHintText()),
             const SizedBox(height: 24),
@@ -528,7 +601,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         );
       case 1:
         return NicheContentApps(
-          key: const ValueKey('content_apps'),
           selectedApps: _selectedApps,
           appDisplayInfos: _appDisplayInfos,
           introText: _getIntroText(),
@@ -537,7 +609,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         );
       case 2:
         return Column(
-          key: const ValueKey('content_activate'),
           children: [
             if (_gamificationRunning) ...[
               const SizedBox(height: 16),
@@ -621,21 +692,22 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-            ] else
+            ] else ...[
               const Icon(Icons.do_not_disturb_on_rounded,
                   size: 80, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text("Módulo desativado",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey)),
-            const SizedBox(height: 8),
-            const Text(
-              "Ative o módulo para começar a usá-lo e para criar seu progresso.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
+              const SizedBox(height: 16),
+              const Text("Módulo desativado",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey)),
+              const SizedBox(height: 8),
+              const Text(
+                "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
           ],
         );
       default:
@@ -643,13 +715,28 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     }
   }
 
-  Widget _buildTabActions() {
-    switch (_selectedIndex) {
+  Widget _buildTabActions(int index) {
+    switch (index) {
+      // --- BOTÃO COMEÇAR (ABA 0) ---
       case 0:
-        return const SizedBox(height: 55, key: ValueKey('action_none'));
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Começar',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, // Vai para "Apps"
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
+            },
+            borderRadius: 18,
+          ),
+        );
       case 1:
         return SizedBox(
-          key: const ValueKey('action_apps'),
           width: double.infinity,
           height: 55,
           child: GlowingButton(
@@ -661,7 +748,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         );
       case 2:
         return SizedBox(
-          key: const ValueKey('action_activate'),
           width: double.infinity,
           height: 55,
           child: GlowingButton(

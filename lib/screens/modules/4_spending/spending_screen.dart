@@ -31,12 +31,22 @@ class _SpendingScreenState extends State<SpendingScreen> {
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
+
+  // --- CONTROLADOR DE PÁGINA ---
+  late PageController _pageController;
   int _selectedIndex = 0; // 0=Como Funciona, 1=Apps, 2=Ativar
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // --- HARDCODED TEXTS FOR SPENDING ---
@@ -302,7 +312,144 @@ class _SpendingScreenState extends State<SpendingScreen> {
         ),
       ),
     );
-    setState(() {});
+
+    // Se tiver apps e o controller estiver ok, avança para ativar
+    if (_selectedApps.isNotEmpty) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      } else {
+        setState(() => _selectedIndex = 2);
+      }
+    } else {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    if (_loadingData) {
+      return Scaffold(
+        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Custom
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          // CORRIGIDO: Agora reage ao tema corretamente
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _niche.name,
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child:
+                            NicheHeader(niche: _niche, showBackground: false)),
+                    const SizedBox(height: 24),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildSegmentedControl()),
+                    const SizedBox(height: 32),
+
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
+                          // 0: Como Funciona
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 24),
+                                _buildTabActions(0),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 1: Apps
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(1),
+                                const SizedBox(height: 24),
+                                _buildTabActions(1),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 2: Ativar
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(2),
+                                const SizedBox(height: 24),
+                                _buildTabActions(2),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSegmentedControl() {
@@ -325,7 +472,13 @@ class _SpendingScreenState extends State<SpendingScreen> {
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
-                setState(() => _selectedIndex = index);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() => _selectedIndex = index);
+                }
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
@@ -371,8 +524,8 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
   }
 
-  Widget _buildTabContent() {
-    switch (_selectedIndex) {
+  Widget _buildTabContent(int index) {
+    switch (index) {
       case 0:
         return Column(
           children: [
@@ -535,8 +688,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-            ],
-            if (!_gamificationRunning) ...[
+            ] else ...[
               const Icon(Icons.do_not_disturb_on_rounded,
                   size: 80, color: Colors.grey),
               const SizedBox(height: 16),
@@ -552,16 +704,32 @@ class _SpendingScreenState extends State<SpendingScreen> {
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
-            ] else ...[
-              const SizedBox(height: 24),
             ],
           ],
         );
     }
   }
 
-  Widget _buildTabActions() {
-    switch (_selectedIndex) {
+  Widget _buildTabActions(int index) {
+    switch (index) {
+      // --- BOTÃO COMEÇAR (ABA 0) ---
+      case 0:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Começar',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, // Vai para "Apps"
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
+            },
+            borderRadius: 18,
+          ),
+        );
       case 1:
         return SizedBox(
           width: double.infinity,
@@ -593,81 +761,5 @@ class _SpendingScreenState extends State<SpendingScreen> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final isDark = theme.brightness == Brightness.dark;
-
-    if (_loadingData) {
-      return Scaffold(
-        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      NicheHeader(niche: _niche),
-                      const SizedBox(height: 24),
-                      _buildSegmentedControl(),
-                      const SizedBox(height: 32),
-                      _buildTabContent(),
-                      const SizedBox(height: 32),
-                      _buildTabActions(),
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

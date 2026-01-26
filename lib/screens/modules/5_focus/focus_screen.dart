@@ -32,12 +32,22 @@ class _FocusScreenState extends State<FocusScreen> {
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
+
+  // --- CONTROLADOR DE PÁGINA ---
+  late PageController _pageController;
   int _selectedIndex = 0; // 0=Como Funciona, 1=Apps, 2=Tempo, 3=Ativar
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // --- HARDCODED TEXTS FOR FOCUS ---
@@ -58,18 +68,6 @@ class _FocusScreenState extends State<FocusScreen> {
 
       TimeOfDay? start;
       TimeOfDay? end;
-
-      // Focus module usually stores interval as two times in DB?
-      // Based on original code it seemed like it just loaded times.
-      // NicheContentFocus logic used standard times?
-      // Actually original code for focus didn't seemingly load start/end from DB explicitly separate from times list?
-      // Wait, let's check CloudSyncService usage in original code.
-      // Original code: _times = userTimes...
-      // But _focusStart/_focusEnd were not seemingly loaded from DB in the original snippet I saw?
-      // Ah, the NicheContentFocus logic might rely on local state or maybe I missed how start/end are persisted.
-      // Let's assume for now we just load selected apps.
-      // If the original user wants to persist the interval, we might need to check if existing DB supports it.
-      // For now, I will keep it simple: If times list has 2 entries, assume start/end.
 
       if (userTimes.length >= 2) {
         start = TimeOfDay(hour: userTimes[0].hour, minute: userTimes[0].minute);
@@ -297,7 +295,19 @@ class _FocusScreenState extends State<FocusScreen> {
         ),
       ),
     );
-    setState(() {});
+
+    // Se tiver apps e o controller estiver ok, avança para a próxima etapa
+    if (_selectedApps.isNotEmpty) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(2, // Vai para "Tempo"
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      } else {
+        setState(() => _selectedIndex = 2);
+      }
+    } else {
+      setState(() {});
+    }
   }
 
   Future<void> _pickFocusInterval() async {
@@ -350,6 +360,15 @@ class _FocusScreenState extends State<FocusScreen> {
       hour: end.hour,
       minute: end.minute,
     );
+
+    // Se o tempo foi definido, avança para ativar
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(3, // Vai para "Ativar"
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    } else {
+      setState(() => _selectedIndex = 3);
+    }
   }
 
   void _removeFocusInterval() async {
@@ -369,6 +388,150 @@ class _FocusScreenState extends State<FocusScreen> {
         ),
       );
     }
+  }
+
+  String _formatTime(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  String _getModuleHintText() {
+    return 'Selecione apps que costumam te distrair (como redes sociais, jogos, etc.) e defina um intervalo de foco.\n'
+        'Durante esse tempo, se você abrir esses apps, será alertado para fechá-los em até 30 segundos. Caso contrário, seu progresso será resetado.';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    if (_loadingData) {
+      return Scaffold(
+        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Row
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _niche.name,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child:
+                            NicheHeader(niche: _niche, showBackground: false)),
+                    const SizedBox(height: 24),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildSegmentedControl()),
+                    const SizedBox(height: 32),
+
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
+                          // 0: Como Funciona
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 24),
+                                _buildTabActions(0),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 1: Apps
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(1),
+                                const SizedBox(height: 24),
+                                _buildTabActions(1),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 2: Tempo
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(2),
+                                const SizedBox(height: 24),
+                                _buildTabActions(2),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 3: Ativar
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(3),
+                                const SizedBox(height: 24),
+                                _buildTabActions(3),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSegmentedControl() {
@@ -391,7 +554,13 @@ class _FocusScreenState extends State<FocusScreen> {
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
-                setState(() => _selectedIndex = index);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() => _selectedIndex = index);
+                }
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
@@ -437,16 +606,8 @@ class _FocusScreenState extends State<FocusScreen> {
     );
   }
 
-  String _formatTime(TimeOfDay time) =>
-      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-
-  String _getModuleHintText() {
-    return 'Selecione apps que costumam te distrair (como redes sociais, jogos, etc.) e defina um intervalo de foco.\n'
-        'Durante esse tempo, se você abrir esses apps, será alertado para fechá-los em até 30 segundos. Caso contrário, seu progresso será resetado.';
-  }
-
-  Widget _buildTabContent() {
-    switch (_selectedIndex) {
+  Widget _buildTabContent(int index) {
+    switch (index) {
       case 0:
         return Column(
           children: [
@@ -660,8 +821,7 @@ class _FocusScreenState extends State<FocusScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-            ],
-            if (!_gamificationRunning) ...[
+            ] else ...[
               const Icon(Icons.do_not_disturb_on_rounded,
                   size: 80, color: Colors.grey),
               const SizedBox(height: 16),
@@ -677,16 +837,34 @@ class _FocusScreenState extends State<FocusScreen> {
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
-              const SizedBox(height: 24),
             ],
+            const SizedBox(height: 24),
           ],
         );
     }
   }
 
-  Widget _buildTabActions() {
-    switch (_selectedIndex) {
-      case 1: // Apps
+  Widget _buildTabActions(int index) {
+    switch (index) {
+      // --- BOTÃO COMEÇAR (ABA 0) ---
+      case 0:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Começar',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, // Vai para "Apps"
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
+            },
+            borderRadius: 18,
+          ),
+        );
+      case 1:
         return SizedBox(
           width: double.infinity,
           height: 50,
@@ -697,7 +875,7 @@ class _FocusScreenState extends State<FocusScreen> {
             borderRadius: 18,
           ),
         );
-      case 2: // Interval
+      case 2:
         return SizedBox(
           width: double.infinity,
           height: 50,
@@ -708,7 +886,7 @@ class _FocusScreenState extends State<FocusScreen> {
             borderRadius: 18,
           ),
         );
-      case 3: // Activate
+      case 3:
         return SizedBox(
           width: double.infinity,
           height: 50,
@@ -728,81 +906,5 @@ class _FocusScreenState extends State<FocusScreen> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    if (_loadingData) {
-      return Scaffold(
-        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Row
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      NicheHeader(niche: _niche),
-                      const SizedBox(height: 24),
-                      _buildSegmentedControl(),
-                      const SizedBox(height: 32),
-                      _buildTabContent(),
-                      const SizedBox(height: 32),
-                      _buildTabActions(),
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

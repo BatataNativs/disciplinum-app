@@ -686,7 +686,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 2),
+        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 3),
       ),
     );
   }

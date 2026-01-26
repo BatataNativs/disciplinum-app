@@ -31,8 +31,13 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   SmokingSettingsModel? settings;
   bool isLoading = true;
   bool _gamificationRunning = false;
+  bool isSaving = false;
   final SmokingService _service = SmokingService();
+
+  // --- CONTROLADOR DE PÁGINA ---
+  late PageController _pageController;
   int _selectedIndex = 0;
+
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
   final TextEditingController _priceController =
@@ -45,6 +50,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   @override
   void initState() {
     super.initState();
+    // Inicializa o controller
+    _pageController = PageController(initialPage: 0);
     _loadSettings();
   }
 
@@ -52,6 +59,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   void dispose() {
     _priceController.dispose();
     _packsController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -67,14 +75,18 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       });
 
       if (settings != null) {
-        // Pre-fill controllers
         _priceController.text =
             settings!.packPrice.toStringAsFixed(2).replaceAll('.', ',');
         _packsController.text = settings!.packsPerDay.toString();
-        _selectedDate = settings!.quitDate;
+
+        if (!_gamificationRunning) {
+          _selectedDate = DateTime.now();
+        } else {
+          _selectedDate = settings!.quitDate;
+        }
+
         _selectedCurrency = settings!.currency;
 
-        // Sincroniza e restaura o ciclo se já estiver ativo
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
       }
     }
@@ -120,20 +132,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
 
-    // Atualiza horários no cache do serviço
     gamification.scheduleByModule[NicheId.smoking] =
         times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
 
     if (onlySyncSchedules) return;
 
-    // Se houver horários e o módulo estiver ativo, garante que o ciclo está rodando
     if (times.isNotEmpty && _gamificationRunning) {
-      // Garante permissões (Notificação e Status de uso)
       await PermissionService.ensurePermissions(context);
-
       gamification.startModuleCycle(nicheId: NicheId.smoking);
 
-      // Garante que o monitor background (Timer) está ativo
       if (!gamification.isGeneralMonitoringActive) {
         gamification.startMonitoringApps(
             nicheId: NicheId.smoking,
@@ -144,7 +151,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   Future<void> _saveSettings(
       double price, int packs, DateTime date, String currency) async {
-    setState(() => isLoading = true);
+    setState(() => isSaving = true);
+
     final newSettings = SmokingSettingsModel(
       packPrice: price,
       packsPerDay: packs,
@@ -158,10 +166,21 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       if (mounted) {
         setState(() {
           settings = newSettings;
-          isLoading = false;
+          isSaving = false;
         });
 
-        // Apenas sincroniza horários SEM ativar ao salvar
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+          );
+        } else {
+          setState(() {
+            _selectedIndex = 2;
+          });
+        }
+
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
         messenger.showSnackBar(
@@ -171,7 +190,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => isLoading = false);
+        setState(() => isSaving = false);
         messenger.showSnackBar(
           SnackBar(content: Text("Erro ao salvar: $e")),
         );
@@ -179,7 +198,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
   }
 
-  // --- CORREÇÃO PRINCIPAL AQUI ---
   Future<void> _resetProgress() async {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
@@ -212,10 +230,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     if (confirmed == true) {
       setState(() => isLoading = true);
       try {
-        // 1. Arquiva tentativa atual e reseta economia no banco
         await _service.archiveAndReset();
+        await CloudSyncService.removeAllTimesForNiche(
+            nicheId: NicheId.smoking.id);
+        await CloudSyncService.removeAllTimesForNiche(
+            nicheId: NicheId.smoking.id + 100);
 
-        // 2. Reseta gamificação e desativa module
         gamification.resetMedals(
           NicheId.smoking,
           notificationTitle: 'Módulo de Parar de Fumar Reiniciado',
@@ -225,7 +245,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         );
 
         if (mounted) {
-          // Recarrega as configurações para ter os dados do histórico
           _service.getSettings().then((data) {
             if (mounted) {
               setState(() {
@@ -333,10 +352,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       setState(() => isLoading = true);
 
       try {
-        // 1. Arquiva e reseta economia
         await _service.archiveAndReset();
+        await CloudSyncService.removeAllTimesForNiche(
+            nicheId: NicheId.smoking.id);
+        await CloudSyncService.removeAllTimesForNiche(
+            nicheId: NicheId.smoking.id + 100);
 
-        // 2. Desativa e reseta gamificação
         gamification.resetMedals(
           NicheId.smoking,
           notificationTitle: 'Módulo Desativado',
@@ -477,26 +498,72 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      NicheHeader(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
                       ),
-                      const SizedBox(height: 16),
-                      _buildSegmentedControl(),
-                      const SizedBox(height: 24),
-                      // Top Content Zone (Static)
-                      _buildTabContent(),
-                      const SizedBox(height: 24),
-                      // Bottom Action Zone (Static)
-                      _buildTabActions(),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildSegmentedControl(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
+                          // PAGINA 0: Como Funciona
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 24),
+                                _buildTabActions(0),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // PAGINA 1: Info Consumo
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(1),
+                                const SizedBox(height: 24),
+                                _buildTabActions(1),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // PAGINA 2: Ativar
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(2),
+                                const SizedBox(height: 24),
+                                _buildTabActions(2),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -526,7 +593,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
-                setState(() => _selectedIndex = index);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                }
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
@@ -569,11 +644,10 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     );
   }
 
-  Widget _buildTabContent() {
-    switch (_selectedIndex) {
+  Widget _buildTabContent(int index) {
+    switch (index) {
       case 0:
         return Column(
-          key: const ValueKey('content_how_it_works'),
           children: [
             const NicheInfoSection(
               hintText:
@@ -584,7 +658,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         );
       case 1:
         return Column(
-          key: const ValueKey('content_consumption_info'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
@@ -608,7 +681,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               ),
               child: Column(
                 children: [
-                  // Price Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -686,7 +758,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                     ],
                   ),
                   const Divider(height: 24),
-                  // Packs Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -732,7 +803,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                     ],
                   ),
                   const Divider(height: 24),
-                  // Date Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -777,7 +847,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         );
       case 2:
         return Column(
-          key: const ValueKey('content_activate'),
           children: [
             if (_gamificationRunning && settings != null) ...[
               Row(
@@ -923,39 +992,55 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
   }
 
-  Widget _buildTabActions() {
-    switch (_selectedIndex) {
+  Widget _buildTabActions(int index) {
+    switch (index) {
+      // --- NOVO BOTÃO COMEÇAR (ABA 0) ---
       case 0:
-        return const SizedBox(height: 55, key: ValueKey('action_none'));
-      case 1:
         return SizedBox(
-          key: const ValueKey('action_save_settings'),
           width: double.infinity,
           height: 55,
           child: GlowingButton(
-            text: 'Salvar',
+            text: 'Começar',
             color: const Color.fromARGB(255, 57, 92, 208),
             onPressed: () {
-              if (_priceController.text.isNotEmpty &&
-                  _packsController.text.isNotEmpty) {
-                String cleanPrice = _priceController.text
-                    .replaceAll(RegExp(r'[^\d,]'), '')
-                    .replaceAll(',', '.');
-
-                _saveSettings(
-                  double.tryParse(cleanPrice) ?? 0.0,
-                  int.tryParse(_packsController.text) ?? 0,
-                  _selectedDate,
-                  _selectedCurrency,
-                );
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, // Vai para "Info de Consumo"
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
               }
             },
             borderRadius: 18,
           ),
         );
+      case 1:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: isSaving ? 'Salvando...' : 'Salvar',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: isSaving
+                ? () {} // Bloqueia clique
+                : () {
+                    if (_priceController.text.isNotEmpty &&
+                        _packsController.text.isNotEmpty) {
+                      String cleanPrice = _priceController.text
+                          .replaceAll(RegExp(r'[^\d,]'), '')
+                          .replaceAll(',', '.');
+
+                      _saveSettings(
+                        double.tryParse(cleanPrice) ?? 0.0,
+                        int.tryParse(_packsController.text) ?? 0,
+                        _selectedDate,
+                        _selectedCurrency,
+                      );
+                    }
+                  },
+            borderRadius: 18,
+          ),
+        );
       case 2:
         return Column(
-          key: const ValueKey('action_activate'),
           children: [
             SizedBox(
               width: double.infinity,

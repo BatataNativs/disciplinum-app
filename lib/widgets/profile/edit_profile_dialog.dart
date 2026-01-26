@@ -49,6 +49,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   Future<String?> _showBioDialog() async {
     final TextEditingController tempBioController =
         TextEditingController(text: _bioController.text);
+
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -61,6 +62,14 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           decoration: InputDecoration(
             hintText: 'Escreva algo sobre você...',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.grey),
+              tooltip: 'Limpar texto',
+              onPressed: () {
+                tempBioController.clear();
+                HapticFeedback.lightImpact();
+              },
+            ),
           ),
         ),
         actions: [
@@ -106,7 +115,6 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         );
         navigator.pop(true);
       } else {
-        // Mostra o erro caso falhe (Solicitação do usuário)
         messenger.showSnackBar(
           SnackBar(
             content: Text(
@@ -123,6 +131,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Definição de cores para reutilizar e garantir consistência
+    final Color textColor = isDark ? Colors.white : Colors.black;
+    final Color subtitleColor = isDark ? Colors.white70 : Colors.black54;
+
     return AlertDialog(
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -131,8 +143,8 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         children: [
           Icon(Icons.edit_note_rounded, color: theme.colorScheme.primary),
           const SizedBox(width: 12),
-          const Text('Editar Perfil',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('Editar Perfil',
+              style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
         ],
       ),
       content: SingleChildScrollView(
@@ -150,9 +162,13 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
+              style: TextStyle(color: textColor), // Cor do texto digitado
               decoration: InputDecoration(
                 hintText: 'Como quer ser chamado?',
-                prefixIcon: const Icon(Icons.person_outline, size: 20),
+                hintStyle:
+                    TextStyle(color: subtitleColor.withValues(alpha: 0.5)),
+                prefixIcon:
+                    Icon(Icons.person_outline, size: 20, color: subtitleColor),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceContainerHighest
                     .withValues(alpha: 0.3),
@@ -172,62 +188,59 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     letterSpacing: 1.1)),
             const SizedBox(height: 4),
             SwitchListTile(
-              activeThumbColor: isDark
-                  ? Colors.white
-                  : Colors.black, // cor da bolinha quando ativado
+              activeThumbColor: isDark ? Colors.white : Colors.black,
               activeTrackColor: isDark
                   ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black
-                      .withValues(alpha: 0.3), // cor do fundo quando ativado
-              title:
-                  const Text('Exibir e-mail', style: TextStyle(fontSize: 14)),
-              subtitle: const Text(
+                  : Colors.black.withValues(alpha: 0.3),
+              title: Text('Exibir e-mail',
+                  style: TextStyle(fontSize: 14, color: textColor)),
+              subtitle: Text(
                   'Caso desmarcado,\nseu e-mail não será exibido publicamente',
-                  style: TextStyle(fontSize: 11)),
+                  style: TextStyle(fontSize: 11, color: subtitleColor)),
               value: _showEmail,
               onChanged: (val) {
                 HapticFeedback.selectionClick();
                 setState(() => _showEmail = val);
               },
               contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.alternate_email_rounded, size: 20),
+              secondary: Icon(Icons.alternate_email_rounded,
+                  size: 20, color: textColor),
             ),
             SwitchListTile(
-              activeThumbColor: isDark
-                  ? Colors.white
-                  : Colors.black, // cor da bolinha quando ativado
+              activeThumbColor: isDark ? Colors.white : Colors.black,
               activeTrackColor: isDark
                   ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black
-                      .withValues(alpha: 0.3), // cor do fundo quando ativado
-              title: const Text('Exibir minha foto',
-                  style: TextStyle(fontSize: 14)),
-              subtitle: const Text(
-                  'caso desmarcado,\nsua foto não será exibida publicamente',
-                  style: TextStyle(fontSize: 11)),
+                  : Colors.black.withValues(alpha: 0.3),
+              title: Text('Exibir minha foto',
+                  style: TextStyle(fontSize: 14, color: textColor)),
+              subtitle: Text(
+                  'Caso desmarcado,\nsua foto não será exibida publicamente',
+                  style: TextStyle(fontSize: 11, color: subtitleColor)),
               value: _showAvatar,
               onChanged: (val) {
                 HapticFeedback.selectionClick();
                 setState(() => _showAvatar = val);
               },
               contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.face_unlock_rounded, size: 20),
+              secondary:
+                  Icon(Icons.face_unlock_rounded, size: 20, color: textColor),
             ),
             const Divider(),
             ListTile(
-              title: const Text('Frase a ser exibida\nno seu perfil:',
-                  style: TextStyle(fontSize: 14)),
+              title: Text('Frase a ser exibida\nno seu perfil:',
+                  style: TextStyle(fontSize: 14, color: textColor)),
               subtitle: Text(
                 _bioController.text.isEmpty
                     ? 'Clique para adicionar uma frase'
                     : _bioController.text,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, color: subtitleColor),
               ),
-              trailing: const Icon(Icons.edit, size: 16),
+              trailing: Icon(Icons.edit, size: 16, color: subtitleColor),
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.format_quote_rounded, size: 20),
+              leading:
+                  Icon(Icons.format_quote_rounded, size: 20, color: textColor),
               onTap: () async {
                 HapticFeedback.lightImpact();
                 final updatedBio = await _showBioDialog();
@@ -241,13 +254,15 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             if (widget.authService.isEmailUser) ...[
               const Divider(),
               ListTile(
-                title:
-                    const Text('Alterar Senha', style: TextStyle(fontSize: 14)),
-                subtitle: const Text('Redefina sua senha de acesso',
-                    style: TextStyle(fontSize: 11)),
-                trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                title: Text('Alterar Senha',
+                    style: TextStyle(fontSize: 14, color: textColor)),
+                subtitle: Text('Redefina sua senha de acesso',
+                    style: TextStyle(fontSize: 11, color: subtitleColor)),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    size: 20, color: textColor),
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.lock_reset_rounded, size: 20),
+                leading:
+                    Icon(Icons.lock_reset_rounded, size: 20, color: textColor),
                 onTap: () {
                   HapticFeedback.lightImpact();
                   Navigator.pop(context);
@@ -263,14 +278,15 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           style: TextButton.styleFrom(
-            foregroundColor: isDark ? Colors.white : Colors.black,
+            foregroundColor: textColor,
           ),
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
-            foregroundColor: isDark ? Colors.white : Colors.black,
+            foregroundColor:
+                Colors.white, // Texto do botão primary geralmente é branco
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape:
@@ -279,13 +295,13 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           onPressed: _isLoading ? null : _save,
           child: _isLoading
               ? const SizedBox(
-                  width: 16, height: 16, child: CircularProgressIndicator())
-              : Text('Confirmar',
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(color: Colors.white))
+              : const Text('Confirmar',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? Colors.white
-                          : const Color.fromARGB(255, 255, 255, 255))),
+                      color: Colors.white)), // Forçando branco no botão primary
         ),
       ],
     );

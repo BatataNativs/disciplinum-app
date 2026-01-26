@@ -31,12 +31,22 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
+
+  // --- CONTROLADOR DE PÁGINA ---
+  late PageController _pageController;
   int _selectedIndex = 0; // 0=Como Funciona, 1=Apps, 2=Ativar
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // --- HARDCODED TEXTS FOR ADULT CONTENT ---
@@ -307,233 +317,18 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         ),
       ),
     );
-    setState(() {});
-  }
 
-  Widget _buildSegmentedControl() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Apps', 'Ativar'];
-
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Row(
-        children: List.generate(options.length, (index) {
-          final isSelected = _selectedIndex == index;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _selectedIndex = index);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeOutQuart,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? const Color.fromARGB(255, 57, 92, 208)
-                          : const Color.fromARGB(255, 18, 189, 211))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(21),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: (isDark
-                                    ? const Color.fromARGB(255, 57, 92, 208)
-                                    : const Color.fromARGB(255, 10, 223, 219))
-                                .withValues(alpha: 0.3),
-                            blurRadius: 10,
-                          )
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  options[index],
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black54),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildTabContent() {
-    switch (_selectedIndex) {
-      case 0:
-        return Column(
-          key: const ValueKey('content_how_it_works'),
-          children: [
-            NicheInfoSection(hintText: _getModuleHintText()),
-            const SizedBox(height: 24),
-            const SizedBox(height: 24),
-          ],
-        );
-      case 1:
-        return NicheContentApps(
-          key: const ValueKey('content_apps'),
-          selectedApps: _selectedApps,
-          introText: _getIntroText(),
-          onAdd: _openSelectApps,
-          onRemove: (pkg) => _removeSelectedApp(pkg),
-        );
-      case 2:
-        return Column(
-          key: const ValueKey('content_activate'),
-          children: [
-            if (_gamificationRunning) ...[
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const MyProgressAdultContent()),
-                        );
-                      },
-                      child: Container(
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF395CC8),
-                          borderRadius: BorderRadius.circular(21),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF395CC8)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'Meu progresso',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  const AvoidAdultContentNotificationsScreen()),
-                        );
-                      },
-                      child: Container(
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(21),
-                          border: Border.all(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white24
-                                    : Colors.grey[400]!,
-                          ),
-                        ),
-                        child: Text(
-                          'Notificações',
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ] else
-              const Icon(Icons.do_not_disturb_on_rounded,
-                  size: 80, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text("Módulo desativado",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey)),
-            const SizedBox(height: 8),
-            const Text(
-              "Ative o módulo para começar a usá-lo e para criar seu progresso.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Widget _buildTabActions() {
-    switch (_selectedIndex) {
-      case 0:
-        return const SizedBox(height: 55, key: ValueKey('action_none'));
-      case 1:
-        return SizedBox(
-          key: const ValueKey('action_apps'),
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: 'Selecionar aplicativos',
-            color: const Color.fromARGB(255, 57, 92, 208),
-            onPressed: _openSelectApps,
-            borderRadius: 18,
-          ),
-        );
-      case 2:
-        return SizedBox(
-          key: const ValueKey('action_activate'),
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: _gamificationRunning ? 'Desativar Módulo' : 'Ativar Módulo',
-            color: _gamificationRunning
-                ? const Color.fromARGB(255, 239, 68, 68)
-                : const Color.fromARGB(255, 16, 185, 129),
-            onPressed: _gamificationRunning
-                ? _desativarNichoMonitoramento
-                : _ativarNichoMonitoramento,
-            borderRadius: 18,
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
+    // Se tiver apps e o controller estiver ok, avança para ativar
+    if (_selectedApps.isNotEmpty) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      } else {
+        setState(() => _selectedIndex = 2);
+      }
+    } else {
+      setState(() {});
     }
   }
 
@@ -618,26 +413,72 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      NicheHeader(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
                       ),
-                      const SizedBox(height: 32),
-                      _buildSegmentedControl(),
-                      const SizedBox(height: 32),
-                      // Top Content Zone (Static)
-                      _buildTabContent(),
-                      const SizedBox(height: 24),
-                      // Bottom Action Zone (Static)
-                      _buildTabActions(),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildSegmentedControl(),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
+                          // 0: Como Funciona
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 24),
+                                _buildTabActions(0),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 1: Apps
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(1),
+                                const SizedBox(height: 24),
+                                _buildTabActions(1),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                          // 2: Ativar
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(2),
+                                const SizedBox(height: 24),
+                                _buildTabActions(2),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -645,5 +486,250 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSegmentedControl() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final List<String> options = ['Como Funciona', 'Apps', 'Ativar'];
+
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        children: List.generate(options.length, (index) {
+          final isSelected = _selectedIndex == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() => _selectedIndex = index);
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.easeOutQuart,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark
+                          ? const Color.fromARGB(255, 57, 92, 208)
+                          : const Color.fromARGB(255, 18, 189, 211))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(21),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: (isDark
+                                    ? const Color.fromARGB(255, 57, 92, 208)
+                                    : const Color.fromARGB(255, 10, 223, 219))
+                                .withValues(alpha: 0.3),
+                            blurRadius: 10,
+                          )
+                        ]
+                      : [],
+                ),
+                child: Text(
+                  options[index],
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTabContent(int index) {
+    switch (index) {
+      case 0:
+        return Column(
+          children: [
+            NicheInfoSection(hintText: _getModuleHintText()),
+            const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
+        );
+      case 1:
+        return NicheContentApps(
+          selectedApps: _selectedApps,
+          introText: _getIntroText(),
+          onAdd: _openSelectApps,
+          onRemove: (pkg) => _removeSelectedApp(pkg),
+        );
+      case 2:
+        return Column(
+          children: [
+            if (_gamificationRunning) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MyProgressAdultContent()),
+                        );
+                      },
+                      child: Container(
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF395CC8),
+                          borderRadius: BorderRadius.circular(21),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF395CC8)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Meu progresso',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  const AvoidAdultContentNotificationsScreen()),
+                        );
+                      },
+                      child: Container(
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(21),
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white24
+                                    : Colors.grey[400]!,
+                          ),
+                        ),
+                        child: Text(
+                          'Notificações',
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              const Icon(Icons.do_not_disturb_on_rounded,
+                  size: 80, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text("Módulo desativado",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey)),
+              const SizedBox(height: 8),
+              const Text(
+                "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ],
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildTabActions(int index) {
+    switch (index) {
+      // --- BOTÃO COMEÇAR (ABA 0) ---
+      case 0:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Começar',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, // Vai para "Apps"
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
+            },
+            borderRadius: 18,
+          ),
+        );
+      case 1:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: 'Selecionar aplicativos',
+            color: const Color.fromARGB(255, 57, 92, 208),
+            onPressed: _openSelectApps,
+            borderRadius: 18,
+          ),
+        );
+      case 2:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: GlowingButton(
+            text: _gamificationRunning ? 'Desativar Módulo' : 'Ativar Módulo',
+            color: _gamificationRunning
+                ? const Color.fromARGB(255, 239, 68, 68)
+                : const Color.fromARGB(255, 16, 185, 129),
+            onPressed: _gamificationRunning
+                ? _desativarNichoMonitoramento
+                : _ativarNichoMonitoramento,
+            borderRadius: 18,
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 }
