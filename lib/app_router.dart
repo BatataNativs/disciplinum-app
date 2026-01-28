@@ -20,6 +20,7 @@ import 'package:disciplinum/screens/modules/3_diet/diet_settings_screen.dart';
 import 'package:disciplinum/screens/modules/4_spending/spending_screen.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_screen.dart';
 import 'package:disciplinum/screens/modules/6_adultContent/avoid_adult_content_screen.dart';
+import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_screen.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 
 // --- IMPORT DA NOVA TELA ---
@@ -106,6 +107,9 @@ class AppRouter {
           case NicheId.adultContent:
             return FastMaterialPageRoute(
                 builder: (_) => const AvoidAdultContentScreen());
+          case NicheId.moneySavingChallenge:
+            return FastMaterialPageRoute(
+                builder: (_) => const MoneySavingChallengeScreen());
         }
 
       case AppRouter.settings:

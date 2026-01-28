@@ -4,7 +4,8 @@ enum NicheId {
   diet(3),
   spending(4),
   focus(5),
-  adultContent(6);
+  adultContent(6),
+  moneySavingChallenge(7);
 
   final int id;
   const NicheId(this.id);

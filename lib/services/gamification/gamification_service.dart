@@ -14,6 +14,7 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
 
 // Mensagens por módulo
 final Map<NicheId, String> moduleMessages = {
@@ -29,6 +30,8 @@ final Map<NicheId, String> moduleMessages = {
       '⏳ Atenção aos objetivos. Mantenha o foco e a disciplina para alcançar seu objetivo!',
   NicheId.adultContent:
       '🔞 Vai fazer isso mesmo? Cuidado com os efeitos negativos a longo prazo!',
+  NicheId.moneySavingChallenge:
+      '💰 Hoje é dia de se aproximar mais da sua meta! Que tal marcar mais um quadradinho hoje?',
 };
 
 String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
@@ -38,7 +41,10 @@ String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
       if (custom != null && custom.isNotEmpty) return custom;
     }
   }
-  return moduleMessages[nicheId] ?? 'Conquista em progresso!';
+  final msg = moduleMessages[nicheId];
+  if (msg != null) return msg;
+
+  return 'Conquista em progresso!';
 }
 
 enum GamificationMedal { bronze, prata, ouro, diamante }
@@ -544,9 +550,73 @@ class GamificationService extends ChangeNotifier {
           body: phrase,
         );
       }
-    } else {
       debugPrint(
           '⚠️ Nenhuma lista de motivação encontrada para ${nicheId.name} no momento do agendamento.');
+    }
+
+    // 3. Agendar Desafio da Poupança (Módulo 7)
+    if (nicheId == NicheId.moneySavingChallenge) {
+      await scheduleChallengeNotification();
+    }
+  }
+
+  /// Agenda as notificações específicas do Desafio da Poupança com base nas configurações do modelo
+  Future<void> scheduleChallengeNotification() async {
+    try {
+      final challenge = await MoneySavingChallengeService().getChallenge();
+      if (challenge == null || challenge.notifFrequency == 'disabled') {
+        // Cancela notificações do módulo 7 se estiver desativado
+        // O range de IDs para o módulo 7 é 7100+ (checkins) e 7500+ (motivações/desafio)
+        // No caso do desafio, usamos um ID fixo ou range. Vamos usar 7001 para a notificação recorrente.
+        await NotificationService.cancelNotification(7001);
+        return;
+      }
+
+      final timeParts = challenge.notifTime.split(':');
+      final time = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+
+      final title = 'Desafio da Poupança 💰';
+      final body = getModuleMessage(NicheId.moneySavingChallenge);
+      const int notifId = 7001;
+
+      // Primeiro cancela a anterior para garantir
+      await NotificationService.cancelNotification(notifId);
+
+      switch (challenge.notifFrequency) {
+        case 'diario':
+          await NotificationService.scheduleDailyNotification(
+            id: notifId,
+            time: time,
+            title: title,
+            body: body,
+          );
+          break;
+        case 'semanal':
+          await NotificationService.scheduleWeeklyNotification(
+            id: notifId,
+            dayOfWeek: challenge.notifDayOfWeek,
+            time: time,
+            title: title,
+            body: body,
+          );
+          break;
+        case 'mensal':
+          await NotificationService.scheduleMonthlyNotification(
+            id: notifId,
+            dayOfMonth: challenge.notifDayOfMonth,
+            time: time,
+            title: title,
+            body: body,
+          );
+          break;
+      }
+      debugPrint(
+          '✅ Notificação do Desafio da Poupança agendada: ${challenge.notifFrequency}');
+    } catch (e) {
+      debugPrint('Erro ao agendar notificação do desafio: $e');
     }
   }
 

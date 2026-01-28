@@ -222,6 +222,16 @@ class MyProgressScreen extends StatelessWidget {
       case NicheId.adultContent:
         detailScreen = const MyProgressAdultContent();
         break;
+      case NicheId.moneySavingChallenge:
+        // Por enquanto, não tem tela de progresso específica
+        // Abre a tela principal do módulo
+        detailScreen = null;
+        break;
+    }
+
+    if (detailScreen == null) {
+      // Para módulos sem tela de progresso específica, não navega
+      return;
     }
 
     Navigator.push(

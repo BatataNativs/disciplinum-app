@@ -88,6 +88,14 @@ class NicheRepository {
         appCategory: 'browsers',
         scale: 1.5, // Configuração individual de tamanho
       ),
+      Niche(
+        id: NicheId.moneySavingChallenge,
+        name: 'Desafio da Poupança',
+        iconPath: 'assets/icons/niche_poupanca.png',
+        homePhrase: 'Economize de forma lúdica e visual.',
+        type: NicheType.timeInterval,
+        scale: 1.5,
+      ),
     ];
   }
 
