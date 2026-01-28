@@ -184,6 +184,108 @@ class NotificationService {
     }
   }
 
+  static Future<void> scheduleWeeklyNotification({
+    required int id,
+    required int dayOfWeek, // 1 (Segunda) a 7 (Domingo)
+    required TimeOfDay time,
+    required String body,
+    String title = 'Lembrete Semanal',
+    String? payload,
+  }) async {
+    if (kIsWeb) return;
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+
+    while (scheduledDate.weekday != dayOfWeek || scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    final androidPlatformChannelSpecifics = fln.AndroidNotificationDetails(
+      'disciplinum_scheduled',
+      'Lembretes Agendados',
+      channelDescription: 'Notificações agendadas (Frases, Check-in)',
+      importance: fln.Importance.max,
+      priority: fln.Priority.high,
+      playSound: soundEnabled,
+      styleInformation: fln.BigTextStyleInformation(body),
+    );
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: fln.DateTimeComponents.dayOfWeekAndTime,
+      payload: payload,
+    );
+    debugPrint('Agendado Semanal: $title para $scheduledDate (ID: $id)');
+  }
+
+  static Future<void> scheduleMonthlyNotification({
+    required int id,
+    required int dayOfMonth, // 1 a 31
+    required TimeOfDay time,
+    required String body,
+    String title = 'Lembrete Mensal',
+    String? payload,
+  }) async {
+    if (kIsWeb) return;
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      dayOfMonth,
+      time.hour,
+      time.minute,
+    );
+
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 30));
+      scheduledDate = tz.TZDateTime(
+        tz.local,
+        scheduledDate.year,
+        scheduledDate.month,
+        dayOfMonth,
+        time.hour,
+        time.minute,
+      );
+    }
+
+    final androidPlatformChannelSpecifics = fln.AndroidNotificationDetails(
+      'disciplinum_scheduled',
+      'Lembretes Agendados',
+      channelDescription: 'Notificações agendadas (Frases, Check-in)',
+      importance: fln.Importance.max,
+      priority: fln.Priority.high,
+      playSound: soundEnabled,
+      styleInformation: fln.BigTextStyleInformation(body),
+    );
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: fln.DateTimeComponents.dayOfMonthAndTime,
+      payload: payload,
+    );
+    debugPrint('Agendado Mensal: $title para $scheduledDate (ID: $id)');
+  }
+
   static Future<void> cancelNotification(int id) async {
     if (kIsWeb) return;
     await flutterLocalNotificationsPlugin.cancel(id);
