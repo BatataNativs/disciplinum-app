@@ -22,6 +22,7 @@ import 'package:disciplinum/screens/modules/5_focus/focus_screen.dart';
 import 'package:disciplinum/screens/modules/6_adultContent/avoid_adult_content_screen.dart';
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_screen.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
+import 'package:disciplinum/screens/modules/8_procrastination/procrastination_screen.dart';
 
 // --- IMPORT DA NOVA TELA ---
 import 'package:disciplinum/screens/misc/lojinha_screen.dart';
@@ -85,31 +86,46 @@ class AppRouter {
 
       case AppRouter.nicheDetail:
         final args = settings.arguments;
-        if (args is! Niche) {
+        Niche? niche;
+        String? heroTag;
+
+        if (args is Niche) {
+          niche = args;
+        } else if (args is Map<String, dynamic>) {
+          niche = args['niche'] as Niche?;
+          heroTag = args['heroTag'] as String?;
+        }
+
+        if (niche == null) {
           return _errorRoute('Argumento inválido para Detalhes do Nicho');
         }
 
-        switch (args.id) {
+        switch (niche.id) {
           case NicheId.smoking:
             return FastMaterialPageRoute(
-                builder: (_) => const StopSmokingScreen());
+                builder: (_) => StopSmokingScreen(heroTag: heroTag));
           case NicheId.bingeEating:
             return FastMaterialPageRoute(
-                builder: (_) => const BingeEatingScreen());
+                builder: (_) => BingeEatingScreen(heroTag: heroTag));
           case NicheId.diet:
             return FastMaterialPageRoute(
-                builder: (_) => const DietSettingsScreen());
+                builder: (_) => DietSettingsScreen(heroTag: heroTag));
           case NicheId.spending:
             return FastMaterialPageRoute(
-                builder: (_) => const SpendingScreen());
+                builder: (_) => SpendingScreen(heroTag: heroTag));
           case NicheId.focus:
-            return FastMaterialPageRoute(builder: (_) => const FocusScreen());
+            return FastMaterialPageRoute(
+                builder: (_) => FocusScreen(heroTag: heroTag));
           case NicheId.adultContent:
             return FastMaterialPageRoute(
-                builder: (_) => const AvoidAdultContentScreen());
+                builder: (_) => AvoidAdultContentScreen(heroTag: heroTag));
           case NicheId.moneySavingChallenge:
             return FastMaterialPageRoute(
-                builder: (_) => const MoneySavingChallengeScreen());
+                builder: (_) => MoneySavingChallengeScreen(heroTag: heroTag));
+          case NicheId.procrastination:
+            return FastMaterialPageRoute(
+                builder: (_) => ProcrastinationScreen(
+                    heroTag: heroTag ?? 'procrastination_default'));
         }
 
       case AppRouter.settings:

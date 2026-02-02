@@ -63,6 +63,8 @@ dependencies:
     sdk: flutter
   timezone: ^0.10.1
   flutter_timezone: ^3.0.1
+  table_calendar: ^3.2.0
+  uuid: ^4.5.2
 
 dev_dependencies:
   flutter_test:

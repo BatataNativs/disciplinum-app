@@ -11,6 +11,7 @@ import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/services/review/review_service.dart';
 import 'package:disciplinum/services/user_privacy/privacy_service.dart';
+import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/app.dart';
 import 'package:disciplinum/app_router.dart';
@@ -97,6 +98,13 @@ Future<void> main() async {
 
         // AdService instanciado diretamente aqui (mantido para futuros anúncios globais)
         ChangeNotifierProvider(create: (_) => AdService()),
+
+        ChangeNotifierProvider(
+          create: (context) => ProcrastinationService(
+            Provider.of<GamificationService>(context, listen: false),
+            prefs,
+          ),
+        ),
 
         ChangeNotifierProvider(
           create: (context) {

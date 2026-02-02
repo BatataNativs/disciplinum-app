@@ -83,7 +83,6 @@ class NicheRepository {
         name: 'Evitar conteúdo adulto',
         iconPath: 'assets/icons/niche_adult_content.png',
         homePhrase: 'Fortaleça sua mente e tenha mais autocontrole.',
-
         type: NicheType.apps,
         appCategory: 'browsers',
         scale: 1.5, // Configuração individual de tamanho
@@ -96,11 +95,71 @@ class NicheRepository {
         type: NicheType.timeInterval,
         scale: 1.5,
       ),
+      Niche(
+        id: NicheId.procrastination,
+        name: 'Evitar Procrastinação',
+        iconPath: 'assets/icons/niche_procrastination.png',
+        homePhrase: 'Gerencie tarefas e evite a procrastinação.',
+        type: NicheType.schedule,
+        scale: 1.5,
+      ),
     ];
   }
 
   static Niche getById(NicheId id) {
     return getAll().firstWhere((n) => n.id == id,
         orElse: () => throw Exception('Niche not found: $id'));
+  }
+}
+
+// --- ESTRUTURA DE CATEGORIAS DA HOME ---
+
+class NicheCategory {
+  final String title;
+  final String idPrefix; // Usado para gerar a heroTag única (ex: 'saude')
+  final List<NicheId> nicheIds;
+
+  const NicheCategory({
+    required this.title,
+    required this.idPrefix,
+    required this.nicheIds,
+  });
+}
+
+class NicheCategoryRepository {
+  static List<NicheCategory> getCategories() {
+    return const [
+      NicheCategory(
+        title: 'Saúde e Fitness',
+        idPrefix: 'saude',
+        nicheIds: [
+          NicheId.smoking,
+          NicheId.bingeEating,
+          NicheId.diet,
+        ],
+      ),
+      NicheCategory(
+        title: 'Mente e Hábitos',
+        idPrefix: 'mente',
+        nicheIds: [
+          NicheId.smoking,
+          NicheId.focus,
+          NicheId.procrastination, // Novo
+          NicheId.adultContent,
+          NicheId.bingeEating,
+          NicheId.spending,
+          NicheId.moneySavingChallenge,
+        ],
+      ),
+      NicheCategory(
+        title: 'Finanças',
+        idPrefix: 'financas',
+        nicheIds: [
+          NicheId.spending,
+          NicheId.moneySavingChallenge,
+          NicheId.bingeEating, // Gastos com comida
+        ],
+      ),
+    ];
   }
 }

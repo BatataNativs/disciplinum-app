@@ -21,7 +21,8 @@ import 'package:flutter/services.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 
 class StopSmokingScreen extends StatefulWidget {
-  const StopSmokingScreen({super.key});
+  final String? heroTag;
+  const StopSmokingScreen({super.key, this.heroTag});
 
   @override
   State<StopSmokingScreen> createState() => _StopSmokingScreenState();
@@ -505,6 +506,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                       child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
+                        heroTag: widget.heroTag,
                       ),
                     ),
                     const SizedBox(height: 16),

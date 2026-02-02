@@ -14,7 +14,8 @@ import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dart';
 
 class DietSettingsScreen extends StatefulWidget {
-  const DietSettingsScreen({super.key});
+  final String? heroTag;
+  const DietSettingsScreen({super.key, this.heroTag});
 
   @override
   State<DietSettingsScreen> createState() => _DietSettingsScreenState();
@@ -311,6 +312,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                       child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
+                        heroTag: widget.heroTag,
                       ),
                     ),
                     const SizedBox(height: 32),

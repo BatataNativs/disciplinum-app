@@ -845,21 +845,31 @@ class GamificationService extends ChangeNotifier {
   }
 
   void startModuleCycle({required NicheId nicheId}) async {
+    debugPrint('🚀 Iniciando ciclo para módulo: $nicheId');
     _isModuleActive = true;
+
+    // 1. Tenta carregar dados existentes primeiro
     await _syncWithCloud(nicheId);
+
+    // 2. Se não houver dados (novo módulo ou desativado), inicializa
+    if (!_diasConsecutivosByModule.containsKey(nicheId)) {
+      debugPrint('🐣 Novo módulo detectado, inicializando streak: $nicheId');
+      _diasConsecutivosByModule[nicheId] = 0;
+      _moduleStartDates[nicheId] = DateTime.now();
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_prefsActiveNicheKey, nicheId.id);
 
-    if ((_diasConsecutivosByModule[nicheId] ?? 0) == 0) {
-      _moduleStartDates[nicheId] = DateTime.now();
-      _saveLocalStatus(nicheId);
-      CloudSyncService.saveModuleStatus(
-        nicheId: nicheId,
-        isActive: true,
-        consecutiveDays: 0,
-      );
-    }
+    // 3. Salva o status garantindo que isModuleActive(nicheId) será true
+    await _saveLocalStatus(nicheId);
+    CloudSyncService.saveModuleStatus(
+      nicheId: nicheId,
+      isActive: true,
+      consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
+    );
+
+    notifyListeners();
   }
 
   void stopModuleCycle({required NicheId nicheId}) async {

@@ -19,7 +19,8 @@ import 'package:disciplinum/widgets/4_spending/my_progress_spending.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 
 class SpendingScreen extends StatefulWidget {
-  const SpendingScreen({super.key});
+  final String? heroTag;
+  const SpendingScreen({super.key, this.heroTag});
 
   @override
   State<SpendingScreen> createState() => _SpendingScreenState();
@@ -385,8 +386,11 @@ class _SpendingScreenState extends State<SpendingScreen> {
                   children: [
                     Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child:
-                            NicheHeader(niche: _niche, showBackground: false)),
+                        child: NicheHeader(
+                          niche: _niche,
+                          showBackground: false,
+                          heroTag: widget.heroTag,
+                        )),
                     const SizedBox(height: 24),
                     Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),

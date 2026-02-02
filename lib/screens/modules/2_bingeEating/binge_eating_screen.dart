@@ -18,7 +18,8 @@ import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart'
 import 'package:disciplinum/utils/app_info_helper.dart';
 
 class BingeEatingScreen extends StatefulWidget {
-  const BingeEatingScreen({super.key});
+  final String? heroTag;
+  const BingeEatingScreen({super.key, this.heroTag});
 
   @override
   State<BingeEatingScreen> createState() => _BingeEatingScreenState();
@@ -451,6 +452,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                       child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
+                        heroTag: widget.heroTag,
                       ),
                     ),
                     const SizedBox(height: 32),

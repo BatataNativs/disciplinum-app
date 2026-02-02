@@ -1,0 +1,263 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/models/8_procrastination/procrastination_model.dart';
+import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+
+class ProcrastinationService extends ChangeNotifier {
+  static const String _moduleId = 'procrastination';
+  static const String _localKey = 'procrastination_data';
+
+  final GamificationService _gamificationService;
+  final SharedPreferences _prefs;
+  final SupabaseClient _supabase = Supabase.instance.client;
+
+  Map<String, ProcrastinationDay> _days = {};
+
+  ProcrastinationService(this._gamificationService, this._prefs) {
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // 1. Carrega local primeiro (cache imediato)
+    final String? localData = _prefs.getString(_localKey);
+    if (localData != null) {
+      try {
+        final Map<String, dynamic> decoded = jsonDecode(localData);
+        _days = decoded.map(
+            (key, value) => MapEntry(key, ProcrastinationDay.fromJson(value)));
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Erro ao carregar dados locais de procrastinação: $e');
+      }
+    }
+
+    // 2. Tenta carregar da nuvem se estiver logado
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        // Se offline/guest, ainda assim verifica virada de dia
+        await _checkMidnightReset();
+        return;
+      }
+
+      final response = await _supabase
+          .from('user_module_settings')
+          .select()
+          .eq('user_id', userId)
+          .eq('module_id', _moduleId)
+          .maybeSingle();
+
+      if (response != null && response['module_data'] != null) {
+        final cloudJson = response['module_data'];
+        final Map<String, dynamic> decoded =
+            cloudJson is String ? jsonDecode(cloudJson) : cloudJson;
+
+        final cloudDays = decoded.map(
+            (key, value) => MapEntry(key, ProcrastinationDay.fromJson(value)));
+
+        _days = cloudDays;
+        await _prefs.setString(
+            _localKey,
+            jsonEncode(
+                _days.map((key, value) => MapEntry(key, value.toJson()))));
+        notifyListeners();
+      }
+
+      // Verifica virada de dia após carregar dados (Cloud ou Local)
+      await _checkMidnightReset();
+    } catch (e) {
+      debugPrint('Erro ao sincronizar com nuvem (load): $e');
+      await _checkMidnightReset();
+    }
+  }
+
+  /// Verifica se houve virada de dia e se dias anteriores foram cumpridos.
+  /// Isso evita punição imediata enquanto o dia ainda está ocorrendo.
+  Future<void> _checkMidnightReset() async {
+    final now = DateTime.now();
+    final todayKey = _dateKey(now);
+    final lastCheckStr = _prefs.getString('procrastination_last_check');
+
+    if (lastCheckStr == null) {
+      // Primeira execução: marca hoje como iniciado e sai
+      await _prefs.setString('procrastination_last_check', todayKey);
+      return;
+    }
+
+    if (lastCheckStr == todayKey) return; // Já verificado hoje
+
+    // Identifica o intervalo de dias entre o último check e hoje
+    DateTime lastCheckDate = DateTime.parse(lastCheckStr);
+    DateTime checkDate =
+        DateTime(lastCheckDate.year, lastCheckDate.month, lastCheckDate.day);
+    DateTime today = DateTime(now.year, now.month, now.day);
+
+    bool resetTriggered = false;
+
+    // Verifica todos os dias passados desde o último check (inclusive o dia do último check)
+    // até ontem. O dia de hoje ainda não é validado para falha.
+    while (checkDate.isBefore(today)) {
+      final key = _dateKey(checkDate);
+      final day = _days[key];
+
+      // Só penaliza se:
+      // 1. Tinha tarefas
+      // 2. Não completou todas
+      // 3. Não está marcado como completo nem como falha ainda
+      if (day != null &&
+          day.tasks.isNotEmpty &&
+          !day.allTasksCompleted &&
+          !day.isDayComplete &&
+          !day.isDayFailed) {
+        _days[key] = day.copyWith(isDayFailed: true, isDayComplete: false);
+
+        if (!resetTriggered) {
+          _gamificationService.resetMedals(
+            NicheId.procrastination,
+            notificationTitle: "Dia Incompleto 📉",
+            notificationBody:
+                "Você deixou tarefas pendentes em dias anteriores. Seu streak foi reiniciado.",
+            deactivate: false,
+          );
+          resetTriggered = true;
+        }
+      }
+      checkDate = checkDate.add(const Duration(days: 1));
+    }
+
+    await _prefs.setString('procrastination_last_check', todayKey);
+    if (resetTriggered) {
+      await _saveData();
+      notifyListeners();
+    }
+  }
+
+  Future<void> _saveData() async {
+    final jsonData = _days.map((key, value) => MapEntry(key, value.toJson()));
+    final encoded = jsonEncode(jsonData);
+
+    // Salva local
+    await _prefs.setString(_localKey, encoded);
+
+    // Salva cloud
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await _supabase.from('user_module_settings').upsert({
+        'user_id': userId,
+        'module_id': _moduleId,
+        'module_data': jsonData,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id, module_id');
+    } catch (e) {
+      debugPrint('Erro ao sincronizar com nuvem (save): $e');
+    }
+  }
+
+  String _dateKey(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  List<ProcrastinationTask> getTasksForDay(DateTime date) {
+    final key = _dateKey(date);
+    final tasks = _days[key]?.tasks ?? [];
+
+    // Sort: tasks with time first (earlier to later), then untimed tasks
+    final sortedTasks = List<ProcrastinationTask>.from(tasks);
+    sortedTasks.sort((a, b) {
+      if (a.startTime != null && b.startTime != null) {
+        return a.startTime!.compareTo(b.startTime!);
+      }
+      if (a.startTime != null) return -1;
+      if (b.startTime != null) return 1;
+      return 0;
+    });
+
+    return sortedTasks;
+  }
+
+  ProcrastinationDay? getDay(DateTime date) {
+    return _days[_dateKey(date)];
+  }
+
+  Future<void> addTask(DateTime date, ProcrastinationTask task) async {
+    final key = _dateKey(date);
+    final day = _days[key] ?? ProcrastinationDay(date: date, tasks: []);
+
+    final updatedTasks = List<ProcrastinationTask>.from(day.tasks)..add(task);
+
+    _days[key] = day.copyWith(tasks: updatedTasks);
+    await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> updateTask(
+      DateTime date, ProcrastinationTask updatedTask) async {
+    final key = _dateKey(date);
+    final day = _days[key];
+    if (day == null) return;
+
+    final updatedTasks =
+        day.tasks.map((t) => t.id == updatedTask.id ? updatedTask : t).toList();
+    _days[key] = day.copyWith(tasks: updatedTasks);
+
+    await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> removeTask(DateTime date, String taskId) async {
+    final key = _dateKey(date);
+    final day = _days[key];
+    if (day == null) return;
+
+    final updatedTasks = day.tasks.where((t) => t.id != taskId).toList();
+    _days[key] = day.copyWith(tasks: updatedTasks);
+    await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> clearCompletedTasks(DateTime date) async {
+    final key = _dateKey(date);
+    final day = _days[key];
+    if (day == null) return;
+
+    final updatedTasks = day.tasks.where((t) => !t.isCompleted).toList();
+    _days[key] = day.copyWith(tasks: updatedTasks);
+    await _saveData();
+    notifyListeners();
+  }
+
+  /// Verifica se o dia foi cumprido (apenas sucesso imediato).
+  /// A falha é verificada retrospectivamente em [_checkMidnightReset].
+  Future<bool> checkDayCompletion(DateTime date) async {
+    final key = _dateKey(date);
+    final day = _days[key];
+
+    if (day == null || day.tasks.isEmpty) return false;
+
+    final allCompleted = day.allTasksCompleted;
+
+    if (allCompleted) {
+      if (!day.isDayComplete) {
+        _days[key] = day.copyWith(isDayComplete: true, isDayFailed: false);
+        await _saveData();
+        notifyListeners();
+      }
+      return true;
+    }
+
+    // Se não completou tudo, mas estava marcado como completo (ex: desmarcou algo),
+    // removemos o status de completo.
+    if (day.isDayComplete && !allCompleted) {
+      _days[key] = day.copyWith(isDayComplete: false);
+      await _saveData();
+      notifyListeners();
+    }
+
+    return false;
+  }
+}

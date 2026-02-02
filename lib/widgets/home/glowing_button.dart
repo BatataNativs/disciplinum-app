@@ -9,6 +9,7 @@ class GlowingButton extends StatefulWidget {
   final Color? secondaryColor;
   final Color? textColor;
   final Color? glowColor;
+  final IconData? icon;
 
   const GlowingButton({
     super.key,
@@ -20,6 +21,7 @@ class GlowingButton extends StatefulWidget {
     this.secondaryColor,
     this.textColor,
     this.glowColor,
+    this.icon,
   });
 
   @override
@@ -105,6 +107,10 @@ class _GlowingButtonState extends State<GlowingButton>
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: textColor, size: 20),
+                  const SizedBox(width: 8),
+                ],
                 Text(
                   widget.text,
                   style: TextStyle(
