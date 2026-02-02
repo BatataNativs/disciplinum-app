@@ -1,4 +1,3 @@
-import 'package:disciplinum/models/niche_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -107,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _handleNicheTap(Niche niche) async {
+  Future<void> _handleNicheTap(Niche niche, String heroTag) async {
     HapticFeedback.lightImpact();
 
     bool isUsageGranted = await PermissionService.hasUsagePermission();
@@ -119,34 +118,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     if (!mounted) return;
 
-    if (niche.id == NicheId.smoking) {
-      Navigator.pushNamed(context, AppRouter.stopSmoking);
-    } else {
-      Navigator.pushNamed(
-        context,
-        AppRouter.nicheDetail,
-        arguments: niche,
-      );
-    }
+    // Se for stopSmoking, mantemos a lógica (mas agora passando heroTag se quiser,
+    // embora o AppRouter para stopSmoking use pushNamed direto sem args no case 'stopSmoking'
+    // Mas para consistência, vamos usar a rota detalhada se for possível, ou ajustar.
+    // O AppRouter tem um case específico para NicheId.smoking dentro do nicheDetail.
+    // Então vamos usar nicheDetail para tudo para aproveitar a heroTag.
+
+    Navigator.pushNamed(
+      context,
+      AppRouter.nicheDetail,
+      arguments: {'niche': niche, 'heroTag': heroTag},
+    );
   }
 
-  Widget _buildNicheCard(Niche niche, bool isDark, TextTheme textTheme) {
+  Widget _buildNicheCard(
+      Niche niche, bool isDark, TextTheme textTheme, String heroTag) {
     return NeonCard(
-      onTap: () => _handleNicheTap(niche),
+      onTap: () => _handleNicheTap(niche, heroTag),
       contentOpacity: 1.0,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Transform.scale(
             scale: niche.scale,
-            child:
-                Image.asset(niche.iconPath, height: 100, fit: BoxFit.contain),
+            child: Hero(
+              tag: heroTag,
+              child:
+                  Image.asset(niche.iconPath, height: 80, fit: BoxFit.contain),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             niche.name,
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
@@ -178,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final niches = NicheRepository.getAll();
+    final categories = NicheCategoryRepository.getCategories();
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -261,47 +266,54 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: PageView.builder(
-                      scrollDirection: Axis.vertical,
-                      padEnds: false,
-                      controller: PageController(
-                        viewportFraction: 0.28,
-                      ),
-                      itemCount: (niches.length / 2).ceil(),
-                      itemBuilder: (context, rowIndex) {
-                        final int firstIndex = rowIndex * 2;
-                        final int secondIndex = firstIndex + 1;
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(
+                        top: 10, bottom: 100, left: 16, right: 16),
+                    itemCount: categories.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 32),
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.title,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 190, // Altura para os cards
+                            child: ListView.separated(
+                              clipBehavior: Clip.none,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: category.nicheIds.length,
+                              separatorBuilder: (context, i) =>
+                                  const SizedBox(width: 12),
+                              itemBuilder: (context, i) {
+                                final nicheId = category.nicheIds[i];
+                                final niche = NicheRepository.getById(nicheId);
+                                // Gera heroTag única: prefixo_id
+                                final heroTag =
+                                    '${category.idPrefix}_${niche.id}';
 
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: firstIndex < niches.length
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: _buildNicheCard(niches[firstIndex],
-                                          isDark, textTheme),
-                                    )
-                                  : const SizedBox.shrink(),
+                                return SizedBox(
+                                  width: 150,
+                                  child: _buildNicheCard(
+                                      niche, isDark, textTheme, heroTag),
+                                );
+                              },
                             ),
-                            Expanded(
-                              child: secondIndex < niches.length
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: _buildNicheCard(
-                                          niches[secondIndex],
-                                          isDark,
-                                          textTheme),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],

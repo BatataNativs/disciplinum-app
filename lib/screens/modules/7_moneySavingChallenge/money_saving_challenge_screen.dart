@@ -8,10 +8,14 @@ import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challen
 import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
+import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:provider/provider.dart';
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_notifications_screen.dart';
 
 class MoneySavingChallengeScreen extends StatefulWidget {
-  const MoneySavingChallengeScreen({super.key});
+  final String? heroTag;
+  const MoneySavingChallengeScreen({super.key, this.heroTag});
 
   @override
   State<MoneySavingChallengeScreen> createState() =>
@@ -138,6 +142,7 @@ class _MoneySavingChallengeScreenState
         minValue: minValue,
         maxValue: maxValue,
         currency: _selectedCurrency,
+        isActive: false, // Começa como inativo (Rascunho)
       );
 
       if (mounted) {
@@ -146,7 +151,7 @@ class _MoneySavingChallengeScreenState
           _isSaving = false;
         });
 
-        _showSnackBar('Desafio criado! Bora poupar! 💰');
+        _showSnackBar('Desafio criado! Ative-o para começar.');
 
         // Vai para a aba do grid
         if (_pageController.hasClients) {
@@ -165,8 +170,90 @@ class _MoneySavingChallengeScreenState
     }
   }
 
+  Future<void> _activateChallenge() async {
+    if (_challenge == null) return;
+    HapticFeedback.mediumImpact();
+
+    // Atualiza status local e notifica gamification
+    final updated = _challenge!.copyWith(isActive: true);
+    await _service.saveChallenge(updated);
+
+    if (mounted) {
+      setState(() => _challenge = updated);
+
+      // Inicia ciclo de gamificação
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+      gamification.startModuleCycle(nicheId: _niche.id);
+
+      _showSnackBar('Desafio ativado! Boa sorte! 🚀');
+    }
+  }
+
+  Future<void> _deactivateChallenge() async {
+    if (_challenge == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Desativar Desafio?'),
+        content: const Text(
+          'Ao desativar, seu progresso de dias consecutivos (gamificação) será zerado.\n\nVocê manterá os dados financeiros salvos, mas a contagem de dias reinicia.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sim, desativar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      HapticFeedback.heavyImpact();
+
+      // Atualiza status
+      final updated = _challenge!.copyWith(isActive: false);
+      await _service.saveChallenge(updated);
+
+      if (mounted) {
+        setState(() => _challenge = updated);
+
+        // Reseta gamificação e notifica
+        final gamification =
+            Provider.of<GamificationService>(context, listen: false);
+
+        gamification.resetMedals(
+          _niche.id,
+          deactivate: true,
+          notificationTitle: 'Desafio Pausado ⏸️',
+          notificationBody:
+              'Seu desafio foi desativado e a contagem de dias reiniciada. Seus valores guardados permanecem salvos.',
+        );
+
+        // Cancela notificações específicas
+        await NotificationService.cancelNotification(7001);
+
+        _showSnackBar('Desafio desativado.');
+      }
+    }
+  }
+
   Future<void> _toggleCell(int index) async {
     if (_challenge == null) return;
+
+    if (!_challenge!.isActive) {
+      _showSnackBar('Ative o desafio para marcar células!');
+      return;
+    }
+
     HapticFeedback.lightImpact();
 
     final updated = await _service.toggleCell(index);
@@ -176,18 +263,39 @@ class _MoneySavingChallengeScreenState
       // Comemoração se completou o desafio
       if (updated.isComplete) {
         HapticFeedback.heavyImpact();
-        _showSnackBar('🎉 Parabéns! Você completou o desafio!');
+        if (mounted) {
+          _showSnackBar('🎉 Parabéns! Você completou o desafio!');
+          _handleCompletionReset();
+        }
       }
     }
+  }
+
+  Future<void> _handleCompletionReset() async {
+    // Reseta a gamificação mas MATÉM o desafio como ativo ou inativo?
+    // O pedido diz "Reset de Gamificação". Vamos zerar dias.
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+
+    // Envia notificação de sucesso e reseta dias
+    gamification.resetMedals(_niche.id,
+        notificationTitle: 'Desafio Concluído! 🏆',
+        notificationBody:
+            'Parabéns por atingir sua meta financeira! Sua contagem de dias foi reiniciada para o próximo ciclo.',
+        deactivate:
+            false // Mantém ativo por enquanto, ou usuário desativa manualmente?
+        // Se o usuario completou, talvez queira apenas admirar.
+        // Mas o pedido diz explicitamente resetar gamificação.
+        );
   }
 
   Future<void> _resetChallenge() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Resetar Desafio?'),
+        title: const Text('Excluir Desafio?'),
         content: const Text(
-          'Isso vai apagar todo o progresso atual e você poderá criar um novo desafio.\n\nDeseja continuar?',
+          'Isso vai apagar TODO o progresso financeiro e zerar sua gamificação.\n\nDeseja continuar?',
         ),
         actions: [
           TextButton(
@@ -200,7 +308,7 @@ class _MoneySavingChallengeScreenState
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sim, resetar'),
+            child: const Text('Sim, excluir'),
           ),
         ],
       ),
@@ -208,10 +316,25 @@ class _MoneySavingChallengeScreenState
 
     if (confirmed == true) {
       HapticFeedback.heavyImpact();
+
+      if (!mounted) return;
+
+      // Reseta gamificação e notifica exclusão
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+
+      gamification.resetMedals(
+        _niche.id,
+        deactivate: true,
+        notificationTitle: 'Desafio Excluído 🗑️',
+        notificationBody:
+            'Todo o seu progresso do desafio (financeiro e gamificação) foi apagado permanentemente.',
+      );
+
       await _service.deleteChallenge();
       if (mounted) {
         setState(() => _challenge = null);
-        _showSnackBar('Desafio resetado');
+        _showSnackBar('Desafio excluído');
 
         // Limpa os campos
         _targetController.clear();
@@ -326,6 +449,7 @@ class _MoneySavingChallengeScreenState
                       child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
+                        heroTag: widget.heroTag,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -784,14 +908,50 @@ class _MoneySavingChallengeScreenState
 
     return Column(
       children: [
-        // Progresso
+        // 1. Status Header
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          color: challenge.isActive
+              ? Colors.green.withValues(alpha: 0.1)
+              : Colors.orange.withValues(alpha: 0.1),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                challenge.isActive
+                    ? Icons.check_circle
+                    : Icons.pause_circle_filled,
+                size: 16,
+                color: challenge.isActive ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                challenge.isActive
+                    ? 'MÓDULO ATIVO'
+                    : 'MÓDULO DESATIVADO (RASCUNHO)',
+                style: TextStyle(
+                  color: challenge.isActive ? Colors.green : Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // 2. Reposioned Summary (Piggy Bank + Texts)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _buildProgressCard(challenge, isDark),
+          child: _buildRepositionedSummary(challenge, isDark),
         ),
+
         const SizedBox(height: 12),
 
-        // Grid
+        // 3. Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -799,69 +959,115 @@ class _MoneySavingChallengeScreenState
           ),
         ),
 
-        // Ações
+        // 4. Action Buttons (Activate/Deactivate)
         Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) =>
-                              const MoneySavingChallengeNotificationsScreen()),
-                    );
-                  },
-                  child: Container(
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(21),
-                      border: Border.all(
-                        color: isDark ? Colors.white24 : Colors.grey[400]!,
+              if (!challenge.isActive)
+                GlowingButton(
+                  text: 'ATIVAR DESAFIO',
+                  color: Colors.green,
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: _activateChallenge,
+                ),
+              if (challenge.isActive) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.notifications_outlined,
+                            size: 18,
+                            color: isDark ? Colors.white70 : Colors.black54),
+                        label: Text('Notificações',
+                            style: TextStyle(
+                                fontSize: 13,
+                                color:
+                                    isDark ? Colors.white70 : Colors.black54)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    const MoneySavingChallengeNotificationsScreen()),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: isDark
+                                  ? Colors.white24
+                                  : const Color.fromARGB(255, 0, 0, 0)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      'Notificações',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.fullscreen,
+                            size: 18,
+                            color: isDark ? Colors.white70 : Colors.black54),
+                        label: Text('Tela Cheia',
+                            style: TextStyle(
+                                fontSize: 13,
+                                color:
+                                    isDark ? Colors.white70 : Colors.black54)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  _FullScreenGridPage(challenge: challenge),
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: isDark
+                                  ? Colors.white24
+                                  : const Color.fromARGB(255, 0, 0, 0)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.pause_circle_outline,
+                        color: Colors.orange),
+                    label: const Text('Desativar Desafio',
+                        style: TextStyle(color: Colors.orange)),
+                    onPressed: _deactivateChallenge,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: _resetChallenge,
-                  child: Container(
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(21),
-                      border: Border.all(
-                        color: Colors.redAccent.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: const Text(
-                      'Resetar',
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ],
+              if (!challenge.isActive)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      label: const Text('Excluir Desafio',
+                          style: TextStyle(color: Colors.red)),
+                      onPressed: _resetChallenge,
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -869,89 +1075,115 @@ class _MoneySavingChallengeScreenState
     );
   }
 
-  Widget _buildProgressCard(MoneySavingChallengeModel challenge, bool isDark) {
-    final saved = challenge.totalSaved;
-    final target = challenge.targetAmount;
-    final percent = challenge.progressPercent;
+  Widget _buildRepositionedSummary(
+      MoneySavingChallengeModel challenge, bool isDark) {
+    // Calcula progresso
+    final progress = challenge.progressPercent;
+    final totalSaved = challenge.totalSaved;
+    final remaining = challenge.targetAmount - totalSaved;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [const Color(0xFF1E3A5F), const Color(0xFF0D253F)]
-              : [const Color(0xFF4CAF50), const Color(0xFF2E7D32)],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.blue : Colors.green).withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Esquerda: Porquinho e Porcentagem
+          Column(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Stack(
+                alignment: Alignment.center,
                 children: [
-                  const Text(
-                    'Total Guardado',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      backgroundColor:
+                          isDark ? Colors.white10 : Colors.grey[200],
+                      valueColor:
+                          const AlwaysStoppedAnimation(Color(0xFF6366F1)),
+                      strokeWidth: 6,
+                    ),
                   ),
                   Text(
-                    '${challenge.currency} ${saved.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
+                    '${(progress * 100).toInt()}%',
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                 ],
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Meta',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  Text(
-                    '${challenge.currency} ${target.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 8),
+              const Icon(Icons.savings, color: Color(0xFF6366F1), size: 20),
             ],
           ),
-          const SizedBox(height: 12),
-          // Barra de progresso
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: percent,
-              minHeight: 10,
-              backgroundColor: Colors.white24,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                percent >= 1.0 ? Colors.amber : Colors.white,
-              ),
+
+          const SizedBox(width: 16),
+
+          // Direita: Valores
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildValueRow(
+                    'Guardado',
+                    '${challenge.currency} ${totalSaved.toStringAsFixed(2)}',
+                    const Color(0xFF6366F1),
+                    isDark),
+                const SizedBox(height: 8),
+                _buildValueRow(
+                    'Falta',
+                    '${challenge.currency} ${remaining.toStringAsFixed(2)}',
+                    isDark ? Colors.white60 : Colors.grey[600]!,
+                    isDark),
+                const SizedBox(height: 8),
+                _buildValueRow(
+                    'Meta',
+                    '${challenge.currency} ${challenge.targetAmount.toStringAsFixed(2)}',
+                    isDark ? Colors.white30 : Colors.grey[400]!,
+                    isDark,
+                    isSmall: true),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${(percent * 100).toStringAsFixed(1)}% concluído • ${challenge.markedCells.length}/${challenge.totalCells} células',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildValueRow(String label, String value, Color color, bool isDark,
+      {bool isSmall = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+            fontSize: isSmall ? 10 : 12,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: isSmall ? 12 : 16,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1020,6 +1252,170 @@ class _MoneySavingChallengeScreenState
           ),
         );
       },
+    );
+  }
+}
+
+class _FullScreenGridPage extends StatelessWidget {
+  final MoneySavingChallengeModel challenge;
+
+  const _FullScreenGridPage({required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      body: Stack(
+        children: [
+          // Grid centralizado
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Meu Desafio da Poupança 💰',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Meta: ${challenge.currency} ${challenge.targetAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Usamos LayoutBuilder para garantir que a grade caiba na tela
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxWidth;
+                      return SizedBox(
+                        width: size,
+                        height: size,
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: challenge.gridSize,
+                            crossAxisSpacing: 4,
+                            mainAxisSpacing: 4,
+                          ),
+                          itemCount: challenge.totalCells,
+                          itemBuilder: (context, index) {
+                            final isMarked =
+                                challenge.markedCells.contains(index);
+                            final value = index < challenge.cellValues.length
+                                ? challenge.cellValues[index]
+                                : 0.0;
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: isMarked
+                                    ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF4CAF50),
+                                          Color(0xFF66BB6A)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: isDark
+                                            ? [
+                                                Colors.grey[800]!,
+                                                Colors.grey[700]!
+                                              ]
+                                            : [
+                                                Colors.grey[300]!,
+                                                Colors.grey[200]!
+                                              ],
+                                      ),
+                                borderRadius: BorderRadius.circular(
+                                    challenge.gridSize > 12 ? 2 : 4),
+                              ),
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(1),
+                                    child: Text(
+                                      value.toStringAsFixed(0),
+                                      style: TextStyle(
+                                        color: isMarked
+                                            ? Colors.white
+                                            : (isDark
+                                                ? Colors.white70
+                                                : Colors.black87),
+                                        fontSize:
+                                            challenge.gridSize > 10 ? 8 : 10,
+                                        fontWeight: isMarked
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Total Guardado: ${challenge.currency} ${challenge.totalSaved.toStringAsFixed(2)} (${(challenge.progressPercent * 100).toInt()}%)',
+                      style: const TextStyle(
+                        color: Color(0xFF6366F1),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Botão de voltar
+          Positioned(
+            top: 40,
+            left: 16,
+            child: SafeArea(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white10
+                        : Colors.black.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

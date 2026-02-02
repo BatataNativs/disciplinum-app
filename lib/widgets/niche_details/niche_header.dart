@@ -4,11 +4,13 @@ import '../../models/niche.dart';
 class NicheHeader extends StatelessWidget {
   final Niche niche;
   final bool showBackground;
+  final String? heroTag;
 
   const NicheHeader({
     super.key,
     required this.niche,
     this.showBackground = true,
+    this.heroTag,
   });
 
   @override
@@ -18,7 +20,7 @@ class NicheHeader extends StatelessWidget {
 
     return Center(
       child: Hero(
-        tag: 'app_logo',
+        tag: heroTag ?? 'niche_icon_${niche.id}',
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: showBackground

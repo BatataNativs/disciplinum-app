@@ -10,6 +10,7 @@ class MoneySavingChallengeModel {
   final List<double> cellValues;
   final DateTime createdAt;
   final String currency;
+  final bool isActive;
 
   MoneySavingChallengeModel({
     required this.targetAmount,
@@ -22,6 +23,7 @@ class MoneySavingChallengeModel {
     required this.cellValues,
     required this.createdAt,
     this.currency = 'R\$',
+    this.isActive = false,
     this.notifFrequency =
         'disabled', // 'diario', 'semanal', 'mensal', 'disabled'
     this.notifTime = '09:00',
@@ -83,6 +85,7 @@ class MoneySavingChallengeModel {
     String? notifTime,
     int? notifDayOfWeek,
     int? notifDayOfMonth,
+    bool? isActive,
   }) {
     return MoneySavingChallengeModel(
       targetAmount: targetAmount ?? this.targetAmount,
@@ -99,6 +102,7 @@ class MoneySavingChallengeModel {
       notifTime: notifTime ?? this.notifTime,
       notifDayOfWeek: notifDayOfWeek ?? this.notifDayOfWeek,
       notifDayOfMonth: notifDayOfMonth ?? this.notifDayOfMonth,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -164,6 +168,7 @@ class MoneySavingChallengeModel {
       'notif_time': notifTime,
       'notif_day_of_week': notifDayOfWeek,
       'notif_day_of_month': notifDayOfMonth,
+      'is_active': isActive,
     };
   }
 
@@ -190,6 +195,7 @@ class MoneySavingChallengeModel {
       notifTime: json['notif_time'] as String? ?? '09:00',
       notifDayOfWeek: json['notif_day_of_week'] as int? ?? 1,
       notifDayOfMonth: json['notif_day_of_month'] as int? ?? 1,
+      isActive: json['is_active'] as bool? ?? false,
     );
   }
 }

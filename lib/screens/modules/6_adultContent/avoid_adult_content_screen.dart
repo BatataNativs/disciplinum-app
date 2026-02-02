@@ -18,7 +18,8 @@ import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dar
 import 'package:disciplinum/utils/app_info_helper.dart';
 
 class AvoidAdultContentScreen extends StatefulWidget {
-  const AvoidAdultContentScreen({super.key});
+  final String? heroTag;
+  const AvoidAdultContentScreen({super.key, this.heroTag});
 
   @override
   State<AvoidAdultContentScreen> createState() =>
@@ -420,6 +421,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                       child: NicheHeader(
                         niche: _niche,
                         showBackground: false,
+                        heroTag: widget.heroTag,
                       ),
                     ),
                     const SizedBox(height: 32),

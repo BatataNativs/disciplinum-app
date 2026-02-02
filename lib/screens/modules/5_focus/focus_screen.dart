@@ -18,7 +18,8 @@ import 'package:disciplinum/screens/modules/5_focus/focus_notifications_screen.d
 import 'package:disciplinum/utils/app_info_helper.dart';
 
 class FocusScreen extends StatefulWidget {
-  const FocusScreen({super.key});
+  final String? heroTag;
+  const FocusScreen({super.key, this.heroTag});
 
   @override
   State<FocusScreen> createState() => _FocusScreenState();
@@ -455,8 +456,11 @@ class _FocusScreenState extends State<FocusScreen> {
                   children: [
                     Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child:
-                            NicheHeader(niche: _niche, showBackground: false)),
+                        child: NicheHeader(
+                          niche: _niche,
+                          showBackground: false,
+                          heroTag: widget.heroTag,
+                        )),
                     const SizedBox(height: 24),
                     Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),

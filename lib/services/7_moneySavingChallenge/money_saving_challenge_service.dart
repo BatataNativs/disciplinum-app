@@ -118,6 +118,7 @@ class MoneySavingChallengeService {
     required double minValue,
     required double maxValue,
     String currency = 'R\$',
+    bool isActive = false,
   }) async {
     final cellValues = MoneySavingChallengeModel.generateCellValues(
       gridSize: gridSize,
@@ -136,6 +137,7 @@ class MoneySavingChallengeService {
       cellValues: cellValues,
       createdAt: DateTime.now(),
       currency: currency,
+      isActive: isActive,
     );
 
     await saveChallenge(challenge);

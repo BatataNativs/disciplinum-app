@@ -227,6 +227,9 @@ class MyProgressScreen extends StatelessWidget {
         // Abre a tela principal do módulo
         detailScreen = null;
         break;
+      case NicheId.procrastination:
+        detailScreen = null;
+        break;
     }
 
     if (detailScreen == null) {
