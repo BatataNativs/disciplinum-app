@@ -82,7 +82,7 @@ class NicheRepository {
         id: NicheId.adultContent,
         name: 'Evitar conteúdo adulto',
         iconPath: 'assets/icons/niche_adult_content.png',
-        homePhrase: 'Fortaleça sua disciplina e sua mente.',
+        homePhrase: 'Fortaleça sua mente e tenha mais autocontrole.',
 
         type: NicheType.apps,
         appCategory: 'browsers',
