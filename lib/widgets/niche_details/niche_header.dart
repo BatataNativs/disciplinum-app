@@ -35,7 +35,7 @@ class NicheHeader extends StatelessWidget {
               : null,
           child: Image.asset(
             niche.iconPath,
-            height: 80, // altura do ícone do módulo
+            height: 120, // Aumentado para melhor visibilidade interna
           ),
         ),
       ),

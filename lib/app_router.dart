@@ -123,9 +123,13 @@ class AppRouter {
             return FastMaterialPageRoute(
                 builder: (_) => MoneySavingChallengeScreen(heroTag: heroTag));
           case NicheId.procrastination:
+            final initialTabIndex = (args is Map<String, dynamic>)
+                ? (args['initialTabIndex'] as int? ?? 0)
+                : 0;
             return FastMaterialPageRoute(
                 builder: (_) => ProcrastinationScreen(
-                    heroTag: heroTag ?? 'procrastination_default'));
+                    heroTag: heroTag ?? 'procrastination_default',
+                    initialTabIndex: initialTabIndex));
         }
 
       case AppRouter.settings:
