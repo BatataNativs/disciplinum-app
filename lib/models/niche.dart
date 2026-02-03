@@ -37,29 +37,29 @@ class NicheRepository {
       Niche(
         id: NicheId.smoking,
         name: 'Parar de fumar',
-        iconPath: 'assets/icons/niche_cigarro.png',
+        iconPath: 'assets/icons/icon_no_smoking.png',
         homePhrase: 'Controle o vício e melhore sua saúde.',
         type: NicheType.schedule,
         maxSlots: 8,
-        scale: 1.5,
+        scale: 2.9,
       ),
       Niche(
         id: NicheId.bingeEating,
         name: 'Compulsão alimentar',
-        iconPath: 'assets/icons/niche_compulsao.png',
+        iconPath: 'assets/icons/icon_binge_eating.png',
         homePhrase: 'Reduza impulsos e tenha mais autocontrole.',
         type: NicheType.apps,
         appCategory: 'delivery_food',
-        scale: 1.5,
+        scale: 2.9,
       ),
       Niche(
         id: NicheId.diet,
         name: 'Manter dieta',
-        iconPath: 'assets/icons/niche_dieta.png',
+        iconPath: 'assets/icons/icon_diet.png',
         homePhrase: 'Organize suas refeições e mantenha o foco.',
         type: NicheType.schedule,
         maxSlots: 6,
-        scale: 1.5,
+        scale: 2.9,
       ),
       Niche(
         id: NicheId.spending,
@@ -68,7 +68,7 @@ class NicheRepository {
         homePhrase: 'Evite gastos desnecessários e/ou não planejados.',
         type: NicheType.apps,
         appCategory: 'shopping_delivery',
-        scale: 1.5,
+        scale: 2.2,
       ),
       Niche(
         id: NicheId.focus,
@@ -76,7 +76,7 @@ class NicheRepository {
         iconPath: 'assets/icons/niche_foco.png',
         homePhrase: 'Elimine distrações e foque em seus objetivos.',
         type: NicheType.timeInterval,
-        scale: 1.5,
+        scale: 2.7,
       ),
       Niche(
         id: NicheId.adultContent,
@@ -85,23 +85,23 @@ class NicheRepository {
         homePhrase: 'Fortaleça sua mente e tenha mais autocontrole.',
         type: NicheType.apps,
         appCategory: 'browsers',
-        scale: 1.5, // Configuração individual de tamanho
+        scale: 2.9, // Configuração individual de tamanho
       ),
       Niche(
         id: NicheId.moneySavingChallenge,
-        name: 'Desafio da Poupança',
+        name: 'Desafio da poupança',
         iconPath: 'assets/icons/niche_poupanca.png',
         homePhrase: 'Economize de forma lúdica e visual.',
         type: NicheType.timeInterval,
-        scale: 1.5,
+        scale: 1.9,
       ),
       Niche(
         id: NicheId.procrastination,
-        name: 'Evitar Procrastinação',
+        name: 'Evitar procrastinação',
         iconPath: 'assets/icons/niche_procrastination.png',
         homePhrase: 'Gerencie tarefas e evite a procrastinação.',
         type: NicheType.schedule,
-        scale: 1.5,
+        scale: 2.7,
       ),
     ];
   }

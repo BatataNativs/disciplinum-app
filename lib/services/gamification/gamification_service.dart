@@ -32,6 +32,8 @@ final Map<NicheId, String> moduleMessages = {
       '🔞 Vai fazer isso mesmo? Cuidado com os efeitos negativos a longo prazo!',
   NicheId.moneySavingChallenge:
       '💰 Hoje é dia de se aproximar mais da sua meta! Que tal marcar mais um quadradinho hoje?',
+  NicheId.procrastination:
+      '🗓️ Não esqueça dos seus compromissos agendados. Verifique suas tarefas e compromissos para hoje!',
 };
 
 String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
@@ -510,6 +512,18 @@ class GamificationService extends ChangeNotifier {
               'Manteve-se disciplinado hoje? \n\nLembre-se de conferir seu progresso no app 🚀.';
         }
 
+        if (nicheId == NicheId.procrastination) {
+          payload = 'procrastination_checkin';
+          actions = [
+            const AndroidNotificationAction(
+              'ver_itens',
+              'Ver itens agendados',
+              showsUserInterface: true,
+              cancelNotification: true,
+            ),
+          ];
+        }
+
         TimeOfDay finalTime = time;
         if (nicheId == NicheId.diet) {
           final dt = DateTime(2024, 1, 1, time.hour, time.minute)
@@ -869,6 +883,9 @@ class GamificationService extends ChangeNotifier {
       consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
     );
 
+    // 4. Agenda as notificações nativas (Check-in, Lembretes)
+    await _scheduleNativeNotifications(nicheId);
+
     notifyListeners();
   }
 
@@ -881,6 +898,7 @@ class GamificationService extends ChangeNotifier {
       isActive: false,
       consecutiveDays: 0,
     );
+    await _cancelModuleNotifications(nicheId);
     notifyListeners();
   }
 
@@ -964,15 +982,15 @@ class GamificationService extends ChangeNotifier {
     return _maxMedalByModule[nicheId]?.asset;
   }
 
-  void resetMedals(
+  Future<void> resetMedals(
     NicheId nicheId, {
     int notificationIdOffset = 999,
     String? notificationTitle,
     String? notificationBody,
     bool sendNotification = true,
-    String? iconPath,
+    String? iconPath = 'assets/icon_disciplinum.png',
     bool deactivate = false,
-  }) {
+  }) async {
     _violationStartByApp.clear();
     _warnedApps.clear();
     _lastSeenMonitoredApp.clear();
@@ -1015,6 +1033,10 @@ class GamificationService extends ChangeNotifier {
       );
     }
 
+    if (deactivate) {
+      await _cancelModuleNotifications(nicheId);
+    }
+
     notifyListeners();
   }
 
@@ -1054,6 +1076,24 @@ class GamificationService extends ChangeNotifier {
     if (currentDays < 7) return 7;
     if (currentDays < 10) return 10;
     return null;
+  }
+
+  Future<void> _cancelModuleNotifications(NicheId nicheId) async {
+    debugPrint('🔕 Cancelando notificações para o módulo: ${nicheId.name}');
+    // Cancela check-ins (ID base + 100, até 10 slots)
+    for (int i = 0; i < 10; i++) {
+      await NotificationService.cancelNotification(
+          (nicheId.id * 1000) + 100 + i);
+    }
+    // Cancela motivações (ID base + 500, até 10 slots)
+    for (int i = 0; i < 10; i++) {
+      await NotificationService.cancelNotification(
+          (nicheId.id * 1000) + 500 + i);
+    }
+    // Caso especial módulo 7
+    if (nicheId == NicheId.moneySavingChallenge) {
+      await NotificationService.cancelNotification(7001);
+    }
   }
 
   Future<void> _sendCustomNotification(int id, String title, String body,

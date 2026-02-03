@@ -136,18 +136,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return NeonCard(
       onTap: () => _handleNicheTap(niche, heroTag),
       contentOpacity: 1.0,
+      padding: const EdgeInsets.all(8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Transform.scale(
-            scale: niche.scale,
-            child: Hero(
-              tag: heroTag,
-              child:
-                  Image.asset(niche.iconPath, height: 80, fit: BoxFit.contain),
+          // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+          // horizontalmente, independente do número de linhas do texto abaixo.
+          SizedBox(
+            height: 110,
+            child: Center(
+              child: Transform.scale(
+                scale: niche.scale,
+                child: Hero(
+                  tag: heroTag,
+                  child: Image.asset(
+                    niche.iconPath,
+                    height: 60, // Aumentado tamanho base
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          // Área de texto com altura flexível mas alinhada
           Text(
             niche.name,
             textAlign: TextAlign.center,
@@ -155,24 +166,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontSize: 12.5,
               color: isDark ? Colors.white : Colors.black,
+              height: 1.1,
             ),
           ),
           const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              niche.homePhrase,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.bodySmall?.copyWith(
-                color: isDark
-                    ? Colors.white60
-                    : const Color.fromARGB(201, 0, 0, 0),
-                fontSize: 9.5,
-                height: 1.0,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                niche.homePhrase,
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  color: isDark ? Colors.white60 : Colors.black54,
+                  fontSize: 9.5,
+                  height: 1.1,
+                ),
               ),
             ),
           ),
@@ -289,7 +301,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                           const SizedBox(height: 12),
                           SizedBox(
-                            height: 190, // Altura para os cards
+                            height:
+                                210, // Aumentado para acomodar ícones maiores
                             child: ListView.separated(
                               clipBehavior: Clip.none,
                               scrollDirection: Axis.horizontal,

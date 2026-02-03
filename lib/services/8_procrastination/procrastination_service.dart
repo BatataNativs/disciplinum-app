@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/models/8_procrastination/procrastination_model.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
 
 class ProcrastinationService extends ChangeNotifier {
   static const String _moduleId = 'procrastination';
@@ -16,7 +19,11 @@ class ProcrastinationService extends ChangeNotifier {
 
   Map<String, ProcrastinationDay> _days = {};
 
+  static ProcrastinationService? _instance;
+  static ProcrastinationService get instance => _instance!;
+
   ProcrastinationService(this._gamificationService, this._prefs) {
+    _instance = this;
     _loadData();
   }
 
@@ -192,6 +199,7 @@ class ProcrastinationService extends ChangeNotifier {
 
     _days[key] = day.copyWith(tasks: updatedTasks);
     await _saveData();
+    await _scheduleTaskNotification(task);
     notifyListeners();
   }
 
@@ -206,7 +214,40 @@ class ProcrastinationService extends ChangeNotifier {
     _days[key] = day.copyWith(tasks: updatedTasks);
 
     await _saveData();
+    await _scheduleTaskNotification(updatedTask);
     notifyListeners();
+  }
+
+  Future<void> toggleTaskCompletion(DateTime date, String taskId) async {
+    final key = _dateKey(date);
+    final day = _days[key];
+    if (day == null) return;
+
+    final updatedTasks = day.tasks.map((t) {
+      if (t.id == taskId) {
+        final newStatus = !t.isCompleted;
+        return t.copyWith(isCompleted: newStatus);
+      }
+      return t;
+    }).toList();
+
+    _days[key] = day.copyWith(tasks: updatedTasks);
+
+    // Se marcou como concluído, cancela a notificação
+    final updatedTask = updatedTasks.firstWhere((t) => t.id == taskId);
+    if (updatedTask.isCompleted) {
+      await _cancelTaskNotification(taskId);
+    } else {
+      await _scheduleTaskNotification(updatedTask);
+    }
+
+    await _saveData();
+    notifyListeners();
+
+    // Verifica se completou o dia
+    if (updatedTask.isCompleted) {
+      await checkDayCompletion(date);
+    }
   }
 
   Future<void> removeTask(DateTime date, String taskId) async {
@@ -217,6 +258,7 @@ class ProcrastinationService extends ChangeNotifier {
     final updatedTasks = day.tasks.where((t) => t.id != taskId).toList();
     _days[key] = day.copyWith(tasks: updatedTasks);
     await _saveData();
+    await _cancelTaskNotification(taskId);
     notifyListeners();
   }
 
@@ -259,5 +301,102 @@ class ProcrastinationService extends ChangeNotifier {
     }
 
     return false;
+  }
+
+  Future<void> deleteAllTasks() async {
+    _days = {};
+    await _saveData();
+
+    // Resetar o last_check para hoje ao limpar tudo, evitando punições retroativas de dias vazios que tinham tarefas
+    final todayKey = _dateKey(DateTime.now());
+    await _prefs.setString('procrastination_last_check', todayKey);
+
+    // Cancelar todas as notificações pendentes (idealmente filtrando por ID range do módulo)
+    // Por simplicidade aqui, o cancelamento individual é mais seguro se tivermos os IDs,
+    // mas como limpamos TUDO, podemos confiar que novas tarefas terão novos agendamentos.
+    notifyListeners();
+  }
+
+  // --- NOTIFICAÇÕES ---
+
+  Future<void> _scheduleTaskNotification(ProcrastinationTask task) async {
+    if (task.isCompleted) {
+      await _cancelTaskNotification(task.id);
+      return;
+    }
+
+    final scheduledDate = task.startTime ??
+        DateTime(
+            task.startTime?.year ?? DateTime.now().year,
+            task.startTime?.month ?? DateTime.now().month,
+            task.startTime?.day ?? DateTime.now().day,
+            0,
+            0);
+
+    // Se a data já passou, não agenda
+    if (scheduledDate.isBefore(DateTime.now())) return;
+
+    final int notificationId = task.id.hashCode.abs();
+
+    await NotificationService.scheduleNotification(
+      id: notificationId,
+      title: 'Tarefa: ${task.title}',
+      body: task.description ?? 'Hora de realizar sua tarefa!',
+      scheduledDate: scheduledDate,
+      payload: 'task_${task.id}',
+      actions: [
+        const fln.AndroidNotificationAction(
+          'done',
+          'concluído ✅',
+          showsUserInterface: true,
+        ),
+        const fln.AndroidNotificationAction(
+          'delete',
+          'Apagar',
+          showsUserInterface: true,
+        ),
+        const fln.AndroidNotificationAction(
+          'postpone',
+          'Adiar',
+          showsUserInterface: true,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _cancelTaskNotification(String taskId) async {
+    final int notificationId = taskId.hashCode.abs();
+    await NotificationService.cancelNotification(notificationId);
+  }
+
+  /// Processa ações vindas das notificações
+  Future<void> handleNotificationAction(String actionId, String payload) async {
+    debugPrint(
+        '🔔 ProcrastinationService: Processando ação $actionId com payload $payload');
+
+    if (!payload.startsWith('task_')) return;
+    final taskId = payload.replaceFirst('task_', '');
+
+    // Encontra a tarefa e sua data
+    DateTime? taskDay;
+    for (var entry in _days.entries) {
+      if (entry.value.tasks.any((t) => t.id == taskId)) {
+        taskDay = DateTime.parse(entry.key);
+        break;
+      }
+    }
+
+    if (taskDay == null) {
+      debugPrint('⚠️ Tarefa $taskId não encontrada para processar ação.');
+      return;
+    }
+
+    if (actionId == 'done') {
+      await toggleTaskCompletion(taskDay, taskId);
+      debugPrint('✅ Tarefa $taskId marcada como concluída via notificação.');
+    } else if (actionId == 'delete') {
+      await removeTask(taskDay, taskId);
+      debugPrint('🗑️ Tarefa $taskId removida via notificação.');
+    }
   }
 }

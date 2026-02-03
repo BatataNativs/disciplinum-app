@@ -12,6 +12,11 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:disciplinum/main.dart';
+import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     fln.FlutterLocalNotificationsPlugin();
@@ -43,6 +48,31 @@ Future<void> initNotifications() async {
     onDidReceiveNotificationResponse: (fln.NotificationResponse response) {
       if (response.actionId == actionIdNao) {
         NotificationService.onRelapseDetected?.call(response.payload);
+      }
+
+      // Lógica para abrir módulo de Procrastinação na aba correta (Check-in Diário)
+      if (response.payload == 'procrastination_checkin' ||
+          response.actionId == 'ver_itens') {
+        final niche = NicheRepository.getById(NicheId.procrastination);
+        navigatorKey.currentState?.pushNamed(
+          AppRouter.nicheDetail,
+          arguments: {
+            'niche': niche,
+            'initialTabIndex': 2, // Aba Ativar Módulo
+          },
+        );
+      }
+
+      // Lógica para ações rápidas de TAREFAS de Procrastinação
+      if (response.payload != null && response.payload!.startsWith('task_')) {
+        final actionId = response.actionId;
+        if (actionId == 'done' ||
+            actionId == 'delete' ||
+            actionId == 'postpone') {
+          // Usa o Singleton para processar a ação
+          ProcrastinationService.instance
+              .handleNotificationAction(actionId!, response.payload!);
+        }
       }
     },
   );
@@ -229,6 +259,44 @@ class NotificationService {
       payload: payload,
     );
     debugPrint('Agendado Semanal: $title para $scheduledDate (ID: $id)');
+  }
+
+  static Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    String? payload,
+    List<fln.AndroidNotificationAction>? actions,
+  }) async {
+    if (kIsWeb) return;
+
+    final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
+    final now = tz.TZDateTime.now(tz.local);
+
+    if (tzScheduledDate.isBefore(now)) return;
+
+    final androidPlatformChannelSpecifics = fln.AndroidNotificationDetails(
+      'disciplinum_tasks',
+      'Tarefas e Lembretes',
+      channelDescription: 'Notificações de tarefas individuais',
+      importance: fln.Importance.max,
+      priority: fln.Priority.high,
+      playSound: soundEnabled,
+      styleInformation: fln.BigTextStyleInformation(body),
+      actions: actions,
+    );
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tzScheduledDate,
+      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      payload: payload,
+    );
+    debugPrint('Agendado Único: $title para $tzScheduledDate (ID: $id)');
   }
 
   static Future<void> scheduleMonthlyNotification({

@@ -1,0 +1,41 @@
+﻿[ÔêÜ] Flutter (Channel stable, 3.38.9, on Microsoft Windows [vers├åo 10.0.26200.7705], locale pt-BR) [674ms]
+    ÔÇó Flutter version 3.38.9 on channel stable at C:\src\flutter\flutter
+    ÔÇó Upstream repository https://github.com/flutter/flutter.git
+    ÔÇó Framework revision 67323de285 (5 days ago), 2026-01-28 13:43:12 -0800
+    ÔÇó Engine revision 587c18f873
+    ÔÇó Dart version 3.10.8
+    ÔÇó DevTools version 2.51.1
+    ÔÇó Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, omit-legacy-version-file, enable-lldb-debugging
+
+[ÔêÜ] Windows Version (Windows 11 or higher, 25H2, 2009) [2,1s]
+
+[!] Android toolchain - develop for Android devices (Android SDK version 36.1.0) [927ms]
+    ÔÇó Android SDK at C:\Users\dougl\AppData\Local\Android\sdk
+    ÔÇó Emulator version 36.3.10.0 (build_id 14472402) (CL:N/A)
+    ÔÇó Platform android-36, build-tools 36.1.0
+    ÔÇó Java binary at: C:\Program Files (x86)\Android Studio\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    ÔÇó Java version OpenJDK Runtime Environment (build 21.0.8+-14196175-b1038.72)
+    X Android license status unknown.
+      Run `flutter doctor --android-licenses` to accept the SDK licenses.
+      See https://flutter.dev/to/windows-android-setup for more details.
+
+[ÔêÜ] Chrome - develop for the web [256ms]
+    ÔÇó Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[ÔêÜ] Visual Studio - develop Windows apps (Ferramentas de Build do Visual Studio 2019 16.11.53) [255ms]
+    ÔÇó Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+    ÔÇó Ferramentas de Build do Visual Studio 2019 version 16.11.36631.11
+    ÔÇó Windows 10 SDK version 10.0.19041.0
+
+[ÔêÜ] Connected device (4 available) [760ms]
+    ÔÇó SM S928B (mobile) ÔÇó RQCXA08L6QR ÔÇó android-arm64  ÔÇó Android 16 (API 36)
+    ÔÇó Windows (desktop) ÔÇó windows     ÔÇó windows-x64    ÔÇó Microsoft Windows [vers├åo 10.0.26200.7705]
+    ÔÇó Chrome (web)      ÔÇó chrome      ÔÇó web-javascript ÔÇó Google Chrome 143.0.7499.170
+    ÔÇó Edge (web)        ÔÇó edge        ÔÇó web-javascript ÔÇó Microsoft Edge 144.0.3719.104
+
+[ÔêÜ] Network resources [420ms]
+    ÔÇó All expected network resources are available.
+
+! Doctor found issues in 1 category.

@@ -9,14 +9,20 @@ import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
 import 'package:disciplinum/widgets/home/glowing_button.dart';
+import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastination.dart';
+import 'package:disciplinum/screens/modules/8_procrastination/procrastination_notifications_screen.dart';
+import 'package:flutter/services.dart';
 
 class ProcrastinationScreen extends StatefulWidget {
   final String heroTag;
+  final int initialTabIndex;
 
   const ProcrastinationScreen({
     super.key,
     required this.heroTag,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -29,29 +35,42 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   bool _isLoading = false;
 
+  late PageController _pageController;
+  int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTabIndex;
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _ativarModulo() async {
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.startModuleCycle(nicheId: NicheId.procrastination);
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _desativarModulo() async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Desativar módulo?"),
         content: const Text(
           "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
+          "Além disso, todas as suas tarefas serão excluídas permanentemente.\n\n"
           "Deseja continuar?",
         ),
         actions: [
@@ -64,22 +83,38 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar e zerar"),
+            child: const Text("Sim, desativar"),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
+      if (!mounted) {
+        return;
+      }
+      HapticFeedback.heavyImpact();
       setState(() => _isLoading = true);
+
+      // Reinicia gamificação REAL
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
       gamification.resetMedals(
         NicheId.procrastination,
-        notificationTitle: 'Módulo Desativado',
-        notificationBody: 'Seu progresso foi zerado e o módulo desativado.',
+        notificationTitle: 'Módulo Reiniciado 🔄',
+        notificationBody: 'Seu progresso da procrastinação foi zerado.',
         deactivate: true,
       );
+
+      // Limpa tarefas no serviço
+      final service =
+          Provider.of<ProcrastinationService>(context, listen: false);
+      await service.deleteAllTasks();
+
       await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -88,160 +123,295 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
     final service = Provider.of<ProcrastinationService>(context);
     final gamification = Provider.of<GamificationService>(context);
     final isActive = gamification.isModuleActive(NicheId.procrastination);
-
-    final tasks = service.getTasksForDay(_selectedDay);
-    final dayStatus = service.getDay(_selectedDay);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Obter objeto Niche
     final niche = NicheRepository.getById(NicheId.procrastination);
 
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(niche.name),
+          centerTitle: true,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header Custom com Back e Desativar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new_rounded,
-                        color: isDark ? Colors.white : Colors.black87),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Spacer(),
-                  if (isActive)
-                    TextButton.icon(
-                      onPressed: _desativarModulo,
-                      icon: const Icon(Icons.power_settings_new,
-                          color: Colors.redAccent, size: 18),
-                      label: const Text('Desativar módulo',
-                          style:
-                              TextStyle(color: Colors.redAccent, fontSize: 13)),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              isDark
+                  ? const Color.fromARGB(255, 0, 0, 0)
+                  : const Color.fromARGB(255, 230, 235, 255),
+              isDark
+                  ? const Color.fromARGB(255, 10, 15, 30)
+                  : const Color.fromARGB(255, 255, 255, 255)
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Custom
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                ],
+                    Expanded(
+                      child: Text(
+                        niche.name,
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
               ),
-            ),
-
-            if (!isActive)
-              _buildInactiveState(niche, isDark)
-            else
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Header Padrão (Ícone)
-                      NicheHeader(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: NicheHeader(
                         niche: niche,
                         showBackground: false,
                         heroTag: widget.heroTag,
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildSegmentedControl(),
+                    ),
+                    const SizedBox(height: 24),
 
-                      // Calendário
-                      _buildCalendar(service, isDark),
+                    // --- PAGEVIEW ---
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() => _selectedIndex = index);
+                        },
+                        children: [
+                          // Aba 0: Como funciona
+                          _buildHowItWorksTab(isDark),
 
-                      const SizedBox(height: 16),
+                          // Aba 1: Editor de tarefas
+                          _buildEditorTab(service, isDark),
 
-                      // Resumo do Dia
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              DateFormat("d 'de' MMMM", 'pt_BR')
-                                  .format(_selectedDay),
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            if (tasks.isNotEmpty)
-                              _buildDayStatusBadge(dayStatus),
-                          ],
-                        ),
+                          // Aba 2: Ativar módulo
+                          _buildActivationTab(isActive, niche, service, isDark),
+                        ],
                       ),
-
-                      const SizedBox(height: 8),
-
-                      // Lista de Tarefas
-                      if (tasks.isEmpty) _buildEmptyState(isDark),
-
-                      if (tasks.isNotEmpty)
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
-                          itemCount: tasks.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final task = tasks[index];
-                            return _buildTaskTile(task, service, isDark);
-                          },
-                        ),
-
-                      if (tasks.any((t) => t.isCompleted))
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: () =>
-                                  service.clearCompletedTasks(_selectedDay),
-                              icon: const Icon(Icons.delete_sweep_outlined,
-                                  color: Colors.redAccent, size: 20),
-                              label: const Text('Excluir concluídos',
-                                  style: TextStyle(color: Colors.redAccent)),
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 80), // Espaço para FAB
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
-      floatingActionButton: isActive
-          ? FloatingActionButton.extended(
-              heroTag: 'add_task_fab',
-              onPressed: () => _showAddTaskModal(context, service),
-              label: const Text('Nova Tarefa'),
-              icon: const Icon(Icons.add_task),
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
-  Widget _buildInactiveState(Niche niche, bool isDark) {
-    return Expanded(
-      child: Padding(
+  Widget _buildSegmentedControl() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final List<String> options = [
+      'Como funciona',
+      'Editor de tarefas',
+      'Ativar módulo'
+    ];
+
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        children: List.generate(options.length, (index) {
+          final isSelected = _selectedIndex == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
+                } else {
+                  setState(() => _selectedIndex = index);
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.easeOutQuart,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark
+                          ? const Color.fromARGB(255, 57, 92, 208)
+                          : const Color.fromARGB(255, 18, 189, 211))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(21),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: (isDark
+                                    ? const Color.fromARGB(255, 57, 92, 208)
+                                    : const Color.fromARGB(255, 10, 223, 219))
+                                .withValues(alpha: 0.3),
+                            blurRadius: 10,
+                          )
+                        ]
+                      : [],
+                ),
+                child: Text(
+                  options[index],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // --- ABA 0: COMO FUNCIONA ---
+  Widget _buildHowItWorksTab(bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const NicheInfoSection(
+            hintText:
+                "Neste módulo, na tela 'Editor de Tarefas', você pode criar, editar e excluir tarefas a serem cumpridas, no dia atual ou em qualquer dia. Concluindo todas do dia, você segue com seu progresso. Deixando de cumprir alguma, o seu progresso reinicia.",
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: GlowingButton(
+              text: 'Acessar Editor',
+              color: const Color(0xFF6366F1),
+              onPressed: () {
+                _pageController.animateToPage(
+                  1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                );
+              },
+              borderRadius: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- ABA 1: EDITOR DE TAREFAS ---
+  Widget _buildEditorTab(ProcrastinationService service, bool isDark) {
+    final tasks = service.getTasksForDay(_selectedDay);
+    final dayStatus = service.getDay(_selectedDay);
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildCalendar(service, isDark),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        DateFormat("d 'de' MMMM", 'pt_BR').format(_selectedDay),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      if (tasks.isNotEmpty) _buildDayStatusBadge(dayStatus),
+                    ],
+                  ),
+                ),
+                if (tasks.isEmpty) _buildEmptyState(isDark),
+                if (tasks.isNotEmpty)
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: tasks.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      // No editor, checkbox desabilitado ou apenas visual
+                      return _buildTaskTile(task, service, isDark,
+                          isEditable: true);
+                    },
+                  ),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: GlowingButton(
+            text: 'Nova Tarefa',
+            icon: Icons.add_task,
+            color: const Color(0xFF6366F1),
+            onPressed: () => _showAddTaskModal(context, service),
+            borderRadius: 18,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- ABA 2: ATIVAR MÓDULO ---
+  Widget _buildActivationTab(
+      bool isActive, Niche niche, ProcrastinationService service, bool isDark) {
+    if (!isActive) {
+      return Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Hero(
-              tag: widget.heroTag,
-              child: Image.asset(niche.iconPath, height: 120),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              niche.name,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            Icon(
+              Icons.do_not_disturb_on,
+              size: 80,
+              color: isDark ? Colors.white38 : Colors.grey,
             ),
             const SizedBox(height: 16),
             Text(
-              'Pequenas tarefas geram grandes mudanças. Organize seu dia e vença a procrastinação.',
+              "Ative o módulo para começar a usá-lo e para criar seu progresso",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -250,18 +420,141 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
             ),
             const SizedBox(height: 40),
             GlowingButton(
-              text: 'ATIVAR MÓDULO',
+              text: 'Ativar Módulo',
               onPressed: _ativarModulo,
               color: const Color(0xFF6366F1),
             ),
           ],
         ),
-      ),
+      );
+    }
+
+    final todayTasks = service.getTasksForDay(DateTime.now());
+
+    return Column(
+      children: [
+        Expanded(
+          child: todayTasks.isEmpty
+              ? Center(
+                  child: Text(
+                    "Nenhuma tarefa para hoje.\nCrie no Editor!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38),
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: todayTasks.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final task = todayTasks[index];
+                    if (task.isCompleted) {
+                      return const SizedBox.shrink();
+                    }
+                    return _buildTaskTile(task, service, isDark,
+                        isCheckable: true);
+                  },
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextButton.icon(
+            onPressed: _desativarModulo,
+            icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
+            label: const Text('Desativar módulo',
+                style: TextStyle(color: Colors.redAccent, fontSize: 16)),
+          ),
+        ),
+
+        // --- BOTÕES DE AÇÃO ESTILO PÍLULA (PADRÃO SMOKING) ---
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MyProgressProcrastination()),
+                    );
+                  },
+                  child: Container(
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF395CC8),
+                      borderRadius: BorderRadius.circular(21),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF395CC8).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'Meu progresso',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              const ProcrastinationNotificationsScreen()),
+                    );
+                  },
+                  child: Container(
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(21),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white24
+                            : Colors.grey[400]!,
+                      ),
+                    ),
+                    child: Text(
+                      'Notificações',
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildDayStatusBadge(ProcrastinationDay? day) {
-    if (day == null) return const SizedBox();
+    if (day == null) {
+      return const SizedBox();
+    }
 
     if (day.isDayComplete) {
       return Container(
@@ -366,6 +659,9 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
               cancelText: 'Cancelar',
               confirmText: 'Selecionar',
             );
+            if (!mounted) {
+              return;
+            }
             if (picked != null) {
               setState(() {
                 _focusedDay = picked;
@@ -396,119 +692,171 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
   }
 
   Widget _buildTaskTile(
-      ProcrastinationTask task, ProcrastinationService service, bool isDark) {
-    return Dismissible(
-      key: Key(task.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-            color: Colors.red, borderRadius: BorderRadius.circular(12)),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      confirmDismiss: (direction) async {
-        return await showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-                  title: const Text('Remover tarefa?'),
-                  content: const Text('Esta ação não pode ser desfeita.'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancelar')),
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Remover',
-                            style: TextStyle(color: Colors.red))),
-                  ],
-                ));
-      },
-      onDismissed: (_) {
-        service.removeTask(_selectedDay, task.id);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-            color: isDark ? Colors.grey[900] : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: task.isCompleted
-                    ? Colors.green.withValues(alpha: 0.5)
-                    : (isDark ? Colors.white12 : Colors.grey[300]!)),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2))
-            ]),
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: Checkbox(
-            value: task.isCompleted,
-            activeColor: Colors.green,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            onChanged: (val) {
-              final updated = task.copyWith(isCompleted: val);
-              service.updateTask(_selectedDay, updated);
-
-              // Feedback visual imediato e possível validação de dia
-              // A validação completa pode ser feita aqui se quisermos feedback instantaneo
-              if (val == true) {
-                service.checkDayCompletion(_selectedDay);
-              }
-            },
-          ),
-          title: Text(
-            task.title,
-            style: TextStyle(
-                decoration:
-                    task.isCompleted ? TextDecoration.lineThrough : null,
-                color: task.isCompleted
-                    ? (isDark ? Colors.white38 : Colors.black38)
-                    : (isDark ? Colors.white : Colors.black87),
-                fontWeight: FontWeight.w600),
-          ),
-          subtitle: task.description != null
-              ? Text(task.description!,
-                  maxLines: 2, overflow: TextOverflow.ellipsis)
-              : null,
-          trailing: (task.startTime != null || task.endTime != null)
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (task.startTime != null)
-                      Text(
-                        DateFormat('HH:mm').format(task.startTime!),
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : Colors.black87),
-                      ),
-                    if (task.endTime != null && task.startTime != null)
-                      Text(
-                        'até ${DateFormat('HH:mm').format(task.endTime!)}',
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.white38 : Colors.black38),
-                      )
-                    else if (task.endTime != null)
-                      Text(
-                        DateFormat('HH:mm').format(task.endTime!),
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : Colors.black87),
-                      ),
-                  ],
-                )
-              : null,
+      ProcrastinationTask task, ProcrastinationService service, bool isDark,
+      {bool isCheckable = false, bool isEditable = false}) {
+    final tile = Container(
+      decoration: BoxDecoration(
+          color: isDark ? Colors.grey[900] : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: task.isCompleted
+                  ? Colors.green.withValues(alpha: 0.5)
+                  : (isDark ? Colors.white12 : Colors.grey[300]!)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2))
+          ]),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: isCheckable
+            ? Checkbox(
+                value: task.isCompleted,
+                activeColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4)),
+                onChanged: (val) {
+                  final updated = task.copyWith(isCompleted: val);
+                  service.updateTask(DateTime.now(), updated);
+                  if (val == true) {
+                    service.checkDayCompletion(DateTime.now());
+                  }
+                },
+              )
+            : Icon(Icons.task_alt,
+                color: task.isCompleted ? Colors.green : Colors.grey),
+        title: Text(
+          task.title,
+          style: TextStyle(
+              decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+              color: task.isCompleted
+                  ? (isDark ? Colors.white38 : Colors.black38)
+                  : (isDark ? Colors.white : Colors.black87),
+              fontWeight: FontWeight.w600),
+        ),
+        subtitle: task.description != null
+            ? Text(task.description!,
+                maxLines: 2, overflow: TextOverflow.ellipsis)
+            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (task.startTime != null || task.endTime != null)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (task.startTime != null)
+                    Text(
+                      DateFormat('HH:mm').format(task.startTime!),
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                  if (task.endTime != null && task.startTime != null)
+                    Text(
+                      'até ${DateFormat('HH:mm').format(task.endTime!)}',
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: isDark ? Colors.white38 : Colors.black38),
+                    )
+                  else if (task.endTime != null)
+                    Text(
+                      DateFormat('HH:mm').format(task.endTime!),
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                ],
+              ),
+            if (isEditable) ...[
+              const SizedBox(width: 8),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, size: 20),
+                onSelected: (val) {
+                  if (val == 'delete') {
+                    _confirmDeleteTask(task, service);
+                  } else if (val == 'edit') {
+                    _showEditTaskModal(task, service);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(children: [
+                        Icon(Icons.edit, size: 18),
+                        SizedBox(width: 8),
+                        Text('Editar')
+                      ])),
+                  const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(children: [
+                        Icon(Icons.delete, color: Colors.red, size: 18),
+                        SizedBox(width: 8),
+                        Text('Excluir', style: TextStyle(color: Colors.red))
+                      ])),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
+
+    return tile;
+  }
+
+  Future<void> _confirmDeleteTask(
+      ProcrastinationTask task, ProcrastinationService service) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remover tarefa?'),
+        content: const Text('Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child:
+                  const Text('Remover', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+    if (confirmed == true) {
+      service.removeTask(_selectedDay, task.id);
+    }
+  }
+
+  void _showEditTaskModal(
+      ProcrastinationTask task, ProcrastinationService service) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AddTaskModal(
+        selectedDay: _selectedDay,
+        service: service,
+        taskToEdit: task,
+      ),
+    ).then((result) {
+      if (result == true && mounted) {
+        _pageController.animateToPage(
+          2, // Aba Ativar Módulo
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutQuart,
+        );
+      }
+    });
   }
 
   void _showAddTaskModal(BuildContext context, ProcrastinationService service) {
@@ -518,15 +866,26 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) =>
           _AddTaskModal(selectedDay: _selectedDay, service: service),
-    );
+    ).then((result) {
+      if (result == true && mounted) {
+        HapticFeedback.lightImpact();
+        _pageController.animateToPage(
+          2, // Aba Ativar Módulo
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutQuart,
+        );
+      }
+    });
   }
 }
 
 class _AddTaskModal extends StatefulWidget {
   final DateTime selectedDay;
   final ProcrastinationService service;
+  final ProcrastinationTask? taskToEdit;
 
-  const _AddTaskModal({required this.selectedDay, required this.service});
+  const _AddTaskModal(
+      {required this.selectedDay, required this.service, this.taskToEdit});
 
   @override
   State<_AddTaskModal> createState() => _AddTaskModalState();
@@ -537,6 +896,21 @@ class _AddTaskModalState extends State<_AddTaskModal> {
   final _descController = TextEditingController();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.taskToEdit != null) {
+      _titleController.text = widget.taskToEdit!.title;
+      _descController.text = widget.taskToEdit!.description ?? '';
+      if (widget.taskToEdit!.startTime != null) {
+        _startTime = TimeOfDay.fromDateTime(widget.taskToEdit!.startTime!);
+      }
+      if (widget.taskToEdit!.endTime != null) {
+        _endTime = TimeOfDay.fromDateTime(widget.taskToEdit!.endTime!);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -557,7 +931,7 @@ class _AddTaskModalState extends State<_AddTaskModal> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Nova Tarefa',
+              widget.taskToEdit != null ? 'Editar Tarefa' : 'Nova Tarefa',
               style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -569,7 +943,7 @@ class _AddTaskModalState extends State<_AddTaskModal> {
               autofocus: true,
               style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
-                labelText: 'Título da tarefa',
+                labelText: 'Nome da tarefa',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.title),
@@ -597,7 +971,9 @@ class _AddTaskModalState extends State<_AddTaskModal> {
                     onPressed: () async {
                       final t = await showTimePicker(
                           context: context, initialTime: TimeOfDay.now());
-                      if (t != null) setState(() => _startTime = t);
+                      if (t != null) {
+                        setState(() => _startTime = t);
+                      }
                     },
                   ),
                 ),
@@ -609,7 +985,9 @@ class _AddTaskModalState extends State<_AddTaskModal> {
                     onPressed: () async {
                       final t = await showTimePicker(
                           context: context, initialTime: TimeOfDay.now());
-                      if (t != null) setState(() => _endTime = t);
+                      if (t != null) {
+                        setState(() => _endTime = t);
+                      }
                     },
                   ),
                 ),
@@ -626,9 +1004,12 @@ class _AddTaskModalState extends State<_AddTaskModal> {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12))),
-                child: const Text('Adicionar Tarefa',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(
+                    widget.taskToEdit != null
+                        ? 'Salvar Alterações'
+                        : 'Adicionar Tarefa',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             )
           ],
@@ -638,7 +1019,9 @@ class _AddTaskModalState extends State<_AddTaskModal> {
   }
 
   void _saveTask() {
-    if (_titleController.text.trim().isEmpty) return;
+    if (_titleController.text.trim().isEmpty) {
+      return;
+    }
 
     final now = widget.selectedDay;
     DateTime? startDt;
@@ -653,17 +1036,29 @@ class _AddTaskModalState extends State<_AddTaskModal> {
           now.year, now.month, now.day, _endTime!.hour, _endTime!.minute);
     }
 
-    final task = ProcrastinationTask(
-      id: Uuid().v4(),
-      title: _titleController.text.trim(),
-      description: _descController.text.trim().isEmpty
-          ? null
-          : _descController.text.trim(),
-      startTime: startDt,
-      endTime: endDt,
-    );
+    if (widget.taskToEdit != null) {
+      final updated = widget.taskToEdit!.copyWith(
+        title: _titleController.text.trim(),
+        description: _descController.text.trim().isEmpty
+            ? null
+            : _descController.text.trim(),
+        startTime: startDt,
+        endTime: endDt,
+      );
+      widget.service.updateTask(widget.selectedDay, updated);
+    } else {
+      final task = ProcrastinationTask(
+        id: const Uuid().v4(),
+        title: _titleController.text.trim(),
+        description: _descController.text.trim().isEmpty
+            ? null
+            : _descController.text.trim(),
+        startTime: startDt,
+        endTime: endDt,
+      );
+      widget.service.addTask(widget.selectedDay, task);
+    }
 
-    widget.service.addTask(widget.selectedDay, task);
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 }

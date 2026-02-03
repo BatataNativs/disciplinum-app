@@ -3,12 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/app_router.dart';
 import 'package:disciplinum/models/niche.dart';
-import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
-import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/misc/system_stuff/installed_app_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
@@ -106,7 +105,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
     );
   }
 
-  Future<void> _handleNicheTap(Niche niche) async {
+  Future<void> _handleNicheTap(Niche niche, String heroTag) async {
     HapticFeedback.lightImpact();
 
     bool isUsageGranted = await PermissionService.hasUsagePermission();
@@ -118,55 +117,67 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
 
     if (!mounted) return;
 
-    if (niche.id == NicheId.smoking) {
-      Navigator.pushNamed(context, AppRouter.stopSmoking);
-    } else {
-      Navigator.pushNamed(
-        context,
-        AppRouter.nicheDetail,
-        arguments: niche,
-      );
-    }
+    Navigator.pushNamed(
+      context,
+      AppRouter.nicheDetail,
+      arguments: {'niche': niche, 'heroTag': heroTag},
+    );
   }
 
-  Widget _buildNicheCard(Niche niche, bool isDark, TextTheme textTheme) {
+  Widget _buildNicheCard(
+      Niche niche, bool isDark, TextTheme textTheme, String heroTag) {
     return NeonCard(
-      onTap: () => _handleNicheTap(niche),
+      onTap: () => _handleNicheTap(niche, heroTag),
       contentOpacity: 1.0,
+      padding: const EdgeInsets.all(8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Transform.scale(
-            scale: niche.scale,
-            child:
-                Image.asset(niche.iconPath, height: 100, fit: BoxFit.contain),
+          // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+          // horizontalmente, independente do número de linhas do texto abaixo.
+          SizedBox(
+            height: 110,
+            child: Center(
+              child: Transform.scale(
+                scale: niche.scale,
+                child: Hero(
+                  tag: heroTag,
+                  child: Image.asset(
+                    niche.iconPath,
+                    height: 60, // Aumentado tamanho base
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 8),
+          // Área de texto com altura flexível mas alinhada
           Text(
             niche.name,
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontSize: 12.5,
               color: isDark ? Colors.white : Colors.black,
+              height: 1.1,
             ),
           ),
           const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              niche.homePhrase,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.bodySmall?.copyWith(
-                color: isDark
-                    ? Colors.white60
-                    : const Color.fromARGB(201, 0, 0, 0),
-                fontSize: 9.5,
-                height: 1.0,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                niche.homePhrase,
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  color: isDark ? Colors.white60 : Colors.black54,
+                  fontSize: 9.5,
+                  height: 1.1,
+                ),
               ),
             ),
           ),
@@ -177,7 +188,6 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
 
   @override
   Widget build(BuildContext context) {
-    final niches = NicheRepository.getAll();
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -257,50 +267,67 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Modo convidado',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: PageView.builder(
-                      scrollDirection: Axis.vertical,
-                      padEnds: false,
-                      controller: PageController(
-                        viewportFraction: 0.28,
-                      ),
-                      itemCount: (niches.length / 2).ceil(),
-                      itemBuilder: (context, rowIndex) {
-                        final int firstIndex = rowIndex * 2;
-                        final int secondIndex = firstIndex + 1;
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(
+                        top: 10, bottom: 100, left: 16, right: 16),
+                    itemCount: NicheCategoryRepository.getCategories().length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 32),
+                    itemBuilder: (context, index) {
+                      final category =
+                          NicheCategoryRepository.getCategories()[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.title,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height:
+                                210, // Aumentado para acomodar ícones maiores
+                            child: ListView.separated(
+                              clipBehavior: Clip.none,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: category.nicheIds.length,
+                              separatorBuilder: (context, i) =>
+                                  const SizedBox(width: 12),
+                              itemBuilder: (context, i) {
+                                final nicheId = category.nicheIds[i];
+                                final niche = NicheRepository.getById(nicheId);
+                                final heroTag =
+                                    'guest_${category.idPrefix}_${niche.id}';
 
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: firstIndex < niches.length
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: _buildNicheCard(niches[firstIndex],
-                                          isDark, textTheme),
-                                    )
-                                  : const SizedBox.shrink(),
+                                return SizedBox(
+                                  width: 150,
+                                  child: _buildNicheCard(
+                                      niche, isDark, textTheme, heroTag),
+                                );
+                              },
                             ),
-                            Expanded(
-                              child: secondIndex < niches.length
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: _buildNicheCard(
-                                          niches[secondIndex],
-                                          isDark,
-                                          textTheme),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
