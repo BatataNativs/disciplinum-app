@@ -373,7 +373,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
                       final task = tasks[index];
                       // No editor, checkbox desabilitado ou apenas visual
                       return _buildTaskTile(task, service, isDark,
-                          isEditable: true);
+                          isEditable: true, taskDate: _selectedDay);
                     },
                   ),
                 const SizedBox(height: 100),
@@ -453,7 +453,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
                       return const SizedBox.shrink();
                     }
                     return _buildTaskTile(task, service, isDark,
-                        isCheckable: true);
+                        isCheckable: true, taskDate: DateTime.now());
                   },
                 ),
         ),
@@ -693,7 +693,13 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
 
   Widget _buildTaskTile(
       ProcrastinationTask task, ProcrastinationService service, bool isDark,
-      {bool isCheckable = false, bool isEditable = false}) {
+      {bool isCheckable = false, bool isEditable = false, DateTime? taskDate}) {
+    // Calcula a urgência atual da tarefa
+    final urgency = task.isCompleted
+        ? task.completedUrgencyLevel
+        : service.getTaskUrgency(task, taskDate ?? _selectedDay);
+    final urgencyColor = urgency?.color ?? Colors.grey;
+
     final tile = Container(
       decoration: BoxDecoration(
           color: isDark ? Colors.grey[900] : Colors.white,
@@ -701,31 +707,55 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
           border: Border.all(
               color: task.isCompleted
                   ? Colors.green.withValues(alpha: 0.5)
-                  : (isDark ? Colors.white12 : Colors.grey[300]!)),
+                  : urgencyColor.withValues(alpha: 0.6),
+              width: task.isCompleted ? 1 : 2),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
+                color: task.isCompleted
+                    ? Colors.black.withValues(alpha: 0.05)
+                    : urgencyColor.withValues(alpha: 0.15),
+                blurRadius: 6,
                 offset: const Offset(0, 2))
           ]),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: isCheckable
-            ? Checkbox(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Indicador de urgência (bolinha colorida)
+            if (!task.isCompleted)
+              Container(
+                width: 12,
+                height: 12,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: urgencyColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: urgencyColor.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            if (isCheckable)
+              Checkbox(
                 value: task.isCompleted,
                 activeColor: Colors.green,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4)),
                 onChanged: (val) {
-                  final updated = task.copyWith(isCompleted: val);
-                  service.updateTask(DateTime.now(), updated);
-                  if (val == true) {
-                    service.checkDayCompletion(DateTime.now());
-                  }
+                  // Usa toggleTaskCompletion para salvar a urgência corretamente
+                  service.toggleTaskCompletion(
+                      taskDate ?? DateTime.now(), task.id);
                 },
               )
-            : Icon(Icons.task_alt,
-                color: task.isCompleted ? Colors.green : Colors.grey),
+            else
+              Icon(Icons.task_alt,
+                  color: task.isCompleted ? Colors.green : urgencyColor),
+          ],
+        ),
         title: Text(
           task.title,
           style: TextStyle(

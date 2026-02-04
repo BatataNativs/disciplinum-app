@@ -223,10 +223,31 @@ class ProcrastinationService extends ChangeNotifier {
     final day = _days[key];
     if (day == null) return;
 
+    final now = DateTime.now();
     final updatedTasks = day.tasks.map((t) {
       if (t.id == taskId) {
         final newStatus = !t.isCompleted;
-        return t.copyWith(isCompleted: newStatus);
+        if (newStatus) {
+          // Calculando urgência no momento do check
+          final urgency = t.startTime != null || t.endTime != null
+              ? t.getUrgencyLevel(now)
+              : ProcrastinationTask.getUrgencyForDate(date, now);
+          return t.copyWith(
+            isCompleted: newStatus,
+            completedUrgencyLevel: urgency,
+          );
+        } else {
+          // Desmarcando - remove a urgência salva
+          return ProcrastinationTask(
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            startTime: t.startTime,
+            endTime: t.endTime,
+            isCompleted: false,
+            completedUrgencyLevel: null,
+          );
+        }
       }
       return t;
     }).toList();
@@ -398,5 +419,96 @@ class ProcrastinationService extends ChangeNotifier {
       await removeTask(taskDay, taskId);
       debugPrint('🗑️ Tarefa $taskId removida via notificação.');
     }
+  }
+
+  // --- ESTATÍSTICAS DE DESPROCRASTINAÇÃO ---
+
+  /// Retorna estatísticas sobre as tarefas concluídas por nível de urgência
+  Map<String, dynamic> getCompletedTasksStats() {
+    int greenCount = 0;
+    int yellowCount = 0;
+    int redCount = 0;
+    int totalCompleted = 0;
+
+    for (final day in _days.values) {
+      for (final task in day.tasks) {
+        if (task.isCompleted && task.completedUrgencyLevel != null) {
+          totalCompleted++;
+          switch (task.completedUrgencyLevel!) {
+            case UrgencyLevel.green:
+              greenCount++;
+              break;
+            case UrgencyLevel.yellow:
+              yellowCount++;
+              break;
+            case UrgencyLevel.red:
+              redCount++;
+              break;
+          }
+        }
+      }
+    }
+
+    // Calcula percentuais
+    final greenPercent =
+        totalCompleted > 0 ? (greenCount / totalCompleted * 100) : 0.0;
+    final yellowPercent =
+        totalCompleted > 0 ? (yellowCount / totalCompleted * 100) : 0.0;
+    final redPercent =
+        totalCompleted > 0 ? (redCount / totalCompleted * 100) : 0.0;
+
+    // Determina o perfil
+    String profile;
+    String profileEmoji;
+    String profileDescription;
+
+    if (totalCompleted == 0) {
+      profile = 'Sem dados';
+      profileEmoji = '📊';
+      profileDescription =
+          'Complete algumas tarefas para ver seu perfil de desprocrastinação!';
+    } else if (greenPercent >= 50) {
+      profile = 'Zen';
+      profileEmoji = '🧘';
+      profileDescription =
+          'Você é um planejador disciplinado! Resolve suas tarefas com antecedência.';
+    } else if (redPercent >= 50) {
+      profile = 'Adrenalina';
+      profileEmoji = '⚡';
+      profileDescription =
+          'Você deixa tudo para última hora. Isso gera estresse desnecessário!';
+    } else if (yellowPercent >= 40) {
+      profile = 'Na Trave';
+      profileEmoji = '⚽';
+      profileDescription =
+          'Você flerta com o prazo, mas entrega. Tente antecipar mais!';
+    } else {
+      profile = 'Equilibrado';
+      profileEmoji = '⚖️';
+      profileDescription =
+          'Seu comportamento varia. Tente migrar para a zona verde!';
+    }
+
+    return {
+      'totalCompleted': totalCompleted,
+      'greenCount': greenCount,
+      'yellowCount': yellowCount,
+      'redCount': redCount,
+      'greenPercent': greenPercent,
+      'yellowPercent': yellowPercent,
+      'redPercent': redPercent,
+      'profile': profile,
+      'profileEmoji': profileEmoji,
+      'profileDescription': profileDescription,
+    };
+  }
+
+  /// Retorna a urgência atual de uma tarefa específica
+  UrgencyLevel getTaskUrgency(ProcrastinationTask task, DateTime taskDate) {
+    final now = DateTime.now();
+    if (task.startTime != null || task.endTime != null) {
+      return task.getUrgencyLevel(now);
+    }
+    return ProcrastinationTask.getUrgencyForDate(taskDate, now);
   }
 }
