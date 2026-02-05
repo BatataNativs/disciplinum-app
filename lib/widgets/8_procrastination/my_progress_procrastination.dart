@@ -4,6 +4,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_stats_screen.dart';
+import 'package:disciplinum/screens/modules/8_procrastination/completed_lists_screen.dart';
 
 class MyProgressProcrastination extends StatelessWidget {
   const MyProgressProcrastination({super.key});
@@ -120,6 +121,58 @@ class MyProgressProcrastination extends StatelessWidget {
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Botão de Listas Concluídas
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CompletedListsScreen(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4CAF50),
+                          const Color(0xFF8BC34A),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.checklist_rounded,
+                            color: Colors.white, size: 22),
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: Text(
+                            'Listas concluídas sem nenhum atraso',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
