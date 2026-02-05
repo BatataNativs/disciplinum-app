@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:disciplinum/models/8_procrastination/procrastination_model.dart';
 import 'package:disciplinum/models/niche_id.dart';
-import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
-import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastination.dart';
+import 'package:disciplinum/widgets/8_procrastination/task_creation_dialog.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_notifications_screen.dart';
-import 'package:flutter/services.dart';
+import 'package:disciplinum/widgets/home/glowing_button.dart';
 
 class ProcrastinationScreen extends StatefulWidget {
-  final String heroTag;
+  final String? heroTag;
   final int initialTabIndex;
 
   const ProcrastinationScreen({
     super.key,
-    required this.heroTag,
+    this.heroTag,
     this.initialTabIndex = 0,
   });
 
@@ -29,196 +25,83 @@ class ProcrastinationScreen extends StatefulWidget {
   State<ProcrastinationScreen> createState() => _ProcrastinationScreenState();
 }
 
-class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime _selectedDay = DateTime.now();
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  bool _isLoading = false;
-
-  late PageController _pageController;
-  int _selectedIndex = 0;
+class _ProcrastinationScreenState extends State<ProcrastinationScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _selectedListId = 'default';
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.initialTabIndex;
-    _pageController = PageController(initialPage: _selectedIndex);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _ativarModulo() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.startModuleCycle(nicheId: NicheId.procrastination);
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _desativarModulo() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Desativar módulo?"),
-        content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Além disso, todas as suas tarefas serão excluídas permanentemente.\n\n"
-          "Deseja continuar?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar"),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      if (!mounted) {
-        return;
-      }
-      HapticFeedback.heavyImpact();
-      setState(() => _isLoading = true);
-
-      // Reinicia gamificação REAL
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
-      gamification.resetMedals(
-        NicheId.procrastination,
-        notificationTitle: 'Módulo Reiniciado 🔄',
-        notificationBody: 'Seu progresso da procrastinação foi zerado.',
-        deactivate: true,
-      );
-
-      // Limpa tarefas no serviço
-      final service =
-          Provider.of<ProcrastinationService>(context, listen: false);
-      await service.deleteAllTasks();
-
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final service = Provider.of<ProcrastinationService>(context);
     final gamification = Provider.of<GamificationService>(context);
     final isActive = gamification.isModuleActive(NicheId.procrastination);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Obter objeto Niche
-    final niche = NicheRepository.getById(NicheId.procrastination);
-
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(niche.name),
-          centerTitle: true,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
+              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Header Custom
+              // Header com título
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
+                      icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    Expanded(
-                      child: Text(
-                        niche.name,
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
+                    const SizedBox(width: 8),
+                    Text(
+                      'Procrastinação',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 48),
                   ],
                 ),
               ),
+
+              // Segmented Control (2 opções)
+              _buildSegmentedControl(isDark),
+
+              // Conteúdo
               Expanded(
-                child: Column(
+                child: TabBarView(
+                  controller: _tabController,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: NicheHeader(
-                        niche: niche,
-                        showBackground: false,
-                        heroTag: widget.heroTag,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSegmentedControl(),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // --- PAGEVIEW ---
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          setState(() => _selectedIndex = index);
-                        },
-                        children: [
-                          // Aba 0: Como funciona
-                          _buildHowItWorksTab(isDark),
-
-                          // Aba 1: Editor de tarefas
-                          _buildEditorTab(service, isDark),
-
-                          // Aba 2: Ativar módulo
-                          _buildActivationTab(isActive, niche, service, isDark),
-                        ],
-                      ),
-                    ),
+                    _buildHowItWorks(isDark),
+                    _buildTasksView(isDark, service, isActive),
                   ],
                 ),
               ),
@@ -229,866 +112,1078 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen> {
     );
   }
 
-  Widget _buildSegmentedControl() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = [
-      'Como funciona',
-      'Editor de tarefas',
-      'Ativar módulo'
-    ];
+  Widget _buildSegmentedControl(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          indicator: BoxDecoration(
+            color: const Color(0xFF6366F1),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelColor: Colors.white,
+          unselectedLabelColor: isDark ? Colors.white60 : Colors.black45,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            letterSpacing: 0.3,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+          dividerColor: Colors.transparent,
+          tabs: const [
+            Tab(text: 'Como funciona'),
+            Tab(text: 'Tarefas'),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildHowItWorks(bool isDark) {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoCard(
+                  isDark,
+                  icon: Icons.lightbulb_outline,
+                  title: 'O que é este módulo?',
+                  content:
+                      'O módulo de Procrastinação ajuda você a combater o hábito de deixar tarefas para depois. '
+                      'Crie listas de tarefas e compromissos, defina prazos, e acompanhe seu progresso!',
+                ),
+                const SizedBox(height: 16),
+                _buildInfoCard(
+                  isDark,
+                  icon: Icons.timer_outlined,
+                  title: 'Urgência Dinâmica',
+                  content:
+                      'Cada tarefa tem um indicador de urgência que muda automaticamente:\n\n'
+                      '🟢 Verde: Você tem tempo de sobra\n'
+                      '🟡 Amarelo: Prazo se aproximando\n'
+                      '🔴 Vermelho: Urgente!',
+                ),
+                const SizedBox(height: 16),
+                _buildInfoCard(
+                  isDark,
+                  icon: Icons.trending_up,
+                  title: 'Seu Perfil',
+                  content:
+                      'Ao completar tarefas, analisamos quando você as finalizou:\n\n'
+                      '🧘 Zen: Resolve tudo com antecedência\n'
+                      '⚡ Adrenalina: Deixa para última hora\n'
+                      '⚽ Na Trave: Flerta com o prazo\n'
+                      '⚖️ Equilibrado: Comportamento variado',
+                ),
+                const SizedBox(height: 16),
+                _buildInfoCard(
+                  isDark,
+                  icon: Icons.checklist,
+                  title: 'Listas de Tarefas',
+                  content:
+                      'Organize suas tarefas em listas separadas. Complete uma lista inteira sem atrasos '
+                      'e ela será registrada como uma conquista especial!',
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: GlowingButton(
+              text: 'Começar',
+              color: const Color(0xFF6366F1),
+              onPressed: () {
+                _tabController.animateTo(1);
+              },
+              borderRadius: 18,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard(
+    bool isDark, {
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
     return Container(
-      height: 50,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Row(
-        children: List.generate(options.length, (index) {
-          final isSelected = _selectedIndex == index;
-          return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black54,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTasksView(
+      bool isDark, ProcrastinationService service, bool isActive) {
+    final lists = service.getAllLists();
+    final currentList = lists.firstWhere(
+      (l) => l.id == _selectedListId,
+      orElse: () => lists.isNotEmpty
+          ? lists.first
+          : TaskList(
+              id: 'default', name: 'Nome da lista', createdAt: DateTime.now()),
+    );
+
+    return Column(
+      children: [
+        // Abas das listas (rolável)
+        _buildListTabs(isDark, service, lists),
+
+        // Header da lista atual selecionada
+        _buildListHeader(isDark, service, currentList, lists),
+
+        // Lista de tarefas
+        Expanded(
+          child: _buildTaskList(isDark, service, currentList),
+        ),
+
+        // Botões inferiores (2x2)
+        _buildBottomButtons(isDark, service, isActive),
+      ],
+    );
+  }
+
+  Widget _buildListTabs(
+      bool isDark, ProcrastinationService service, List<TaskList> lists) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.2)
+            : Colors.white.withValues(alpha: 0.7),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: lists.length + 1,
+        itemBuilder: (ctx, index) {
+          if (index == lists.length) {
+            // Botão + Lista
+            return Center(
+              child: TextButton.icon(
+                onPressed: () => _showCreateListDialog(service),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('Nova Lista'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF6366F1),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+            );
+          }
+
+          final list = lists[index];
+          final isSelected = list.id == _selectedListId;
+
+          return RepaintBoundary(
             child: GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                if (_pageController.hasClients) {
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutQuad);
-                } else {
-                  setState(() => _selectedIndex = index);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeOutQuart,
+              onTap: () => setState(() => _selectedListId = list.id),
+              child: Container(
                 alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? const Color.fromARGB(255, 57, 92, 208)
-                          : const Color.fromARGB(255, 18, 189, 211))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(21),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: (isDark
-                                    ? const Color.fromARGB(255, 57, 92, 208)
-                                    : const Color.fromARGB(255, 10, 223, 219))
-                                .withValues(alpha: 0.3),
-                            blurRadius: 10,
-                          )
-                        ]
-                      : [],
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isSelected
+                          ? const Color(0xFF6366F1)
+                          : Colors.transparent,
+                      width: 3,
+                    ),
+                  ),
                 ),
                 child: Text(
-                  options[index],
-                  textAlign: TextAlign.center,
+                  list.name,
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 14,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black54),
+                        ? (isDark ? Colors.white : const Color(0xFF6366F1))
+                        : (isDark ? Colors.white70 : Colors.black54),
                   ),
                 ),
               ),
             ),
           );
-        }),
+        },
       ),
     );
   }
 
-  // --- ABA 0: COMO FUNCIONA ---
-  Widget _buildHowItWorksTab(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const NicheInfoSection(
-            hintText:
-                "Neste módulo, na tela 'Editor de Tarefas', você pode criar, editar e excluir tarefas a serem cumpridas, no dia atual ou em qualquer dia. Concluindo todas do dia, você segue com seu progresso. Deixando de cumprir alguma, o seu progresso reinicia.",
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            height: 55,
-            child: GlowingButton(
-              text: 'Acessar Editor',
-              color: const Color(0xFF6366F1),
-              onPressed: () {
-                _pageController.animateToPage(
-                  1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                );
-              },
-              borderRadius: 18,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- ABA 1: EDITOR DE TAREFAS ---
-  Widget _buildEditorTab(ProcrastinationService service, bool isDark) {
-    final tasks = service.getTasksForDay(_selectedDay);
-    final dayStatus = service.getDay(_selectedDay);
-
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildCalendar(service, isDark),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        DateFormat("d 'de' MMMM", 'pt_BR').format(_selectedDay),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      if (tasks.isNotEmpty) _buildDayStatusBadge(dayStatus),
-                    ],
-                  ),
-                ),
-                if (tasks.isEmpty) _buildEmptyState(isDark),
-                if (tasks.isNotEmpty)
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    itemCount: tasks.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final task = tasks[index];
-                      // No editor, checkbox desabilitado ou apenas visual
-                      return _buildTaskTile(task, service, isDark,
-                          isEditable: true, taskDate: _selectedDay);
-                    },
-                  ),
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: GlowingButton(
-            text: 'Nova Tarefa',
-            icon: Icons.add_task,
-            color: const Color(0xFF6366F1),
-            onPressed: () => _showAddTaskModal(context, service),
-            borderRadius: 18,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- ABA 2: ATIVAR MÓDULO ---
-  Widget _buildActivationTab(
-      bool isActive, Niche niche, ProcrastinationService service, bool isDark) {
-    if (!isActive) {
-      return Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.do_not_disturb_on,
-              size: 80,
-              color: isDark ? Colors.white38 : Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "Ative o módulo para começar a usá-lo e para criar seu progresso",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 40),
-            GlowingButton(
-              text: 'Ativar Módulo',
-              onPressed: _ativarModulo,
-              color: const Color(0xFF6366F1),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final todayTasks = service.getTasksForDay(DateTime.now());
-
-    return Column(
-      children: [
-        Expanded(
-          child: todayTasks.isEmpty
-              ? Center(
-                  child: Text(
-                    "Nenhuma tarefa para hoje.\nCrie no Editor!",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.black38),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: todayTasks.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final task = todayTasks[index];
-                    if (task.isCompleted) {
-                      return const SizedBox.shrink();
-                    }
-                    return _buildTaskTile(task, service, isDark,
-                        isCheckable: true, taskDate: DateTime.now());
-                  },
-                ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: TextButton.icon(
-            onPressed: _desativarModulo,
-            icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
-            label: const Text('Desativar módulo',
-                style: TextStyle(color: Colors.redAccent, fontSize: 16)),
-          ),
-        ),
-
-        // --- BOTÕES DE AÇÃO ESTILO PÍLULA (PADRÃO SMOKING) ---
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const MyProgressProcrastination()),
-                    );
-                  },
-                  child: Container(
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF395CC8),
-                      borderRadius: BorderRadius.circular(21),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF395CC8).withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Text(
-                      'Meu progresso',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) =>
-                              const ProcrastinationNotificationsScreen()),
-                    );
-                  },
-                  child: Container(
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(21),
-                      border: Border.all(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white24
-                            : Colors.grey[400]!,
-                      ),
-                    ),
-                    child: Text(
-                      'Notificações',
-                      style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDayStatusBadge(ProcrastinationDay? day) {
-    if (day == null) {
-      return const SizedBox();
-    }
-
-    if (day.isDayComplete) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green),
-        ),
-        child: const Text('COMPLETO 🏆',
-            style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-                fontSize: 12)),
-      );
-    } else if (day.isDayFailed) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red),
-        ),
-        child: const Text('PENDENTE ⚠️',
-            style: TextStyle(
-                color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
-      );
-    }
-
-    return const SizedBox();
-  }
-
-  Widget _buildEmptyState(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 40),
-      child: Column(
-        children: [
-          Icon(Icons.event_note,
-              size: 48, color: isDark ? Colors.white24 : Colors.black26),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhuma tarefa para este dia.',
-            style: TextStyle(color: isDark ? Colors.white54 : Colors.black45),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCalendar(ProcrastinationService service, bool isDark) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 4,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: TableCalendar(
-          locale: 'pt_BR',
-          firstDay: DateTime.utc(2024, 1, 1),
-          lastDay: DateTime.utc(2030, 12, 31),
-          focusedDay: _focusedDay,
-          calendarFormat: _calendarFormat,
-          availableCalendarFormats: const {
-            CalendarFormat.month: 'Mês',
-            CalendarFormat.twoWeeks: '2 Semanas',
-            CalendarFormat.week: 'Semana',
-          },
-          headerStyle: HeaderStyle(
-            formatButtonShowsNext: false,
-            formatButtonDecoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.5)),
-            ),
-            formatButtonTextStyle: const TextStyle(
-              color: Color(0xFF6366F1),
-              fontWeight: FontWeight.bold,
-            ),
-            titleCentered: true,
-          ),
-          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          onDaySelected: (selectedDay, focusedDay) {
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-          },
-          onFormatChanged: (format) {
-            if (_calendarFormat != format) {
-              setState(() => _calendarFormat = format);
-            }
-          },
-          onHeaderTapped: (focusedDay) async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: focusedDay,
-              firstDate: DateTime.utc(2024, 1, 1),
-              lastDate: DateTime.utc(2030, 12, 31),
-              helpText: 'Selecionar Mês/Ano',
-              cancelText: 'Cancelar',
-              confirmText: 'Selecionar',
-            );
-            if (!mounted) {
-              return;
-            }
-            if (picked != null) {
-              setState(() {
-                _focusedDay = picked;
-                _selectedDay = picked;
-              });
-            }
-          },
-          onPageChanged: (focusedDay) => _focusedDay = focusedDay,
-          calendarStyle: CalendarStyle(
-            markerDecoration: const BoxDecoration(
-                color: Color(0xFF6366F1), shape: BoxShape.circle),
-            selectedDecoration: const BoxDecoration(
-              color: Color(0xFF6366F1),
-              shape: BoxShape.circle,
-            ),
-            todayDecoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-          ),
-          eventLoader: (day) {
-            final tasks = service.getTasksForDay(day);
-            return tasks.isNotEmpty ? [true] : [];
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTaskTile(
-      ProcrastinationTask task, ProcrastinationService service, bool isDark,
-      {bool isCheckable = false, bool isEditable = false, DateTime? taskDate}) {
-    // Calcula a urgência atual da tarefa
-    final urgency = task.isCompleted
-        ? task.completedUrgencyLevel
-        : service.getTaskUrgency(task, taskDate ?? _selectedDay);
-    final urgencyColor = urgency?.color ?? Colors.grey;
-
-    final tile = Container(
+  Widget _buildListHeader(bool isDark, ProcrastinationService service,
+      TaskList currentList, List<TaskList> lists) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-          color: isDark ? Colors.grey[900] : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: task.isCompleted
-                  ? Colors.green.withValues(alpha: 0.5)
-                  : urgencyColor.withValues(alpha: 0.6),
-              width: task.isCompleted ? 1 : 2),
-          boxShadow: [
-            BoxShadow(
-                color: task.isCompleted
-                    ? Colors.black.withValues(alpha: 0.05)
-                    : urgencyColor.withValues(alpha: 0.15),
-                blurRadius: 6,
-                offset: const Offset(0, 2))
-          ]),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Indicador de urgência (bolinha colorida)
-            if (!task.isCompleted)
-              Container(
-                width: 12,
-                height: 12,
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: urgencyColor,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: urgencyColor.withValues(alpha: 0.5),
-                      blurRadius: 4,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Nome da lista selecionada + ícone editar (Área clicável expandida)
+          Expanded(
+            child: InkWell(
+              onTap: () => _showRenameListDialog(service, currentList),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        currentList.name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: isDark ? Colors.white38 : Colors.black38,
                     ),
                   ],
                 ),
               ),
-            if (isCheckable)
-              Checkbox(
-                value: task.isCompleted,
-                activeColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4)),
-                onChanged: (val) {
-                  // Usa toggleTaskCompletion para salvar a urgência corretamente
-                  service.toggleTaskCompletion(
-                      taskDate ?? DateTime.now(), task.id);
-                },
-              )
-            else
-              Icon(Icons.task_alt,
-                  color: task.isCompleted ? Colors.green : urgencyColor),
+            ),
+          ),
+
+          // Botão de ordenação
+          PopupMenuButton<SortMode>(
+            icon: Icon(
+              Icons.swap_vert,
+              color: isDark ? Colors.white54 : Colors.black45,
+            ),
+            onSelected: (mode) {
+              service.setListSortMode(currentList.id, mode);
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: SortMode.custom,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: currentList.sortMode == SortMode.custom
+                          ? const Color(0xFF6366F1)
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Personalizado'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: SortMode.date,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: currentList.sortMode == SortMode.date
+                          ? const Color(0xFF6366F1)
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Data'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Menu de ações
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.more_vert,
+              color: isDark ? Colors.white54 : Colors.black45,
+            ),
+            onSelected: (action) {
+              if (action == 'delete_all') {
+                _showDeleteAllTasksDialog(service, currentList.id);
+              } else if (action == 'delete_list') {
+                _showDeleteListDialog(service, currentList.id);
+              }
+            },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'delete_all',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep, size: 18),
+                    SizedBox(width: 8),
+                    Text('Excluir todas as tarefas'),
+                  ],
+                ),
+              ),
+              if (lists.length > 1)
+                const PopupMenuItem(
+                  value: 'delete_list',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever, size: 18, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Excluir lista',
+                          style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskList(
+      bool isDark, ProcrastinationService service, TaskList currentList) {
+    final sortMode = service.getListSortMode(currentList.id);
+
+    if (sortMode == SortMode.date) {
+      return _buildGroupedTaskList(isDark, service, currentList.id);
+    }
+
+    final tasks = service.getTasksForList(currentList.id);
+
+    if (tasks.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.task_alt,
+              size: 64,
+              color: isDark ? Colors.white24 : Colors.black12,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nenhuma tarefa ainda',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white54 : Colors.black45,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Toque em "Nova Tarefa" para adicionar',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white38 : Colors.black26,
+              ),
+            ),
           ],
+        ),
+      );
+    }
+
+    return RepaintBoundary(
+      child: ReorderableListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: tasks.length,
+        onReorder: (oldIndex, newIndex) {
+          if (newIndex > oldIndex) newIndex--;
+          final taskIds = tasks.map((t) => t.id).toList();
+          final item = taskIds.removeAt(oldIndex);
+          taskIds.insert(newIndex, item);
+          service.reorderTasks(currentList.id, taskIds);
+        },
+        itemBuilder: (ctx, index) {
+          final task = tasks[index];
+          return _buildTaskTile(
+            key: ValueKey(task.id),
+            isDark: isDark,
+            task: task,
+            service: service,
+            listId: currentList.id,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGroupedTaskList(
+      bool isDark, ProcrastinationService service, String listId) {
+    final grouped = service.getTasksGroupedByDate(listId);
+
+    if (grouped.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.task_alt,
+              size: 64,
+              color: isDark ? Colors.white24 : Colors.black12,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nenhuma tarefa ainda',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white54 : Colors.black45,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final sortedDates = grouped.keys.toList()..sort();
+
+    return RepaintBoundary(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: sortedDates.length,
+        itemBuilder: (ctx, index) {
+          final date = sortedDates[index];
+          final tasks = grouped[date]!;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  _formatDateHeader(date),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6366F1),
+                  ),
+                ),
+              ),
+              ...tasks.map((task) => _buildTaskTile(
+                    key: ValueKey(task.id),
+                    isDark: isDark,
+                    task: task,
+                    service: service,
+                    listId: listId,
+                  )),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  String _formatDateHeader(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final dateOnly = DateTime(date.year, date.month, date.day);
+
+    if (dateOnly == today) {
+      return 'Hoje';
+    } else if (dateOnly == tomorrow) {
+      return 'Amanhã';
+    } else {
+      return DateFormat("d 'de' MMMM", 'pt_BR').format(date);
+    }
+  }
+
+  Widget _buildTaskTile({
+    required Key key,
+    required bool isDark,
+    required ProcrastinationTask task,
+    required ProcrastinationService service,
+    required String listId,
+  }) {
+    final now = DateTime.now();
+    final urgency = task.isCompleted
+        ? (task.completedUrgencyLevel ?? UrgencyLevel.green)
+        : (task.startTime != null || task.endTime != null
+            ? task.getUrgencyLevel(now)
+            : (task.scheduledDate != null
+                ? ProcrastinationTask.getUrgencyForDate(
+                    task.scheduledDate!, now)
+                : UrgencyLevel.green));
+
+    return Container(
+      key: key,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16), // Bordas mais arredondadas
+        border: Border.all(
+          color: task.isCompleted
+              ? Colors.transparent
+              : urgency.color.withValues(alpha: 0.6), // Mais saturado
+          width: 2.0, // Border mais grossa
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        onTap: () {
+          TaskCreationDialog.show(
+            context,
+            service: service,
+            listId: listId,
+            taskToEdit: task,
+          );
+        },
+        leading: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            service.toggleTaskInList(listId, task.id);
+          },
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: task.isCompleted
+                  ? const Color(0xFF6366F1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: task.isCompleted
+                    ? const Color(0xFF6366F1)
+                    : (isDark ? Colors.white38 : Colors.black26),
+                width: 2,
+              ),
+            ),
+            child: task.isCompleted
+                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                : null,
+          ),
         ),
         title: Text(
           task.title,
           style: TextStyle(
-              decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-              color: task.isCompleted
-                  ? (isDark ? Colors.white38 : Colors.black38)
-                  : (isDark ? Colors.white : Colors.black87),
-              fontWeight: FontWeight.w600),
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: task.isCompleted
+                ? (isDark ? Colors.white38 : Colors.black38)
+                : (isDark ? Colors.white : Colors.black87),
+            decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+          ),
         ),
-        subtitle: task.description != null
-            ? Text(task.description!,
-                maxLines: 2, overflow: TextOverflow.ellipsis)
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (task.startTime != null || task.endTime != null)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+        subtitle: _buildTaskSubtitle(task, isDark),
+        trailing: PopupMenuButton<String>(
+          icon: Icon(
+            Icons.more_vert,
+            size: 20,
+            color: isDark ? Colors.white38 : Colors.black38,
+          ),
+          onSelected: (action) {
+            if (action == 'edit') {
+              TaskCreationDialog.show(
+                context,
+                service: service,
+                listId: listId,
+                taskToEdit: task,
+              );
+            } else if (action == 'delete') {
+              _showDeleteTaskDialog(service, listId, task.id);
+            }
+          },
+          itemBuilder: (ctx) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
                 children: [
-                  if (task.startTime != null)
-                    Text(
-                      DateFormat('HH:mm').format(task.startTime!),
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : Colors.black87),
-                    ),
-                  if (task.endTime != null && task.startTime != null)
-                    Text(
-                      'até ${DateFormat('HH:mm').format(task.endTime!)}',
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: isDark ? Colors.white38 : Colors.black38),
-                    )
-                  else if (task.endTime != null)
-                    Text(
-                      DateFormat('HH:mm').format(task.endTime!),
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : Colors.black87),
-                    ),
+                  Icon(Icons.edit, size: 18),
+                  SizedBox(width: 8),
+                  Text('Editar'),
                 ],
               ),
-            if (isEditable) ...[
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20),
-                onSelected: (val) {
-                  if (val == 'delete') {
-                    _confirmDeleteTask(task, service);
-                  } else if (val == 'edit') {
-                    _showEditTaskModal(task, service);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(children: [
-                        Icon(Icons.edit, size: 18),
-                        SizedBox(width: 8),
-                        Text('Editar')
-                      ])),
-                  const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(children: [
-                        Icon(Icons.delete, color: Colors.red, size: 18),
-                        SizedBox(width: 8),
-                        Text('Excluir', style: TextStyle(color: Colors.red))
-                      ])),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 18, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Excluir', style: TextStyle(color: Colors.red)),
                 ],
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
-
-    return tile;
   }
 
-  Future<void> _confirmDeleteTask(
-      ProcrastinationTask task, ProcrastinationService service) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remover tarefa?'),
-        content: const Text('Esta ação não pode ser desfeita.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child:
-                  const Text('Remover', style: TextStyle(color: Colors.red))),
+  Widget? _buildTaskSubtitle(ProcrastinationTask task, bool isDark) {
+    final parts = <String>[];
+
+    if (task.scheduledDate != null) {
+      parts.add(DateFormat('dd/MM/yyyy').format(task.scheduledDate!));
+    }
+
+    if (task.startTime != null && task.endTime != null) {
+      final start = DateFormat('HH:mm').format(task.startTime!);
+      final end = DateFormat('HH:mm').format(task.endTime!);
+      parts.add('$start - $end');
+    } else if (task.startTime != null) {
+      parts.add(DateFormat('HH:mm').format(task.startTime!));
+    }
+
+    if (parts.isEmpty) return null;
+
+    return Row(
+      children: [
+        Icon(
+          Icons.schedule,
+          size: 14,
+          color: const Color(0xFF6366F1).withValues(alpha: 0.7),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          parts.join(' • '),
+          style: TextStyle(
+            fontSize: 12,
+            color: const Color(0xFF6366F1).withValues(alpha: 0.8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomButtons(
+      bool isDark, ProcrastinationService service, bool isActive) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Linha superior: Nova Tarefa | Notificações
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.add,
+                  label: 'Nova Tarefa',
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: () {
+                    TaskCreationDialog.show(
+                      context,
+                      service: service,
+                      listId: _selectedListId,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.notifications_outlined,
+                  label: 'Notificações',
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ProcrastinationNotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Linha inferior: Meu progresso | Desativar módulo
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Meu progresso',
+                  color: Colors.teal,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MyProgressProcrastination(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: isActive ? Icons.power_settings_new : Icons.power_off,
+                  label: isActive ? 'Desativar módulo' : 'Ativar módulo',
+                  color: isActive ? Colors.red : Colors.green,
+                  isDark: isDark,
+                  isDestructive: isActive,
+                  onTap: () => _toggleModule(isActive),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
-
-    if (!mounted) {
-      return;
-    }
-    if (confirmed == true) {
-      service.removeTask(_selectedDay, task.id);
-    }
   }
 
-  void _showEditTaskModal(
-      ProcrastinationTask task, ProcrastinationService service) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _AddTaskModal(
-        selectedDay: _selectedDay,
-        service: service,
-        taskToEdit: task,
-      ),
-    ).then((result) {
-      if (result == true && mounted) {
-        _pageController.animateToPage(
-          2, // Aba Ativar Módulo
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutQuart,
-        );
-      }
-    });
-  }
-
-  void _showAddTaskModal(BuildContext context, ProcrastinationService service) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) =>
-          _AddTaskModal(selectedDay: _selectedDay, service: service),
-    ).then((result) {
-      if (result == true && mounted) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return InkWell(
+      onTap: () {
         HapticFeedback.lightImpact();
-        _pageController.animateToPage(
-          2, // Aba Ativar Módulo
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutQuart,
-        );
-      }
-    });
-  }
-}
-
-class _AddTaskModal extends StatefulWidget {
-  final DateTime selectedDay;
-  final ProcrastinationService service;
-  final ProcrastinationTask? taskToEdit;
-
-  const _AddTaskModal(
-      {required this.selectedDay, required this.service, this.taskToEdit});
-
-  @override
-  State<_AddTaskModal> createState() => _AddTaskModalState();
-}
-
-class _AddTaskModalState extends State<_AddTaskModal> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-  TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.taskToEdit != null) {
-      _titleController.text = widget.taskToEdit!.title;
-      _descController.text = widget.taskToEdit!.description ?? '';
-      if (widget.taskToEdit!.startTime != null) {
-        _startTime = TimeOfDay.fromDateTime(widget.taskToEdit!.startTime!);
-      }
-      if (widget.taskToEdit!.endTime != null) {
-        _endTime = TimeOfDay.fromDateTime(widget.taskToEdit!.endTime!);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
-      padding: EdgeInsets.fromLTRB(
-          24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isDestructive
+              ? color.withValues(alpha: 0.12)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.95)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDestructive
+                ? color.withValues(alpha: 0.4)
+                : (isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.05)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              widget.taskToEdit != null ? 'Editar Tarefa' : 'Nova Tarefa',
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _titleController,
-              autofocus: true,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
-              decoration: InputDecoration(
-                labelText: 'Nome da tarefa',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.title),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descController,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
-              decoration: InputDecoration(
-                labelText: 'Descrição (opcional)',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.description_outlined),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.access_time),
-                    label: Text(
-                        _startTime?.format(context) ?? 'Início (Opcional)'),
-                    onPressed: () async {
-                      final t = await showTimePicker(
-                          context: context, initialTime: TimeOfDay.now());
-                      if (t != null) {
-                        setState(() => _startTime = t);
-                      }
-                    },
-                  ),
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDestructive
+                      ? color
+                      : (isDark ? Colors.white70 : Colors.black54),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.access_time_filled),
-                    label: Text(_endTime?.format(context) ?? 'Fim (Opcional)'),
-                    onPressed: () async {
-                      final t = await showTimePicker(
-                          context: context, initialTime: TimeOfDay.now());
-                      if (t != null) {
-                        setState(() => _endTime = t);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _saveTask,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                child: Text(
-                    widget.taskToEdit != null
-                        ? 'Salvar Alterações'
-                        : 'Adicionar Tarefa',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                overflow: TextOverflow.ellipsis,
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _saveTask() {
-    if (_titleController.text.trim().isEmpty) {
-      return;
-    }
+  // ===========================
+  // DIALOGS
+  // ===========================
 
-    final now = widget.selectedDay;
-    DateTime? startDt;
-    DateTime? endDt;
+  void _showCreateListDialog(ProcrastinationService service) {
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (_startTime != null) {
-      startDt = DateTime(
-          now.year, now.month, now.day, _startTime!.hour, _startTime!.minute);
-    }
-    if (_endTime != null) {
-      endDt = DateTime(
-          now.year, now.month, now.day, _endTime!.hour, _endTime!.minute);
-    }
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+        title: const Text('Nova lista'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nome da lista',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (controller.text.trim().isNotEmpty) {
+                await service.createList(controller.text.trim());
+                final lists = service.getAllLists();
+                if (!ctx.mounted) return;
+                setState(() {
+                  _selectedListId = lists.last.id;
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Criar'),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (widget.taskToEdit != null) {
-      final updated = widget.taskToEdit!.copyWith(
-        title: _titleController.text.trim(),
-        description: _descController.text.trim().isEmpty
-            ? null
-            : _descController.text.trim(),
-        startTime: startDt,
-        endTime: endDt,
+  void _showRenameListDialog(ProcrastinationService service, TaskList list) {
+    final controller = TextEditingController(text: list.name);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+        title: const Text('Renomear lista'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nome da lista',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (controller.text.trim().isNotEmpty) {
+                await service.renameList(list.id, controller.text.trim());
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAllTasksDialog(
+      ProcrastinationService service, String listId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir todas as tarefas?'),
+        content: const Text(
+            'Esta ação removerá todas as tarefas desta lista. Não é possível desfazer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await service.deleteAllTasksFromList(listId);
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx);
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteListDialog(ProcrastinationService service, String listId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir lista?'),
+        content: const Text(
+            'Esta ação removerá a lista e todas as suas tarefas. Não é possível desfazer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await service.deleteList(listId);
+              final lists = service.getAllLists();
+              if (!ctx.mounted) return;
+              setState(() {
+                _selectedListId = lists.isNotEmpty ? lists.first.id : 'default';
+              });
+              Navigator.pop(ctx);
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteTaskDialog(
+      ProcrastinationService service, String listId, String taskId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir tarefa?'),
+        content: const Text('Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await service.removeTaskFromList(listId, taskId);
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx);
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleModule(bool isActive) {
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+
+    if (isActive) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Desativar módulo?'),
+          content: const Text(
+              'Ao desativar, seu progresso de medalhas será pausado.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                gamification.stopModuleCycle(nicheId: NicheId.procrastination);
+                Navigator.pop(ctx);
+              },
+              child:
+                  const Text('Desativar', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
       );
-      widget.service.updateTask(widget.selectedDay, updated);
     } else {
-      final task = ProcrastinationTask(
-        id: const Uuid().v4(),
-        title: _titleController.text.trim(),
-        description: _descController.text.trim().isEmpty
-            ? null
-            : _descController.text.trim(),
-        startTime: startDt,
-        endTime: endDt,
-      );
-      widget.service.addTask(widget.selectedDay, task);
+      gamification.startModuleCycle(nicheId: NicheId.procrastination);
     }
-
-    Navigator.pop(context, true);
   }
 }

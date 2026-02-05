@@ -9,7 +9,6 @@ import 'package:disciplinum/services/permissions/notifications/notification_serv
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
-import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
 import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dart';
 
@@ -46,13 +45,6 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
   }
 
   // --- HARDCODED TEXTS FOR DIET ---
-  String _getModuleHintText() {
-    return 'Este módulo te ajuda a organizar seus horários de refeição e envia alertas '
-        'para que você não saia da dieta. '
-        'Ajuste os horários conforme sua rotina de refeições para manter consistência.'
-        '\n\nATENÇÃO: Este módulo vai te notificar 30 min antes do horário definido, '
-        'pra você ter tempo de preparar/aquecer a refeição.';
-  }
 
   Future<void> _loadAllPersistentData() async {
     if (_isLoadingData) return;
@@ -333,16 +325,21 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                         },
                         children: [
                           // 0: Como Funciona
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(0),
-                                const SizedBox(height: 24),
-                                _buildTabActions(0),
-                                const SizedBox(height: 40),
-                              ],
-                            ),
+                          Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _buildTabContent(0),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                                child: _buildTabActions(0),
+                              ),
+                            ],
                           ),
                           // 1: Ativar
                           SingleChildScrollView(
@@ -374,13 +371,13 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     final List<String> options = ['Como Funciona', 'Ativar'];
 
     return Container(
-      height: 50,
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: List.generate(options.length, (index) {
@@ -398,24 +395,20 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                 }
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeOutQuart,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? const Color.fromARGB(255, 57, 92, 208)
-                          : const Color.fromARGB(255, 18, 189, 211))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(21),
+                  color:
+                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: (isDark
-                                    ? const Color.fromARGB(255, 57, 92, 208)
-                                    : const Color.fromARGB(255, 10, 223, 219))
-                                .withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFF6366F1).withValues(alpha: 0.3),
                             blurRadius: 10,
+                            offset: const Offset(0, 2),
                           )
                         ]
                       : [],
@@ -423,11 +416,12 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                 child: Text(
                   options[index],
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black54),
+                        : (isDark ? Colors.white60 : Colors.black45),
+                    letterSpacing: isSelected ? 0.2 : 0,
                   ),
                 ),
               ),
@@ -439,12 +433,34 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
   }
 
   Widget _buildTabContent(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
         return Column(
           children: [
-            NicheInfoSection(hintText: _getModuleHintText()),
-            const SizedBox(height: 24),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.restaurant_outlined,
+              title: 'Organize suas refeições',
+              content:
+                  'Este módulo te ajuda a manter o foco em sua dieta lembrando você dos horários de comer.',
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.timer_outlined,
+              title: 'Antecedência',
+              content:
+                  'Você receberá um alerta 30 minutos antes de cada refeição definida para se organizar.',
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.auto_awesome_outlined,
+              title: 'Consistência',
+              content:
+                  'Mantenha seus horários regulados para melhorar seu metabolismo e disciplina.',
+            ),
           ],
         );
       case 1:
@@ -464,14 +480,14 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                         );
                       },
                       child: Container(
-                        height: 44,
+                        height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF395CC8),
-                          borderRadius: BorderRadius.circular(21),
+                          color: const Color(0xFF6366F1),
+                          borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF395CC8)
+                              color: const Color(0xFF6366F1)
                                   .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
@@ -500,27 +516,21 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                         ).then((_) => _loadAllPersistentData());
                       },
                       child: Container(
-                        height: 44,
+                        height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(21),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white24
-                                    : Colors.grey[400]!,
+                            color: isDark ? Colors.white10 : Colors.black12,
                           ),
                         ),
                         child: Text(
                           'Notificações',
                           style: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black87,
+                            color: isDark ? Colors.white : Colors.black87,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -532,7 +542,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               ),
               const SizedBox(height: 16),
             ] else ...[
-              const Icon(Icons.do_not_disturb_on_rounded,
+              const Icon(Icons.restaurant_menu_rounded,
                   size: 80, color: Colors.grey),
               const SizedBox(height: 16),
               const Text("Módulo desativado",
@@ -542,7 +552,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                       color: Colors.grey)),
               const SizedBox(height: 8),
               const Text(
-                "Ative o módulo para começar a usá-lo e para criar seu progresso.",
+                "Ative o módulo para começar a organizar sua alimentação e disciplina.",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
@@ -552,6 +562,65 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildInfoCard(
+    bool isDark, {
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black54,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTabActions(int index) {

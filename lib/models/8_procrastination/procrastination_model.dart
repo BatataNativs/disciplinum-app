@@ -11,11 +11,11 @@ extension UrgencyLevelExtension on UrgencyLevel {
   Color get color {
     switch (this) {
       case UrgencyLevel.green:
-        return const Color(0xFF4CAF50); // Verde
+        return const Color(0xFF2E7D32); // Verde mais escuro/saturado
       case UrgencyLevel.yellow:
-        return const Color(0xFFFFC107); // Amarelo
+        return const Color(0xFFF9A825); // Amarelo/Laranja mais visível
       case UrgencyLevel.red:
-        return const Color(0xFFF44336); // Vermelho
+        return const Color(0xFFC62828); // Vermelho mais profundo
     }
   }
 
@@ -56,13 +56,210 @@ extension UrgencyLevelExtension on UrgencyLevel {
   }
 }
 
+/// Opções de repetição para tarefas
+enum TaskRepetition {
+  none, // Sem repetição
+  daily, // Diariamente
+  weekly, // Semanalmente
+  monthly, // Mensalmente
+  yearly, // Anualmente
+  custom, // Personalizado
+}
+
+extension TaskRepetitionExtension on TaskRepetition {
+  String get label {
+    switch (this) {
+      case TaskRepetition.none:
+        return 'Não repetir';
+      case TaskRepetition.daily:
+        return 'Diariamente';
+      case TaskRepetition.weekly:
+        return 'Semanalmente';
+      case TaskRepetition.monthly:
+        return 'Mensalmente';
+      case TaskRepetition.yearly:
+        return 'Anualmente';
+      case TaskRepetition.custom:
+        return 'Personalizado';
+    }
+  }
+
+  static TaskRepetition fromString(String? value) {
+    if (value == null) return TaskRepetition.none;
+    switch (value) {
+      case 'daily':
+        return TaskRepetition.daily;
+      case 'weekly':
+        return TaskRepetition.weekly;
+      case 'monthly':
+        return TaskRepetition.monthly;
+      case 'yearly':
+        return TaskRepetition.yearly;
+      case 'custom':
+        return TaskRepetition.custom;
+      default:
+        return TaskRepetition.none;
+    }
+  }
+}
+
+/// Modo de ordenação das tarefas em uma lista
+enum SortMode {
+  custom, // Ordem personalizada pelo usuário
+  date, // Agrupado por data
+}
+
+extension SortModeExtension on SortMode {
+  String get label {
+    switch (this) {
+      case SortMode.custom:
+        return 'Personalizado';
+      case SortMode.date:
+        return 'Data';
+    }
+  }
+
+  static SortMode fromString(String? value) {
+    if (value == null) return SortMode.custom;
+    switch (value) {
+      case 'date':
+        return SortMode.date;
+      default:
+        return SortMode.custom;
+    }
+  }
+}
+
+/// Lista de tarefas (aba superior no estilo Google Tasks)
+class TaskList {
+  final String id;
+  String name;
+  final DateTime createdAt;
+  int order;
+  SortMode sortMode;
+
+  // Rastreia se a lista foi 100% concluída sem atrasos
+  bool isFullyCompleted;
+  DateTime? completedAt;
+
+  TaskList({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    this.order = 0,
+    this.sortMode = SortMode.custom,
+    this.isFullyCompleted = false,
+    this.completedAt,
+  });
+
+  TaskList copyWith({
+    String? name,
+    int? order,
+    SortMode? sortMode,
+    bool? isFullyCompleted,
+    DateTime? completedAt,
+  }) {
+    return TaskList(
+      id: id,
+      name: name ?? this.name,
+      createdAt: createdAt,
+      order: order ?? this.order,
+      sortMode: sortMode ?? this.sortMode,
+      isFullyCompleted: isFullyCompleted ?? this.isFullyCompleted,
+      completedAt: completedAt ?? this.completedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'created_at': createdAt.toIso8601String(),
+      'order': order,
+      'sort_mode': sortMode.name,
+      'is_fully_completed': isFullyCompleted,
+      'completed_at': completedAt?.toIso8601String(),
+    };
+  }
+
+  factory TaskList.fromJson(Map<String, dynamic> json) {
+    return TaskList(
+      id: json['id'],
+      name: json['name'],
+      createdAt: DateTime.parse(json['created_at']),
+      order: json['order'] ?? 0,
+      sortMode: SortModeExtension.fromString(json['sort_mode']),
+      isFullyCompleted: json['is_fully_completed'] ?? false,
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'])
+          : null,
+    );
+  }
+}
+
+/// Configuração de repetição personalizada
+class RepetitionConfig {
+  final int interval; // A cada X (dias, semanas, meses, anos)
+  final String unit; // 'day', 'week', 'month', 'year'
+  final List<int>? weekDays; // Para repetição semanal (0=Dom, 1=Seg, etc)
+  final DateTime? startDate;
+  final DateTime? endDate; // Termina em data específica
+  final int? occurrences; // Termina após X ocorrências
+
+  RepetitionConfig({
+    this.interval = 1,
+    this.unit = 'day',
+    this.weekDays,
+    this.startDate,
+    this.endDate,
+    this.occurrences,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'interval': interval,
+      'unit': unit,
+      'week_days': weekDays,
+      'start_date': startDate?.toIso8601String(),
+      'end_date': endDate?.toIso8601String(),
+      'occurrences': occurrences,
+    };
+  }
+
+  factory RepetitionConfig.fromJson(Map<String, dynamic> json) {
+    return RepetitionConfig(
+      interval: json['interval'] ?? 1,
+      unit: json['unit'] ?? 'day',
+      weekDays:
+          json['week_days'] != null ? List<int>.from(json['week_days']) : null,
+      startDate: json['start_date'] != null
+          ? DateTime.parse(json['start_date'])
+          : null,
+      endDate:
+          json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+      occurrences: json['occurrences'],
+    );
+  }
+}
+
 class ProcrastinationTask {
   final String id;
   final String title;
   final String? description;
-  final DateTime? startTime;
-  final DateTime? endTime; // Se null, é ponto único
+  final DateTime? scheduledDate; // Data da tarefa (sem hora)
+  final DateTime? startTime; // Hora de início
+  final DateTime? endTime; // Hora de fim (se null, é ponto único)
   bool isCompleted;
+
+  // ID da lista à qual pertence
+  final String listId;
+
+  // Ordem personalizada na lista
+  int order;
+
+  // Configuração de repetição
+  final TaskRepetition repetition;
+  final RepetitionConfig? repetitionConfig;
 
   /// Nível de urgência no momento em que a tarefa foi concluída.
   /// Null se ainda não foi concluída.
@@ -72,9 +269,14 @@ class ProcrastinationTask {
     required this.id,
     required this.title,
     this.description,
+    this.scheduledDate,
     this.startTime,
     this.endTime,
     this.isCompleted = false,
+    this.listId = 'default',
+    this.order = 0,
+    this.repetition = TaskRepetition.none,
+    this.repetitionConfig,
     this.completedUrgencyLevel,
   });
 
@@ -99,11 +301,19 @@ class ProcrastinationTask {
     } else if (endTime != null) {
       targetDateTime = endTime!;
       hasTime = true;
-    } else {
+    } else if (scheduledDate != null) {
       // Tarefa sem horário - considera fim do dia (23:59)
-      // Usa o dia atual pois a tarefa está associada a uma data específica
-      // O código de chamada deve passar a data correta
-      return UrgencyLevel.red; // Fallback - será corrigido pelo caller
+      targetDateTime = DateTime(
+        scheduledDate!.year,
+        scheduledDate!.month,
+        scheduledDate!.day,
+        23,
+        59,
+        59,
+      );
+      hasTime = false;
+    } else {
+      return UrgencyLevel.red; // Fallback
     }
 
     final difference = targetDateTime.difference(now);
@@ -150,18 +360,28 @@ class ProcrastinationTask {
   ProcrastinationTask copyWith({
     String? title,
     String? description,
+    DateTime? scheduledDate,
     DateTime? startTime,
     DateTime? endTime,
     bool? isCompleted,
+    String? listId,
+    int? order,
+    TaskRepetition? repetition,
+    RepetitionConfig? repetitionConfig,
     UrgencyLevel? completedUrgencyLevel,
   }) {
     return ProcrastinationTask(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       isCompleted: isCompleted ?? this.isCompleted,
+      listId: listId ?? this.listId,
+      order: order ?? this.order,
+      repetition: repetition ?? this.repetition,
+      repetitionConfig: repetitionConfig ?? this.repetitionConfig,
       completedUrgencyLevel:
           completedUrgencyLevel ?? this.completedUrgencyLevel,
     );
@@ -172,9 +392,14 @@ class ProcrastinationTask {
       'id': id,
       'title': title,
       'description': description,
+      'scheduled_date': scheduledDate?.toIso8601String(),
       'start_time': startTime?.toIso8601String(),
       'end_time': endTime?.toIso8601String(),
       'is_completed': isCompleted,
+      'list_id': listId,
+      'order': order,
+      'repetition': repetition.name,
+      'repetition_config': repetitionConfig?.toJson(),
       'completed_urgency_level': completedUrgencyLevel?.name,
     };
   }
@@ -184,12 +409,21 @@ class ProcrastinationTask {
       id: json['id'],
       title: json['title'],
       description: json['description'],
+      scheduledDate: json['scheduled_date'] != null
+          ? DateTime.parse(json['scheduled_date'])
+          : null,
       startTime: json['start_time'] != null
           ? DateTime.parse(json['start_time'])
           : null,
       endTime:
           json['end_time'] != null ? DateTime.parse(json['end_time']) : null,
       isCompleted: json['is_completed'] ?? false,
+      listId: json['list_id'] ?? 'default',
+      order: json['order'] ?? 0,
+      repetition: TaskRepetitionExtension.fromString(json['repetition']),
+      repetitionConfig: json['repetition_config'] != null
+          ? RepetitionConfig.fromJson(json['repetition_config'])
+          : null,
       completedUrgencyLevel:
           UrgencyLevelExtension.fromString(json['completed_urgency_level']),
     );

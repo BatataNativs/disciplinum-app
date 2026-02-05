@@ -7,7 +7,6 @@ import 'package:disciplinum/models/7_moneySavingChallenge/money_saving_challenge
 import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
 import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/widgets/niche_details/niche_header.dart';
-import 'package:disciplinum/widgets/niche_details/niche_info_section.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:provider/provider.dart';
@@ -468,16 +467,21 @@ class _MoneySavingChallengeScreenState
                         },
                         children: [
                           // 0: Como Funciona
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildHowItWorksTab(),
-                                const SizedBox(height: 24),
-                                _buildHowItWorksActions(),
-                                const SizedBox(height: 40),
-                              ],
-                            ),
+                          Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _buildHowItWorksTab(),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                                child: _buildHowItWorksActions(),
+                              ),
+                            ],
                           ),
                           // 1: Configurar
                           SingleChildScrollView(
@@ -513,13 +517,13 @@ class _MoneySavingChallengeScreenState
     final List<String> options = ['Como Funciona', 'Configurar', 'Meu Desafio'];
 
     return Container(
-      height: 50,
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: List.generate(options.length, (index) {
@@ -537,24 +541,20 @@ class _MoneySavingChallengeScreenState
                 }
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeOutQuart,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? const Color.fromARGB(255, 57, 92, 208)
-                          : const Color.fromARGB(255, 18, 189, 211))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(21),
+                  color:
+                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: (isDark
-                                    ? const Color.fromARGB(255, 57, 92, 208)
-                                    : const Color.fromARGB(255, 10, 223, 219))
-                                .withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFF6366F1).withValues(alpha: 0.3),
                             blurRadius: 10,
+                            offset: const Offset(0, 2),
                           )
                         ]
                       : [],
@@ -566,7 +566,8 @@ class _MoneySavingChallengeScreenState
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black54),
+                        : (isDark ? Colors.white60 : Colors.black45),
+                    letterSpacing: isSelected ? 0.2 : 0,
                   ),
                 ),
               ),
@@ -580,15 +581,100 @@ class _MoneySavingChallengeScreenState
   // ============ ABA 0: COMO FUNCIONA ============
 
   Widget _buildHowItWorksTab() {
-    return const NicheInfoSection(
-      hintText:
-          'O Desafio da Poupança é um tracker visual para te ajudar a poupar dinheiro de forma lúdica!\n\n'
-          '1️⃣ Defina sua meta (ex: R\$ 5.000)\n'
-          '2️⃣ Configure o período desejado (ex: 6 meses)\n'
-          '3️⃣ Escolha o tamanho do grid e os valores das células\n'
-          '4️⃣ A cada depósito que fizer na vida real, marque a célula correspondente no app\n\n'
-          'As células mudam de cor conforme você marca, e você acompanha seu progresso visualmente!\n\n'
-          '💡 Dica: Este é um tracker manual - você é responsável por registrar seus depósitos.',
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        _buildInfoCard(
+          isDark,
+          icon: Icons.savings_outlined,
+          title: 'O que é?',
+          content:
+              'O Desafio da Poupança é um tracker visual para te ajudar a poupar dinheiro de forma lúdica e organizada.',
+        ),
+        const SizedBox(height: 16),
+        _buildInfoCard(
+          isDark,
+          icon: Icons.settings_outlined,
+          title: 'Configuração',
+          content:
+              'Defina sua meta e o período desejado. O app criará um grid personalizado com as economias que você deve fazer.',
+        ),
+        const SizedBox(height: 16),
+        _buildInfoCard(
+          isDark,
+          icon: Icons.check_circle_outline,
+          title: 'Como usar',
+          content:
+              'A cada depósito real que você fizer, marque a célula correspondente no grid. Acompanhe seu progresso visualmente!',
+        ),
+        const SizedBox(height: 16),
+        _buildInfoCard(
+          isDark,
+          icon: Icons.lightbulb_outline,
+          title: 'Dica Importante',
+          content:
+              'Este é um tracker manual - você é o responsável por registrar seus depósitos e gerenciar seu dinheiro real.',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard(
+    bool isDark, {
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black54,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
