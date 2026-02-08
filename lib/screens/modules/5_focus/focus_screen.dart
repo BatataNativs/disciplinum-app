@@ -455,11 +455,10 @@ class _FocusScreenState extends State<FocusScreen> {
                           showBackground: false,
                           heroTag: widget.heroTag,
                         )),
-                    const SizedBox(height: 24),
                     Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: _buildSegmentedControl()),
-                    const SizedBox(height: 32),
 
                     // --- PAGEVIEW ---
                     Expanded(
@@ -471,21 +470,23 @@ class _FocusScreenState extends State<FocusScreen> {
                           });
                         },
                         children: [
-                           // 0: Como Funciona
-                           Column(
-                             children: [
-                               Expanded(
-                                 child: SingleChildScrollView(
-                                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                                   child: _buildTabContent(0),
-                                 ),
-                               ),
-                               Padding(
-                                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                                 child: _buildTabActions(0),
-                               ),
-                             ],
-                           ),
+                          // 0: Como Funciona
+                          Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _buildTabContent(0),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                                child: _buildTabActions(0),
+                              ),
+                            ],
+                          ),
                           // 1: Apps
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -540,7 +541,7 @@ class _FocusScreenState extends State<FocusScreen> {
     final List<String> options = ['Como Funciona', 'Apps', 'Tempo', 'Ativar'];
 
     return Container(
-      height: 48,
+      height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark
@@ -576,7 +577,7 @@ class _FocusScreenState extends State<FocusScreen> {
                           BoxShadow(
                             color:
                                 const Color(0xFF6366F1).withValues(alpha: 0.3),
-                            blurRadius: 10,
+                            blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
                         ]
@@ -590,7 +591,7 @@ class _FocusScreenState extends State<FocusScreen> {
                     color: isSelected
                         ? Colors.white
                         : (isDark ? Colors.white60 : Colors.black45),
-                    letterSpacing: isSelected ? 0.2 : 0,
+                    letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -924,7 +925,7 @@ class _FocusScreenState extends State<FocusScreen> {
           height: 55,
           child: GlowingButton(
             text: 'Começar',
-            color: const Color.fromARGB(255, 57, 92, 208),
+            color: const Color(0xFF6366F1),
             onPressed: () {
               if (_pageController.hasClients) {
                 _pageController.animateToPage(1, // Vai para "Apps"
@@ -938,7 +939,7 @@ class _FocusScreenState extends State<FocusScreen> {
       case 1:
         return SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 55,
           child: GlowingButton(
             text: 'Selecionar/Adicionar apps',
             onPressed: _openSelectApps,
@@ -949,7 +950,7 @@ class _FocusScreenState extends State<FocusScreen> {
       case 2:
         return SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 55,
           child: GlowingButton(
             text: 'Definir intervalo',
             onPressed: _pickFocusInterval,
@@ -960,7 +961,7 @@ class _FocusScreenState extends State<FocusScreen> {
       case 3:
         return SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 55,
           child: GlowingButton(
             text: _gamificationRunning
                 ? 'Desativar Monitoramento'

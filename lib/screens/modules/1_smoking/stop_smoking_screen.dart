@@ -508,12 +508,11 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                         heroTag: widget.heroTag,
                       ),
                     ),
-                    const SizedBox(height: 16),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       child: _buildSegmentedControl(),
                     ),
-                    const SizedBox(height: 24),
 
                     // --- PAGEVIEW ---
                     Expanded(
@@ -584,7 +583,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     final List<String> options = ['Como funciona', 'Info de Consumo', 'Ativar'];
 
     return Container(
-      height: 48,
+      height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark
@@ -620,7 +619,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                           BoxShadow(
                             color:
                                 const Color(0xFF6366F1).withValues(alpha: 0.3),
-                            blurRadius: 10,
+                            blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
                         ]
@@ -629,12 +628,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 child: Text(
                   options[index],
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
                         : (isDark ? Colors.white60 : Colors.black45),
-                    letterSpacing: isSelected ? 0.2 : 0,
+                    letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1075,7 +1074,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           height: 55,
           child: GlowingButton(
             text: 'Começar',
-            color: const Color.fromARGB(255, 57, 92, 208),
+            color: const Color(0xFF6366F1),
             onPressed: () {
               if (_pageController.hasClients) {
                 _pageController.animateToPage(1, // Vai para "Info de Consumo"
@@ -1092,7 +1091,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           height: 55,
           child: GlowingButton(
             text: isSaving ? 'Salvando...' : 'Salvar',
-            color: const Color.fromARGB(255, 57, 92, 208),
+            color: const Color(0xFF6366F1),
             onPressed: isSaving
                 ? () {} // Bloqueia clique
                 : () {
