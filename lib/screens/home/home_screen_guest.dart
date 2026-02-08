@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/app_router.dart';
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
@@ -281,51 +282,34 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.only(
-                        top: 10, bottom: 100, left: 16, right: 16),
-                    itemCount: NicheCategoryRepository.getCategories().length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 32),
-                    itemBuilder: (context, index) {
-                      final category =
-                          NicheCategoryRepository.getCategories()[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            category.title,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height:
-                                210, // Aumentado para acomodar ícones maiores
-                            child: ListView.separated(
-                              clipBehavior: Clip.none,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: category.nicheIds.length,
-                              separatorBuilder: (context, i) =>
-                                  const SizedBox(width: 12),
-                              itemBuilder: (context, i) {
-                                final nicheId = category.nicheIds[i];
-                                final niche = NicheRepository.getById(nicheId);
-                                final heroTag =
-                                    'guest_${category.idPrefix}_${niche.id}';
+                  child: Consumer<GamificationService>(
+                    builder: (context, gamificationService, _) {
+                      // 1. Filtra nichos ativos (mesmo guest pode ter ativos na sessão)
+                      final activeNiches = NicheId.values
+                          .where((id) => gamificationService.isModuleActive(id))
+                          .toList();
 
-                                return SizedBox(
-                                  width: 150,
-                                  child: _buildNicheCard(
-                                      niche, isDark, textTheme, heroTag),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                      final categories =
+                          NicheCategoryRepository.getCategories();
+                      final allCategories =
+                          List<NicheCategory>.from(categories);
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.only(
+                            top: 10, bottom: 100, left: 16, right: 16),
+                        itemCount: allCategories.length + 1,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 32),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return _buildActiveModulesSection(
+                                activeNiches, isDark, textTheme);
+                          }
+
+                          final category = allCategories[index - 1];
+                          return _buildCategorySection(
+                              category, isDark, textTheme);
+                        },
                       );
                     },
                   ),
@@ -371,6 +355,118 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
         ),
       ),
       bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildCategorySection(
+      NicheCategory category, bool isDark, TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          category.title,
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            clipBehavior: Clip.none,
+            scrollDirection: Axis.horizontal,
+            itemCount: category.nicheIds.length,
+            separatorBuilder: (context, i) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final nicheId = category.nicheIds[i];
+              final niche = NicheRepository.getById(nicheId);
+              final heroTag = 'guest_${category.idPrefix}_${niche.id}';
+
+              return SizedBox(
+                width: 150,
+                child: _buildNicheCard(niche, isDark, textTheme, heroTag),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveModulesSection(
+      List<NicheId> activeNiches, bool isDark, TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.bolt, color: Colors.amber, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Módulos Ativos (Convidado)',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 210,
+          child: activeNiches.isEmpty
+              ? _buildEmptyStateCard(isDark, textTheme)
+              : ListView.separated(
+                  clipBehavior: Clip.none,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: activeNiches.length,
+                  separatorBuilder: (context, i) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final nicheId = activeNiches[i];
+                    final niche = NicheRepository.getById(nicheId);
+                    final heroTag = 'guest_active_${niche.id}';
+
+                    return SizedBox(
+                      width: 150,
+                      child: _buildNicheCard(niche, isDark, textTheme, heroTag),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyStateCard(bool isDark, TextTheme textTheme) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: 150,
+        child: NeonCard(
+          onTap: () {}, // No action
+          contentOpacity: 0.5,
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.dashboard_outlined,
+                  size: 40, color: isDark ? Colors.white24 : Colors.black26),
+              const SizedBox(height: 12),
+              Text(
+                'Sem módulos ativos',
+                textAlign: TextAlign.center,
+                style: textTheme.bodySmall?.copyWith(
+                  color: isDark ? Colors.white54 : Colors.black45,
+                  fontSize: 11,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

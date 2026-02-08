@@ -5,6 +5,7 @@ import 'package:disciplinum/services/permissions/usage_stats/permission_service.
 import 'package:disciplinum/app_router.dart';
 
 import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
 
 import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
@@ -42,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       PermissionService.verifyPermissionAfterReturn(context);
+      _checkPendingMedals();
     }
   }
 
@@ -53,6 +55,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final route = ModalRoute.of(context);
       if (route != null && route.isCurrent) {
         _permissionsChecked = true;
+
+        // Verifica medalhas pendentes assim que a tela monta
+        _checkPendingMedals();
 
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
@@ -69,6 +74,82 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         }
       }
     });
+  }
+
+  void _checkPendingMedals() {
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+    final pending = gamification.pendingMedals;
+
+    if (pending.isNotEmpty) {
+      // Pega a primeira e mostra
+      final medalData = pending.first;
+      _showMedalDialog(medalData);
+    }
+  }
+
+  void _showMedalDialog(Map<String, dynamic> medalData) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Força clicar no OK
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Nova Conquista! 🎉',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Image.asset(
+                medalData['medal_asset'], // Ex: assets/medal_gold.png
+                height: 100,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Você ganhou a medalha de ${medalData['medal_name']}!',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Continue assim para alcançar novos objetivos.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    // Consome e tenta mostrar próxima se houver
+                    Provider.of<GamificationService>(context, listen: false)
+                        .consumePendingMedal(medalData);
+                    Navigator.of(ctx).pop();
+
+                    // Pequeno delay para animação de fechar e abrir a próxima
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) _checkPendingMedals();
+                    });
+                  },
+                  child: const Text('Incrível!',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _mostrarDialogoLoja() {
@@ -280,51 +361,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.only(
-                        top: 10, bottom: 100, left: 16, right: 16),
-                    itemCount: categories.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 32),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            category.title,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height:
-                                210, // Aumentado para acomodar ícones maiores
-                            child: ListView.separated(
-                              clipBehavior: Clip.none,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: category.nicheIds.length,
-                              separatorBuilder: (context, i) =>
-                                  const SizedBox(width: 12),
-                              itemBuilder: (context, i) {
-                                final nicheId = category.nicheIds[i];
-                                final niche = NicheRepository.getById(nicheId);
-                                // Gera heroTag única: prefixo_id
-                                final heroTag =
-                                    '${category.idPrefix}_${niche.id}';
+                  child: Consumer<GamificationService>(
+                    builder: (context, gamificationService, _) {
+                      // 1. Filtra nichos ativos
+                      final activeNiches = NicheId.values
+                          .where((id) => gamificationService.isModuleActive(id))
+                          .toList();
 
-                                return SizedBox(
-                                  width: 150,
-                                  child: _buildNicheCard(
-                                      niche, isDark, textTheme, heroTag),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                      // 2. Prepara a lista de categorias para exibição
+                      final allCategories =
+                          List<NicheCategory>.from(categories);
+
+                      // 3. Adiciona categoria "Módulos Ativos" no topo
+                      // Criamos uma categoria "fake" ou especial para renderizar
+                      // Mas como a estrutura do ListView abaixo itera sobre categorias,
+                      // vamos injetar essa categoria especial na lista local.
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.only(
+                            top: 10, bottom: 100, left: 16, right: 16),
+                        // +1 para a categoria "Módulos Ativos"
+                        itemCount: allCategories.length + 1,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 32),
+                        itemBuilder: (context, index) {
+                          // Se for o primeiro item, renderiza "Módulos Ativos"
+                          if (index == 0) {
+                            return _buildActiveModulesSection(
+                                activeNiches, isDark, textTheme);
+                          }
+
+                          // Senão, renderiza as categorias normais (index - 1)
+                          final category = allCategories[index - 1];
+                          return _buildCategorySection(
+                              category, isDark, textTheme);
+                        },
                       );
                     },
                   ),
@@ -370,6 +441,123 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
       bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildCategorySection(
+      NicheCategory category, bool isDark, TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          category.title,
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            clipBehavior: Clip.none,
+            scrollDirection: Axis.horizontal,
+            itemCount: category.nicheIds.length,
+            separatorBuilder: (context, i) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final nicheId = category.nicheIds[i];
+              final niche = NicheRepository.getById(nicheId);
+              final heroTag = '${category.idPrefix}_${niche.id}';
+
+              return SizedBox(
+                width: 150,
+                child: _buildNicheCard(niche, isDark, textTheme, heroTag),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveModulesSection(
+      List<NicheId> activeNiches, bool isDark, TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.bolt, color: Colors.amber, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Módulos Ativos',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 210,
+          child: activeNiches.isEmpty
+              ? _buildEmptyStateCard(isDark, textTheme)
+              : ListView.separated(
+                  clipBehavior: Clip.none,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: activeNiches.length,
+                  separatorBuilder: (context, i) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final nicheId = activeNiches[i];
+                    final niche = NicheRepository.getById(nicheId);
+                    final heroTag = 'active_${niche.id}';
+
+                    return SizedBox(
+                      width: 150,
+                      child: _buildNicheCard(niche, isDark, textTheme, heroTag),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyStateCard(bool isDark, TextTheme textTheme) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: 150,
+        height: 195,
+        child: NeonCard(
+          onTap: () {}, // No action
+          contentOpacity: 0.5,
+          padding: const EdgeInsets.all(8),
+          child: SizedBox.expand(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '🚫',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 40),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Sem módulos ativos',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: isDark ? Colors.white54 : Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -230,6 +230,9 @@ class MyProgressScreen extends StatelessWidget {
       case NicheId.procrastination:
         detailScreen = null;
         break;
+      case NicheId.reading:
+        detailScreen = null;
+        break;
     }
 
     if (detailScreen == null) {

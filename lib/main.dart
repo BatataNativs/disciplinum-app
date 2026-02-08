@@ -12,6 +12,7 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/services/review/review_service.dart';
 import 'package:disciplinum/services/user_privacy/privacy_service.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
+import 'package:disciplinum/services/9_reading/reading_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/app.dart';
 import 'package:disciplinum/app_router.dart';
@@ -104,6 +105,10 @@ Future<void> main() async {
             Provider.of<GamificationService>(context, listen: false),
             prefs,
           ),
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) => ReadingService(prefs),
         ),
 
         ChangeNotifierProvider(
