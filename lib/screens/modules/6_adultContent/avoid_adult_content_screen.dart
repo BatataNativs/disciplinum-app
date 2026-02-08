@@ -415,12 +415,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                         heroTag: widget.heroTag,
                       ),
                     ),
-                    const SizedBox(height: 32),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       child: _buildSegmentedControl(),
                     ),
-                    const SizedBox(height: 32),
 
                     // --- PAGEVIEW ---
                     Expanded(
@@ -491,7 +490,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     final List<String> options = ['Como Funciona', 'Apps', 'Ativar'];
 
     return Container(
-      height: 48,
+      height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark
@@ -527,7 +526,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                           BoxShadow(
                             color:
                                 const Color(0xFF6366F1).withValues(alpha: 0.3),
-                            blurRadius: 10,
+                            blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
                         ]
@@ -536,13 +535,14 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 child: Text(
                   options[index],
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
                         : (isDark ? Colors.white60 : Colors.black45),
-                    letterSpacing: isSelected ? 0.2 : 0,
+                    letterSpacing: isSelected ? 0.3 : 0,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -760,7 +760,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
           height: 55,
           child: GlowingButton(
             text: 'Começar',
-            color: const Color.fromARGB(255, 57, 92, 208),
+            color: const Color(0xFF6366F1),
             onPressed: () {
               if (_pageController.hasClients) {
                 _pageController.animateToPage(1, // Vai para "Apps"
@@ -777,7 +777,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
           height: 55,
           child: GlowingButton(
             text: 'Selecionar aplicativos',
-            color: const Color.fromARGB(255, 57, 92, 208),
+            color: const Color(0xFF6366F1),
             onPressed: _openSelectApps,
             borderRadius: 18,
           ),
