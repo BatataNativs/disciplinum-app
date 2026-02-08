@@ -23,6 +23,7 @@ import 'package:disciplinum/screens/modules/6_adultContent/avoid_adult_content_s
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_screen.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_screen.dart';
+import 'package:disciplinum/screens/modules/9_reading/reading_screen.dart';
 
 // --- IMPORT DA NOVA TELA ---
 import 'package:disciplinum/screens/misc/lojinha_screen.dart';
@@ -41,6 +42,7 @@ class AppRouter {
   static const String resetPassword = '/reset-password';
   static const String myProgress = '/my_progress';
   static const String stopSmoking = '/stop_smoking';
+  static const String reading = '/reading'; // Módulo 9
   static const String shop = '/lojinha'; // Rota da lojinha
 
   static const String smokingNotifications = '/smoking_notifications';
@@ -130,6 +132,13 @@ class AppRouter {
                 builder: (_) => ProcrastinationScreen(
                     heroTag: heroTag ?? 'procrastination_default',
                     initialTabIndex: initialTabIndex));
+          case NicheId.reading:
+            final initialTabIndex = (args is Map<String, dynamic>)
+                ? (args['initialTabIndex'] as int? ?? 0)
+                : 0;
+            return FastMaterialPageRoute(
+                builder: (_) => ReadingScreen(
+                    heroTag: heroTag, initialTabIndex: initialTabIndex));
         }
 
       case AppRouter.settings:

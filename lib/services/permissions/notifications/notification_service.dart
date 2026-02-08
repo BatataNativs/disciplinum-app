@@ -58,7 +58,19 @@ Future<void> initNotifications() async {
           AppRouter.nicheDetail,
           arguments: {
             'niche': niche,
-            'initialTabIndex': 2, // Aba Ativar Módulo
+            'initialTabIndex': 2, // Aba Ativar Módulo (ou tarefas)
+          },
+        );
+      }
+
+      // Lógica para abrir módulo de Leitura
+      if (response.payload == 'reading' || response.actionId == 'reading_log') {
+        final niche = NicheRepository.getById(NicheId.reading);
+        navigatorKey.currentState?.pushNamed(
+          AppRouter.nicheDetail,
+          arguments: {
+            'niche': niche,
+            'initialTabIndex': 1, // Aba Minha Estante
           },
         );
       }

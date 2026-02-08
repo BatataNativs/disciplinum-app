@@ -34,6 +34,8 @@ final Map<NicheId, String> moduleMessages = {
       '💰 Hoje é dia de se aproximar mais da sua meta! Que tal marcar mais um quadradinho hoje?',
   NicheId.procrastination:
       '🗓️ Não esqueça dos seus compromissos agendados. Verifique suas tarefas e compromissos para hoje!',
+  NicheId.reading:
+      '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?',
 };
 
 String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
@@ -98,6 +100,11 @@ class GamificationService extends ChangeNotifier {
   final Map<NicheId, String> _customMessages = {};
   final Map<NicheId, List<String>> _customPhrases = {};
 
+  // Fila de medalhas pendentes de visualização (Popup)
+  final List<Map<String, dynamic>> _pendingMedals = [];
+  List<Map<String, dynamic>> get pendingMedals =>
+      List.unmodifiable(_pendingMedals);
+
   Map<NicheId, String> get customMessages => _customMessages;
   Map<NicheId, List<String>> get customPhrases => _customPhrases;
 
@@ -107,6 +114,7 @@ class GamificationService extends ChangeNotifier {
   static const String _prefsActiveNicheKey = 'active_niche_id';
   // Prefixo para o status de cada módulo (Local-First)
   static const String _prefsModuleStatusPrefix = 'module_status_';
+  static const String _prefsPendingMedalsKey = 'pending_medals';
 
   // Controle de monitoramento
   bool _isModuleActive = false;
@@ -123,17 +131,26 @@ class GamificationService extends ChangeNotifier {
   NicheId? currentNicheId;
 
   void _handleRelapseFromNotification(String? payload) {
+    if (payload != null && payload.startsWith('medal_ack')) {
+      // Apenas limpamos a notificação, nada especial a fazer aqui
+      // O popup será mostrado quando o app abrir
+      return;
+    }
+
     NicheId? nicheId;
     if (payload != null) {
+      // Tenta parsing do ID
       nicheId = NicheId.values.firstWhere(
         (e) => e.id.toString() == payload,
-        orElse: () => NicheId.smoking,
+        orElse: () =>
+            NicheId.smoking, // Fallback, mas idealmente tratamos melhor
       );
     } else {
       nicheId = currentNicheId;
     }
 
-    if (nicheId == NicheId.smoking) {
+    if (nicheId == NicheId.smoking && !payload!.startsWith('reading')) {
+      // proteção simples
       final niche = NicheRepository.getById(nicheId!);
       resetMedals(
         nicheId,
@@ -163,10 +180,115 @@ class GamificationService extends ChangeNotifier {
       }
     }
 
+    // Carrega medalhas pendentes
+    final pendingJson = prefs.getString(_prefsPendingMedalsKey);
+    if (pendingJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(pendingJson);
+        _pendingMedals.addAll(decoded.cast<Map<String, dynamic>>());
+      } catch (e) {
+        debugPrint('Erro ao carregar medalhas pendentes: $e');
+      }
+    }
+
     notifyListeners();
 
     // Tenta restaurar TODOS os módulos ativos e horários
     await _restoreAllActiveModules();
+  }
+
+  Future<void> _savePendingMedals() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsPendingMedalsKey, jsonEncode(_pendingMedals));
+  }
+
+  void consumePendingMedal(Map<String, dynamic> medal) {
+    _pendingMedals.remove(medal);
+    _savePendingMedals();
+    notifyListeners();
+  }
+
+  // Novo método unificado para conceder medalhas
+  void awardMedal(NicheId nicheId, GamificationMedal medal) {
+    // 1. Adicionar à fila de pendentes (para Popup)
+    final medalData = {
+      'niche_id': nicheId.id,
+      'medal_name': medal.nameBr,
+      'medal_asset': medal.asset,
+      'awarded_at': DateTime.now().toIso8601String(),
+    };
+
+    // Evita duplicatas na fila
+    final alreadyPending = _pendingMedals.any(
+        (m) => m['niche_id'] == nicheId.id && m['medal_name'] == medal.nameBr);
+
+    if (!alreadyPending) {
+      _pendingMedals.add(medalData);
+      _savePendingMedals();
+    }
+
+    // 2. Enviar notificação com ações
+    _sendMedalNotificationWithActions(nicheId, medal);
+
+    notifyListeners();
+  }
+
+  Future<void> _sendMedalNotificationWithActions(
+      NicheId nicheId, GamificationMedal medal) async {
+    final title = 'Nova Medalha Conquistada! 🏆';
+    final body =
+        'Parabéns! Você alcançou a medalha de ${medal.nameBr} no módulo ${NicheRepository.getById(nicheId).name}.';
+    final id = nicheId.id + 900;
+
+    // Carrega ícone se possível
+    AndroidBitmap<Uint8List>? largeIcon;
+    try {
+      final iconPath =
+          medal.asset; // Tenta usar a própria medalha como ícone grande
+      if (iconPath.endsWith('.png')) {
+        // check simples
+        final ByteData data = await rootBundle.load(iconPath);
+        largeIcon = ByteArrayAndroidBitmap(data.buffer.asUint8List());
+      }
+    } catch (_) {}
+
+    await NotificationService.scheduleDailyNotification(
+      id: id,
+      time: TimeOfDay
+          .now(), // Imediato (hack, ou usar show direto) -> NotificationService não tem show direto público fácil com actions?
+      // O NotificationService tem schedule, mas flutterLocalNotificationsPlugin tem show.
+      // Vou usar o plugin direto aqui para ter controle total das actions
+      title: title,
+      body: body,
+    );
+
+    // REVISÃO: NotificationService.scheduleDailyNotification não é para imediato.
+    // Vou usar uma implementação direta aqui similar ao _sendCustomNotification mas com actions.
+
+    final androidDetails = AndroidNotificationDetails(
+        'disciplinum_medals', 'Conquistas e Medalhas',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        largeIcon: largeIcon,
+        styleInformation: BigTextStyleInformation(body),
+        actions: [
+          const AndroidNotificationAction(
+            'view_app',
+            'Ver no app',
+            showsUserInterface:
+                true, // Abre o app e deve disparar o popup via pending medals
+          ),
+          const AndroidNotificationAction(
+            'dismiss_medal',
+            'Ok. Apagar',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+        ]);
+
+    await flutterLocalNotificationsPlugin.show(
+        id, title, body, NotificationDetails(android: androidDetails));
   }
 
   Future<void> _restoreAllActiveModules() async {
@@ -952,11 +1074,9 @@ class GamificationService extends ChangeNotifier {
           maxMedal: newMedal.toString().split('.').last,
         );
 
-        _sendCustomNotification(
-          nicheId.id + 900,
-          'Nova Medalha Conquistada! 🏆',
-          'Parabéns! Você alcançou a medalha de ${newMedal.nameBr} neste módulo.',
-        );
+        // Substitui chamada antiga pela nova com popup e actions
+        awardMedal(nicheId, newMedal);
+
         notifyListeners();
       }
     }

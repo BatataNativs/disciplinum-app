@@ -103,6 +103,15 @@ class NicheRepository {
         type: NicheType.schedule,
         scale: 2.7,
       ),
+      Niche(
+        id: NicheId.reading,
+        name: 'Leitura',
+        iconPath:
+            'assets/icons/niche_reading.png', // Verifique se o ícone existe ou use um placeholder
+        homePhrase: 'Expanda seus horizontes através da leitura.',
+        type: NicheType.schedule,
+        scale: 2.7,
+      ),
     ];
   }
 
@@ -143,8 +152,9 @@ class NicheCategoryRepository {
         idPrefix: 'mente',
         nicheIds: [
           NicheId.smoking,
+          NicheId.reading, // Novo
           NicheId.focus,
-          NicheId.procrastination, // Novo
+          NicheId.procrastination,
           NicheId.adultContent,
           NicheId.bingeEating,
           NicheId.spending,
