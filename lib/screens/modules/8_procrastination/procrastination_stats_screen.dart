@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/models/8_procrastination/procrastination_model.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
+import 'package:disciplinum/screens/modules/8_procrastination/completed_lists_screen.dart';
 
 class ProcrastinationStatsScreen extends StatelessWidget {
   const ProcrastinationStatsScreen({super.key});
@@ -263,6 +264,66 @@ class ProcrastinationStatsScreen extends StatelessWidget {
                         Icons.alarm,
                         UrgencyLevel.red.color,
                         isDark,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Link para Listas Concluídas
+                NeonCard(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CompletedListsScreen(),
+                      ),
+                    );
+                  },
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: Color(0xFF4CAF50),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Conquistas Especiais',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Listas concluídas sem nenhum atraso',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? Colors.white54 : Colors.black45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: isDark ? Colors.white24 : Colors.black26,
                       ),
                     ],
                   ),

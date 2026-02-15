@@ -6,7 +6,6 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import '../../../screens/schedule_screen.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
-import 'frases_motivacionais.dart';
 
 class SmokingNotificationsScreen extends StatefulWidget {
   const SmokingNotificationsScreen({super.key});
@@ -19,7 +18,6 @@ class SmokingNotificationsScreen extends StatefulWidget {
 class _SmokingNotificationsScreenState
     extends State<SmokingNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
-  int _checkInCount = 0;
   int _motivationCount = 0;
   bool _isLoading = true;
 
@@ -30,14 +28,11 @@ class _SmokingNotificationsScreenState
   }
 
   Future<void> _loadCounts() async {
-    final checkInTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id);
     final motivationTimes =
         await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 100);
 
     if (mounted) {
       setState(() {
-        _checkInCount = checkInTimes.length;
         _motivationCount = motivationTimes.length;
         _isLoading = false;
       });
@@ -76,44 +71,6 @@ class _SmokingNotificationsScreenState
                 child: Column(
                   children: [
                     _buildSettingsCard(
-                      title: 'Check-in Diário',
-                      description: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                                  'Receba uma notificação para registrar se você resistiu ao hábito hoje. ',
-                              style: TextStyle(
-                                color: isDark ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Permite 1 horário.',
-                              style: TextStyle(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      count: _checkInCount,
-                      max: 1,
-                      onTap: () => _openSchedule(isMotivation: false),
-                      leadingWidget: Image.asset(
-                        'assets/icons/checkindiario.png',
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.contain,
-                      ),
-                      color: Colors.blueAccent,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSettingsCard(
                       title: 'Frases Motivacionais',
                       description: Text.rich(
                         TextSpan(
@@ -141,14 +98,7 @@ class _SmokingNotificationsScreenState
                       ),
                       count: _motivationCount,
                       max: 8,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  const FrasesMotivacionaisScreen()),
-                        ).then((_) => _loadCounts());
-                      },
+                      onTap: _openSchedule,
                       leadingWidget: Container(
                         padding: const EdgeInsets.all(10),
                         child: Image.asset(
@@ -224,11 +174,10 @@ class _SmokingNotificationsScreenState
     );
   }
 
-  Future<void> _openSchedule({required bool isMotivation}) async {
-    final nicheId = isMotivation ? _niche.id.id + 100 : _niche.id.id;
-    final maxSlots = isMotivation ? 8 : 1;
-    final title =
-        isMotivation ? 'Horários de Motivação' : 'Horário de Check-in';
+  Future<void> _openSchedule() async {
+    final nicheId = _niche.id.id + 100;
+    const maxSlots = 8;
+    const title = 'Horários de Motivação';
 
     final initialItems =
         await CloudSyncService.loadUserNicheTimes(nicheId: nicheId);

@@ -105,11 +105,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? const Color(0xFFB0B0B0) : const Color(0xFF424242),
+                  color: isDark
+                      ? const Color(0xFFB0B0B0)
+                      : const Color(0xFF424242),
                 ),
                 children: [
                   TextSpan(
-                    text: ', leia até o final. \nHá avisos importantes sobre o propósito do app e seu funcionamento.\n\n',
+                    text:
+                        ', leia até o final. \nHá avisos importantes sobre o propósito do app e seu funcionamento.\n\n',
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
                     ),
@@ -136,7 +139,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, false),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 0, 0, 0), // Altere esta cor conforme necessário
+              backgroundColor: const Color.fromARGB(
+                  255, 0, 0, 0), // Altere esta cor conforme necessário
               foregroundColor: Colors.white,
             ),
             child: const Text('Ok, continuar vendo'),
@@ -193,8 +197,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 return UnconstrainedBox(
                                   child: Image.asset(
                                     'assets/disciplinado.png',
-                                    height: 270,
-                                    width: 270,
+                                    height: 200,
+                                    width: 200,
                                     fit: BoxFit.contain,
                                   ),
                                 );
@@ -243,7 +247,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (index == 0) {
                               pageTitle = 'Disciplina e Foco';
                             } else if (index == 1) {
-                              pageTitle = 'Gamificação de incentivo ao seu progresso';
+                              pageTitle =
+                                  'Gamificação de incentivo ao seu progresso';
                             } else {
                               pageTitle = 'Atenção!';
                             }
@@ -286,7 +291,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   text:
                                       'Transforme seus hábitos diários e seja mais disciplinado!\n\n'
-                                      'Este app te ajuda a evitar compras impulsivas, manter o foco e melhorar sua rotina.',
+                                      'Este app pode te ajudar a:\n'
+                                      '• Evitar compras impulsivas\n'
+                                      '• Manter o foco em atividades\n'
+                                      '• Parar de fumar\n'
+                                      '• Evitar conteúdo adulto\n'
+                                      '• Evitar procrastinação\n'
+                                      '• E muito mais!',
                                 ),
                               );
                             } else if (index == 1) {
@@ -296,7 +307,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   children: [
                                     const TextSpan(
-                                      text: 'Conquiste medalhas, insígnias e troféus ',
+                                      text:
+                                          'Conquiste medalhas, insígnias e troféus ',
                                     ),
                                     const TextSpan(
                                       text: '(FICTÍCIOS)',

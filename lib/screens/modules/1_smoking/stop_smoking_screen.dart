@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import 'package:disciplinum/services/1_smoking/smoking_service.dart';
-import 'package:disciplinum/widgets/1_smoking/savings_dashboard.dart';
-import 'package:disciplinum/widgets/1_smoking/health_compact_card.dart';
 import 'package:disciplinum/screens/modules/1_smoking/health_detail_screen.dart';
 import 'package:disciplinum/widgets/1_smoking/my_progress_smoking.dart';
 import 'package:provider/provider.dart';
@@ -10,14 +8,13 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
-import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
+import '../../schedule_screen.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   final String? heroTag;
@@ -169,23 +166,10 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           isSaving = false;
         });
 
-        if (_pageController.hasClients) {
-          _pageController.animateToPage(
-            2,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-          );
-        } else {
-          setState(() {
-            _selectedIndex = 2;
-          });
-        }
-
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
         messenger.showSnackBar(
-          const SnackBar(
-              content: Text("Dados de consumo salvos com sucesso! ✔")),
+          const SnackBar(content: Text('Informações salvas com sucesso! ✔')),
         );
       }
     } catch (e) {
@@ -198,79 +182,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
   }
 
-  Future<void> _resetProgress() async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Poxa, teve uma recaída?"),
-        content: const Text(
-          "Que pena!\nÉ difícil, mas não desista!\n\n"
-          "Tente novamente quando se sentir pronto!\n(espero que em breve).\n\n"
-          "Ao registrar a recaída, isso vai apagar seu progresso atual e o módulo será desativado até que você preencha novos dados de consumo e o ative novamente.\n\n"
-          "Deseja registrar a recaída?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, infelizmente.."),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() => isLoading = true);
-      try {
-        await _service.archiveAndReset();
-        await CloudSyncService.removeAllTimesForNiche(
-            nicheId: NicheId.smoking.id);
-        await CloudSyncService.removeAllTimesForNiche(
-            nicheId: NicheId.smoking.id + 100);
-
-        gamification.resetMedals(
-          NicheId.smoking,
-          notificationTitle: 'Módulo de Parar de Fumar Reiniciado',
-          notificationBody:
-              'Seu progresso foi zerado e o módulo desativado. Como estímulo, confira no app o quanto economizou nessa tentativa!',
-          deactivate: true,
-        );
-
-        if (mounted) {
-          _service.getSettings().then((data) {
-            if (mounted) {
-              setState(() {
-                settings = data;
-                _gamificationRunning = false;
-                isLoading = false;
-              });
-            }
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    "Progresso resetado. Configure novamente quando estiver pronto. 💪")),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Erro ao resetar: $e")),
-          );
-        }
-      }
-    }
-  }
-
   Future<void> _ativarNichoMonitoramento() async {
     HapticFeedback.mediumImpact();
     await PermissionService.ensurePermissions(context);
@@ -279,7 +190,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     bool notificationGranted = await NotificationService.requestPermission();
     if (notificationGranted) {
       if (settings != null) {
-        setState(() => isLoading = true);
+        setState(() => isSaving = true);
         try {
           final now = DateTime.now();
           final updatedSettings = SmokingSettingsModel(
@@ -298,11 +209,11 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           if (mounted) {
             setState(() {
               settings = updatedSettings;
-              isLoading = false;
+              isSaving = false;
             });
           }
         } catch (e) {
-          if (mounted) setState(() => isLoading = false);
+          if (mounted) setState(() => isSaving = false);
         }
       }
       _startGamificationCycle();
@@ -423,9 +334,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(_niche.name,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: Text(_niche.name),
           centerTitle: true,
         ),
         body: Shimmer.fromColors(
@@ -454,6 +363,10 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_niche.name),
+        centerTitle: true,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -472,42 +385,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header Custom
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
               Expanded(
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: NicheHeader(
-                        niche: _niche,
-                        showBackground: false,
-                        heroTag: widget.heroTag,
-                      ),
-                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
@@ -525,21 +405,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                         },
                         children: [
                           // PAGINA 0: Como Funciona
-                          Column(
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: _buildTabContent(0),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                                child: _buildTabActions(0),
-                              ),
-                            ],
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 100),
+                              ],
+                            ),
                           ),
                           // PAGINA 1: Info Consumo
                           SingleChildScrollView(
@@ -547,21 +420,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                             child: Column(
                               children: [
                                 _buildTabContent(1),
-                                const SizedBox(height: 24),
-                                _buildTabActions(1),
-                                const SizedBox(height: 40),
-                              ],
-                            ),
-                          ),
-                          // PAGINA 2: Ativar
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(2),
-                                const SizedBox(height: 24),
-                                _buildTabActions(2),
-                                const SizedBox(height: 40),
+                                const SizedBox(height: 100),
                               ],
                             ),
                           ),
@@ -570,6 +429,23 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                     ),
                   ],
                 ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_selectedIndex == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildTabActions(0),
+                    )
+                  else ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildTabActions(1),
+                    ),
+                    _buildBottomButtons(isDark),
+                  ],
+                ],
               ),
             ],
           ),
@@ -580,7 +456,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Info de Consumo', 'Ativar'];
+    final List<String> options = ['Como funciona', 'Info de Consumo'];
 
     return Container(
       height: 44,
@@ -865,142 +741,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             const SizedBox(height: 24),
           ],
         );
-      case 2:
-        return Column(
-          children: [
-            if (_gamificationRunning && settings != null) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SavingsDetailScreen(
-                              settings: settings!,
-                              isActive: _gamificationRunning,
-                            ),
-                          ),
-                        );
-                      },
-                      child: SavingsDashboard(
-                        settings: settings!,
-                        compact: true,
-                        isActive: _gamificationRunning,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: HealthCompactCard(
-                      settings: settings!,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                HealthDetailScreen(settings: settings!),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const MyProgressSmoking()),
-                        );
-                      },
-                      child: Container(
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6366F1)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'Meu progresso',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  const SmokingNotificationsScreen()),
-                        );
-                      },
-                      child: Container(
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? Colors.white10 : Colors.black12,
-                          ),
-                        ),
-                        child: Text(
-                          'Notificações',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ] else ...[
-              const Icon(Icons.smoke_free_rounded,
-                  size: 80, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text("Módulo desativado",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey)),
-              const SizedBox(height: 8),
-              const Text(
-                "Ative o módulo para começar sua jornada para uma vida mais saudável.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ],
-        );
       default:
         return const SizedBox.shrink();
     }
@@ -1066,34 +806,37 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   }
 
   Widget _buildTabActions(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
-      // --- NOVO BOTÃO COMEÇAR (ABA 0) ---
       case 0:
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: GlowingButton(
-            text: 'Começar',
+          child: _buildActionButton(
+            icon: Icons.rocket_launch_rounded,
+            label: 'Começar',
             color: const Color(0xFF6366F1),
-            onPressed: () {
+            isDark: isDark,
+            onTap: () {
               if (_pageController.hasClients) {
-                _pageController.animateToPage(1, // Vai para "Info de Consumo"
+                _pageController.animateToPage(1,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic);
               }
             },
-            borderRadius: 18,
           ),
         );
       case 1:
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: GlowingButton(
-            text: isSaving ? 'Salvando...' : 'Salvar',
+          child: _buildActionButton(
+            icon: Icons.save_rounded,
+            label: isSaving ? 'Salvando...' : 'Salvar',
             color: const Color(0xFF6366F1),
-            onPressed: isSaving
-                ? () {} // Bloqueia clique
+            isDark: isDark,
+            onTap: isSaving
+                ? () {}
                 : () {
                     if (_priceController.text.isNotEmpty &&
                         _packsController.text.isNotEmpty) {
@@ -1109,46 +852,410 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                       );
                     }
                   },
-            borderRadius: 18,
           ),
-        );
-      case 2:
-        return Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: GlowingButton(
-                text:
-                    _gamificationRunning ? 'Desativar Módulo' : 'Ativar Módulo',
-                color: _gamificationRunning
-                    ? const Color.fromARGB(255, 239, 68, 68)
-                    : const Color.fromARGB(255, 16, 185, 129),
-                onPressed: _gamificationRunning
-                    ? _desativarNichoMonitoramento
-                    : _ativarNichoMonitoramento,
-                borderRadius: 18,
-              ),
-            ),
-            if (_gamificationRunning) ...[
-              const SizedBox(height: 12),
-              TextButton.icon(
-                onPressed: _resetProgress,
-                icon: const Icon(Icons.refresh,
-                    color: Colors.redAccent, size: 20),
-                label: const Text(
-                  "Tive uma recaída (Resetar)",
-                  style: TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ],
         );
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildBottomButtons(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.check_circle_outline,
+                  label: 'Check-in diário',
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: _openCheckInManager,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.notifications_outlined,
+                  label: 'Notificações',
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SmokingNotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Estatísticas',
+                  color: Colors.teal,
+                  isDark: isDark,
+                  onTap: _showStatisticsMenu,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: _gamificationRunning
+                      ? Icons.power_settings_new
+                      : Icons.power_off,
+                  label: _gamificationRunning
+                      ? 'Desativar Módulo'
+                      : 'Ativar Módulo',
+                  color: _gamificationRunning ? Colors.red : Colors.green,
+                  isDark: isDark,
+                  isDestructive: _gamificationRunning,
+                  onTap: _gamificationRunning
+                      ? _desativarNichoMonitoramento
+                      : _ativarNichoMonitoramento,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCheckInManager() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.check_circle_outline,
+                      color: Color(0xFF6366F1), size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Check-in Diário',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'O que é?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O Check-in Diário é o seu compromisso de registrar se você resistiu ao hábito de fumar hoje. '
+              'Ele é fundamental para manter seu progresso.',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black54,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Como funciona?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Você receberá uma notificação no horário configurado perguntando se você fumou ou não. '
+              'Responder todos os dias e mostre a si mesmo que você é capaz!',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black54,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.access_time_rounded,
+                    label: 'Configurar Horário',
+                    color: const Color(0xFF6366F1),
+                    isDark: isDark,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      final nicheId = _niche.id.id;
+                      final initialItems =
+                          await CloudSyncService.loadUserNicheTimes(
+                              nicheId: nicheId);
+                      final initialTimes = initialItems
+                          .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
+                          .toList();
+
+                      if (!mounted) return;
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ScheduleScreen(
+                            args: ScheduleScreenArgs(
+                              nicheId: nicheId,
+                              maxSlots: 1,
+                              title: 'Horário de Check-in',
+                              initialTimes: initialTimes,
+                              onChanged: (times) {
+                                _syncCheckInWithGamification(
+                                    onlySyncSchedules: true);
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStatisticsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estatísticas',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildMenuTile(
+              icon: Icons.savings_outlined,
+              label: 'Economia',
+              color: Colors.green,
+              onTap: () {
+                Navigator.pop(ctx);
+                if (settings != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SavingsDetailScreen(
+                        settings: settings!,
+                        isActive: _gamificationRunning,
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildMenuTile(
+              icon: Icons.health_and_safety_outlined,
+              label: 'Saúde',
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                if (settings != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HealthDetailScreen(settings: settings!),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Meu progresso',
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyProgressSmoking()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ListActionTile(
+      icon: icon,
+      label: label,
+      color: color,
+      onTap: onTap,
+      isDark: isDark,
+    );
+  }
+}
+
+class ListActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const ListActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: isDark ? Colors.white30 : Colors.black26,
+        ),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+      ),
+    );
   }
 }

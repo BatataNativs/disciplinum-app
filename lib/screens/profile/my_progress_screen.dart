@@ -12,6 +12,9 @@ import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/widgets/4_spending/my_progress_spending.dart';
 import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
+import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
+import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastination.dart';
+import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 
 class MyProgressScreen extends StatelessWidget {
   const MyProgressScreen({super.key});
@@ -201,7 +204,7 @@ class MyProgressScreen extends StatelessWidget {
   }
 
   void _navigateToProgressDetail(BuildContext context, Niche niche) {
-    Widget? detailScreen;
+    late final Widget detailScreen;
 
     switch (niche.id) {
       case NicheId.smoking:
@@ -223,26 +226,19 @@ class MyProgressScreen extends StatelessWidget {
         detailScreen = const MyProgressAdultContent();
         break;
       case NicheId.moneySavingChallenge:
-        // Por enquanto, não tem tela de progresso específica
-        // Abre a tela principal do módulo
-        detailScreen = null;
+        detailScreen = const MyProgressMoneySavingChallenge();
         break;
       case NicheId.procrastination:
-        detailScreen = null;
+        detailScreen = const MyProgressProcrastination();
         break;
       case NicheId.reading:
-        detailScreen = null;
+        detailScreen = const MyProgressReading();
         break;
-    }
-
-    if (detailScreen == null) {
-      // Para módulos sem tela de progresso específica, não navega
-      return;
     }
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => detailScreen!),
+      MaterialPageRoute(builder: (_) => detailScreen),
     );
   }
 

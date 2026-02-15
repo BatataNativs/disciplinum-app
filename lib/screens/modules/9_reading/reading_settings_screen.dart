@@ -108,13 +108,39 @@ class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      GlowingButton(
-                        text: _notificationTime != null
-                            ? 'Horário: ${_notificationTime!.format(context)}'
-                            : 'Definir Horário',
-                        color: const Color(0xFF6366F1),
-                        icon: Icons.access_time,
-                        onPressed: () => _selectTime(context),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GlowingButton(
+                              text: _notificationTime != null
+                                  ? 'Horário: ${_notificationTime!.format(context)}'
+                                  : 'Definir Horário',
+                              color: const Color(0xFF6366F1),
+                              icon: Icons.access_time,
+                              onPressed: () => _selectTime(context),
+                            ),
+                          ),
+                          if (_notificationTime != null) ...[
+                            const SizedBox(width: 12),
+                            IconButton(
+                              onPressed: () {
+                                Provider.of<ReadingService>(context,
+                                        listen: false)
+                                    .cancelDailyReminder();
+                                setState(() {
+                                  _notificationTime = null;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Lembrete removido')),
+                                );
+                              },
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red),
+                              tooltip: 'Remover lembrete',
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),

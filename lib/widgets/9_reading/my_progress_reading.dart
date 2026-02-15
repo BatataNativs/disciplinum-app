@@ -4,21 +4,19 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 
-class MyProgressMoneySavingChallenge extends StatelessWidget {
-  const MyProgressMoneySavingChallenge({super.key});
+class MyProgressReading extends StatelessWidget {
+  const MyProgressReading({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gamification = Provider.of<GamificationService>(context);
-    final dias =
-        gamification.diasConsecutivosByModule[NicheId.moneySavingChallenge] ??
-            0;
-    final isActive = gamification.isModuleActive(NicheId.moneySavingChallenge);
+    final dias = gamification.diasConsecutivosByModule[NicheId.reading] ?? 0;
+    final isActive = gamification.isModuleActive(NicheId.reading);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Poupança'),
+        title: const Text('Leitura'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -45,12 +43,12 @@ class MyProgressMoneySavingChallenge extends StatelessWidget {
                   child: Column(
                     children: [
                       Image.asset(
-                        'assets/icons/niche_poupanca.png',
+                        'assets/icons/niche_reading.png',
                         height: 64,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        isActive ? '$dias dias poupando' : 'Módulo desativado',
+                        isActive ? '$dias dias lendo' : 'Módulo desativado',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

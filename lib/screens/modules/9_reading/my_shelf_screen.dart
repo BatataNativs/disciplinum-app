@@ -5,10 +5,104 @@ import 'package:disciplinum/screens/modules/9_reading/widgets/book_tile.dart';
 import 'package:disciplinum/screens/modules/9_reading/widgets/book_details_dialog.dart';
 import 'package:disciplinum/screens/modules/9_reading/finished_books_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class MyShelfScreen extends StatelessWidget {
   const MyShelfScreen({super.key});
+
+  void _showBookOptions(BuildContext context, dynamic book) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                book.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading:
+                  Icon(Icons.edit_outlined, color: const Color(0xFF6366F1)),
+              title: const Text('Editar livro'),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.pop(ctx);
+                AddBookDialog.show(context, bookToEdit: book);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Excluir livro',
+                  style: TextStyle(color: Colors.red)),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.pop(ctx);
+                _confirmDelete(context, book);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, dynamic book) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir livro?'),
+        content: Text(
+          'Tem certeza que deseja excluir "${book.title}"? Esta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final service =
+                  Provider.of<ReadingService>(context, listen: false);
+              service.deleteBook(book.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +126,7 @@ class MyShelfScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
-                  onPressed: () => showDialog(
-                      context: context, builder: (_) => const AddBookDialog()),
+                  onPressed: () => AddBookDialog.show(context),
                   child: const Text("Adicionar Primeiro Livro"),
                 ),
               ],
@@ -118,7 +211,8 @@ class MyShelfScreen extends StatelessWidget {
                             );
                           },
                           onLongPress: () {
-                            // Opção de editar/excluir (já tem no update dialog, mas pode ter aqui tb)
+                            HapticFeedback.mediumImpact();
+                            _showBookOptions(context, book);
                           },
                         );
                       },

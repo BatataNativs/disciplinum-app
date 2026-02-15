@@ -8,9 +8,6 @@ import 'package:disciplinum/services/permissions/notifications/notification_serv
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
-import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_notifications_screen.dart';
 
@@ -35,7 +32,7 @@ class _FocusScreenState extends State<FocusScreen> {
 
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Como Funciona, 1=Apps, 2=Tempo, 3=Ativar
+  int _selectedIndex = 0; // 0=Como Funciona, 1=Configurações
 
   @override
   void initState() {
@@ -299,11 +296,11 @@ class _FocusScreenState extends State<FocusScreen> {
     // Se tiver apps e o controller estiver ok, avança para a próxima etapa
     if (_selectedApps.isNotEmpty) {
       if (_pageController.hasClients) {
-        _pageController.animateToPage(2, // Vai para "Tempo"
+        _pageController.animateToPage(1, // Vai para "Configurações"
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic);
       } else {
-        setState(() => _selectedIndex = 2);
+        setState(() => _selectedIndex = 1);
       }
     } else {
       setState(() {});
@@ -317,6 +314,7 @@ class _FocusScreenState extends State<FocusScreen> {
     final start = await showTimePicker(
       context: context,
       initialTime: now,
+      helpText: 'HORÁRIO DE INÍCIO',
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -330,7 +328,8 @@ class _FocusScreenState extends State<FocusScreen> {
 
     final end = await showTimePicker(
       context: context,
-      initialTime: start,
+      initialTime: const TimeOfDay(hour: 0, minute: 0),
+      helpText: 'HORÁRIO DE TÉRMINO',
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -361,14 +360,9 @@ class _FocusScreenState extends State<FocusScreen> {
       minute: end.minute,
     );
 
-    // Se o tempo foi definido, avança para ativar
-    if (_pageController.hasClients) {
-      _pageController.animateToPage(3, // Vai para "Ativar"
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic);
-    } else {
-      setState(() => _selectedIndex = 3);
-    }
+    // Se o tempo foi definido, avança para o seletor de apps
+    if (!mounted) return;
+    await _openSelectApps();
   }
 
   void _removeFocusInterval() async {
@@ -448,13 +442,7 @@ class _FocusScreenState extends State<FocusScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: NicheHeader(
-                          niche: _niche,
-                          showBackground: false,
-                          heroTag: widget.heroTag,
-                        )),
+                    const SizedBox(height: 8),
                     Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
@@ -471,55 +459,22 @@ class _FocusScreenState extends State<FocusScreen> {
                         },
                         children: [
                           // 0: Como Funciona
-                          Column(
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: _buildTabContent(0),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                                child: _buildTabActions(0),
-                              ),
-                            ],
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildTabContent(0),
+                                const SizedBox(height: 100),
+                              ],
+                            ),
                           ),
-                          // 1: Apps
+                          // 1: Configurações
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
                                 _buildTabContent(1),
-                                const SizedBox(height: 24),
-                                _buildTabActions(1),
-                                const SizedBox(height: 40),
-                              ],
-                            ),
-                          ),
-                          // 2: Tempo
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(2),
-                                const SizedBox(height: 24),
-                                _buildTabActions(2),
-                                const SizedBox(height: 40),
-                              ],
-                            ),
-                          ),
-                          // 3: Ativar
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(3),
-                                const SizedBox(height: 24),
-                                _buildTabActions(3),
-                                const SizedBox(height: 40),
+                                const SizedBox(height: 100),
                               ],
                             ),
                           ),
@@ -529,6 +484,26 @@ class _FocusScreenState extends State<FocusScreen> {
                   ],
                 ),
               ),
+              _selectedIndex == 0
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildActionButton(
+                        icon: Icons.rocket_launch_rounded,
+                        label: 'Começar',
+                        color: const Color(0xFF6366F1),
+                        isDark: isDark,
+                        onTap: () {
+                          if (_pageController.hasClients) {
+                            _pageController.animateToPage(1,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic);
+                          } else {
+                            setState(() => _selectedIndex = 1);
+                          }
+                        },
+                      ),
+                    )
+                  : _buildBottomButtons(isDark),
             ],
           ),
         ),
@@ -536,9 +511,185 @@ class _FocusScreenState extends State<FocusScreen> {
     );
   }
 
+  Widget _buildBottomButtons(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.settings_suggest_rounded,
+                  label: 'Configurar',
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: _pickFocusInterval,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.notifications_outlined,
+                  label: 'Notificações',
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FocusNotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Estatísticas',
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: _showStatisticsMenu,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: _gamificationRunning
+                      ? Icons.power_settings_new
+                      : Icons.power_off,
+                  label: _gamificationRunning
+                      ? 'Desativar módulo'
+                      : 'Ativar módulo',
+                  color: _gamificationRunning ? Colors.red : Colors.green,
+                  isDark: isDark,
+                  isDestructive: _gamificationRunning,
+                  onTap: _gamificationRunning
+                      ? _desativarNichoMonitoramento
+                      : _ativarNichoMonitoramento,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStatisticsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estatísticas e Opções',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Meu progresso',
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyProgressFocus()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ListActionTile(
+      icon: icon,
+      label: label,
+      color: color,
+      isDark: isDark,
+      onTap: onTap,
+    );
+  }
+
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Apps', 'Tempo', 'Ativar'];
+    final List<String> options = ['Como Funciona', 'Foco e produtividade'];
 
     return Container(
       height: 44,
@@ -586,7 +737,7 @@ class _FocusScreenState extends State<FocusScreen> {
                 child: Text(
                   options[index],
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
@@ -594,8 +745,6 @@ class _FocusScreenState extends State<FocusScreen> {
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -641,20 +790,86 @@ class _FocusScreenState extends State<FocusScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Apps Selecionados:',
+              'Intervalo de Foco:',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time_rounded,
+                      color: const Color(0xFF6366F1), size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_focusStart == null || _focusEnd == null)
+                          const Text('Nenhum intervalo definido.',
+                              style: TextStyle(color: Colors.grey))
+                        else
+                          Text(
+                            'Das ${_formatTime(_focusStart!)} até ${_formatTime(_focusEnd!)}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: isDark ? Colors.white : Colors.black87),
+                          ),
+                        const Text(
+                          'Configure este horário no botão "Configurar"',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_focusStart != null && _focusEnd != null)
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded,
+                          color: Colors.grey, size: 20),
+                      onPressed: _removeFocusInterval,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Apps Monitorados:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 12),
             if (_selectedApps.isEmpty)
-              NeonCard(
-                padding: const EdgeInsets.all(12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: const Center(
                   child: Text(
-                    'Nenhum app selecionado ainda.',
+                    'Nenhum app selecionado.',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
@@ -667,9 +882,6 @@ class _FocusScreenState extends State<FocusScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final infos = snapshot.data!;
-                  final isDark =
-                      Theme.of(context).brightness == Brightness.dark;
-
                   return Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -705,155 +917,8 @@ class _FocusScreenState extends State<FocusScreen> {
               ),
           ],
         );
-      case 2:
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Intervalo de Foco:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-            const SizedBox(height: 12),
-            NeonCard(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_focusStart == null || _focusEnd == null)
-                    Text('Nenhum intervalo definido.',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white60 : Colors.black54))
-                  else ...[
-                    Text(
-                      'Das ${_formatTime(_focusStart!)} até ${_formatTime(_focusEnd!)}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isDark ? Colors.white : Colors.black87),
-                    ),
-                    const SizedBox(width: 12),
-                    InkWell(
-                      onTap: _removeFocusInterval,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 20,
-                          color: isDark ? Colors.white : Colors.black54,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      case 3:
       default:
-        return Column(
-          children: [
-            if (_gamificationRunning) ...[
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const MyProgressFocus()),
-                        );
-                      },
-                      child: Container(
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6366F1)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'Meu progresso',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const FocusNotificationsScreen()),
-                        );
-                      },
-                      child: Container(
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? Colors.white10 : Colors.black12,
-                          ),
-                        ),
-                        child: Text(
-                          'Notificações',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ] else ...[
-              const Icon(Icons.center_focus_weak_rounded,
-                  size: 80, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text("Módulo desativado",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey)),
-              const SizedBox(height: 8),
-              const Text(
-                "Ative o módulo para começar a focar melhor em suas atividades.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ],
-        );
+        return const SizedBox.shrink();
     }
   }
 
@@ -915,68 +980,59 @@ class _FocusScreenState extends State<FocusScreen> {
       ),
     );
   }
+}
 
-  Widget _buildTabActions(int index) {
-    switch (index) {
-      // --- BOTÃO COMEÇAR (ABA 0) ---
-      case 0:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: 'Começar',
-            color: const Color(0xFF6366F1),
-            onPressed: () {
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(1, // Vai para "Apps"
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
-              }
-            },
-            borderRadius: 18,
+class ListActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const ListActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-        );
-      case 1:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: 'Selecionar/Adicionar apps',
-            onPressed: _openSelectApps,
-            color: const Color(0xFF6366F1),
-            borderRadius: 18,
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
           ),
-        );
-      case 2:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: 'Definir intervalo',
-            onPressed: _pickFocusInterval,
-            color: const Color(0xFF6366F1),
-            borderRadius: 18,
-          ),
-        );
-      case 3:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: GlowingButton(
-            text: _gamificationRunning
-                ? 'Desativar Monitoramento'
-                : 'Ativar Monitoramento',
-            color: _gamificationRunning
-                ? Colors.redAccent
-                : const Color.fromARGB(255, 16, 165, 53),
-            onPressed: _gamificationRunning
-                ? _desativarNichoMonitoramento
-                : _ativarNichoMonitoramento,
-            borderRadius: 18,
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: isDark ? Colors.white30 : Colors.black26,
+        ),
+        onTap: onTap,
+      ),
+    );
   }
 }
