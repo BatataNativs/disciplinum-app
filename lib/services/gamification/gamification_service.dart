@@ -337,16 +337,137 @@ class GamificationService extends ChangeNotifier {
 
           // Se a nuvem tem frases salvas, atualiza o cache local
           if (cloudPhrases.isNotEmpty) {
-            // Opcional: só sobrescreve se local estiver vazio ou se quiser forçar nuvem
             _customPhrases[nicheId] = cloudPhrases;
-          } else {
-            // Se nuvem só tem horários sem frase (legado), usa a padrão
-            // (Isso será tratado no getMotivationalPhrase)
           }
         }
 
         // --- Agendamento Nativo (Ambos: Check-in + Motivação) ---
         await _scheduleNativeNotifications(nicheId);
+      }
+    }
+  }
+
+  /// Puxa TODOS os dados do cloud e atualiza o estado local do app (Full Sync)
+  Future<bool> refreshAllDataFromCloud() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return false;
+
+      debugPrint('🔄 Iniciando Full Sync de dados do Cloud...');
+
+      // 1. Puxa todos os status dos módulos
+      final statusList = await Supabase.instance.client
+          .from('user_module_status')
+          .select()
+          .eq('user_id', user.id);
+
+      _maxMedalByModule.clear();
+      _diasConsecutivosByModule.clear();
+
+      for (var row in statusList as List) {
+        final status = UserModuleStatus.fromJson(row);
+        final nicheId = NicheId.tryFromInt(status.nicheId);
+        if (nicheId != null) {
+          if (status.isActive) {
+            _diasConsecutivosByModule[nicheId] = status.consecutiveDays;
+            if (status.maxMedal != null) {
+              _maxMedalByModule[nicheId] = GamificationMedal.values.firstWhere(
+                (m) => m.nameBr == status.maxMedal,
+                orElse: () => GamificationMedal.bronze,
+              );
+            }
+          }
+        }
+      }
+
+      // 2. Puxa horários de todos os módulos
+      final timesList = await Supabase.instance.client
+          .from('user_niche_times')
+          .select()
+          .eq('user_id', user.id);
+
+      scheduleByModule.clear();
+      motivationSchedulesByModule.clear();
+
+      for (var row in timesList as List) {
+        final nicheIdRaw = row['niche_id'] as int;
+        final hour = row['hour'] as int;
+        final minute = row['minute'] as int;
+        final phrase = row['phrase'] as String?;
+
+        if (nicheIdRaw > 100) {
+          // Motivação
+          final nicheId = NicheId.tryFromInt(nicheIdRaw - 100);
+          if (nicheId != null) {
+            motivationSchedulesByModule.putIfAbsent(nicheId, () => []);
+            motivationSchedulesByModule[nicheId]!
+                .add(TimeOfDay(hour: hour, minute: minute));
+            if (phrase != null && phrase.isNotEmpty) {
+              _customPhrases.putIfAbsent(nicheId, () => []);
+              if (!_customPhrases[nicheId]!.contains(phrase)) {
+                _customPhrases[nicheId]!.add(phrase);
+              }
+            }
+          }
+        } else {
+          // Check-in
+          final nicheId = NicheId.tryFromInt(nicheIdRaw);
+          if (nicheId != null) {
+            scheduleByModule.putIfAbsent(nicheId, () => []);
+            scheduleByModule[nicheId]!
+                .add(TimeOfDay(hour: hour, minute: minute));
+          }
+        }
+      }
+
+      // 3. Puxa apps monitorados
+      final appsList = await Supabase.instance.client
+          .from('user_niche_apps')
+          .select()
+          .eq('user_id', user.id);
+
+      // Como monitoramento costuma ser de um módulo por vez no app,
+      // carregamos os apps do módulo atual se ele existir
+      if (currentNicheId != null) {
+        monitoredApps = (appsList as List)
+            .where((row) => row['niche_id'] == currentNicheId!.id)
+            .map((row) => row['app_package'] as String)
+            .toList();
+      }
+
+      // 4. Módulo 7 (Poupança) - Puxa via serviço dedicado para garantir lógica de migração
+      await MoneySavingChallengeService().getChallenges();
+
+      // Persiste as mudanças básicas localmente
+      await _saveAllToLocalCache();
+
+      // Reagenda notificações para os novos horários
+      for (final nid in _diasConsecutivosByModule.keys) {
+        await _scheduleNativeNotifications(nid);
+      }
+
+      notifyListeners();
+      debugPrint('✅ Full Sync concluído com sucesso.');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Erro no Full Sync: $e');
+      return false;
+    }
+  }
+
+  Future<void> _saveAllToLocalCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Salva frases customizadas
+    for (var entry in _customPhrases.entries) {
+      await prefs.setStringList('custom_phrases_${entry.key.id}', entry.value);
+    }
+    // Salva status dos módulos ativos para restauração offline
+    for (var niche in NicheId.values) {
+      final key = '$_prefsModuleStatusPrefix${niche.id}';
+      if (_diasConsecutivosByModule.containsKey(niche)) {
+        await prefs.setInt(key, _diasConsecutivosByModule[niche]!);
+      } else {
+        await prefs.remove(key);
       }
     }
   }
@@ -699,7 +820,8 @@ class GamificationService extends ChangeNotifier {
   /// Agenda as notificações específicas do Desafio da Poupança com base nas configurações do modelo
   Future<void> scheduleChallengeNotification() async {
     try {
-      final challenge = await MoneySavingChallengeService().getChallenge();
+      final challenge =
+          await MoneySavingChallengeService().getActiveChallenge();
       if (challenge == null || challenge.notifFrequency == 'disabled') {
         // Cancela notificações do módulo 7 se estiver desativado
         // O range de IDs para o módulo 7 é 7100+ (checkins) e 7500+ (motivações/desafio)

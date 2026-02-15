@@ -110,6 +110,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() => _isSyncing = false);
 
+    // Força atualização da UI do GamificationService via Provider se necessário
+    // mas refreshAllDataFromCloud já chama notifyListeners()
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
