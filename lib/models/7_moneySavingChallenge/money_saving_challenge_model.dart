@@ -1,5 +1,7 @@
 /// Modelo de dados para o Desafio da Poupança
 class MoneySavingChallengeModel {
+  final String id;
+  final String title;
   final double targetAmount;
   final int periodValue;
   final String periodType; // 'dias', 'meses', 'anos', 'indeterminado'
@@ -13,6 +15,8 @@ class MoneySavingChallengeModel {
   final bool isActive;
 
   MoneySavingChallengeModel({
+    required this.id,
+    required this.title,
     required this.targetAmount,
     required this.periodValue,
     required this.periodType,
@@ -71,6 +75,8 @@ class MoneySavingChallengeModel {
   }
 
   MoneySavingChallengeModel copyWith({
+    String? id,
+    String? title,
     double? targetAmount,
     int? periodValue,
     String? periodType,
@@ -88,6 +94,8 @@ class MoneySavingChallengeModel {
     bool? isActive,
   }) {
     return MoneySavingChallengeModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
       targetAmount: targetAmount ?? this.targetAmount,
       periodValue: periodValue ?? this.periodValue,
       periodType: periodType ?? this.periodType,
@@ -154,6 +162,8 @@ class MoneySavingChallengeModel {
   /// Serializa para JSON (Supabase e SharedPreferences)
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
+      'title': title,
       'target_amount': targetAmount,
       'period_value': periodValue,
       'period_type': periodType,
@@ -175,6 +185,8 @@ class MoneySavingChallengeModel {
   /// Deserializa do JSON
   factory MoneySavingChallengeModel.fromJson(Map<String, dynamic> json) {
     return MoneySavingChallengeModel(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? 'Desafio',
       targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0,
       periodValue: json['period_value'] as int? ?? 0,
       periodType: json['period_type'] as String? ?? 'indeterminado',

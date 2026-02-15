@@ -26,6 +26,7 @@ class _MoneySavingChallengeScreenState
   final MoneySavingChallengeService _service = MoneySavingChallengeService();
 
   MoneySavingChallengeModel? _challenge;
+  List<MoneySavingChallengeModel> _challenges = [];
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -34,6 +35,8 @@ class _MoneySavingChallengeScreenState
   int _selectedIndex = 0; // 0=Como Funciona, 1=Configuração
 
   // --- CONFIGURAÇÃO ---
+  final TextEditingController _titleController =
+      TextEditingController(text: 'Novo Desafio');
   final TextEditingController _targetController = TextEditingController();
   final TextEditingController _periodValueController = TextEditingController();
   final TextEditingController _minValueController = TextEditingController();
@@ -67,6 +70,7 @@ class _MoneySavingChallengeScreenState
   @override
   void dispose() {
     _pageController.dispose();
+    _titleController.dispose();
     _targetController.dispose();
     _periodValueController.dispose();
     _minValueController.dispose();
@@ -77,15 +81,29 @@ class _MoneySavingChallengeScreenState
   Future<void> _loadChallenge() async {
     setState(() => _isLoading = true);
     try {
-      final challenge = await _service.getChallenge();
+      final list = await _service.getChallenges();
+      final active = await _service.getActiveChallenge();
       if (mounted) {
         setState(() {
-          _challenge = challenge;
+          _challenges = list;
+          _challenge = active;
           _isLoading = false;
         });
+
+        // Se tem um desafio ativo, preenche os campos com os dados dele (opcional)
+        if (active != null) {
+          _titleController.text = active.title;
+          _targetController.text = active.targetAmount.toStringAsFixed(2);
+          _periodValueController.text = active.periodValue.toString();
+          _minValueController.text = active.minValue.toStringAsFixed(2);
+          _maxValueController.text = active.maxValue.toStringAsFixed(2);
+          _selectedPeriodType = active.periodType;
+          _selectedGridSize = active.gridSize;
+          _selectedCurrency = active.currency;
+        }
       }
     } catch (e) {
-      debugPrint('Erro ao carregar desafio: $e');
+      debugPrint('Erro ao carregar desafios: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -125,6 +143,9 @@ class _MoneySavingChallengeScreenState
 
     try {
       final challenge = await _service.createChallenge(
+        title: _titleController.text.trim().isEmpty
+            ? 'Novo Desafio'
+            : _titleController.text.trim(),
         targetAmount: target,
         periodValue: periodValue,
         periodType: _selectedPeriodType,
@@ -132,16 +153,18 @@ class _MoneySavingChallengeScreenState
         minValue: minValue,
         maxValue: maxValue,
         currency: _selectedCurrency,
-        isActive: false, // Começa como inativo (Rascunho)
+        isActive: true, // Agora criamos e já ativamos para facilitar
       );
 
       if (mounted) {
+        final list = await _service.getChallenges();
         setState(() {
+          _challenges = list;
           _challenge = challenge;
           _isSaving = false;
         });
 
-        _showSnackBar('Desafio criado! Ative-o para começar.');
+        _showSnackBar('Desafio criado e ativado!');
 
         // Vai para a aba do grid (agora via botão, mas podemos mudar para tab 1 se preferir)
         if (_pageController.hasClients) {
@@ -261,10 +284,12 @@ class _MoneySavingChallengeScreenState
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && _challenge != null) {
       HapticFeedback.heavyImpact();
 
       if (!mounted) return;
+
+      final idToDelete = _challenge!.id;
 
       // Reseta gamificação e notifica exclusão
       final gamification =
@@ -278,19 +303,13 @@ class _MoneySavingChallengeScreenState
             'Todo o seu progresso do desafio (financeiro e gamificação) foi apagado permanentemente.',
       );
 
-      await _service.deleteChallenge();
+      await _service.deleteChallenge(idToDelete);
       if (mounted) {
-        setState(() => _challenge = null);
+        await _loadChallenge();
         _showSnackBar('Desafio excluído');
 
-        // Limpa os campos
-        _targetController.clear();
-        _periodValueController.clear();
-        _minValueController.clear();
-        _maxValueController.clear();
-
-        // Volta para a aba de configuração
-        if (_pageController.hasClients) {
+        // Volta para a aba de configuração se não sobrou nenhum
+        if (_challenge == null && _pageController.hasClients) {
           _pageController.animateToPage(
             1,
             duration: const Duration(milliseconds: 300),
@@ -299,6 +318,81 @@ class _MoneySavingChallengeScreenState
         }
       }
     }
+  }
+
+  Future<void> _switchChallenge(String id) async {
+    setState(() => _isLoading = true);
+    await _service.setActiveChallenge(id);
+    await _loadChallenge();
+    if (mounted) {
+      _showSnackBar('Desafio alterado!');
+      Navigator.pop(context); // Fecha o menu de desafios
+    }
+  }
+
+  Future<void> _showChallengesList() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Meus Desafios',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline,
+                      color: Color(0xFF6366F1)),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (_pageController.hasClients) {
+                      _pageController.animateToPage(1,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _challenges.length,
+                itemBuilder: (context, index) {
+                  final c = _challenges[index];
+                  final isActive = c.id == _challenge?.id;
+                  return _buildMenuTile(
+                    icon: isActive ? Icons.check_circle : Icons.circle_outlined,
+                    label: c.title,
+                    color: isActive
+                        ? Colors.green
+                        : (isDark ? Colors.white38 : Colors.black38),
+                    onTap: () => _switchChallenge(c.id),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showSnackBar(String message) {
@@ -350,16 +444,33 @@ class _MoneySavingChallengeScreenState
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _niche.name,
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_challenge != null)
+                            Text(
+                              _challenge!.title,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 48),
+                    IconButton(
+                      icon: Icon(Icons.layers_outlined,
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: _showChallengesList,
+                    ),
                   ],
                 ),
               ),
@@ -672,8 +783,17 @@ class _MoneySavingChallengeScreenState
               const SizedBox(height: 24),
             ],
             _buildMenuTile(
+              icon: Icons.layers_outlined,
+              label: 'Trocar Desafio',
+              color: Colors.purple,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showChallengesList();
+              },
+            ),
+            _buildMenuTile(
               icon: Icons.delete_outline,
-              label: 'Excluir Desafio',
+              label: 'Excluir Desafio Atual',
               color: _challenge != null ? Colors.red : Colors.grey,
               onTap: _challenge != null
                   ? () {
@@ -834,6 +954,22 @@ class _MoneySavingChallengeScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Título
+          const Text('Nome do Desafio:',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _titleController,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            decoration: InputDecoration(
+              hintText: 'Ex: Viagem, Carro Novo...',
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+          ),
+          const SizedBox(height: 20),
+
           // Meta
           const Text('Meta de poupança:',
               style: TextStyle(fontWeight: FontWeight.bold)),

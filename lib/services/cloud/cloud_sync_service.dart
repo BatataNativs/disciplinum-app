@@ -4,6 +4,7 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/user_module_status.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -214,34 +215,11 @@ class CloudSyncService {
   }
 
   static Future<bool> syncNow() async {
-    final result = await _retryOperation<bool>(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('⚠️ Nenhum usuário logado; nada para sincronizar.');
-        return false;
-      }
-
-      await supabase
-          .from('user_module_status')
-          .select('niche_id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-      await supabase
-          .from('user_niche_apps')
-          .select('niche_id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-      await supabase
-          .from('user_niche_times')
-          .select('niche_id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-      return true;
-    });
-
-    return result ?? false;
+    try {
+      return await GamificationService.instance.refreshAllDataFromCloud();
+    } catch (e) {
+      debugPrint('❌ Erro durante sincronização global: $e');
+      return false;
+    }
   }
 }

@@ -29,7 +29,7 @@ class _MoneySavingChallengeNotificationsScreenState
   }
 
   Future<void> _loadData() async {
-    final challenge = await _service.getChallenge();
+    final challenge = await _service.getActiveChallenge();
     if (mounted) {
       setState(() {
         _challenge = challenge;
