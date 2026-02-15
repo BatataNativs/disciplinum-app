@@ -75,6 +75,11 @@ Future<void> initNotifications() async {
         );
       }
 
+      // Lógica para fechar a notificação de leitura (ID 9000)
+      if (response.actionId == 'reading_skip') {
+        flutterLocalNotificationsPlugin.cancel(9000);
+      }
+
       // Lógica para ações rápidas de TAREFAS de Procrastinação
       if (response.payload != null && response.payload!.startsWith('task_')) {
         final actionId = response.actionId;

@@ -261,6 +261,26 @@ class ReadingService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateBook({
+    required String bookId,
+    required String title,
+    String? author,
+    required int totalPages,
+    required ReadingTheme theme,
+  }) async {
+    final index = _books.indexWhere((b) => b.id == bookId);
+    if (index != -1) {
+      _books[index] = _books[index].copyWith(
+        title: title,
+        author: author,
+        totalPages: totalPages,
+        theme: theme,
+      );
+      await _saveAllLocal();
+      notifyListeners();
+    }
+  }
+
   // ===========================================
   // LÓGICA DE GAMIFICAÇÃO
   // ===========================================
@@ -362,6 +382,13 @@ class ReadingService extends ChangeNotifier {
         ),
       ],
     );
+  }
+
+  Future<void> cancelDailyReminder() async {
+    await _prefs.remove('reading_notification_hour');
+    await _prefs.remove('reading_notification_minute');
+    await NotificationService.cancelNotification(9000);
+    notifyListeners();
   }
   // ===========================================
   // ESTATÍSTICAS

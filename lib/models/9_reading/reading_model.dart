@@ -20,17 +20,17 @@ extension ReadingThemeExtension on ReadingTheme {
   String get label {
     switch (this) {
       case ReadingTheme.ficcaoCientifica:
-        return 'Ficção-científica';
+        return 'Ficção Científica';
       case ReadingTheme.terrorMisterio:
-        return 'Terror e Mistério';
+        return 'Terror / Mistério';
       case ReadingTheme.romance:
         return 'Romance';
       case ReadingTheme.suspenseThriller:
         return 'Suspense / Thriller';
       case ReadingTheme.policialInvestigacao:
-        return 'Policial / Investigação';
+        return 'Policial / Investigação (ficção)';
       case ReadingTheme.trueCrime:
-        return 'True Crime';
+        return 'True Crime (casos reais)';
       case ReadingTheme.fantasia:
         return 'Fantasia';
       case ReadingTheme.aventura:
@@ -40,7 +40,7 @@ extension ReadingThemeExtension on ReadingTheme {
       case ReadingTheme.biografiaAutobiografia:
         return 'Biografia / Autobiografia';
       case ReadingTheme.autoajuda:
-        return 'Autoajuda';
+        return 'Autoajuda / Desenv. Pessoal';
       case ReadingTheme.outros:
         return 'Outros';
     }

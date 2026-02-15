@@ -12,6 +12,7 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/services/review/review_service.dart';
 import 'package:disciplinum/services/user_privacy/privacy_service.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
+import 'package:disciplinum/services/4_spending/spending_service.dart';
 import 'package:disciplinum/services/9_reading/reading_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/app.dart';
@@ -106,7 +107,9 @@ Future<void> main() async {
             prefs,
           ),
         ),
-
+        ChangeNotifierProvider(
+          create: (context) => SpendingService(prefs),
+        ),
         ChangeNotifierProvider(
           create: (context) => ReadingService(prefs),
         ),

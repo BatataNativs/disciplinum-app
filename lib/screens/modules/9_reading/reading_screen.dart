@@ -4,9 +4,8 @@ import 'package:disciplinum/screens/modules/9_reading/reading_settings_screen.da
 import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart';
 import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
+import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class ReadingScreen extends StatefulWidget {
@@ -173,19 +172,19 @@ class _ReadingScreenState extends State<ReadingScreen>
             ),
           ),
         ),
-        // Botão Começar restaurado
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           child: SizedBox(
             width: double.infinity,
             height: 55,
-            child: GlowingButton(
-              text: 'Começar',
+            child: _buildActionButton(
+              icon: Icons.rocket_launch_rounded,
+              label: 'Começar',
               color: const Color(0xFF6366F1),
-              onPressed: () {
+              isDark: isDark,
+              onTap: () {
                 _tabController.animateTo(1);
               },
-              borderRadius: 18,
             ),
           ),
         ),
@@ -210,13 +209,11 @@ class _ReadingScreenState extends State<ReadingScreen>
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.add,
-                  label: '+ Livro',
+                  label: 'Livro',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (_) => const AddBookDialog());
+                    AddBookDialog.show(context);
                   },
                 ),
               ),
@@ -247,14 +244,9 @@ class _ReadingScreenState extends State<ReadingScreen>
                 child: _buildActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
-                  color: Colors.teal,
+                  color: const Color(0xFF6366F1),
                   isDark: isDark,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => const ReadingStatsScreen()),
-                    );
-                  },
+                  onTap: _showStatsMenu,
                 ),
               ),
               const SizedBox(width: 12),
@@ -283,56 +275,132 @@ class _ReadingScreenState extends State<ReadingScreen>
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        height: 52,
         decoration: BoxDecoration(
-          color: isDestructive
-              ? color.withValues(alpha: 0.12)
-              : (isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.white.withValues(alpha: 0.95)),
-          borderRadius: BorderRadius.circular(16),
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isDestructive
-                ? color.withValues(alpha: 0.4)
-                : (isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.05)),
+            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: color),
+            Icon(icon, color: color, size: 20),
             const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDestructive
-                      ? color
-                      : (isDark ? Colors.white70 : Colors.black54),
-                ),
-                overflow: TextOverflow.ellipsis,
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showStatsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estatísticas e Opções',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Estatísticas de leitura',
+              color: Colors.teal,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReadingStatsScreen()),
+                );
+              },
+            ),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Meu progresso',
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyProgressReading()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: isDark ? Colors.white30 : Colors.black26,
+        ),
+        onTap: onTap,
       ),
     );
   }

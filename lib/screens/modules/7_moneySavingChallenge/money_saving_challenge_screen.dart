@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/7_moneySavingChallenge/money_saving_challenge_model.dart';
 import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
 import 'package:disciplinum/widgets/home/glowing_button.dart';
-import 'package:disciplinum/widgets/niche_details/niche_header.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_notifications_screen.dart';
+import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
 
 class MoneySavingChallengeScreen extends StatefulWidget {
   final String? heroTag;
@@ -32,7 +31,7 @@ class _MoneySavingChallengeScreenState
 
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // 0=Como Funciona, 1=Configuração
 
   // --- CONFIGURAÇÃO ---
   final TextEditingController _targetController = TextEditingController();
@@ -83,14 +82,6 @@ class _MoneySavingChallengeScreenState
         setState(() {
           _challenge = challenge;
           _isLoading = false;
-
-          // Se já tem um desafio, vai direto para o grid
-          if (_challenge != null) {
-            _selectedIndex = 2;
-            if (_pageController.hasClients) {
-              _pageController.jumpToPage(2);
-            }
-          }
         });
       }
     } catch (e) {
@@ -152,10 +143,10 @@ class _MoneySavingChallengeScreenState
 
         _showSnackBar('Desafio criado! Ative-o para começar.');
 
-        // Vai para a aba do grid
+        // Vai para a aba do grid (agora via botão, mas podemos mudar para tab 1 se preferir)
         if (_pageController.hasClients) {
           _pageController.animateToPage(
-            2,
+            1,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
           );
@@ -245,49 +236,6 @@ class _MoneySavingChallengeScreenState
     }
   }
 
-  Future<void> _toggleCell(int index) async {
-    if (_challenge == null) return;
-
-    if (!_challenge!.isActive) {
-      _showSnackBar('Ative o desafio para marcar células!');
-      return;
-    }
-
-    HapticFeedback.lightImpact();
-
-    final updated = await _service.toggleCell(index);
-    if (mounted && updated != null) {
-      setState(() => _challenge = updated);
-
-      // Comemoração se completou o desafio
-      if (updated.isComplete) {
-        HapticFeedback.heavyImpact();
-        if (mounted) {
-          _showSnackBar('🎉 Parabéns! Você completou o desafio!');
-          _handleCompletionReset();
-        }
-      }
-    }
-  }
-
-  Future<void> _handleCompletionReset() async {
-    // Reseta a gamificação mas MATÉM o desafio como ativo ou inativo?
-    // O pedido diz "Reset de Gamificação". Vamos zerar dias.
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-
-    // Envia notificação de sucesso e reseta dias
-    gamification.resetMedals(_niche.id,
-        notificationTitle: 'Desafio Concluído! 🏆',
-        notificationBody:
-            'Parabéns por atingir sua meta financeira! Sua contagem de dias foi reiniciada para o próximo ciclo.',
-        deactivate:
-            false // Mantém ativo por enquanto, ou usuário desativa manualmente?
-        // Se o usuario completou, talvez queira apenas admirar.
-        // Mas o pedido diz explicitamente resetar gamificação.
-        );
-  }
-
   Future<void> _resetChallenge() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -370,29 +318,8 @@ class _MoneySavingChallengeScreenState
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(_niche.name),
-          centerTitle: true,
-        ),
-        body: Shimmer.fromColors(
-          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                    height: 60, width: double.infinity, color: Colors.white),
-                const SizedBox(height: 16),
-                Container(height: 20, width: 200, color: Colors.white),
-                const SizedBox(height: 8),
-                Container(
-                    height: 40, width: double.infinity, color: Colors.white),
-              ],
-            ),
-          ),
-        ),
+        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -403,19 +330,15 @@ class _MoneySavingChallengeScreenState
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
+              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Header Custom
+              // Header Row
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -430,7 +353,7 @@ class _MoneySavingChallengeScreenState
                       child: Text(
                         _niche.name,
                         style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87),
                         textAlign: TextAlign.center,
@@ -443,67 +366,68 @@ class _MoneySavingChallengeScreenState
               Expanded(
                 child: Column(
                   children: [
+                    const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: NicheHeader(
-                        niche: _niche,
-                        showBackground: false,
-                        heroTag: widget.heroTag,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: _buildSegmentedControl(),
-                    ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: _buildSegmentedControl()),
 
                     // --- PAGEVIEW ---
                     Expanded(
                       child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
-                          setState(() => _selectedIndex = index);
+                          setState(() {
+                            _selectedIndex = index;
+                          });
                         },
                         children: [
                           // 0: Como Funciona
-                          Column(
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: _buildHowItWorksTab(),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                                child: _buildHowItWorksActions(),
-                              ),
-                            ],
+                          SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                _buildHowItWorksTab(),
+                                const SizedBox(height: 100),
+                              ],
+                            ),
                           ),
-                          // 1: Configurar
+                          // 1: Configurações
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
                                 _buildConfigTab(),
-                                const SizedBox(height: 24),
-                                _buildConfigActions(),
-                                const SizedBox(height: 40),
+                                const SizedBox(height: 100),
                               ],
                             ),
                           ),
-                          // 2: Meu Desafio (Grid)
-                          _challenge != null
-                              ? _buildChallengeTab()
-                              : _buildNoChallengeTab(),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
+              _selectedIndex == 0
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildActionButton(
+                        icon: Icons.rocket_launch_rounded,
+                        label: 'Começar',
+                        color: const Color(0xFF6366F1),
+                        isDark: isDark,
+                        onTap: () {
+                          if (_pageController.hasClients) {
+                            _pageController.animateToPage(1,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic);
+                          } else {
+                            setState(() => _selectedIndex = 1);
+                          }
+                        },
+                      ),
+                    )
+                  : _buildBottomButtons(isDark),
             ],
           ),
         ),
@@ -513,7 +437,7 @@ class _MoneySavingChallengeScreenState
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Configurar', 'Meu Desafio'];
+    final List<String> options = ['Como Funciona', 'Configuração'];
 
     return Container(
       height: 44,
@@ -575,6 +499,221 @@ class _MoneySavingChallengeScreenState
           );
         }),
       ),
+    );
+  }
+
+  Widget _buildBottomButtons(bool isDark) {
+    bool hasChallenge = _challenge != null;
+    bool isActive = _challenge?.isActive ?? false;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.grid_view_rounded,
+                  label: 'Meu Desafio',
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: hasChallenge
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  _FullScreenGridPage(challenge: _challenge!),
+                            ),
+                          );
+                        }
+                      : () {
+                          if (_pageController.hasClients) {
+                            _pageController.animateToPage(1,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic);
+                          }
+                        },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.notifications_outlined,
+                  label: 'Notificações',
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const MoneySavingChallengeNotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Estatísticas',
+                  color: Colors.teal,
+                  isDark: isDark,
+                  onTap: _showStatisticsMenu,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: isActive ? Icons.power_settings_new : Icons.power_off,
+                  label: isActive ? 'Desativar módulo' : 'Ativar módulo',
+                  color: isActive ? Colors.red : Colors.green,
+                  isDark: isDark,
+                  isDestructive: isActive,
+                  onTap: hasChallenge
+                      ? (isActive ? _deactivateChallenge : _activateChallenge)
+                      : () {
+                          _showSnackBar('Crie um desafio primeiro!');
+                          if (_pageController.hasClients) {
+                            _pageController.animateToPage(1,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic);
+                          }
+                        },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStatisticsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estatísticas e Opções',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (_challenge != null) ...[
+              _buildRepositionedSummary(_challenge!, isDark),
+              const SizedBox(height: 24),
+            ],
+            _buildMenuTile(
+              icon: Icons.delete_outline,
+              label: 'Excluir Desafio',
+              color: _challenge != null ? Colors.red : Colors.grey,
+              onTap: _challenge != null
+                  ? () {
+                      Navigator.pop(ctx);
+                      _resetChallenge();
+                    }
+                  : () {},
+            ),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Meu progresso',
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const MyProgressMoneySavingChallenge()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ListActionTile(
+      icon: icon,
+      label: label,
+      color: color,
+      isDark: isDark,
+      onTap: onTap,
     );
   }
 
@@ -674,25 +813,6 @@ class _MoneySavingChallengeScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHowItWorksActions() {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: GlowingButton(
-        text: 'Começar a Configurar',
-        color: const Color(0xFF6366F1),
-        onPressed: () {
-          if (_pageController.hasClients) {
-            _pageController.animateToPage(1,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic);
-          }
-        },
-        borderRadius: 18,
       ),
     );
   }
@@ -822,6 +942,17 @@ class _MoneySavingChallengeScreenState
               color: isDark ? Colors.white54 : Colors.black54,
             ),
           ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: GlowingButton(
+              text: _isSaving ? 'Criando...' : 'Criar Desafio',
+              color: const Color.fromARGB(255, 16, 185, 129),
+              onPressed: _isSaving ? () {} : () => _createChallenge(),
+              borderRadius: 18,
+            ),
+          ),
         ],
       ),
     );
@@ -937,229 +1068,7 @@ class _MoneySavingChallengeScreenState
     );
   }
 
-  Widget _buildConfigActions() {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: GlowingButton(
-        text: _isSaving ? 'Criando...' : 'Criar Desafio',
-        color: const Color.fromARGB(255, 16, 185, 129),
-        onPressed: _isSaving ? () {} : () => _createChallenge(),
-        borderRadius: 18,
-      ),
-    );
-  }
-
   // ============ ABA 2: MEU DESAFIO (GRID) ============
-
-  Widget _buildNoChallengeTab() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.savings_outlined,
-              size: 80,
-              color: isDark ? Colors.white38 : Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Nenhum desafio ativo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white70 : Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Configure um novo desafio na aba anterior!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDark ? Colors.white54 : Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChallengeTab() {
-    final challenge = _challenge!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      children: [
-        // 1. Status Header
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          color: challenge.isActive
-              ? Colors.green.withValues(alpha: 0.1)
-              : Colors.orange.withValues(alpha: 0.1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                challenge.isActive
-                    ? Icons.check_circle
-                    : Icons.pause_circle_filled,
-                size: 16,
-                color: challenge.isActive ? Colors.green : Colors.orange,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                challenge.isActive
-                    ? 'MÓDULO ATIVO'
-                    : 'MÓDULO DESATIVADO (RASCUNHO)',
-                style: TextStyle(
-                  color: challenge.isActive ? Colors.green : Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // 2. Reposioned Summary (Piggy Bank + Texts)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _buildRepositionedSummary(challenge, isDark),
-        ),
-
-        const SizedBox(height: 12),
-
-        // 3. Grid
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: _buildGrid(challenge, isDark),
-          ),
-        ),
-
-        // 4. Action Buttons (Activate/Deactivate)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: Column(
-            children: [
-              if (!challenge.isActive)
-                GlowingButton(
-                  text: 'ATIVAR DESAFIO',
-                  color: Colors.green,
-                  icon: Icons.play_arrow_rounded,
-                  onPressed: _activateChallenge,
-                ),
-              if (challenge.isActive) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: OutlinedButton.icon(
-                        icon: Icon(Icons.notifications_outlined,
-                            size: 18,
-                            color: isDark ? Colors.white70 : Colors.black54),
-                        label: Text('Notificações',
-                            style: TextStyle(
-                                fontSize: 13,
-                                color:
-                                    isDark ? Colors.white70 : Colors.black54)),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const MoneySavingChallengeNotificationsScreen()),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                              color: isDark
-                                  ? Colors.white24
-                                  : const Color.fromARGB(255, 0, 0, 0)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 1,
-                      child: OutlinedButton.icon(
-                        icon: Icon(Icons.fullscreen,
-                            size: 18,
-                            color: isDark ? Colors.white70 : Colors.black54),
-                        label: Text('Tela Cheia',
-                            style: TextStyle(
-                                fontSize: 13,
-                                color:
-                                    isDark ? Colors.white70 : Colors.black54)),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  _FullScreenGridPage(challenge: challenge),
-                            ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                              color: isDark
-                                  ? Colors.white24
-                                  : const Color.fromARGB(255, 0, 0, 0)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.pause_circle_outline,
-                        color: Colors.orange),
-                    label: const Text('Desativar Desafio',
-                        style: TextStyle(color: Colors.orange)),
-                    onPressed: _deactivateChallenge,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-              if (!challenge.isActive)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      label: const Text('Excluir Desafio',
-                          style: TextStyle(color: Colors.red)),
-                      onPressed: _resetChallenge,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildRepositionedSummary(
       MoneySavingChallengeModel challenge, bool isDark) {
@@ -1272,80 +1181,62 @@ class _MoneySavingChallengeScreenState
       ],
     );
   }
-
-  Widget _buildGrid(MoneySavingChallengeModel challenge, bool isDark) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: challenge.gridSize,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-      ),
-      itemCount: challenge.totalCells,
-      itemBuilder: (context, index) {
-        final isMarked = challenge.markedCells.contains(index);
-        final value = index < challenge.cellValues.length
-            ? challenge.cellValues[index]
-            : 0.0;
-
-        return GestureDetector(
-          onTap: () => _toggleCell(index),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              gradient: isMarked
-                  ? const LinearGradient(
-                      colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : LinearGradient(
-                      colors: isDark
-                          ? [Colors.grey[800]!, Colors.grey[700]!]
-                          : [Colors.grey[300]!, Colors.grey[200]!],
-                    ),
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: isMarked
-                  ? [
-                      BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.4),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : [],
-            ),
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: Text(
-                    value.toStringAsFixed(0),
-                    style: TextStyle(
-                      color: isMarked
-                          ? Colors.white
-                          : (isDark ? Colors.white70 : Colors.black87),
-                      fontSize: challenge.gridSize > 10 ? 10 : 12,
-                      fontWeight:
-                          isMarked ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
-class _FullScreenGridPage extends StatelessWidget {
+class _FullScreenGridPage extends StatefulWidget {
   final MoneySavingChallengeModel challenge;
 
   const _FullScreenGridPage({required this.challenge});
+
+  @override
+  State<_FullScreenGridPage> createState() => _FullScreenGridPageState();
+}
+
+class _FullScreenGridPageState extends State<_FullScreenGridPage> {
+  late MoneySavingChallengeModel _currentChallenge;
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentChallenge = widget.challenge;
+  }
+
+  Future<void> _toggleCell(int index) async {
+    if (_isProcessing) return;
+    if (!_currentChallenge.isActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ative o desafio para marcar células!')),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    HapticFeedback.lightImpact();
+
+    try {
+      final service =
+          Provider.of<MoneySavingChallengeService>(context, listen: false);
+      final updated = await service.toggleCell(index);
+
+      if (mounted && updated != null) {
+        setState(() {
+          _currentChallenge = updated;
+          _isProcessing = false;
+        });
+
+        if (updated.isComplete) {
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('🎉 Parabéns! Você completou o desafio!')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1372,14 +1263,13 @@ class _FullScreenGridPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Meta: ${challenge.currency} ${challenge.targetAmount.toStringAsFixed(2)}',
+                    'Meta: ${_currentChallenge.currency} ${_currentChallenge.targetAmount.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 16,
                       color: isDark ? Colors.white70 : Colors.black54,
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Usamos LayoutBuilder para garantir que a grade caiba na tela
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final size = constraints.maxWidth;
@@ -1390,61 +1280,68 @@ class _FullScreenGridPage extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: challenge.gridSize,
+                            crossAxisCount: _currentChallenge.gridSize,
                             crossAxisSpacing: 4,
                             mainAxisSpacing: 4,
                           ),
-                          itemCount: challenge.totalCells,
+                          itemCount: _currentChallenge.totalCells,
                           itemBuilder: (context, index) {
                             final isMarked =
-                                challenge.markedCells.contains(index);
-                            final value = index < challenge.cellValues.length
-                                ? challenge.cellValues[index]
-                                : 0.0;
+                                _currentChallenge.markedCells.contains(index);
+                            final value =
+                                index < _currentChallenge.cellValues.length
+                                    ? _currentChallenge.cellValues[index]
+                                    : 0.0;
 
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: isMarked
-                                    ? const LinearGradient(
-                                        colors: [
-                                          Color(0xFF4CAF50),
-                                          Color(0xFF66BB6A)
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : LinearGradient(
-                                        colors: isDark
-                                            ? [
-                                                Colors.grey[800]!,
-                                                Colors.grey[700]!
-                                              ]
-                                            : [
-                                                Colors.grey[300]!,
-                                                Colors.grey[200]!
-                                              ],
-                                      ),
-                                borderRadius: BorderRadius.circular(
-                                    challenge.gridSize > 12 ? 2 : 4),
-                              ),
-                              child: Center(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(1),
-                                    child: Text(
-                                      value.toStringAsFixed(0),
-                                      style: TextStyle(
-                                        color: isMarked
-                                            ? Colors.white
-                                            : (isDark
-                                                ? Colors.white70
-                                                : Colors.black87),
-                                        fontSize:
-                                            challenge.gridSize > 10 ? 8 : 10,
-                                        fontWeight: isMarked
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
+                            return GestureDetector(
+                              onTap: () => _toggleCell(index),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  gradient: isMarked
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4CAF50),
+                                            Color(0xFF66BB6A)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : LinearGradient(
+                                          colors: isDark
+                                              ? [
+                                                  Colors.grey[800]!,
+                                                  Colors.grey[700]!
+                                                ]
+                                              : [
+                                                  Colors.grey[300]!,
+                                                  Colors.grey[200]!
+                                                ],
+                                        ),
+                                  borderRadius: BorderRadius.circular(
+                                      _currentChallenge.gridSize > 12 ? 2 : 4),
+                                ),
+                                child: Center(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(1),
+                                      child: Text(
+                                        value.toStringAsFixed(0),
+                                        style: TextStyle(
+                                          color: isMarked
+                                              ? Colors.white
+                                              : (isDark
+                                                  ? Colors.white70
+                                                  : Colors.black87),
+                                          fontSize:
+                                              _currentChallenge.gridSize > 10
+                                                  ? 8
+                                                  : 10,
+                                          fontWeight: isMarked
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1465,7 +1362,7 @@ class _FullScreenGridPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Total Guardado: ${challenge.currency} ${challenge.totalSaved.toStringAsFixed(2)} (${(challenge.progressPercent * 100).toInt()}%)',
+                      'Total Guardado: ${_currentChallenge.currency} ${_currentChallenge.totalSaved.toStringAsFixed(2)} (${(_currentChallenge.progressPercent * 100).toInt()}%)',
                       style: const TextStyle(
                         color: Color(0xFF6366F1),
                         fontWeight: FontWeight.bold,
@@ -1501,6 +1398,61 @@ class _FullScreenGridPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ListActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const ListActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: isDark ? Colors.white30 : Colors.black26,
+        ),
+        onTap: onTap,
       ),
     );
   }
