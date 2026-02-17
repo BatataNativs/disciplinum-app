@@ -219,35 +219,73 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     );
   }
 
-  void _desativarNichoMonitoramento() {
-    HapticFeedback.heavyImpact();
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.stopMonitoringApps();
-
-    _resetMedalsForModule(
-      notificationTitle: 'Progresso reiniciado neste módulo',
-      notificationBody:
-          'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-          'seu progresso começará novamente do zero.',
-      deactivate: true,
-    );
-
-    setState(() => _gamificationRunning = false);
-    CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
-      isActive: false,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            const Text('Módulo desativado — Você não receberá mais alertas'),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.red.withValues(alpha: 0.95),
-        behavior: SnackBarBehavior.floating,
+  Future<void> _desativarNichoMonitoramento() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Desativar módulo?"),
+        content: const Text(
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
+          "Deseja continuar?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Sim, desativar e zerar"),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+      gamification.stopMonitoringApps();
+
+      _resetMedalsForModule(
+        notificationTitle: 'Progresso reiniciado neste módulo',
+        notificationBody:
+            'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
+            'seu progresso começará novamente do zero.',
+        deactivate: true,
+      );
+
+      setState(() {
+        _gamificationRunning = false;
+        _selectedIndex = 0;
+      });
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+      await CloudSyncService.saveModuleStatus(
+        nicheId: _niche.id,
+        isActive: false,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+                'Módulo desativado — Você não receberá mais alertas'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red.withValues(alpha: 0.95),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _resetMedalsForModule({
@@ -441,19 +479,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             children: [
               Expanded(
                 child: _buildActionButton(
-                  icon: Icons.apps_rounded,
-                  label: 'Apps Monitorados',
+                  icon: Icons.touch_app_outlined,
+                  label: 'Selecionar apps',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
-                  onTap: () {
-                    if (_pageController.hasClients) {
-                      _pageController.animateToPage(1,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic);
-                    } else {
-                      setState(() => _selectedIndex = 1);
-                    }
-                  },
+                  onTap: _openSelectApps,
                 ),
               ),
               const SizedBox(width: 12),
@@ -687,26 +717,26 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.security_outlined,
-              title: 'Proteção Ativa',
+              icon: Icons.settings_outlined,
+              title: 'Em "Apps Monitorados", selecione os aplicativos',
               content:
-                  'Este módulo te ajuda a manter o foco enviando alertas ao abrir navegadores ou apps selecionados.',
+                  'Escolha os aplicativos que você deseja evitar. Ative o módulo para iniciar o monitoramento.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.notifications_active_outlined,
-              title: 'Como funciona',
+              icon: Icons.notifications_outlined,
+              title: 'Em "Notificações", configure alertas',
               content:
-                  'Ao abrir um app bloqueado, você receberá um alerta imediato para refletir sobre seu objetivo.',
+                  'Receba mensagens que reforçam seu compromisso e te ajudam a manter a disciplina e o controle mental.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.pause_circle_outline,
-              title: 'Liberdade',
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", veja sua superação',
               content:
-                  'O objetivo é fortalecer sua vontade. O alerta serve como um lembrete do seu compromisso pessoal.',
+                  'Acompanhe seu progresso diário e veja há quanto tempo você está mantendo seu compromisso.',
             ),
           ],
         );
@@ -714,14 +744,6 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Apps Monitorados:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
             const SizedBox(height: 12),
             if (_selectedApps.isEmpty)
               Container(

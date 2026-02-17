@@ -10,7 +10,6 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
-import 'package:disciplinum/widgets/niche_details/niche_content_apps.dart';
 import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 
@@ -25,7 +24,6 @@ class BingeEatingScreen extends StatefulWidget {
 class _BingeEatingScreenState extends State<BingeEatingScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
   final List<String> _selectedApps = [];
-  final List<AppDisplayInfo> _appDisplayInfos = [];
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
@@ -50,7 +48,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
   // --- HARDCODED TEXTS AND LOGIC FOR BINGE EATING ---
 
   String _getIntroText() {
-    return 'Escolha seus apps de delivery:';
+    return 'Apps monitorados:';
   }
 
   Future<void> _loadAllPersistentData() async {
@@ -71,35 +69,25 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           _selectedApps.clear();
           _selectedApps.addAll(apps);
           _gamificationRunning = status?.isActive ?? false;
+          _loadingData = false;
         });
 
-        // Pre-carregar informações dos apps para evitar flickers
-        final infos = await gatherAppDisplayInfo(_selectedApps);
-        if (mounted) {
-          setState(() {
-            _appDisplayInfos.clear();
-            _appDisplayInfos.addAll(infos);
-            _loadingData = false;
-          });
+        if (_gamificationRunning) {
+          final gamification =
+              Provider.of<GamificationService>(context, listen: false);
+          gamification.monitoredApps = List.from(_selectedApps);
 
-          if (_gamificationRunning) {
-            final gamification =
-                Provider.of<GamificationService>(context, listen: false);
-            gamification.monitoredApps = List.from(_selectedApps);
+          bool usageGranted = await UsageStats.checkUsagePermission() ?? false;
 
-            bool usageGranted =
-                await UsageStats.checkUsagePermission() ?? false;
+          if (!mounted) return;
 
-            if (!mounted) return;
-
-            if (usageGranted) {
-              gamification.startMonitoringApps(
-                nicheId: nicheId,
-                horarios: [], // Binge eating only uses apps
-              );
-            } else {
-              setState(() => _gamificationRunning = false);
-            }
+          if (usageGranted) {
+            gamification.startMonitoringApps(
+              nicheId: nicheId,
+              horarios: [], // Binge eating only uses apps
+            );
+          } else {
+            setState(() => _gamificationRunning = false);
           }
         }
       }
@@ -119,7 +107,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     HapticFeedback.mediumImpact();
     setState(() {
       _selectedApps.remove(packageName);
-      _appDisplayInfos.removeWhere((element) => element.package == packageName);
     });
 
     await CloudSyncService.removeUserNicheApp(
@@ -253,32 +240,58 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     );
   }
 
-  void _desativarNichoMonitoramento() {
-    HapticFeedback.heavyImpact();
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.stopMonitoringApps();
-
-    // Reset progress and deactivate the module in one go
-    _resetMedalsForModule(
-      notificationTitle: 'Progresso reiniciado neste módulo',
-      notificationBody:
-          'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-          'seu progresso começará novamente do zero.',
-      deactivate: true,
-    );
-
-    setState(() => _gamificationRunning = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            const Text('Módulo desativado — Você não receberá mais alertas'),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.red.withValues(alpha: 0.95),
-        behavior: SnackBarBehavior.floating,
+  Future<void> _desativarNichoMonitoramento() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Desativar módulo?"),
+        content: const Text(
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
+          "Deseja continuar?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Sim, desativar e zerar"),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+      gamification.stopMonitoringApps();
+
+      // Reset progress and deactivate the module in one go
+      _resetMedalsForModule(
+        notificationTitle: 'Progresso reiniciado neste módulo',
+        notificationBody:
+            'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
+            'seu progresso começará novamente do zero.',
+        deactivate: true,
+      );
+
+      setState(() {
+        _gamificationRunning = false;
+        _selectedIndex = 0;
+      });
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
   }
 
   void _resetMedalsForModule({
@@ -316,14 +329,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   ..addAll(apps);
               });
 
-              final infos = await gatherAppDisplayInfo(apps);
-              if (mounted) {
-                setState(() {
-                  _appDisplayInfos.clear();
-                  _appDisplayInfos.addAll(infos);
-                });
-              }
-
               await CloudSyncService.removeAllAppsForNiche(
                 nicheId: _niche.id,
               );
@@ -339,6 +344,8 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         ),
       ),
     );
+
+    if (!mounted) return;
 
     // Se tiver apps e o controller estiver ok, avança para ativar
     if (_selectedApps.isNotEmpty) {
@@ -473,7 +480,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Apps'];
+    final List<String> options = ['Como Funciona', 'Compulsão alimentar'];
 
     return Container(
       height: 44,
@@ -546,36 +553,101 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.delivery_dining_outlined,
-              title: 'Controle de Delivery',
+              icon: Icons.settings_outlined,
+              title: 'Em "Selecionar apps", escolha os aplicativos de delivery',
               content:
-                  'Identificamos quando você abre apps de entrega para te ajudar a manter o foco em uma alimentação saudável.',
+                  'Selecione os apps de delivery que você deseja monitorar. Após selecionar, ative o módulo para começar o monitoramento.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.notifications_active_outlined,
-              title: 'Alertas em Tempo Real',
+              icon: Icons.notifications_outlined,
+              title: 'Em "Notificações", configure lembretes',
               content:
-                  'Receba notificações de incentivo sempre que um app de delivery selecionado for aberto.',
+                  'Defina horários para receber lembretes motivacionais que te ajudem a evitar pedidos por impulso.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.auto_awesome_outlined,
-              title: 'Novos Hábitos',
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", acompanhe seus ganhos',
               content:
-                  'Construa uma relação mais consciente com a comida e reduza impulsos por meio do monitoramento ativo.',
+                  'Visualize quantos dias você está sem pedir delivery e acompanhe sua evolução.',
             ),
           ],
         );
       case 1:
-        return NicheContentApps(
-          selectedApps: _selectedApps,
-          appDisplayInfos: _appDisplayInfos,
-          introText: _getIntroText(),
-          onAdd: _openSelectApps,
-          onRemove: (pkg) => _removeSelectedApp(pkg),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getIntroText(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_selectedApps.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Nenhum app selecionado.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              FutureBuilder<List<AppDisplayInfo>>(
+                future: gatherAppDisplayInfo(_selectedApps),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final infos = snapshot.data!;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: infos.map((info) {
+                      return InputChip(
+                        visualDensity: VisualDensity.compact,
+                        avatar: info.icon != null
+                            ? CircleAvatar(
+                                backgroundImage: MemoryImage(info.icon!),
+                                backgroundColor: Colors.transparent,
+                              )
+                            : null,
+                        label: Text(info.label ?? info.package,
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF6366F1))),
+                        onDeleted: () => _removeSelectedApp(info.package),
+                        deleteIconColor: isDark
+                            ? Colors.white70
+                            : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                        backgroundColor:
+                            (isDark ? Colors.white : const Color(0xFF6366F1))
+                                .withValues(alpha: 0.1),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+          ],
         );
       default:
         return const SizedBox.shrink();
@@ -694,19 +766,11 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             children: [
               Expanded(
                 child: _buildActionButton(
-                  icon: Icons.apps_rounded,
-                  label: 'Apps',
+                  icon: Icons.touch_app_outlined,
+                  label: 'Selecionar apps',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
-                  onTap: () {
-                    if (_pageController.hasClients) {
-                      _pageController.animateToPage(1,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic);
-                    } else {
-                      setState(() => _selectedIndex = 1);
-                    }
-                  },
+                  onTap: _openSelectApps,
                 ),
               ),
               const SizedBox(width: 12),
@@ -830,15 +894,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
-              icon: Icons.delivery_dining_outlined,
-              label: 'Apps de Delivery',
-              color: const Color(0xFF6366F1),
-              onTap: () {
-                Navigator.pop(ctx);
-                _openSelectApps();
-              },
-            ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
               label: 'Meu progresso',

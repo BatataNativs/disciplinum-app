@@ -259,6 +259,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     );
 
     if (confirmed == true) {
+      if (!mounted) return;
       HapticFeedback.heavyImpact();
       setState(() => isLoading = true);
 
@@ -283,7 +284,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             settings = data;
             _gamificationRunning = false;
             isLoading = false;
+            _selectedIndex = 0;
           });
+
+          if (_pageController.hasClients) {
+            _pageController.animateToPage(0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic);
+          }
 
           messenger.showSnackBar(
             const SnackBar(
@@ -456,7 +464,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Info de Consumo'];
+    final List<String> options = ['Como funciona', 'Parar de fumar'];
 
     return Container(
       height: 44,
@@ -529,26 +537,36 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.health_and_safety_outlined,
-              title: 'Preserve sua saúde',
+              icon: Icons.settings_outlined,
+              title: 'No topo da tela, preencha como é o seu consumo',
               content:
-                  'Parar de fumar melhora sua capacidade pulmonar, reduz riscos cardíacos e aumenta sua longevidade.',
+                  'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.savings_outlined,
-              title: 'Economize dinheiro',
+              icon: Icons.check_box_outlined,
+              title:
+                  'Em "Check-in diário", selecione horário para o Check-in diário',
               content:
-                  'Calcule o quanto você gasta com maços e veja o valor acumulado conforme os dias sem fumar passam.',
+                  'No horário configurado, você receberá uma notificação para que você faça o "check-in diário" da sua disciplina, informando se você fumou ou não no dia.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.family_restroom_outlined,
-              title: 'Qualidade de vida',
+              icon: Icons.notifications_outlined,
+              title: 'Em "Notificações", configure notificações motivacionais',
               content:
-                  'Recupere o olfato, paladar e proporcione um ambiente mais saudável para você e sua família.',
+                  'Insira até 8 horários para receber notificações motivacionais durante o dia. Pra te lembrar de manter a disciplina.',
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.bar_chart_rounded,
+              title:
+                  'Em "Estatísticas", veja estatísticas financeiras e de saúde',
+              content:
+                  'Veja dados de quanto você pode economizar, e como sua saúde pode melhorar, caso mantenha a disciplina.',
             ),
           ],
         );
@@ -559,6 +577,10 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             const Text(
               'Últimas informações de consumo:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const Text(
+              'Preencha os dados do seu consumo de cigarro no momento \n(ou de antes da tentativa atual de parada), salve, e ative o módulo.',
+              style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 16),
             const SizedBox(height: 16),

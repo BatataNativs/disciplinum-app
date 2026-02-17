@@ -9,6 +9,7 @@ import 'package:disciplinum/services/permissions/notifications/notification_serv
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dart';
+import 'package:disciplinum/screens/modules/3_diet/meal_streak_screen.dart';
 import 'package:disciplinum/screens/schedule_screen.dart';
 
 class DietSettingsScreen extends StatefulWidget {
@@ -162,35 +163,68 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     );
   }
 
-  void _desativarNichoMonitoramento() {
-    HapticFeedback.heavyImpact();
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.stopMonitoringApps();
-
-    _resetMedalsForModule(
-      notificationTitle: 'Progresso reiniciado neste módulo',
-      notificationBody:
-          'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-          'seu progresso começará novamente do zero.',
-      deactivate: true,
-    );
-
-    setState(() => _gamificationRunning = false);
-    CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
-      isActive: false,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            const Text('Módulo desativado — Você não receberá mais alertas'),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.red.withValues(alpha: 0.95),
-        behavior: SnackBarBehavior.floating,
+  void _desativarNichoMonitoramento() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Desativar módulo?"),
+        content: const Text(
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
+          "Deseja continuar?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Sim, desativar e zerar"),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+
+      // Reset medals and deactivate
+      gamification.resetMedals(
+        _niche.id,
+        notificationTitle: 'Módulo Desativado',
+        notificationBody:
+            'Seu progresso foi zerado e o módulo desativado. Mantenha a disciplina!',
+        deactivate: true,
+      );
+
+      await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
+      await CloudSyncService.saveModuleStatus(
+          nicheId: _niche.id, isActive: false);
+
+      if (mounted) {
+        setState(() {
+          _gamificationRunning = false;
+          _selectedIndex = 0;
+        });
+
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Módulo desativado e progresso zerado.")),
+        );
+      }
+    }
   }
 
   Future<void> _openScheduleManager() async {
@@ -242,21 +276,37 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     );
   }
 
-  void _resetMedalsForModule({
-    String? notificationTitle,
-    String? notificationBody,
-    bool sendNotification = true,
-    bool deactivate = false,
-  }) {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.resetMedals(
-      _niche.id,
-      notificationTitle: notificationTitle,
-      notificationBody: notificationBody,
-      sendNotification: sendNotification,
-      deactivate: deactivate,
+  Future<void> _removeSchedule(TimeOfDay time) async {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _times.remove(time);
+    });
+
+    await CloudSyncService.removeUserNicheTime(
+      nicheId: _niche.id.id,
+      hour: time.hour,
+      minute: time.minute,
     );
+
+    if (mounted) {
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+      if (gamification.isModuleActive(_niche.id)) {
+        gamification.scheduleByModule[_niche.id] = List.from(_times);
+        gamification.startMonitoringApps(
+          nicheId: _niche.id,
+          horarios: _times,
+        );
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -376,7 +426,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Horários'];
+    final List<String> options = ['Como Funciona', 'Manter Dieta'];
 
     return Container(
       height: 44,
@@ -449,26 +499,26 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.restaurant_outlined,
-              title: 'Organize suas refeições',
+              icon: Icons.schedule,
+              title: 'Preencha seus horários de refeições',
               content:
-                  'Este módulo te ajuda a manter o foco em sua dieta lembrando você dos horários de comer.',
+                  'Defina os horários para que possamos te lembrar de manter o foco na sua dieta e registrar suas refeições.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.timer_outlined,
-              title: 'Antecedência',
+              icon: Icons.notifications_outlined,
+              title: 'Em "Notificações", configure lembretes',
               content:
-                  'Você receberá um alerta 30 minutos antes de cada refeição definida para se organizar.',
+                  'Defina horários para ser lembrado de manter o foco na sua dieta e registrar suas refeições, respondendo às notificações se fez/fará ou não a refeição.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.auto_awesome_outlined,
-              title: 'Consistência',
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", veja seu progresso',
               content:
-                  'Mantenha seus horários regulados para melhorar seu metabolismo e disciplina.',
+                  'Acompanhe o registro de refeições e visualize seu progresso geral do módulo.',
             ),
           ],
         );
@@ -476,9 +526,17 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Após preencher seus horários de refeições, ative o módulo para iniciar sua jornada de alimentação com regularidade.',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
             const SizedBox(height: 8),
             Text(
-              'Suas refeições:',
+              'Seus horários de refeições:',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -513,41 +571,36 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                 ),
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 2.2,
-                ),
-                itemCount: _times.length,
-                itemBuilder: (context, idx) {
-                  final time = _times[idx];
-                  return Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _times.map((time) {
+                  return InputChip(
+                    visualDensity: VisualDensity.compact,
+                    label: Text(
+                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white : const Color(0xFF6366F1),
                       ),
                     ),
-                    child: Text(
-                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF6366F1),
-                      ),
+                    onDeleted: () => _removeSchedule(time),
+                    deleteIconColor: isDark
+                        ? Colors.white70
+                        : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                    backgroundColor:
+                        (isDark ? Colors.white : const Color(0xFF6366F1))
+                            .withValues(alpha: 0.1),
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   );
-                },
+                }).toList(),
               ),
             const SizedBox(height: 16),
             const Text(
-              'Nota: O app enviará lembretes 30 minutos antes de cada horário.',
+              'ATENÇÃO: Este módulo vai te notificar 30 min antes do horário definido. Pra dar tempo de preparar ou esquentar sua refeição',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -680,13 +733,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: () {
-                    if (_pageController.hasClients) {
-                      _pageController.animateToPage(1,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic);
-                    } else {
-                      setState(() => _selectedIndex = 1);
-                    }
+                    _openScheduleManager();
                   },
                 ),
               ),
@@ -802,7 +849,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas e Opções',
+              'Estatísticas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -811,12 +858,17 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             ),
             const SizedBox(height: 20),
             _buildMenuTile(
-              icon: Icons.restaurant_menu_rounded,
-              label: 'Horários de Refeição',
-              color: const Color(0xFF6366F1),
+              icon: Icons.restaurant_rounded,
+              label: 'Registro de refeições',
+              color: Colors.green,
               onTap: () {
                 Navigator.pop(ctx);
-                _openScheduleManager();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MealStreakScreen(scheduledTimes: _times),
+                  ),
+                );
               },
             ),
             _buildMenuTile(

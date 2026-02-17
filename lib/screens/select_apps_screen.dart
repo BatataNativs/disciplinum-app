@@ -174,7 +174,8 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
       } else {
         _selected.add(packageName);
       }
-      _applyFiltersAndSort();
+      // Removido _applyFiltersAndSort() para evitar que a lista pule
+      // e para economizar processamento durante interações rápidas.
     });
   }
 

@@ -170,43 +170,26 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
               children: [
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.lightbulb_outline,
-                  title: 'O que é este módulo?',
+                  icon: Icons.checklist_rounded,
+                  title: 'Em "Tarefas", organize sua rotina',
                   content:
-                      'O módulo de Procrastinação ajuda você a combater o hábito de deixar tarefas para depois. '
-                      'Crie listas de tarefas e compromissos, defina prazos, e acompanhe seu progresso!',
+                      'Crie listas e adicione tarefas. O app usa Urgência Dinâmica (cores 🟢🟡🔴) para mostrar quais prazos estão se aproximando.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.timer_outlined,
-                  title: 'Urgência Dinâmica',
+                  icon: Icons.notification_add_outlined,
+                  title: 'Em "Notificações", configure lembretes',
                   content:
-                      'Cada tarefa tem um indicador de urgência que muda automaticamente:\n\n'
-                      '🟢 Verde: Você tem tempo de sobra\n'
-                      '🟡 Amarelo: Prazo se aproximando\n'
-                      '🔴 Vermelho: Urgente!',
+                      'Defina horários para ser lembrado de revisar suas listas e não deixar nada para a última hora.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.trending_up,
-                  title: 'Seu Perfil',
+                  icon: Icons.bar_chart_rounded,
+                  title: 'Em "Estatísticas", veja sua produtividade',
                   content:
-                      'Ao completar tarefas, analisamos quando você as finalizou:\n\n'
-                      '🧘 Zen: Resolve tudo com antecedência\n'
-                      '⚡ Adrenalina: Deixa para última hora\n'
-                      '⚽ Na Trave: Flerta com o prazo\n'
-                      '⚖️ Equilibrado: Comportamento variado',
-                ),
-                const SizedBox(height: 16),
-                _buildInfoCard(
-                  isDark,
-                  icon: Icons.checklist,
-                  title: 'Listas de Tarefas',
-                  content:
-                      'Organize suas tarefas em listas separadas. Complete uma lista inteira sem atrasos '
-                      'e ela será registrada como uma conquista especial!',
+                      'Acompanhe seu Perfil de Execução e veja se você é Zen, Adrenalina ou Equilibrado ao completar suas tarefas.',
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1128,40 +1111,59 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
     );
   }
 
-  void _toggleModule(bool isActive) {
+  Future<void> _toggleModule(bool isActive) async {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
 
     if (isActive) {
-      showDialog(
+      final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Desativar módulo?'),
           content: const Text(
-              'Ao desativar, seu progresso de medalhas será pausado.'),
+              'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
+              onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancelar'),
             ),
-            TextButton(
-              onPressed: () {
-                gamification.stopModuleCycle(nicheId: NicheId.procrastination);
-                gamification.resetMedals(
-                  NicheId.procrastination,
-                  deactivate: true,
-                  notificationTitle: 'Progresso reiniciado',
-                  notificationBody:
-                      'Você desativou o módulo de Procrastinação. Seu progresso foi resetado.',
-                );
-                Navigator.pop(ctx);
-              },
-              child:
-                  const Text('Desativar', style: TextStyle(color: Colors.red)),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Sim, desativar'),
             ),
           ],
         ),
       );
+
+      if (confirmed == true) {
+        if (!mounted) return;
+        HapticFeedback.heavyImpact();
+
+        gamification.stopModuleCycle(nicheId: NicheId.procrastination);
+        gamification.resetMedals(
+          NicheId.procrastination,
+          deactivate: true,
+          notificationTitle: 'Progresso reiniciado',
+          notificationBody:
+              'Você desativou o módulo de Procrastinação. Seu progresso foi resetado.',
+        );
+        _tabController.animateTo(0);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                  'Módulo desativado — Você não receberá mais alertas'),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.red.withValues(alpha: 0.95),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
     }
   }
 

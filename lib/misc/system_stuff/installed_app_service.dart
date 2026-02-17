@@ -10,6 +10,7 @@ class InstalledAppService extends ChangeNotifier {
 
   List<AppInfo> _cachedApps = [];
   final Map<String, Uint8List?> _iconCache = {};
+  final Map<String, Future<Uint8List?>> _pendingRequests = {};
   bool _isLoading = false;
 
   List<AppInfo> get cachedApps => _cachedApps;
@@ -57,13 +58,30 @@ class InstalledAppService extends ChangeNotifier {
       return _iconCache[packageName];
     }
 
+    if (_pendingRequests.containsKey(packageName)) {
+      return _pendingRequests[packageName];
+    }
+
+    try {
+      final future = _fetchIcon(packageName);
+      _pendingRequests[packageName] = future;
+      return future;
+    } catch (e) {
+      debugPrint('Error queuing icon fetch for $packageName: $e');
+      return null;
+    }
+  }
+
+  Future<Uint8List?> _fetchIcon(String packageName) async {
     try {
       final appInfo = await InstalledApps.getAppInfo(packageName);
       _iconCache[packageName] = appInfo?.icon;
+      _pendingRequests.remove(packageName);
       return appInfo?.icon;
     } catch (e) {
       debugPrint('Error fetching icon for $packageName: $e');
       _iconCache[packageName] = null;
+      _pendingRequests.remove(packageName);
       return null;
     }
   }
@@ -72,6 +90,7 @@ class InstalledAppService extends ChangeNotifier {
   void clearCache() {
     _cachedApps = [];
     _iconCache.clear();
+    _pendingRequests.clear();
     notifyListeners();
   }
 }

@@ -245,10 +245,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Builder(builder: (context) {
                             String pageTitle = '';
                             if (index == 0) {
-                              pageTitle = 'Disciplina e Foco';
+                              pageTitle = 'Disciplina, foco e bons hábitos';
                             } else if (index == 1) {
                               pageTitle =
-                                  'Gamificação de incentivo ao seu progresso';
+                                  'Gamificação e incentivos ao seu progresso';
                             } else {
                               pageTitle = 'Atenção!';
                             }
@@ -291,12 +291,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   text:
                                       'Transforme seus hábitos diários e seja mais disciplinado!\n\n'
-                                      'Este app pode te ajudar a:\n'
-                                      '• Evitar compras impulsivas\n'
-                                      '• Manter o foco em atividades\n'
-                                      '• Parar de fumar\n'
-                                      '• Evitar conteúdo adulto\n'
-                                      '• Evitar procrastinação\n'
+                                      'Este app pode te ajudar a:\n\n'
+                                      '• Evitar compras impulsivas.\n'
+                                      '• Manter o foco em atividades produtivas.\n'
+                                      '• Parar de fumar.\n'
+                                      '• Evitar conteúdo adulto.\n'
+                                      '• Evitar procrastinação.\n\n'
                                       '• E muito mais!',
                                 ),
                               );
@@ -308,7 +308,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   children: [
                                     const TextSpan(
                                       text:
-                                          'Conquiste medalhas, insígnias e troféus ',
+                                          'O app dispõe de medalhas, insígnias e troféus ',
                                     ),
                                     const TextSpan(
                                       text: '(FICTÍCIOS)',
@@ -319,7 +319,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                                     const TextSpan(
                                       text:
-                                          ' ao atingir metas e marcos de progresso. Uma forma lúdica de se motivar e evoluir.',
+                                          ' que você pode conquistar ao atingir metas e marcos de progresso.\nApenas uma forma lúdica de te motivar a evoluir e manter consistência.\n\nE sempre que você quebrar sua sequência de bons hábitos e disciplina, seu progresso e suas conquistas são zerados/reiniciados',
                                     ),
                                   ],
                                 ),
@@ -333,7 +333,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   children: [
                                     const TextSpan(
                                       text:
-                                          'Este app é uma ferramenta de apoio à disciplina, não substitui acompanhamento profissional.\n\n'
+                                          'Este app é apenas uma ferramenta de apoio à disciplina, não substitui acompanhamento profissional.\n\n'
                                           'E, caso queira saber um pouco mais sobre como funciona antes de continuar,\nclique ',
                                     ),
                                     TextSpan(

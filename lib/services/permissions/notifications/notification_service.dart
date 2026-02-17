@@ -17,6 +17,7 @@ import 'package:disciplinum/app_router.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
+import 'package:disciplinum/services/3_diet/meal_tracking_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     fln.FlutterLocalNotificationsPlugin();
@@ -89,6 +90,17 @@ Future<void> initNotifications() async {
           // Usa o Singleton para processar a ação
           ProcrastinationService.instance
               .handleNotificationAction(actionId!, response.payload!);
+        }
+      }
+
+      // Lógica para ações rápidas de DIETA (refeições)
+      if (response.payload != null &&
+          response.payload!.startsWith('diet_meal_')) {
+        final mealTime = response.payload!.replaceFirst('diet_meal_', '');
+        if (response.actionId == 'DIET_SIM') {
+          MealTrackingService.instance.recordMeal(mealTime, done: true);
+        } else if (response.actionId == 'DIET_NAO') {
+          MealTrackingService.instance.recordMeal(mealTime, done: false);
         }
       }
     },
