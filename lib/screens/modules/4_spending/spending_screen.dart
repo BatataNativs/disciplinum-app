@@ -242,7 +242,16 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
 
     if (!mounted) return;
-    setState(() => _gamificationRunning = false);
+    setState(() {
+      _gamificationRunning = false;
+      _selectedIndex = 0;
+    });
+
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    }
     CloudSyncService.saveModuleStatus(
       nicheId: _niche.id,
       isActive: false,
@@ -614,7 +623,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
             ),
             const SizedBox(height: 20),
             _buildMenuTile(
-              icon: Icons.apps_rounded,
+              icon: Icons.touch_app_outlined,
               label: 'Selecionar apps',
               color: const Color(0xFF6366F1),
               onTap: () {
@@ -774,26 +783,26 @@ class _SpendingScreenState extends State<SpendingScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.shopping_bag_outlined,
-              title: 'Controle de Compras',
-              content:
-                  'Monitoramos quando você abre apps de compras e delivery para te ajudar a manter o foco em seus objetivos financeiros.',
-            ),
-            const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
-              icon: Icons.receipt_long_outlined,
-              title: 'Gastos Fixos',
-              content:
-                  'Organize suas contas recorrentes e receba lembretes automáticos para nunca mais atrasar um pagamento.',
-            ),
-            const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
               icon: Icons.account_balance_wallet_outlined,
-              title: 'Saúde Financeira',
+              title: 'Em "Controle de gastos", selecione seus alvos',
               content:
-                  'Construa o hábito de refletir antes de gastar e tenha controle total sobre seu orçamento mensal.',
+                  'Escolha apps de compras para monitorar e cadastre seus gastos fixos. Salve e ative o módulo para iniciar.',
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.notification_add_outlined,
+              title: 'Em "Notificações", configure seus alertas',
+              content:
+                  'Receba lembretes para pagar contas fixas e mensagens motivacionais para evitar gastos desnecessários.',
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              isDark,
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", veja sua economia',
+              content:
+                  'Acompanhe seu progresso financeiro e veja quanto você economizou mantendo a disciplina.',
             ),
           ],
         );

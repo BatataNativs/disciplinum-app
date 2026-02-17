@@ -128,6 +128,7 @@ class GamificationService extends ChangeNotifier {
   final Map<String, DateTime> _violationStartByApp = {};
   final Map<String, DateTime> _warnedApps = {};
   final Map<String, DateTime> _lastSeenMonitoredApp = {};
+  DateTime _lastHeartbeatSave = DateTime.fromMillisecondsSinceEpoch(0);
   NicheId? currentNicheId;
 
   void _handleRelapseFromNotification(String? payload) {
@@ -614,6 +615,18 @@ class GamificationService extends ChangeNotifier {
 
       if (apps.isNotEmpty && activeNicheId != null) {
         final nowMs = now.millisecondsSinceEpoch;
+
+        // --- CORREÇÃO MÓDULO FOCO: Respeitar intervalo de horários ---
+        if (activeNicheId == NicheId.focus) {
+          // Se estiver FORA do intervalo, não monitora e limpa estados de violação
+          if (!historyFocusInterval(activeNicheId, now)) {
+            _violationStartByApp.clear();
+            _warnedApps.clear();
+            // Retorna para pular esta iteração do loop
+            return;
+          }
+        }
+
         final usageApps = await UsageStats.queryUsageStats(
           now.subtract(const Duration(seconds: 60)),
           now,
@@ -769,6 +782,18 @@ class GamificationService extends ChangeNotifier {
 
         TimeOfDay finalTime = time;
         if (nicheId == NicheId.diet) {
+          // Payload com horário original da refeição
+          final timeStr =
+              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+          payload = 'diet_meal_$timeStr';
+          actions = [
+            const AndroidNotificationAction('DIET_SIM', 'Fiz/Farei refeição',
+                showsUserInterface: false, cancelNotification: true),
+            const AndroidNotificationAction('DIET_NAO', 'Não fiz/não farei',
+                showsUserInterface: false, cancelNotification: true),
+          ];
+          body = 'Hora da refeição das $timeStr! Você fez/fará esta refeição?';
+
           final dt = DateTime(2024, 1, 1, time.hour, time.minute)
               .subtract(const Duration(minutes: 30));
           finalTime = TimeOfDay(hour: dt.hour, minute: dt.minute);
@@ -993,8 +1018,14 @@ class GamificationService extends ChangeNotifier {
   }
 
   Future<void> _saveHeartbeat() async {
+    final now = DateTime.now();
+    if (now.difference(_lastHeartbeatSave).inSeconds < 10) {
+      return; // Throttling 10s
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_heartbeat', DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt('last_heartbeat', now.millisecondsSinceEpoch);
+    _lastHeartbeatSave = now;
   }
 
   Future<void> _checkRetroactiveViolations(NicheId nicheId) async {

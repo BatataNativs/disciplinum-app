@@ -230,6 +230,7 @@ class _MoneySavingChallengeScreenState
     );
 
     if (confirmed == true) {
+      if (!mounted) return;
       HapticFeedback.heavyImpact();
 
       // Atualiza status
@@ -237,7 +238,16 @@ class _MoneySavingChallengeScreenState
       await _service.saveChallenge(updated);
 
       if (mounted) {
-        setState(() => _challenge = updated);
+        setState(() {
+          _challenge = updated;
+          _selectedIndex = 0;
+        });
+
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic);
+        }
 
         // Reseta gamificação e notifica
         final gamification =
@@ -846,33 +856,25 @@ class _MoneySavingChallengeScreenState
         _buildInfoCard(
           isDark,
           icon: Icons.savings_outlined,
-          title: 'O que é?',
+          title: 'Crie seu desafio na aba "Configuração"',
           content:
-              'O Desafio da Poupança é um tracker visual para te ajudar a poupar dinheiro de forma lúdica e organizada.',
+              'Defina uma meta de economia, o período e os valores mínimos e máximos que você deseja poupar em cada etapa.',
         ),
         const SizedBox(height: 16),
         _buildInfoCard(
           isDark,
-          icon: Icons.settings_outlined,
-          title: 'Configuração',
+          icon: Icons.notification_add_outlined,
+          title: 'Em "Notificações", defina seus lembretes',
           content:
-              'Defina sua meta e o período desejado. O app criará um grid personalizado com as economias que você deve fazer.',
+              'Configure horários para ser lembrado de guardar dinheiro e manter o foco no seu objetivo financeiro.',
         ),
         const SizedBox(height: 16),
         _buildInfoCard(
           isDark,
-          icon: Icons.check_circle_outline,
-          title: 'Como usar',
+          icon: Icons.bar_chart_rounded,
+          title: 'Em "Estatísticas", acompanhe sua economia',
           content:
-              'A cada depósito real que você fizer, marque a célula correspondente no grid. Acompanhe seu progresso visualmente!',
-        ),
-        const SizedBox(height: 16),
-        _buildInfoCard(
-          isDark,
-          icon: Icons.lightbulb_outline,
-          title: 'Dica Importante',
-          content:
-              'Este é um tracker manual - você é o responsável por registrar seus depósitos e gerenciar seu dinheiro real.',
+              'Visualize seu progresso no grid do desafio e veja o quanto já acumulou para realizar seu sonho.',
         ),
       ],
     );
@@ -1429,60 +1431,13 @@ class _FullScreenGridPageState extends State<_FullScreenGridPage> {
                                     ? _currentChallenge.cellValues[index]
                                     : 0.0;
 
-                            return GestureDetector(
-                              onTap: () => _toggleCell(index),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                decoration: BoxDecoration(
-                                  gradient: isMarked
-                                      ? const LinearGradient(
-                                          colors: [
-                                            Color(0xFF4CAF50),
-                                            Color(0xFF66BB6A)
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        )
-                                      : LinearGradient(
-                                          colors: isDark
-                                              ? [
-                                                  Colors.grey[800]!,
-                                                  Colors.grey[700]!
-                                                ]
-                                              : [
-                                                  Colors.grey[300]!,
-                                                  Colors.grey[200]!
-                                                ],
-                                        ),
-                                  borderRadius: BorderRadius.circular(
-                                      _currentChallenge.gridSize > 12 ? 2 : 4),
-                                ),
-                                child: Center(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(1),
-                                      child: Text(
-                                        value.toStringAsFixed(0),
-                                        style: TextStyle(
-                                          color: isMarked
-                                              ? Colors.white
-                                              : (isDark
-                                                  ? Colors.white70
-                                                  : Colors.black87),
-                                          fontSize:
-                                              _currentChallenge.gridSize > 10
-                                                  ? 8
-                                                  : 10,
-                                          fontWeight: isMarked
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            return ChallengeCell(
+                              index: index,
+                              value: value,
+                              isMarked: isMarked,
+                              isDark: isDark,
+                              gridSize: _currentChallenge.gridSize,
+                              onTap: _toggleCell,
                             );
                           },
                         ),
@@ -1589,6 +1544,70 @@ class ListActionTile extends StatelessWidget {
           color: isDark ? Colors.white30 : Colors.black26,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+class ChallengeCell extends StatelessWidget {
+  final int index;
+  final double value;
+  final bool isMarked;
+  final bool isDark;
+  final int gridSize;
+  final ValueChanged<int> onTap;
+
+  const ChallengeCell({
+    super.key,
+    required this.index,
+    required this.value,
+    required this.isMarked,
+    required this.isDark,
+    required this.gridSize,
+    required this.onTap,
+  });
+
+  static const LinearGradient _markedGradient = LinearGradient(
+    colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    // Cache gradients based on theme to avoid recreation
+    final unMarkedGradient = LinearGradient(
+      colors: isDark
+          ? [Colors.grey[800]!, Colors.grey[700]!]
+          : [Colors.grey[300]!, Colors.grey[200]!],
+    );
+
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          gradient: isMarked ? _markedGradient : unMarkedGradient,
+          borderRadius: BorderRadius.circular(gridSize > 12 ? 2 : 4),
+        ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.all(1),
+              child: Text(
+                value.toStringAsFixed(0),
+                style: TextStyle(
+                  color: isMarked
+                      ? Colors.white
+                      : (isDark ? Colors.white70 : Colors.black87),
+                  fontSize: gridSize > 10 ? 8 : 10,
+                  fontWeight: isMarked ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

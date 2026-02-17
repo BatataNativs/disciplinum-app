@@ -124,11 +124,6 @@ class MyShelfScreen extends StatelessWidget {
                   "Sua estante está vazia.",
                   style: TextStyle(fontSize: 18, color: Colors.grey),
                 ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => AddBookDialog.show(context),
-                  child: const Text("Adicionar Primeiro Livro"),
-                ),
               ],
             ),
           );

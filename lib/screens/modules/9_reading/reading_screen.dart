@@ -6,6 +6,7 @@ import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.da
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class ReadingScreen extends StatefulWidget {
@@ -46,74 +47,138 @@ class _ReadingScreenState extends State<ReadingScreen>
     final isActive = gamification.isModuleActive(NicheId.reading);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Leitura'),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Container(
-                height: 44,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: const Color(0xFF6366F1),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: Colors.white,
-                  unselectedLabelColor:
-                      isDark ? Colors.white60 : Colors.black45,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    letterSpacing: 0.3,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                  dividerColor: Colors.transparent,
-                  tabs: const [
-                    Tab(text: 'Como funciona'),
-                    Tab(text: 'Minha Estante'),
-                  ],
-                ),
-              )),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildHowItWorks(context),
-                // Aba da Estante + Botões
-                Column(
-                  children: [
-                    const Expanded(child: MyShelfScreen()),
-                    _buildBottomButtons(isDark, isActive),
-                  ],
-                ),
-              ],
-            ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
+              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
+            ],
           ),
-        ],
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header com título
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Leitura',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Segmented Control (2 opções)
+              _buildSegmentedControl(isDark),
+
+              // Conteúdo
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildHowItWorks(context),
+                    // Aba da Estante + Botões
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Adicione livros e ative o módulo para começar:",
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Minha Estante:",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Expanded(child: MyShelfScreen()),
+                        _buildBottomButtons(isDark, isActive),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          indicator: BoxDecoration(
+            color: const Color(0xFF6366F1),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelColor: Colors.white,
+          unselectedLabelColor: isDark ? Colors.white60 : Colors.black45,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            letterSpacing: 0.3,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+          dividerColor: Colors.transparent,
+          tabs: const [
+            Tab(text: 'Como funciona'),
+            Tab(text: 'Leitura'),
+          ],
+        ),
       ),
     );
   }
@@ -131,41 +196,28 @@ class _ReadingScreenState extends State<ReadingScreen>
               children: [
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.menu_book_rounded,
-                  title: 'O que é este módulo?',
+                  icon: Icons.auto_stories_rounded,
+                  title: 'Em "+ Livro", adicione os livros',
                   content:
-                      'O módulo de Leitura ajuda você a cultivar o hábito de ler diariamente. '
-                      'Registre seus livros, acompanhe o progresso e mantenha sua mente ativa!',
+                      'Adicione os livros que você está lendo ou planeja ler, em seguida, ative o módulo (após adicionar o primeiro livro).\n'
+                      'É preenchido nome do livro, autor (opcional), número de páginas e tema.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.auto_stories,
-                  title: 'Minha Estante',
+                  icon: Icons.notifications_outlined,
+                  title: 'Em "Notificações", configure lembretes',
                   content:
-                      'Adicione os livros que você está lendo ou planeja ler. '
-                      'Ao iniciar uma leitura, registre as páginas lidas para atualizar seu progresso.',
+                      'Defina horários para ser lembrado de cultivar seu hábito de leitura e manter sua mente ativa todos os dias. \n'
+                      'E o app registra as páginas lidas para atualizar seu progresso, conforme você informa o quanto leu.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.local_fire_department,
-                  title: 'Progresso Diário',
-                  content: 'Mantenha a chama acesa! 🔥\n'
-                      'Leia todos os dias para aumentar seu "streak".\n'
-                      '💡 Dica: Configure o lembrete para um horário que você esteja em casa, como antes de dormir.',
-                ),
-                const SizedBox(height: 16),
-                _buildInfoCard(
-                  isDark,
-                  icon: Icons.emoji_events,
-                  title: 'Conquistas',
+                  icon: Icons.bar_chart_rounded,
+                  title: 'Em "Estatísticas", veja sua evolução',
                   content:
-                      'Ganhe medalhas exclusivas ao manter sua sequência de leitura:\n\n'
-                      '🥉 Bronze: 3 dias seguidos\n'
-                      '🥈 Prata: 5 dias seguidos\n'
-                      '🥇 Ouro: 7 dias seguidos\n'
-                      '💎 Diamante: 10 dias ou mais!',
+                      'Acompanhe sua sequência de leitura e acompanhe seu progresso no módulo.',
                 ),
                 const SizedBox(height: 16),
               ],
@@ -405,33 +457,59 @@ class _ReadingScreenState extends State<ReadingScreen>
     );
   }
 
-  void _toggleModule(bool isActive) {
+  Future<void> _toggleModule(bool isActive) async {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
 
     if (isActive) {
-      showDialog(
+      final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Desativar módulo?'),
           content: const Text(
-              'Ao desativar, seu progresso de medalhas será pausado.'),
+              'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
+              onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancelar'),
             ),
-            TextButton(
-              onPressed: () {
-                gamification.stopModuleCycle(nicheId: NicheId.reading);
-                Navigator.pop(ctx);
-              },
-              child:
-                  const Text('Desativar', style: TextStyle(color: Colors.red)),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Sim, desativar'),
             ),
           ],
         ),
       );
+
+      if (confirmed == true) {
+        if (!mounted) return;
+        HapticFeedback.heavyImpact();
+
+        gamification.stopModuleCycle(nicheId: NicheId.reading);
+        gamification.resetMedals(
+          NicheId.reading,
+          deactivate: true,
+          notificationTitle: 'Módulo Desativado',
+          notificationBody:
+              'Seu progresso de leitura foi zerado e o módulo desativado.',
+        );
+        _tabController.animateTo(0);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                  'Módulo desativado — Você não receberá mais alertas'),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.red.withValues(alpha: 0.95),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
     } else {
       gamification.startModuleCycle(nicheId: NicheId.reading);
     }

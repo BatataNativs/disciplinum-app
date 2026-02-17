@@ -211,35 +211,73 @@ class _FocusScreenState extends State<FocusScreen> {
     );
   }
 
-  void _desativarNichoMonitoramento() {
-    HapticFeedback.heavyImpact();
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    gamification.stopMonitoringApps();
-
-    _resetMedalsForModule(
-      notificationTitle: 'Progresso reiniciado neste módulo',
-      notificationBody:
-          'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-          'seu progresso começará novamente do zero.',
-      deactivate: true,
-    );
-
-    setState(() => _gamificationRunning = false);
-    CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
-      isActive: false,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            const Text('Módulo desativado — Você não receberá mais alertas'),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.red.withValues(alpha: 0.95),
-        behavior: SnackBarBehavior.floating,
+  Future<void> _desativarNichoMonitoramento() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Desativar módulo?"),
+        content: const Text(
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
+          "Deseja continuar?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Sim, desativar e zerar"),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
+      gamification.stopMonitoringApps();
+
+      _resetMedalsForModule(
+        notificationTitle: 'Progresso reiniciado neste módulo',
+        notificationBody:
+            'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
+            'seu progresso começará novamente do zero.',
+        deactivate: true,
+      );
+
+      setState(() {
+        _gamificationRunning = false;
+        _selectedIndex = 0;
+      });
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+      await CloudSyncService.saveModuleStatus(
+        nicheId: _niche.id,
+        isActive: false,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+                'Módulo desativado — Você não receberá mais alertas'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red.withValues(alpha: 0.95),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _resetMedalsForModule({
@@ -762,26 +800,26 @@ class _FocusScreenState extends State<FocusScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.track_changes_outlined,
-              title: 'Lute contra distrações',
+              icon: Icons.tune_outlined,
+              title: 'Em "Configurar", defina seu foco',
               content:
-                  'Selecione apps que costumam te distrair (como redes sociais ou jogos) e defina um intervalo de foco.',
+                  'Defina o intervalo de horário do seu foco e selecione os apps que te distraem. Depois, ative o módulo.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.timer_outlined,
-              title: 'Tempo de Foco',
+              icon: Icons.notification_add_outlined,
+              title: 'Em "Notificações", ative lembretes',
               content:
-                  'Durante o intervalo definido, se você abrir apps distrações, será alertado para fechá-los.',
+                  'Configure notificações para te lembrar de manter o foco durante o seu horário produtivo.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.warning_amber_outlined,
-              title: 'Disciplina',
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", monitore sua produtividade',
               content:
-                  'Você terá 30 segundos para fechar o app. Caso contrário, seu progresso de medalhas será resetado.',
+                  'Veja quanto tempo você conseguiu se manter focado e acompanhe seus dias de sucesso.',
             ),
           ],
         );
@@ -789,6 +827,17 @@ class _FocusScreenState extends State<FocusScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                "A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados durante o intervalo de foco.",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               'Intervalo de Foco:',
               style: TextStyle(
