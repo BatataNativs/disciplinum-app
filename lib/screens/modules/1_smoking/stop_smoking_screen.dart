@@ -31,7 +31,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   bool isSaving = false;
   final SmokingService _service = SmokingService();
 
-  // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
   int _selectedIndex = 0;
 
@@ -47,7 +46,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicializa o controller
     _pageController = PageController(initialPage: 0);
     _loadSettings();
   }
@@ -91,7 +89,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   void _formatCurrencyInput(String value) {
     if (value.isEmpty) {
-      _priceController.value = TextEditingValue(
+      _priceController.value = const TextEditingValue(
         text: '0,00',
         selection: TextSelection.collapsed(offset: 4),
       );
@@ -100,7 +98,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
     String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
     if (numbers.isEmpty) {
-      _priceController.value = TextEditingValue(
+      _priceController.value = const TextEditingValue(
         text: '0,00',
         selection: TextSelection.collapsed(offset: 4),
       );
@@ -169,14 +167,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
         messenger.showSnackBar(
-          const SnackBar(content: Text('Informações salvas com sucesso! ✔')),
+          const SnackBar(content: Text('Informacoes salvas com sucesso!')),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => isSaving = false);
         messenger.showSnackBar(
-          SnackBar(content: Text("Erro ao salvar: $e")),
+          SnackBar(content: Text("Erro ao salvar: \$e")),
         );
       }
     }
@@ -239,8 +237,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text("Desativar módulo?"),
         content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Deseja continuar?",
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
         ),
         actions: [
           TextButton(
@@ -272,9 +269,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
         gamification.resetMedals(
           NicheId.smoking,
-          notificationTitle: 'Módulo Desativado',
+          notificationTitle: 'Progresso reiniciado neste módulo',
           notificationBody:
-              'Seu progresso foi zerado e o módulo desativado. Confira no app o quanto economizou nessa tentativa!',
+              'Você desativou o módulo. Se reativar no futuro, seu progresso começará novamente do zero.',
           deactivate: true,
         );
 
@@ -371,10 +368,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_niche.name),
-        centerTitle: true,
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -383,7 +376,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             colors: [
               isDark
                   ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
+                  : const Color.fromARGB(255, 226, 229, 251),
               isDark
                   ? const Color.fromARGB(255, 10, 15, 30)
                   : const Color.fromARGB(255, 255, 255, 255)
@@ -393,6 +386,30 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // Header Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _niche.name,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
               Expanded(
                 child: Column(
                   children: [
@@ -402,7 +419,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                       child: _buildSegmentedControl(),
                     ),
 
-                    // --- PAGEVIEW ---
                     Expanded(
                       child: PageView(
                         controller: _pageController,
@@ -412,7 +428,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                           });
                         },
                         children: [
-                          // PAGINA 0: Como Funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -422,7 +437,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                               ],
                             ),
                           ),
-                          // PAGINA 1: Info Consumo
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -547,7 +561,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               isDark,
               icon: Icons.check_box_outlined,
               title:
-                  'Em "Check-in diário", selecione horário para o Check-in diário',
+                  'Em "Check-in diario", selecione horario para o Check-in diario',
               content:
                   'No horário configurado, você receberá uma notificação para que você faça o "check-in diário" da sua disciplina, informando se você fumou ou não no dia.',
             ),
@@ -564,7 +578,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               isDark,
               icon: Icons.bar_chart_rounded,
               title:
-                  'Em "Estatísticas", veja estatísticas financeiras e de saúde',
+                  'Em "Estatisticas", veja estatisticas financeiras e de saude',
               content:
                   'Veja dados de quanto você pode economizar, e como sua saúde pode melhorar, caso mantenha a disciplina.',
             ),
@@ -575,26 +589,23 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Últimas informações de consumo:',
+              'Ultimas informacoes de consumo:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const Text(
-              'Preencha os dados do seu consumo de cigarro no momento \n(ou de antes da tentativa atual de parada), salve, e ative o módulo.',
+              'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o modulo.',
               style: TextStyle(fontSize: 12),
             ),
-            const SizedBox(height: 16),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
+                color: isDark
                     ? Colors.white.withValues(alpha: 0.05)
                     : Colors.grey[100],
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white10
-                      : Colors.grey[300]!,
+                  color: isDark ? Colors.white10 : Colors.grey[300]!,
                 ),
               ),
               child: Column(
@@ -602,7 +613,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Preço do maço:"),
+                      const Text("Preco do maco:"),
                       SizedBox(
                         width: 160,
                         height: 40,
@@ -625,10 +636,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black87,
+                                    color: isDark ? Colors.white : Colors.black87,
                                   ),
                                   onChanged: (String? newValue) {
                                     if (newValue != null) {
@@ -637,7 +645,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                       });
                                     }
                                   },
-                                  items: ['R\$', 'US\$', '€', '\$']
+                                  items: ['R\$', 'US\$', 'EUR', '\$']
                                       .map<DropdownMenuItem<String>>(
                                           (String value) {
                                     return DropdownMenuItem<String>(
@@ -668,9 +676,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                   color: Colors.indigo, width: 2),
                             ),
                           ),
-                          onChanged: (val) {
-                            _formatCurrencyInput(val);
-                          },
+                          onChanged: _formatCurrencyInput,
                         ),
                       ),
                     ],
@@ -679,7 +685,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Maços por dia:"),
+                      const Text("Macos por dia:"),
                       SizedBox(
                         width: 80,
                         height: 40,
@@ -691,7 +697,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                               fontWeight: FontWeight.bold, color: Colors.black),
                           onChanged: (val) {
                             if (val.isEmpty) {
-                              _packsController.value = TextEditingValue(
+                              _packsController.value = const TextEditingValue(
                                 text: '0',
                                 selection: TextSelection.collapsed(offset: 1),
                               );
@@ -897,7 +903,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.check_circle_outline,
-                  label: 'Check-in diário',
+                  label: 'Check-in diario',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _openCheckInManager,
@@ -929,7 +935,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
+                  label: 'Estatisticas',
                   color: Colors.teal,
                   isDark: isDark,
                   onTap: _showStatisticsMenu,
@@ -1031,7 +1037,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    'Check-in Diário',
+                    'Check-in Diario',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1043,7 +1049,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'O que é?',
+              'O que e?',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1072,7 +1078,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             const SizedBox(height: 8),
             Text(
               'Você receberá uma notificação no horário configurado perguntando se você fumou ou não. '
-              'Responder todos os dias e mostre a si mesmo que você é capaz!',
+              'Responder todos os dias é mostre a si mesmo que você é capaz!',
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? Colors.white70 : Colors.black54,
@@ -1085,7 +1091,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.access_time_rounded,
-                    label: 'Configurar Horário',
+                    label: 'Configurar Horario',
                     color: const Color(0xFF6366F1),
                     isDark: isDark,
                     onTap: () async {
@@ -1107,7 +1113,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                             args: ScheduleScreenArgs(
                               nicheId: nicheId,
                               maxSlots: 1,
-                              title: 'Horário de Check-in',
+                              title: 'Horario de Check-in',
                               initialTimes: initialTimes,
                               onChanged: (times) {
                                 _syncCheckInWithGamification(
@@ -1145,7 +1151,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas',
+              'Estatisticas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -1174,7 +1180,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             _buildMenuTile(
               icon: Icons.health_and_safety_outlined,
-              label: 'Saúde',
+              label: 'Saude',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
@@ -1190,7 +1196,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: 'Meu Progresso',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
@@ -1214,34 +1220,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListActionTile(
-      icon: icon,
-      label: label,
-      color: color,
-      onTap: onTap,
-      isDark: isDark,
-    );
-  }
-}
-
-class ListActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDark;
-
-  const ListActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -1273,10 +1251,7 @@ class ListActionTile extends StatelessWidget {
           size: 14,
           color: isDark ? Colors.white30 : Colors.black26,
         ),
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
+        onTap: onTap,
       ),
     );
   }

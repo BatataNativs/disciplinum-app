@@ -3,12 +3,17 @@ import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 
 class HealthTimelineCard extends StatelessWidget {
   final SmokingSettingsModel settings;
+  final Duration timeSmokeFree;
 
-  const HealthTimelineCard({super.key, required this.settings});
+  const HealthTimelineCard({
+    super.key,
+    required this.settings,
+    required this.timeSmokeFree,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final duration = settings.timeSmokeFree;
+    final duration = timeSmokeFree;
 
     // Definição dos marcos de saúde
     final milestones = [

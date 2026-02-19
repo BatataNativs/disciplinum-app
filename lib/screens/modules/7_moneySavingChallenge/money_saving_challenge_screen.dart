@@ -422,8 +422,57 @@ class _MoneySavingChallengeScreenState
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                isDark
+                    ? Colors.black
+                    : const Color.fromARGB(255, 226, 229, 251),
+                isDark
+                    ? Colors.black
+                    : const Color.fromARGB(255, 255, 255, 255)
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            color: isDark ? Colors.white : Colors.black87),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      Expanded(
+                        child: Text(
+                          _niche.name,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  isDark ? Colors.white : Colors.black87),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -858,7 +907,7 @@ class _MoneySavingChallengeScreenState
           icon: Icons.savings_outlined,
           title: 'Crie seu desafio na aba "Configuração"',
           content:
-              'Defina uma meta de economia, o período e os valores mínimos e máximos que você deseja poupar em cada etapa.',
+              'Defina uma meta de poupança, o período e os valores mínimos e máximos que você deseja poupar em cada etapa.',
         ),
         const SizedBox(height: 16),
         _buildInfoCard(
@@ -872,7 +921,7 @@ class _MoneySavingChallengeScreenState
         _buildInfoCard(
           isDark,
           icon: Icons.bar_chart_rounded,
-          title: 'Em "Estatísticas", acompanhe sua economia',
+          title: 'Em "Estatísticas", acompanhe sua poupança',
           content:
               'Visualize seu progresso no grid do desafio e veja o quanto já acumulou para realizar seu sonho.',
         ),
