@@ -558,7 +558,7 @@ class _MoneySavingChallengeScreenState
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Configuração'];
+    final List<String> options = ['Como Funciona', 'Desafio da Poupança'];
 
     return Container(
       height: 44,

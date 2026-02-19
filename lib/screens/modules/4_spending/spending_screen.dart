@@ -810,10 +810,11 @@ class _SpendingScreenState extends State<SpendingScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 12),
             Text(
-              'Apps Monitorados:',
+              'Aplicativos monitorados:',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
               ),

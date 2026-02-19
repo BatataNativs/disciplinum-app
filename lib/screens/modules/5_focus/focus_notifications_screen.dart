@@ -45,37 +45,6 @@ class _FocusNotificationsScreenState extends State<FocusNotificationsScreen> {
             children: [
               NotificationMessageEditor(nicheId: _niche.id),
               const SizedBox(height: 24),
-              const Text(
-                'Como funciona?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? Colors.white24 : Colors.grey.shade300,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.touch_app_rounded,
-                        color: theme.colorScheme.primary, size: 32),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados durante o intervalo de foco.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

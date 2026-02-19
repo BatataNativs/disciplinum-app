@@ -9,7 +9,6 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
 import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 
@@ -644,7 +643,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Configurações'];
+    final List<String> options = ['Como Funciona', 'Evitar conteúdo adulto'];
 
     return Container(
       height: 44,
@@ -745,6 +744,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
+            const Text(
+              'Aplicativos monitorados:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
             if (_selectedApps.isEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -804,16 +808,6 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 },
               ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: GlowingButton(
-                text: 'Selecionar Aplicativos',
-                onPressed: _openSelectApps,
-                color: const Color(0xFF6366F1),
-                borderRadius: 18,
-              ),
-            ),
           ],
         );
       default:

@@ -81,7 +81,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Procrastinação',
+                      'Evitar Procrastinação',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -152,7 +152,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
           dividerColor: Colors.transparent,
           tabs: const [
             Tab(text: 'Como funciona'),
-            Tab(text: 'Tarefas'),
+            Tab(text: 'Evitar procrastinação'),
           ],
         ),
       ),
@@ -171,17 +171,17 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
                 _buildInfoCard(
                   isDark,
                   icon: Icons.checklist_rounded,
-                  title: 'Em "Tarefas", organize sua rotina',
+                  title: 'Em " + Nova Tarefa", organize sua rotina',
                   content:
-                      'Crie listas e adicione tarefas. O app usa Urgência Dinâmica (cores 🟢🟡🔴) para mostrar quais prazos estão se aproximando.',
+                      'Crie listas e adicione tarefas. O app usa Urgência Dinâmica (cores 🟢🟡🔴) para mostrar quais prazos'
+                      'estão se aproximando, do verde ao vermelho.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
-                  icon: Icons.notification_add_outlined,
-                  title: 'Em "Notificações", configure lembretes',
-                  content:
-                      'Defina horários para ser lembrado de revisar suas listas e não deixar nada para a última hora.',
+                  icon: Icons.notifications_outlined,
+                  title: 'Em "Notificações", configure o lembrete diário',
+                  content: 'Defina horário para ????? DEFINIR AÇÃO ??????.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(

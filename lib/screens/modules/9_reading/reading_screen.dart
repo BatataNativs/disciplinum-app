@@ -197,7 +197,7 @@ class _ReadingScreenState extends State<ReadingScreen>
                 _buildInfoCard(
                   isDark,
                   icon: Icons.auto_stories_rounded,
-                  title: 'Em "+ Livro", adicione os livros',
+                  title: 'Em " + Livro", adicione os livros',
                   content:
                       'Adicione os livros que você está lendo ou planeja ler, em seguida, ative o módulo (após adicionar o primeiro livro).\n'
                       'É preenchido nome do livro, autor (opcional), número de páginas e tema.',
@@ -206,9 +206,9 @@ class _ReadingScreenState extends State<ReadingScreen>
                 _buildInfoCard(
                   isDark,
                   icon: Icons.notifications_outlined,
-                  title: 'Em "Notificações", configure lembretes',
+                  title: 'Em "Notificações", configure o lembrete diário',
                   content:
-                      'Defina horários para ser lembrado de cultivar seu hábito de leitura e manter sua mente ativa todos os dias. \n'
+                      'Defina horário para ser lembrado de cultivar seu hábito de leitura e manter sua mente ativa todos os dias. \n'
                       'E o app registra as páginas lidas para atualizar seu progresso, conforme você informa o quanto leu.',
                 ),
                 const SizedBox(height: 16),
