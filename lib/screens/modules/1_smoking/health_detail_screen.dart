@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import 'package:disciplinum/widgets/1_smoking/health_timeline_card.dart';
+import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:provider/provider.dart';
 
 class HealthDetailScreen extends StatelessWidget {
   final SmokingSettingsModel settings;
@@ -10,6 +13,9 @@ class HealthDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gamification = Provider.of<GamificationService>(context);
+    final isActive = gamification.isModuleActive(NicheId.smoking);
+    final effectiveDuration = isActive ? settings.timeSmokeFree : Duration.zero;
 
     return Scaffold(
       body: Container(
@@ -61,7 +67,10 @@ class HealthDetailScreen extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
                     children: [
-                      HealthTimelineCard(settings: settings),
+                      HealthTimelineCard(
+                        settings: settings,
+                        timeSmokeFree: effectiveDuration,
+                      ),
                       const SizedBox(height: 24),
                       // Info text
                       Container(

@@ -28,7 +28,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
   bool _loadingData = true;
   bool _isLoadingData = false;
 
-  // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
   int _selectedIndex = 0;
 
@@ -45,8 +44,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     super.dispose();
   }
 
-  // --- HARDCODED TEXTS AND LOGIC FOR BINGE EATING ---
-
   String _getIntroText() {
     return 'Apps monitorados:';
   }
@@ -57,11 +54,8 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
     try {
       final nicheId = _niche.id;
-
-      final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
+      final userApps = await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
-
       final apps = userApps.map((a) => a.appPackage).toList();
 
       if (mounted) {
@@ -73,26 +67,21 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+          final gamification = Provider.of<GamificationService>(context, listen: false);
           gamification.monitoredApps = List.from(_selectedApps);
 
           bool usageGranted = await UsageStats.checkUsagePermission() ?? false;
-
           if (!mounted) return;
 
           if (usageGranted) {
-            gamification.startMonitoringApps(
-              nicheId: nicheId,
-              horarios: [], // Binge eating only uses apps
-            );
+            gamification.startMonitoringApps(nicheId: nicheId, horarios: []);
           } else {
             setState(() => _gamificationRunning = false);
           }
         }
       }
     } catch (e) {
-      debugPrint('Erro ao carregar dados: $e');
+      debugPrint("Erro ao carregar dados: $e");
       if (mounted) {
         setState(() {
           _loadingData = false;
@@ -118,7 +107,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('App removido: $label'),
+          content: Text("App removido: $label"),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -130,14 +119,14 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
     if (_selectedApps.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Primeiro, deve-se selecionar apps a monitorar..',
+        const SnackBar(
+          content: Text(
+            "Primeiro, deve-se selecionar apps a monitorar..",
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 3),
         ),
       );
       return;
@@ -149,9 +138,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Permissão Necessária'),
+            title: const Text("Permissão Necessária"),
             content: const Text(
-              'Para monitorar se você está usando os apps selecionados para ser gatilho de notificações, precisamos de acesso às estatísticas de uso.\n\nToque em "Configurar" e ative o Disciplinum na lista.',
+              "Para monitorar se você está usando os apps selecionados para ser gatilho de notificações, precisamos de acesso às estatísticas de uso. Toque em Configurar e ative o Disciplinum na lista.",
             ),
             actions: [
               TextButton(
@@ -159,7 +148,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   HapticFeedback.lightImpact();
                   Navigator.pop(ctx);
                 },
-                child: const Text('Cancelar'),
+                child: const Text("Cancelar"),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -167,7 +156,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   Navigator.pop(ctx);
                   UsageStats.grantUsagePermission();
                 },
-                child: const Text('Configurar'),
+                child: const Text("Configurar"),
               ),
             ],
           ),
@@ -178,17 +167,11 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = Provider.of<GamificationService>(context, listen: false);
     gamification.monitoredApps = List.from(_selectedApps);
-
-    gamification.startMonitoringApps(
-      nicheId: _niche.id,
-      horarios: [],
-    );
+    gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
 
     final granted = await NotificationService.requestPermission();
-
     if (!mounted) return;
 
     if (granted == true) {
@@ -203,25 +186,21 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
-      isActive: true,
-    );
-    Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+    CloudSyncService.saveModuleStatus(nicheId: _niche.id, isActive: true);
+    Provider.of<GamificationService>(context, listen: false).startModuleCycle(nicheId: _niche.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
+        title: const Text("Permissão necessária"),
         content: const Text(
-          'Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.',
+          "Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.",
         ),
         actions: [
           TextButton(
-            child: const Text('Abrir configurações'),
+            child: const Text("Abrir configurações"),
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop();
@@ -229,7 +208,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             },
           ),
           TextButton(
-            child: const Text('Cancelar'),
+            child: const Text("Cancelar"),
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop();
@@ -246,8 +225,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text("Desativar módulo?"),
         content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Deseja continuar?",
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
         ),
         actions: [
           TextButton(
@@ -268,16 +246,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+      final gamification = Provider.of<GamificationService>(context, listen: false);
       gamification.stopMonitoringApps();
 
-      // Reset progress and deactivate the module in one go
       _resetMedalsForModule(
-        notificationTitle: 'Progresso reiniciado neste módulo',
-        notificationBody:
-            'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-            'seu progresso começará novamente do zero.',
+        notificationTitle: "Progresso reiniciado neste módulo",
+        notificationBody: "Você desativou o módulo ${_niche.name}. Se reativar no futuro, seu progresso começará novamente do zero.",
         deactivate: true,
       );
 
@@ -287,9 +261,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
       });
 
       if (_pageController.hasClients) {
-        _pageController.animateToPage(0,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
+        _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
       }
     }
   }
@@ -300,8 +272,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
       _niche.id,
       notificationTitle: notificationTitle,
@@ -313,7 +284,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
   Future<void> _openSelectApps() async {
     HapticFeedback.selectionClick();
-
     if (!mounted) return;
 
     await Navigator.push(
@@ -329,14 +299,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(
-                nicheId: _niche.id,
-              );
+              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.id);
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
-                  nicheId: _niche.id,
-                  package: pkg,
-                );
+                await CloudSyncService.addUserNicheApp(nicheId: _niche.id, package: pkg);
               }
             },
             nicheId: _niche.id,
@@ -347,12 +312,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
     if (!mounted) return;
 
-    // Se tiver apps e o controller estiver ok, avança para ativar
     if (_selectedApps.isNotEmpty) {
       if (_pageController.hasClients) {
-        _pageController.animateToPage(1,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
+        _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
       } else {
         setState(() => _selectedIndex = 1);
       }
@@ -368,10 +330,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
     if (_loadingData) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(_niche.name),
-          centerTitle: true,
-        ),
+        appBar: AppBar(title: Text(_niche.name), centerTitle: true),
         body: Shimmer.fromColors(
           baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
           highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
@@ -380,16 +339,13 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                    height: 60, width: double.infinity, color: Colors.white),
+                Container(height: 60, width: double.infinity, color: Colors.white),
                 const SizedBox(height: 16),
                 Container(height: 20, width: 200, color: Colors.white),
                 const SizedBox(height: 8),
-                Container(
-                    height: 40, width: double.infinity, color: Colors.white),
+                Container(height: 40, width: double.infinity, color: Colors.white),
                 const SizedBox(height: 16),
-                Container(
-                    height: 50, width: double.infinity, color: Colors.white),
+                Container(height: 50, width: double.infinity, color: Colors.white),
               ],
             ),
           ),
@@ -398,38 +354,47 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_niche.name),
-        centerTitle: true,
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
+              isDark ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 230, 235, 255),
+              isDark ? const Color.fromARGB(255, 10, 15, 30) : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
+              // Header Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _niche.name,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
               Expanded(
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: _buildSegmentedControl(),
                     ),
-
-                    // --- PAGEVIEW ---
                     Expanded(
                       child: PageView(
                         controller: _pageController,
@@ -439,7 +404,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                           });
                         },
                         children: [
-                          // 0: Como Funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -449,7 +413,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                               ],
                             ),
                           ),
-                          // 1: Apps
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -480,15 +443,13 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Compulsão alimentar'];
+    final List<String> options = ['Como funciona', 'Compulsão alimentar'];
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -499,9 +460,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               onTap: () {
                 HapticFeedback.selectionClick();
                 if (_pageController.hasClients) {
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutQuad);
+                  _pageController.animateToPage(index, duration: const Duration(milliseconds: 250), curve: Curves.easeOutQuad);
                 } else {
                   setState(() => _selectedIndex = index);
                 }
@@ -511,14 +470,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                  color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color:
-                                const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
@@ -530,9 +487,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                    color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black45),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
@@ -554,25 +509,22 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             _buildInfoCard(
               isDark,
               icon: Icons.settings_outlined,
-              title: 'Em "Selecionar apps", escolha os aplicativos de delivery',
-              content:
-                  'Selecione os apps de delivery que você deseja monitorar. Após selecionar, ative o módulo para começar o monitoramento.',
+              title: "Em Selecionar apps, escolha os aplicativos de delivery",
+              content: "Selecione os apps de delivery que você deseja monitorar. Após selecionar, ative o módulo para começar o monitoramento.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.notifications_outlined,
-              title: 'Em "Notificações", configure lembretes',
-              content:
-                  'Defina horários para receber lembretes motivacionais que te ajudem a evitar pedidos por impulso.',
+              title: "Em Notificações, configure lembretes",
+              content: "Defina horários para receber lembretes motivacionais que te ajudem a evitar pedidos por impulso.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", acompanhe seus ganhos',
-              content:
-                  'Visualize quantos dias você está sem pedir delivery e acompanhe sua evolução.',
+              title: "Em Estatisticas, acompanhe seus ganhos",
+              content: "Visualize quantos dias você está sem pedir delivery e acompanhe sua evolução.",
             ),
           ],
         );
@@ -594,14 +546,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white,
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
                   child: Text(
-                    'Nenhum app selecionado.',
+                    "Nenhum app selecionado.",
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
@@ -627,21 +577,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                               )
                             : null,
                         label: Text(info.label ?? info.package,
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF6366F1))),
+                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF6366F1))),
                         onDeleted: () => _removeSelectedApp(info.package),
-                        deleteIconColor: isDark
-                            ? Colors.white70
-                            : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                        backgroundColor:
-                            (isDark ? Colors.white : const Color(0xFF6366F1))
-                                .withValues(alpha: 0.1),
+                        deleteIconColor: isDark ? Colors.white70 : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                        backgroundColor: (isDark ? Colors.white : const Color(0xFF6366F1)).withValues(alpha: 0.1),
                         side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       );
                     }).toList(),
                   );
@@ -663,9 +604,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
@@ -722,14 +661,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           height: 55,
           child: _buildActionButton(
             icon: Icons.rocket_launch_rounded,
-            label: 'Começar',
+            label: "Começar",
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: () {
               if (_pageController.hasClients) {
-                _pageController.animateToPage(1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
+                _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
               }
             },
           ),
@@ -740,7 +677,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           height: 55,
           child: _buildActionButton(
             icon: Icons.apps_rounded,
-            label: 'Selecionar aplicativos',
+            label: "Selecionar aplicativos",
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: _openSelectApps,
@@ -755,9 +692,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -767,7 +702,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.touch_app_outlined,
-                  label: 'Selecionar apps',
+                  label: "Selecionar apps",
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _openSelectApps,
@@ -777,15 +712,14 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.notifications_outlined,
-                  label: 'Notificações',
+                  label: "Notificações",
                   color: Colors.amber,
                   isDark: isDark,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const BingeEatingNotificationsScreen(),
+                        builder: (context) => const BingeEatingNotificationsScreen(),
                       ),
                     );
                   },
@@ -799,7 +733,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
+                  label: "Estatisticas",
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _showStatisticsMenu,
@@ -808,18 +742,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionButton(
-                  icon: _gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: _gamificationRunning
-                      ? 'Desativar Módulo'
-                      : 'Ativar Módulo',
+                  icon: _gamificationRunning ? Icons.power_settings_new : Icons.power_off,
+                  label: _gamificationRunning ? "Desativar Módulo" : "Ativar Módulo",
                   color: _gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
                   isDestructive: _gamificationRunning,
-                  onTap: _gamificationRunning
-                      ? _desativarNichoMonitoramento
-                      : _ativarNichoMonitoramento,
+                  onTap: _gamificationRunning ? _desativarNichoMonitoramento : _ativarNichoMonitoramento,
                 ),
               ),
             ],
@@ -842,9 +770,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
+          color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: color.withValues(alpha: isDark ? 0.3 : 0.2),
@@ -886,7 +812,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas e Opções',
+              "Estatisticas e Opcoes",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -896,14 +822,13 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
             const SizedBox(height: 20),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: "Meu progresso",
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const MyProgressBingeEating()),
+                  MaterialPageRoute(builder: (_) => const MyProgressBingeEating()),
                 );
               },
             ),

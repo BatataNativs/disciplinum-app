@@ -11,14 +11,14 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AvoidAdultContentScreen extends StatefulWidget {
   final String? heroTag;
   const AvoidAdultContentScreen({super.key, this.heroTag});
 
   @override
-  State<AvoidAdultContentScreen> createState() =>
-      _AvoidAdultContentScreenState();
+  State<AvoidAdultContentScreen> createState() => _AvoidAdultContentScreenState();
 }
 
 class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
@@ -28,9 +28,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
   bool _loadingData = true;
   bool _isLoadingData = false;
 
-  // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Como Funciona, 1=Configurações
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -45,16 +44,18 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     super.dispose();
   }
 
+  String _getIntroText() {
+    return 'Aplicativos a serem monitorados:';
+  }
+
   Future<void> _loadAllPersistentData() async {
     if (_isLoadingData) return;
     _isLoadingData = true;
 
     try {
       final nicheId = _niche.id;
-      final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
+      final userApps = await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
-
       final apps = userApps.map((a) => a.appPackage).toList();
 
       if (mounted) {
@@ -66,26 +67,21 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+          final gamification = Provider.of<GamificationService>(context, listen: false);
           gamification.monitoredApps = List.from(_selectedApps);
 
           bool usageGranted = await UsageStats.checkUsagePermission() ?? false;
-
           if (!mounted) return;
 
           if (usageGranted) {
-            gamification.startMonitoringApps(
-              nicheId: nicheId,
-              horarios: [],
-            );
+            gamification.startMonitoringApps(nicheId: nicheId, horarios: []);
           } else {
             setState(() => _gamificationRunning = false);
           }
         }
       }
     } catch (e) {
-      debugPrint('Erro ao carregar dados: $e');
+      debugPrint("Erro ao carregar dados: $e");
       if (mounted) {
         setState(() {
           _loadingData = false;
@@ -111,7 +107,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('App removido: $label'),
+          content: Text("App removido: $label"),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -121,15 +117,30 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
   Future<void> _ativarNichoMonitoramento() async {
     HapticFeedback.mediumImpact();
 
+    if (_selectedApps.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Primeiro, deve-se selecionar apps a monitorar..",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.white,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     bool usageGranted = await UsageStats.checkUsagePermission() ?? false;
     if (!usageGranted) {
       if (mounted) {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Permissão Necessária'),
+            title: const Text("Permissão Necessária"),
             content: const Text(
-              'Para monitorar se você está usando os apps selecionados para ser gatilho de notificações, precisamos de acesso às estatísticas de uso.\n\nToque em "Configurar" e ative o Disciplinum na lista.',
+              "Para monitorar se você está usando os apps selecionados, precisamos de acesso às estatísticas de uso. Toque em Configurar e ative o Disciplinum na lista.",
             ),
             actions: [
               TextButton(
@@ -137,7 +148,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   HapticFeedback.lightImpact();
                   Navigator.pop(ctx);
                 },
-                child: const Text('Cancelar'),
+                child: const Text("Cancelar"),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -145,7 +156,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   Navigator.pop(ctx);
                   UsageStats.grantUsagePermission();
                 },
-                child: const Text('Configurar'),
+                child: const Text("Configurar"),
               ),
             ],
           ),
@@ -156,17 +167,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = Provider.of<GamificationService>(context, listen: false);
     gamification.monitoredApps = List.from(_selectedApps);
-
-    gamification.startMonitoringApps(
-      nicheId: _niche.id,
-      horarios: [],
-    );
+    gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
 
     final granted = await NotificationService.requestPermission();
-
     if (!mounted) return;
 
     if (granted == true) {
@@ -181,25 +186,21 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
-      isActive: true,
-    );
-    Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+    CloudSyncService.saveModuleStatus(nicheId: _niche.id, isActive: true);
+    Provider.of<GamificationService>(context, listen: false).startModuleCycle(nicheId: _niche.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
+        title: const Text("Permissão necessária"),
         content: const Text(
-          'Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.',
+          "Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.",
         ),
         actions: [
           TextButton(
-            child: const Text('Abrir configurações'),
+            child: const Text("Abrir configurações"),
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop();
@@ -207,7 +208,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             },
           ),
           TextButton(
-            child: const Text('Cancelar'),
+            child: const Text("Cancelar"),
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop();
@@ -224,8 +225,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text("Desativar módulo?"),
         content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Deseja continuar?",
+          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
         ),
         actions: [
           TextButton(
@@ -246,15 +246,12 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+      final gamification = Provider.of<GamificationService>(context, listen: false);
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
-        notificationTitle: 'Progresso reiniciado neste módulo',
-        notificationBody:
-            'Você desativou o módulo ${_niche.name}. Se reativar no futuro, '
-            'seu progresso começará novamente do zero.',
+        notificationTitle: "Progresso reiniciado neste módulo",
+        notificationBody: "Você desativou o módulo ${_niche.name}. Se reativar no futuro, seu progresso começará novamente do zero.",
         deactivate: true,
       );
 
@@ -264,25 +261,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       });
 
       if (_pageController.hasClients) {
-        _pageController.animateToPage(0,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
-      }
-      await CloudSyncService.saveModuleStatus(
-        nicheId: _niche.id,
-        isActive: false,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-                'Módulo desativado — Você não receberá mais alertas'),
-            duration: const Duration(seconds: 3),
-            backgroundColor: Colors.red.withValues(alpha: 0.95),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
       }
     }
   }
@@ -293,8 +272,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
       _niche.id,
       notificationTitle: notificationTitle,
@@ -306,7 +284,6 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
   Future<void> _openSelectApps() async {
     HapticFeedback.selectionClick();
-
     if (!mounted) return;
 
     await Navigator.push(
@@ -322,14 +299,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(
-                nicheId: _niche.id,
-              );
+              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.id);
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
-                  nicheId: _niche.id,
-                  package: pkg,
-                );
+                await CloudSyncService.addUserNicheApp(nicheId: _niche.id, package: pkg);
               }
             },
             nicheId: _niche.id,
@@ -337,6 +309,18 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         ),
       ),
     );
+
+    if (!mounted) return;
+
+    if (_selectedApps.isNotEmpty) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+      } else {
+        setState(() => _selectedIndex = 1);
+      }
+    } else {
+      setState(() {});
+    }
   }
 
   @override
@@ -347,7 +331,25 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     if (_loadingData) {
       return Scaffold(
         appBar: AppBar(title: Text(_niche.name), centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Shimmer.fromColors(
+          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 60, width: double.infinity, color: Colors.white),
+                const SizedBox(height: 16),
+                Container(height: 20, width: 200, color: Colors.white),
+                const SizedBox(height: 8),
+                Container(height: 40, width: double.infinity, color: Colors.white),
+                const SizedBox(height: 16),
+                Container(height: 50, width: double.infinity, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -358,8 +360,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+              isDark ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 230, 235, 255),
+              isDark ? const Color.fromARGB(255, 10, 15, 30) : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
@@ -368,22 +370,17 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             children: [
               // Header Row
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black87),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
                       child: Text(
                         _niche.name,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -394,13 +391,10 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    const SizedBox(height: 8),
                     Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: _buildSegmentedControl()),
-
-                    // --- PAGEVIEW ---
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: _buildSegmentedControl(),
+                    ),
                     Expanded(
                       child: PageView(
                         controller: _pageController,
@@ -410,7 +404,6 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                           });
                         },
                         children: [
-                          // 0: Como Funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -420,7 +413,6 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                               ],
                             ),
                           ),
-                          // 1: Configurações
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -439,21 +431,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               _selectedIndex == 0
                   ? Padding(
                       padding: const EdgeInsets.all(16),
-                      child: _buildActionButton(
-                        icon: Icons.rocket_launch_rounded,
-                        label: 'Começar',
-                        color: const Color(0xFF6366F1),
-                        isDark: isDark,
-                        onTap: () {
-                          if (_pageController.hasClients) {
-                            _pageController.animateToPage(1,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic);
-                          } else {
-                            setState(() => _selectedIndex = 1);
-                          }
-                        },
-                      ),
+                      child: _buildTabActions(0),
                     )
                   : _buildBottomButtons(isDark),
             ],
@@ -463,195 +441,15 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     );
   }
 
-  Widget _buildBottomButtons(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.touch_app_outlined,
-                  label: 'Selecionar apps',
-                  color: const Color(0xFF6366F1),
-                  isDark: isDark,
-                  onTap: _openSelectApps,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notificações',
-                  color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const AvoidAdultContentNotificationsScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
-                  color: const Color(0xFF6366F1),
-                  isDark: isDark,
-                  onTap: _showStatisticsMenu,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  icon: _gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: _gamificationRunning
-                      ? 'Desativar módulo'
-                      : 'Ativar módulo',
-                  color: _gamificationRunning ? Colors.red : Colors.green,
-                  isDark: isDark,
-                  isDestructive: _gamificationRunning,
-                  onTap: _gamificationRunning
-                      ? _desativarNichoMonitoramento
-                      : _ativarNichoMonitoramento,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Estatísticas e Opções',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildMenuTile(
-              icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
-              color: Colors.blue,
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const MyProgressAdultContent()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListActionTile(
-      icon: icon,
-      label: label,
-      color: color,
-      isDark: isDark,
-      onTap: onTap,
-    );
-  }
-
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Evitar conteúdo adulto'];
+    final List<String> options = ['Como funciona', 'Evitar conteúdo adulto'];
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -662,9 +460,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               onTap: () {
                 HapticFeedback.selectionClick();
                 if (_pageController.hasClients) {
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutQuad);
+                  _pageController.animateToPage(index, duration: const Duration(milliseconds: 250), curve: Curves.easeOutQuad);
                 } else {
                   setState(() => _selectedIndex = index);
                 }
@@ -674,14 +470,12 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                  color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color:
-                                const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
@@ -693,9 +487,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                    color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black45),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
@@ -717,25 +509,22 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             _buildInfoCard(
               isDark,
               icon: Icons.settings_outlined,
-              title: 'Em "Apps Monitorados", selecione os aplicativos',
-              content:
-                  'Escolha os aplicativos que você deseja evitar. Ative o módulo para iniciar o monitoramento.',
+              title: "Em Selecionar apps, escolha os aplicativos a monitorar",
+              content: "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.notifications_outlined,
-              title: 'Em "Notificações", configure alertas',
-              content:
-                  'Receba mensagens que reforçam seu compromisso e te ajudam a manter a disciplina e o controle mental.',
+              title: "Em Notificações, configure lembretes",
+              content: "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", veja sua superação',
-              content:
-                  'Acompanhe seu progresso diário e veja há quanto tempo você está mantendo seu compromisso.',
+              title: "Em Estatísticas, acompanhe sua evolução",
+              content: "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
             ),
           ],
         );
@@ -743,25 +532,26 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 12),
-            const Text(
-              'Aplicativos monitorados:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              _getIntroText(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             if (_selectedApps.isEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white,
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
                   child: Text(
-                    'Nenhum app selecionado.',
+                    "Nenhum app selecionado.",
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
@@ -787,27 +577,17 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                               )
                             : null,
                         label: Text(info.label ?? info.package,
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF6366F1))),
+                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF6366F1))),
                         onDeleted: () => _removeSelectedApp(info.package),
-                        deleteIconColor: isDark
-                            ? Colors.white70
-                            : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                        backgroundColor:
-                            (isDark ? Colors.white : const Color(0xFF6366F1))
-                                .withValues(alpha: 0.1),
+                        deleteIconColor: isDark ? Colors.white70 : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                        backgroundColor: (isDark ? Colors.white : const Color(0xFF6366F1)).withValues(alpha: 0.1),
                         side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       );
                     }).toList(),
                   );
                 },
               ),
-            const SizedBox(height: 24),
           ],
         );
       default:
@@ -824,9 +604,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
@@ -873,26 +651,200 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       ),
     );
   }
-}
 
-class ListActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDark;
+  Widget _buildTabActions(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (index) {
+      case 0:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: _buildActionButton(
+            icon: Icons.rocket_launch_rounded,
+            label: "Começar",
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+              }
+            },
+          ),
+        );
+      case 1:
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: _buildActionButton(
+            icon: Icons.apps_rounded,
+            label: "Selecionar aplicativos",
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: _openSelectApps,
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
-  const ListActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    required this.isDark,
-  });
+  Widget _buildBottomButtons(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.touch_app_outlined,
+                  label: "Selecionar apps",
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: _openSelectApps,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.notifications_outlined,
+                  label: "Notificações",
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AvoidAdultContentNotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  label: "Estatisticas",
+                  color: const Color(0xFF6366F1),
+                  isDark: isDark,
+                  onTap: _showStatisticsMenu,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  icon: _gamificationRunning ? Icons.power_settings_new : Icons.power_off,
+                  label: _gamificationRunning ? "Desativar Módulo" : "Ativar Módulo",
+                  color: _gamificationRunning ? Colors.red : Colors.green,
+                  isDark: isDark,
+                  isDestructive: _gamificationRunning,
+                  onTap: _gamificationRunning ? _desativarNichoMonitoramento : _ativarNichoMonitoramento,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStatisticsMenu() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Estatisticas e Opcoes",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildMenuTile(
+              icon: Icons.bar_chart_rounded,
+              label: "Meu progresso",
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyProgressAdultContent()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(

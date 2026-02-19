@@ -10,6 +10,8 @@ import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastinatio
 import 'package:disciplinum/widgets/8_procrastination/task_creation_dialog.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_notifications_screen.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_stats_screen.dart';
+import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 
 class ProcrastinationScreen extends StatefulWidget {
   final String? heroTag;
@@ -69,33 +71,35 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Header com título
+              // Header Row
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Evitar Procrastinação',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black,
+                    Expanded(
+                      child: Text(
+                        'Evitar Procrastinação',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
                       ),
                     ),
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
 
-              // Segmented Control (2 opções)
+              // Segmented Control (2 opcoes)
               _buildSegmentedControl(isDark),
 
-              // Conteúdo
+              // Conteudo
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -171,25 +175,24 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
                 _buildInfoCard(
                   isDark,
                   icon: Icons.checklist_rounded,
-                  title: 'Em " + Nova Tarefa", organize sua rotina',
+                  title: 'Nova Tarefa: organize sua rotina',
                   content:
-                      'Crie listas e adicione tarefas. O app usa Urgência Dinâmica (cores 🟢🟡🔴) para mostrar quais prazos'
-                      'estão se aproximando, do verde ao vermelho.',
+                      'Crie listas e adicione tarefas. O app usa Urgencia Dinamica para mostrar prazos.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
                   icon: Icons.notifications_outlined,
-                  title: 'Em "Notificações", configure o lembrete diário',
-                  content: 'Defina horário para ????? DEFINIR AÇÃO ??????.',
+                  title: 'Notificacoes: configure lembretes',
+                  content: 'Defina horario para manter sua disciplina.',
                 ),
                 const SizedBox(height: 16),
                 _buildInfoCard(
                   isDark,
                   icon: Icons.bar_chart_rounded,
-                  title: 'Em "Estatísticas", veja sua produtividade',
+                  title: 'Estatisticas: veja sua produtividade',
                   content:
-                      'Acompanhe seu Perfil de Execução e veja se você é Zen, Adrenalina ou Equilibrado ao completar suas tarefas.',
+                      'Acompanhe seu Perfil de Execucao ao completar suas tarefas.',
                 ),
                 const SizedBox(height: 16),
               ],
@@ -203,7 +206,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
             height: 55,
             child: _buildActionButton(
               icon: Icons.rocket_launch_rounded,
-              label: 'Começar',
+              label: 'Comecar',
               color: const Color(0xFF6366F1),
               isDark: isDark,
               onTap: () {
@@ -288,18 +291,11 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
 
     return Column(
       children: [
-        // Abas das listas (rolável)
         _buildListTabs(isDark, service, lists),
-
-        // Header da lista atual selecionada
         _buildListHeader(isDark, service, currentList, lists),
-
-        // Lista de tarefas
         Expanded(
           child: _buildTaskList(isDark, service, currentList),
         ),
-
-        // Botões inferiores (2x2)
         _buildBottomButtons(isDark, service, isActive),
       ],
     );
@@ -325,7 +321,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         itemCount: lists.length + 1,
         itemBuilder: (ctx, index) {
           if (index == lists.length) {
-            // Botão + Lista
             return Center(
               child: TextButton.icon(
                 onPressed: () => _showCreateListDialog(service),
@@ -393,7 +388,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       ),
       child: Row(
         children: [
-          // Nome da lista selecionada + ícone editar (Área clicável expandida)
           Expanded(
             child: InkWell(
               onTap: () => _showRenameListDialog(service, currentList),
@@ -425,8 +419,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
               ),
             ),
           ),
-
-          // Botão de ordenação
           PopupMenuButton<SortMode>(
             icon: Icon(
               Icons.swap_vert,
@@ -470,8 +462,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
               ),
             ],
           ),
-
-          // Menu de ações
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
@@ -654,7 +644,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
     if (dateOnly == today) {
       return 'Hoje';
     } else if (dateOnly == tomorrow) {
-      return 'Amanhã';
+      return 'Amanha';
     } else {
       return DateFormat("d 'de' MMMM", 'pt_BR').format(date);
     }
@@ -682,12 +672,12 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16), // Bordas mais arredondadas
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: task.isCompleted
               ? Colors.transparent
-              : urgency.color.withValues(alpha: 0.6), // Mais saturado
-          width: 2.0, // Border mais grossa
+              : urgency.color.withValues(alpha: 0.6),
+          width: 2.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -817,7 +807,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         ),
         const SizedBox(width: 4),
         Text(
-          parts.join(' • '),
+          parts.join(' - '),
           style: TextStyle(
             fontSize: 12,
             color: const Color(0xFF6366F1).withValues(alpha: 0.8),
@@ -839,7 +829,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Linha superior: Nova Tarefa | Notificações
           Row(
             children: [
               Expanded(
@@ -861,7 +850,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.notifications_outlined,
-                  label: 'Notificações',
+                  label: 'Notificacoes',
                   color: Colors.amber,
                   isDark: isDark,
                   onTap: () {
@@ -878,13 +867,12 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
             ],
           ),
           const SizedBox(height: 12),
-          // Linha inferior: Meu progresso | Desativar módulo
           Row(
             children: [
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
+                  label: 'Estatisticas',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _showStatisticsMenu,
@@ -894,7 +882,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
               Expanded(
                 child: _buildActionButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
-                  label: isActive ? 'Desativar módulo' : 'Ativar módulo',
+                  label: isActive ? 'Desativar modulo' : 'Ativar modulo',
                   color: isActive ? Colors.red : Colors.green,
                   isDark: isDark,
                   isDestructive: isActive,
@@ -948,10 +936,6 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       ),
     );
   }
-
-  // ===========================
-  // DIALOGS
-  // ===========================
 
   void _showCreateListDialog(ProcrastinationService service) {
     final controller = TextEditingController();
@@ -1119,9 +1103,9 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Desativar módulo?'),
+          title: const Text('Desativar modulo?'),
           content: const Text(
-              'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?'),
+              'Ao desativar, seu progresso de medalhas será pausado. Deseja continuar?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -1156,13 +1140,64 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
-                  'Módulo desativado — Você não receberá mais alertas'),
+                  'Módulo desativado - Você não receberá mais notificações de alerta'),
               duration: const Duration(seconds: 3),
-              backgroundColor: Colors.red.withValues(alpha: 0.95),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
           );
         }
+      }
+    } else {
+      HapticFeedback.mediumImpact();
+      if (!mounted) return;
+
+      bool granted = await NotificationService.requestPermission();
+      if (!mounted) return;
+
+      if (granted) {
+        HapticFeedback.heavyImpact();
+        CloudSyncService.saveModuleStatus(
+          nicheId: NicheId.procrastination,
+          isActive: true,
+        );
+        gamification.startModuleCycle(nicheId: NicheId.procrastination);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Módulo de Procrastinação ativado!'),
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permissão necessária'),
+            content: const Text(
+              'Para o módulo de Procrastinação funcionar, habilite as notificações do app nas configurações.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Abrir configurações'),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).pop();
+                  NotificationService.openNotificationSettings();
+                },
+              ),
+              TextButton(
+                child: const Text('Cancelar'),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -1193,7 +1228,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
             const SizedBox(height: 20),
             _buildMenuTile(
               icon: Icons.auto_graph_rounded,
-              label: 'Nível de desprocrastinação',
+              label: 'Nivel de desprocrastinação',
               color: const Color(0xFF6366F1),
               onTap: () {
                 Navigator.pop(ctx);

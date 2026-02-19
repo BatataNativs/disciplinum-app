@@ -381,7 +381,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header Custom
+              // Header Row
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -389,7 +389,6 @@ class _SpendingScreenState extends State<SpendingScreen> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          // CORRIGIDO: Agora reage ao tema corretamente
                           color: isDark ? Colors.white : Colors.black87),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -397,7 +396,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
                       child: Text(
                         _niche.name,
                         style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87),
                         textAlign: TextAlign.center,

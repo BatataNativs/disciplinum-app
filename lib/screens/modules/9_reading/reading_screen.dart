@@ -502,7 +502,7 @@ class _ReadingScreenState extends State<ReadingScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
-                  'Módulo desativado — Você não receberá mais alertas'),
+                  'Módulo desativado — Você não receberá mais notificações'),
               duration: const Duration(seconds: 3),
               backgroundColor: Colors.red.withValues(alpha: 0.95),
               behavior: SnackBarBehavior.floating,

@@ -346,10 +346,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_niche.name),
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -368,6 +365,30 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // Header Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _niche.name,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
               Expanded(
                 child: Column(
                   children: [
@@ -426,7 +447,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Manter Dieta'];
+    final List<String> options = ['Como funciona', 'Manter dieta'];
 
     return Container(
       height: 44,
