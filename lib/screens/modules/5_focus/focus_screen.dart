@@ -800,26 +800,26 @@ class _FocusScreenState extends State<FocusScreen> {
           children: [
             _buildInfoCard(
               isDark,
-              icon: Icons.tune_outlined,
-              title: 'Em "Configurar", defina seu foco',
+              icon: Icons.settings_outlined,
+              title: 'Em "Configurar", defina seus intervalos de foco',
               content:
-                  'Defina o intervalo de horário do seu foco e selecione os apps que te distraem. Depois, ative o módulo.',
+                  'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.notification_add_outlined,
-              title: 'Em "Notificações", ative lembretes',
+              icon: Icons.notifications_outlined,
+              title: 'Notificações',
               content:
-                  'Configure notificações para te lembrar de manter o foco durante o seu horário produtivo.',
+                  'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", monitore sua produtividade',
+              title: 'Em "Estatísticas", monitore seu foco',
               content:
-                  'Veja quanto tempo você conseguiu se manter focado e acompanhe seus dias de sucesso.',
+                  'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
             ),
           ],
         );
@@ -837,9 +837,9 @@ class _FocusScreenState extends State<FocusScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 2),
             Text(
-              'Intervalo de Foco:',
+              'Intervalo de foco:',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -898,7 +898,7 @@ class _FocusScreenState extends State<FocusScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Apps Monitorados:',
+              'Aplicativos monitorados:',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
