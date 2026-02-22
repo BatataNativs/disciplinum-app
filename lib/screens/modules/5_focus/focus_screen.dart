@@ -683,7 +683,7 @@ class _FocusScreenState extends State<FocusScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas e Opções',
+              'Estatísticas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -839,10 +839,11 @@ class _FocusScreenState extends State<FocusScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Intervalo de foco:',
+              'Intervalo de foco definido:',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -900,8 +901,9 @@ class _FocusScreenState extends State<FocusScreen> {
             Text(
               'Aplicativos monitorados:',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),

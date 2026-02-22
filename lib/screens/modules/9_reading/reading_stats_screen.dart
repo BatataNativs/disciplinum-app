@@ -42,16 +42,18 @@ class ReadingStatsScreen extends StatelessWidget {
         ),
         child: SafeArea(
           // Garante que não fica atrás da AppBar transparente/status bar
-          child: Consumer<ReadingService>(
-            builder: (context, service, child) {
+          child: Selector<ReadingService, _ReadingStatsVm>(
+            selector: (_, service) => _ReadingStatsVm.fromService(service),
+            shouldRebuild: (prev, next) => prev != next,
+            builder: (context, vm, child) {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildTotalBooksSection(service, isDark),
+                  _buildTotalBooksSection(vm, isDark),
                   const SizedBox(height: 24),
-                  _buildWeeklyChartSection(service, isDark),
+                  _buildWeeklyChartSection(vm, isDark),
                   const SizedBox(height: 24),
-                  _buildThemesSection(service, isDark),
+                  _buildThemesSection(vm, isDark),
                   const SizedBox(height: 32),
                 ],
               );
@@ -62,9 +64,9 @@ class ReadingStatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalBooksSection(ReadingService service, bool isDark) {
-    final completedCount = service.completedBooks.length;
-    final lastBook = service.lastCompletedBook;
+  Widget _buildTotalBooksSection(_ReadingStatsVm vm, bool isDark) {
+    final completedCount = vm.completedCount;
+    final lastBookTitle = vm.lastCompletedBookTitle;
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -130,7 +132,7 @@ class ReadingStatsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        lastBook?.title ?? 'Nenhum ainda',
+                        lastBookTitle ?? 'Nenhum ainda',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -150,14 +152,12 @@ class ReadingStatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeeklyChartSection(ReadingService service, bool isDark) {
-    final weeklyData = service.getWeeklyReadPages();
-    final sortedDates = weeklyData.keys.toList()..sort();
-
-    // Cálculo da média (apenas dias com leitura ou todos os 7 dias?)
-    // Geralmente média semanal = total / 7
-    final totalPagesWeek = weeklyData.values.fold(0, (sum, val) => sum + val);
-    final dailyAverage = totalPagesWeek / 7;
+  Widget _buildWeeklyChartSection(_ReadingStatsVm vm, bool isDark) {
+    final weeklyData = vm.weeklyData;
+    final sortedDates = vm.sortedDates;
+    final totalPagesWeek = vm.totalPagesWeek;
+    final dailyAverage = vm.dailyAverage;
+    final maxY = vm.maxY;
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -194,8 +194,7 @@ class ReadingStatsScreen extends StatelessWidget {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: (weeklyData.values.reduce((a, b) => a > b ? a : b) * 1.2)
-                    .clamp(10.0, double.infinity),
+                maxY: maxY,
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
@@ -265,10 +264,7 @@ class ReadingStatsScreen extends StatelessWidget {
                             top: Radius.circular(6)),
                         backDrawRodData: BackgroundBarChartRodData(
                           show: true,
-                          toY: (weeklyData.values
-                                      .reduce((a, b) => a > b ? a : b) *
-                                  1.2)
-                              .clamp(10.0, double.infinity),
+                          toY: maxY,
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.05)
                               : Colors.black.withValues(alpha: 0.03),
@@ -320,8 +316,8 @@ class ReadingStatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildThemesSection(ReadingService service, bool isDark) {
-    final stats = service.getThemeStats();
+  Widget _buildThemesSection(_ReadingStatsVm vm, bool isDark) {
+    final stats = vm.themeStats;
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -409,5 +405,112 @@ class ReadingStatsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ReadingStatsVm {
+  final int completedCount;
+  final String? lastCompletedBookTitle;
+  final Map<DateTime, int> weeklyData;
+  final List<DateTime> sortedDates;
+  final int totalPagesWeek;
+  final double dailyAverage;
+  final double maxY;
+  final List<Map<String, dynamic>> themeStats;
+
+  const _ReadingStatsVm({
+    required this.completedCount,
+    required this.lastCompletedBookTitle,
+    required this.weeklyData,
+    required this.sortedDates,
+    required this.totalPagesWeek,
+    required this.dailyAverage,
+    required this.maxY,
+    required this.themeStats,
+  });
+
+  factory _ReadingStatsVm.fromService(ReadingService service) {
+    final completedCount = service.completedBooks.length;
+    final lastBookTitle = service.lastCompletedBook?.title;
+
+    final weeklyData = service.getWeeklyReadPages();
+    final sortedDates = weeklyData.keys.toList()..sort();
+
+    final totalPagesWeek = weeklyData.values.fold(0, (sum, val) => sum + val);
+    final dailyAverage = totalPagesWeek / 7;
+
+    final int maxValue = weeklyData.isEmpty
+        ? 0
+        : weeklyData.values.reduce((a, b) => a > b ? a : b);
+    final maxY = (maxValue * 1.2).clamp(10.0, double.infinity);
+
+    final themeStats = service.getThemeStats();
+
+    return _ReadingStatsVm(
+      completedCount: completedCount,
+      lastCompletedBookTitle: lastBookTitle,
+      weeklyData: weeklyData,
+      sortedDates: sortedDates,
+      totalPagesWeek: totalPagesWeek,
+      dailyAverage: dailyAverage,
+      maxY: maxY,
+      themeStats: themeStats,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is _ReadingStatsVm &&
+        other.completedCount == completedCount &&
+        other.lastCompletedBookTitle == lastCompletedBookTitle &&
+        other.totalPagesWeek == totalPagesWeek &&
+        other.dailyAverage == dailyAverage &&
+        other.maxY == maxY &&
+        _mapEquals(other.weeklyData, weeklyData) &&
+        _listEquals(other.sortedDates, sortedDates) &&
+        _themeStatsEquals(other.themeStats, themeStats);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        completedCount,
+        lastCompletedBookTitle,
+        totalPagesWeek,
+        dailyAverage,
+        maxY,
+        weeklyData.length,
+        sortedDates.length,
+        themeStats.length,
+      );
+
+  static bool _mapEquals(Map<DateTime, int> a, Map<DateTime, int> b) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      final otherValue = b[entry.key];
+      if (otherValue != entry.value) return false;
+    }
+    return true;
+  }
+
+  static bool _listEquals(List<DateTime> a, List<DateTime> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static bool _themeStatsEquals(
+      List<Map<String, dynamic>> a, List<Map<String, dynamic>> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      final ai = a[i];
+      final bi = b[i];
+      if (ai['theme'] != bi['theme']) return false;
+      if (ai['count'] != bi['count']) return false;
+      if (ai['percent'] != bi['percent']) return false;
+    }
+    return true;
   }
 }

@@ -1,3 +1,61 @@
+import 'package:flutter/material.dart';
+
+/// Níveis de urgência baseados na proximidade do vencimento
+enum UrgencyLevel {
+  green, // Tranquilo - faltando mais de 5 dias
+  yellow, // Atenção - de 5 a 2 dias
+  red, // Crítico - de 2 dias até o vencimento
+}
+
+extension UrgencyLevelExtension on UrgencyLevel {
+  Color get color {
+    switch (this) {
+      case UrgencyLevel.green:
+        return const Color(0xFF2E7D32); // Verde mais escuro/saturado
+      case UrgencyLevel.yellow:
+        return const Color(0xFFF9A825); // Amarelo/Laranja mais visível
+      case UrgencyLevel.red:
+        return const Color(0xFFC62828); // Vermelho mais profundo
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case UrgencyLevel.green:
+        return 'Tranquilo';
+      case UrgencyLevel.yellow:
+        return 'Atenção';
+      case UrgencyLevel.red:
+        return 'Urgente';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case UrgencyLevel.green:
+        return '🟢';
+      case UrgencyLevel.yellow:
+        return '🟡';
+      case UrgencyLevel.red:
+        return '🔴';
+    }
+  }
+
+  static UrgencyLevel? fromString(String? value) {
+    if (value == null) return null;
+    switch (value) {
+      case 'green':
+        return UrgencyLevel.green;
+      case 'yellow':
+        return UrgencyLevel.yellow;
+      case 'red':
+        return UrgencyLevel.red;
+      default:
+        return null;
+    }
+  }
+}
+
 class FixedExpenseModel {
   final String id;
   final String name;
@@ -34,6 +92,41 @@ class FixedExpenseModel {
       notificationsEnabled: json['notificationsEnabled'] ?? true,
       notificationDaysBefore: json['notificationDaysBefore'] ?? 1,
     );
+  }
+
+  /// Calcula o nível de urgência baseado nos dias restantes até o vencimento
+  /// - Verde: > 5 dias
+  /// - Amarelo: 5 a 2 dias
+  /// - Vermelho: 2 dias ou menos
+  UrgencyLevel getUrgencyLevel() {
+    if (isPaid) return UrgencyLevel.green;
+    
+    final now = DateTime.now();
+    final currentYear = now.year;
+    final currentMonth = now.month;
+    
+    // Data de vencimento deste mês
+    DateTime dueDate = DateTime(currentYear, currentMonth, dueDay);
+    
+    // Se a data de vencimento já passou, considera o próximo mês
+    if (dueDate.isBefore(now)) {
+      if (currentMonth == 12) {
+        dueDate = DateTime(currentYear + 1, 1, dueDay);
+      } else {
+        dueDate = DateTime(currentYear, currentMonth + 1, dueDay);
+      }
+    }
+    
+    final difference = dueDate.difference(now);
+    final daysRemaining = difference.inDays;
+    
+    if (daysRemaining > 5) {
+      return UrgencyLevel.green;
+    } else if (daysRemaining >= 2) {
+      return UrgencyLevel.yellow;
+    } else {
+      return UrgencyLevel.red;
+    }
   }
 
   Map<String, dynamic> toJson() {

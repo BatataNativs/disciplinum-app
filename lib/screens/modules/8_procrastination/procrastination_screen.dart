@@ -73,7 +73,8 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
             children: [
               // Header Row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -403,6 +404,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -1162,7 +1164,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
           isActive: true,
         );
         gamification.startModuleCycle(nicheId: NicheId.procrastination);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Módulo de Procrastinação ativado!'),

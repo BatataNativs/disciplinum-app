@@ -367,7 +367,8 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             children: [
               // Header Row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -559,8 +560,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             Text(
               'Seus horários de refeições:',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),

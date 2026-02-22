@@ -10,6 +10,8 @@ class InstalledAppService extends ChangeNotifier {
 
   List<AppInfo> _cachedApps = [];
   final Map<String, Uint8List?> _iconCache = {};
+  final List<String> _iconLruKeys = [];
+  static const int _maxIconCacheEntries = 200;
   final Map<String, Future<Uint8List?>> _pendingRequests = {};
   bool _isLoading = false;
 
@@ -55,6 +57,7 @@ class InstalledAppService extends ChangeNotifier {
   /// Busca o ícone de um app específico com cache
   Future<Uint8List?> getAppIcon(String packageName) async {
     if (_iconCache.containsKey(packageName)) {
+      _touchIconKey(packageName);
       return _iconCache[packageName];
     }
 
@@ -76,13 +79,29 @@ class InstalledAppService extends ChangeNotifier {
     try {
       final appInfo = await InstalledApps.getAppInfo(packageName);
       _iconCache[packageName] = appInfo?.icon;
+      _touchIconKey(packageName);
+      _evictIconCacheIfNeeded();
       _pendingRequests.remove(packageName);
       return appInfo?.icon;
     } catch (e) {
       debugPrint('Error fetching icon for $packageName: $e');
       _iconCache[packageName] = null;
+      _touchIconKey(packageName);
+      _evictIconCacheIfNeeded();
       _pendingRequests.remove(packageName);
       return null;
+    }
+  }
+
+  void _touchIconKey(String packageName) {
+    _iconLruKeys.remove(packageName);
+    _iconLruKeys.add(packageName);
+  }
+
+  void _evictIconCacheIfNeeded() {
+    while (_iconLruKeys.length > _maxIconCacheEntries) {
+      final oldestKey = _iconLruKeys.removeAt(0);
+      _iconCache.remove(oldestKey);
     }
   }
 
@@ -90,6 +109,7 @@ class InstalledAppService extends ChangeNotifier {
   void clearCache() {
     _cachedApps = [];
     _iconCache.clear();
+    _iconLruKeys.clear();
     _pendingRequests.clear();
     notifyListeners();
   }

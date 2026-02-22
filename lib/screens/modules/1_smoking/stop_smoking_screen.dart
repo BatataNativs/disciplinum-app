@@ -388,7 +388,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             children: [
               // Header Row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -418,7 +419,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                           horizontal: 16, vertical: 12),
                       child: _buildSegmentedControl(),
                     ),
-
                     Expanded(
                       child: PageView(
                         controller: _pageController,
@@ -589,12 +589,16 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Ultimas informacoes de consumo:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              'Últimas informações de consumo:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
             const Text(
-              'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o modulo.',
-              style: TextStyle(fontSize: 12),
+              'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
+              style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
             Container(
@@ -613,7 +617,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Preco do maco:"),
+                      const Text("Preço do maço:"),
                       SizedBox(
                         width: 160,
                         height: 40,
@@ -636,8 +640,26 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                   ),
+                                  selectedItemBuilder: (BuildContext context) {
+                                    return ['R\$', 'US\$', 'EUR', 'ARS\$']
+                                        .map<Widget>((String item) {
+                                      return Container(
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          item,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList();
+                                  },
                                   onChanged: (String? newValue) {
                                     if (newValue != null) {
                                       setState(() {
@@ -645,12 +667,27 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                       });
                                     }
                                   },
-                                  items: ['R\$', 'US\$', 'EUR', '\$']
+                                  items: ['R\$', 'US\$', 'EUR', 'ARS\$']
                                       .map<DropdownMenuItem<String>>(
                                           (String value) {
+                                    String currencyName = '';
+                                    switch (value) {
+                                      case 'R\$':
+                                        currencyName = 'Real';
+                                        break;
+                                      case 'US\$':
+                                        currencyName = 'Dólar';
+                                        break;
+                                      case 'EUR':
+                                        currencyName = 'Euro';
+                                        break;
+                                      case 'ARS\$':
+                                        currencyName = 'Peso';
+                                        break;
+                                    }
                                     return DropdownMenuItem<String>(
                                       value: value,
-                                      child: Text(value),
+                                      child: Text('$value - $currencyName'),
                                     );
                                   }).toList(),
                                 ),
@@ -685,7 +722,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Macos por dia:"),
+                      const Text("Maços por dia:"),
                       SizedBox(
                         width: 80,
                         height: 40,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
@@ -361,37 +362,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: Consumer<GamificationService>(
-                    builder: (context, gamificationService, _) {
-                      // 1. Filtra nichos ativos
-                      final activeNiches = NicheId.values
-                          .where((id) => gamificationService.isModuleActive(id))
-                          .toList();
-
-                      // 2. Prepara a lista de categorias para exibição
-                      final allCategories =
-                          List<NicheCategory>.from(categories);
-
-                      // 3. Adiciona categoria "Módulos Ativos" no topo
-                      // Criamos uma categoria "fake" ou especial para renderizar
-                      // Mas como a estrutura do ListView abaixo itera sobre categorias,
-                      // vamos injetar essa categoria especial na lista local.
+                  child: Builder(
+                    builder: (context) {
+                      final allCategories = List<NicheCategory>.from(categories);
 
                       return ListView.separated(
                         padding: const EdgeInsets.only(
                             top: 10, bottom: 100, left: 16, right: 16),
-                        // +1 para a categoria "Módulos Ativos"
                         itemCount: allCategories.length + 1,
                         separatorBuilder: (context, index) =>
                             const SizedBox(height: 32),
                         itemBuilder: (context, index) {
-                          // Se for o primeiro item, renderiza "Módulos Ativos"
                           if (index == 0) {
-                            return _buildActiveModulesSection(
-                                activeNiches, isDark, textTheme);
+                            return Selector<GamificationService, List<NicheId>>(
+                              selector: (_, gamificationService) {
+                                return NicheId.values
+                                    .where(
+                                        (id) => gamificationService.isModuleActive(id))
+                                    .toList(growable: false);
+                              },
+                              shouldRebuild: (prev, next) =>
+                                  !listEquals(prev, next),
+                              builder: (context, activeNiches, _) {
+                                return _buildActiveModulesSection(
+                                    activeNiches, isDark, textTheme);
+                              },
+                            );
                           }
 
-                          // Senão, renderiza as categorias normais (index - 1)
                           final category = allCategories[index - 1];
                           return _buildCategorySection(
                               category, isDark, textTheme);
@@ -488,10 +486,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       children: [
         Row(
           children: [
-            const Icon(Icons.bolt, color: Colors.amber, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Módulos Ativos',
+              '✅ Módulos Ativos',
               style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/app_router.dart';
@@ -282,17 +283,10 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: Consumer<GamificationService>(
-                    builder: (context, gamificationService, _) {
-                      // 1. Filtra nichos ativos (mesmo guest pode ter ativos na sessão)
-                      final activeNiches = NicheId.values
-                          .where((id) => gamificationService.isModuleActive(id))
-                          .toList();
-
-                      final categories =
-                          NicheCategoryRepository.getCategories();
-                      final allCategories =
-                          List<NicheCategory>.from(categories);
+                  child: Builder(
+                    builder: (context) {
+                      final categories = NicheCategoryRepository.getCategories();
+                      final allCategories = List<NicheCategory>.from(categories);
 
                       return ListView.separated(
                         padding: const EdgeInsets.only(
@@ -302,8 +296,20 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                             const SizedBox(height: 32),
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            return _buildActiveModulesSection(
-                                activeNiches, isDark, textTheme);
+                            return Selector<GamificationService, List<NicheId>>(
+                              selector: (_, gamificationService) {
+                                return NicheId.values
+                                    .where(
+                                        (id) => gamificationService.isModuleActive(id))
+                                    .toList(growable: false);
+                              },
+                              shouldRebuild: (prev, next) =>
+                                  !listEquals(prev, next),
+                              builder: (context, activeNiches, _) {
+                                return _buildActiveModulesSection(
+                                    activeNiches, isDark, textTheme);
+                              },
+                            );
                           }
 
                           final category = allCategories[index - 1];
@@ -402,10 +408,9 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
       children: [
         Row(
           children: [
-            const Icon(Icons.bolt, color: Colors.amber, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Módulos Ativos (Convidado)',
+              '✅ Módulos Ativos (Convidado)',
               style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
