@@ -13,6 +13,9 @@ import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/4_spending/my_progress_spending.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 import 'package:disciplinum/screens/modules/4_spending/fixed_expenses_screen.dart';
+import 'package:disciplinum/services/4_spending/spending_service.dart';
+import 'package:disciplinum/models/4_spending/fixed_expense_model.dart';
+import 'package:disciplinum/screens/modules/4_spending/fixed_bills_stats_screen.dart';
 
 class SpendingScreen extends StatefulWidget {
   final String? heroTag;
@@ -674,6 +677,20 @@ class _SpendingScreenState extends State<SpendingScreen> {
             ),
             const SizedBox(height: 20),
             _buildMenuTile(
+              icon: Icons.receipt_long_outlined,
+              label: 'Estatísticas de contas pagas',
+              color: Colors.purple,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const FixedBillsStatsScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildMenuTile(
               icon: Icons.bar_chart_rounded,
               label: 'Meu progresso',
               color: Colors.blue,
@@ -783,25 +800,27 @@ class _SpendingScreenState extends State<SpendingScreen> {
             _buildInfoCard(
               isDark,
               icon: Icons.account_balance_wallet_outlined,
-              title: 'Em "Controle de gastos", selecione seus alvos',
+              title:
+                  'Em "Controle de gastos", selecione seus apps a monitorar abertura e gerencie gastos fixos',
               content:
-                  'Escolha apps de compras para monitorar e cadastre seus gastos fixos. Salve e ative o módulo para iniciar.',
+                  'Em "Selecionar apps", escolha apps de compras online para monitorar abertura, e recebe alerta ao abri-los.\nEm "Gastos fixos", cadastre seus gastos fixos, e seja lembrado de pagá-lo.\nHá um sistema de nível de urgência, em cores verde, amarelo e vermelho, de acordo com a proximidade com a data de vencimento de cada conta. Salve e ative o módulo para iniciar.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
-              icon: Icons.notification_add_outlined,
+              icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure seus alertas',
               content:
-                  'Receba lembretes para pagar contas fixas e mensagens motivacionais para evitar gastos desnecessários.',
+                  'Ao abrir um app que você selecionou para monitorar, você receberá notificação de alerta para evitar gastos desnecessários e compras por impulso.\nE também, receba lembretes para pagar suas contas fixas cadastradas no app antes do vencimento delas.',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", veja sua economia',
+              title:
+                  'Em "Estatísticas", acompanhe seu progresso e como anda sua disciplina',
               content:
-                  'Acompanhe seu progresso financeiro e veja quanto você economizou mantendo a disciplina.',
+                  'Acompanhe seu progresso no controle financeiro e mantenha-se disciplinado.',
             ),
           ],
         );
@@ -813,8 +832,9 @@ class _SpendingScreenState extends State<SpendingScreen> {
             Text(
               'Aplicativos monitorados:',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -877,6 +897,145 @@ class _SpendingScreenState extends State<SpendingScreen> {
                   );
                 },
               ),
+            const SizedBox(height: 24),
+            Text(
+              'Gastos fixos:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Consumer<SpendingService>(
+              builder: (context, service, child) {
+                final expenses = service.fixedExpenses;
+                if (expenses.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Nenhum gasto fixo cadastrado.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: expenses.map((expense) {
+                    String formatAmountForDisplay(
+                        double amount, String currency) {
+                      switch (currency) {
+                        case 'R\$':
+                          return amount
+                              .toStringAsFixed(2)
+                              .replaceAll('.', ',')
+                              .replaceAllMapped(
+                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                (match) => '${match.group(1)}.',
+                              );
+                        case 'US\$':
+                          String baseText = amount.toStringAsFixed(2);
+                          List<String> parts = baseText.split('.');
+                          String integerPart = parts[0];
+                          String decimalPart = parts.length > 1 ? parts[1] : '';
+
+                          integerPart = integerPart.replaceAllMapped(
+                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                            (match) => '${match.group(1)},',
+                          );
+
+                          return decimalPart.isNotEmpty
+                              ? '$integerPart.$decimalPart'
+                              : integerPart;
+                        case '€':
+                          return amount.toStringAsFixed(2).replaceAll('.', ',');
+                        case 'ARS\$':
+                          return amount
+                              .toStringAsFixed(2)
+                              .replaceAll('.', ',')
+                              .replaceAllMapped(
+                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                (match) => '${match.group(1)}.',
+                              );
+                        default:
+                          return amount.toStringAsFixed(2);
+                      }
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: expense
+                              .getUrgencyLevel()
+                              .color
+                              .withValues(alpha: 0.6),
+                          width: 2.0,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  expense.name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Vence dia ${expense.dueDay.toString().padLeft(2, '0')} • ${expense.currency} ${formatAmountForDisplay(expense.amount, expense.currency)}',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white60
+                                        : Colors.black54,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              service.togglePaid(expense.id);
+                            },
+                            child: Icon(
+                              expense.isPaid
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              color:
+                                  expense.isPaid ? Colors.green : Colors.grey,
+                              size: 24, // Aumentado de 20 para 24
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
           ],
         );
       default:

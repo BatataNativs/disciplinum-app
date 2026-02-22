@@ -18,7 +18,8 @@ class AvoidAdultContentScreen extends StatefulWidget {
   const AvoidAdultContentScreen({super.key, this.heroTag});
 
   @override
-  State<AvoidAdultContentScreen> createState() => _AvoidAdultContentScreenState();
+  State<AvoidAdultContentScreen> createState() =>
+      _AvoidAdultContentScreenState();
 }
 
 class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
@@ -54,7 +55,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     try {
       final nicheId = _niche.id;
-      final userApps = await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
+      final userApps =
+          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
       final apps = userApps.map((a) => a.appPackage).toList();
 
@@ -67,7 +69,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification = Provider.of<GamificationService>(context, listen: false);
+          final gamification =
+              Provider.of<GamificationService>(context, listen: false);
           gamification.monitoredApps = List.from(_selectedApps);
 
           bool usageGranted = await UsageStats.checkUsagePermission() ?? false;
@@ -167,7 +170,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     if (!mounted) return;
 
-    final gamification = Provider.of<GamificationService>(context, listen: false);
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
     gamification.monitoredApps = List.from(_selectedApps);
     gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
 
@@ -187,7 +191,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       _gamificationRunning = true;
     });
     CloudSyncService.saveModuleStatus(nicheId: _niche.id, isActive: true);
-    Provider.of<GamificationService>(context, listen: false).startModuleCycle(nicheId: _niche.id);
+    Provider.of<GamificationService>(context, listen: false)
+        .startModuleCycle(nicheId: _niche.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -246,12 +251,14 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification = Provider.of<GamificationService>(context, listen: false);
+      final gamification =
+          Provider.of<GamificationService>(context, listen: false);
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
         notificationTitle: "Progresso reiniciado neste módulo",
-        notificationBody: "Você desativou o módulo ${_niche.name}. Se reativar no futuro, seu progresso começará novamente do zero.",
+        notificationBody:
+            "Você desativou o módulo ${_niche.name}. Se reativar no futuro, seu progresso começará novamente do zero.",
         deactivate: true,
       );
 
@@ -261,7 +268,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       });
 
       if (_pageController.hasClients) {
-        _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
       }
     }
   }
@@ -272,7 +281,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification = Provider.of<GamificationService>(context, listen: false);
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
       _niche.id,
       notificationTitle: notificationTitle,
@@ -301,7 +311,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
               await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.id);
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(nicheId: _niche.id, package: pkg);
+                await CloudSyncService.addUserNicheApp(
+                    nicheId: _niche.id, package: pkg);
               }
             },
             nicheId: _niche.id,
@@ -314,7 +325,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     if (_selectedApps.isNotEmpty) {
       if (_pageController.hasClients) {
-        _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+        _pageController.animateToPage(1,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
       } else {
         setState(() => _selectedIndex = 1);
       }
@@ -339,13 +352,16 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(height: 60, width: double.infinity, color: Colors.white),
+                Container(
+                    height: 60, width: double.infinity, color: Colors.white),
                 const SizedBox(height: 16),
                 Container(height: 20, width: 200, color: Colors.white),
                 const SizedBox(height: 8),
-                Container(height: 40, width: double.infinity, color: Colors.white),
+                Container(
+                    height: 40, width: double.infinity, color: Colors.white),
                 const SizedBox(height: 16),
-                Container(height: 50, width: double.infinity, color: Colors.white),
+                Container(
+                    height: 50, width: double.infinity, color: Colors.white),
               ],
             ),
           ),
@@ -360,8 +376,12 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 230, 235, 255),
-              isDark ? const Color.fromARGB(255, 10, 15, 30) : const Color.fromARGB(255, 255, 255, 255)
+              isDark
+                  ? const Color.fromARGB(255, 0, 0, 0)
+                  : const Color.fromARGB(255, 230, 235, 255),
+              isDark
+                  ? const Color.fromARGB(255, 10, 15, 30)
+                  : const Color.fromARGB(255, 255, 255, 255)
             ],
           ),
         ),
@@ -370,17 +390,22 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             children: [
               // Header Row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black87),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
                       child: Text(
                         _niche.name,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -392,7 +417,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       child: _buildSegmentedControl(),
                     ),
                     Expanded(
@@ -449,7 +475,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -460,7 +488,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               onTap: () {
                 HapticFeedback.selectionClick();
                 if (_pageController.hasClients) {
-                  _pageController.animateToPage(index, duration: const Duration(milliseconds: 250), curve: Curves.easeOutQuad);
+                  _pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutQuad);
                 } else {
                   setState(() => _selectedIndex = index);
                 }
@@ -470,12 +500,14 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                  color:
+                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFF6366F1).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
@@ -487,7 +519,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black45),
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white60 : Colors.black45),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
@@ -510,21 +544,24 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               isDark,
               icon: Icons.settings_outlined,
               title: "Em Selecionar apps, escolha os aplicativos a monitorar",
-              content: "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
+              content:
+                  "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.notifications_outlined,
               title: "Em Notificações, configure lembretes",
-              content: "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
+              content:
+                  "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               isDark,
               icon: Icons.bar_chart_rounded,
               title: "Em Estatísticas, acompanhe sua evolução",
-              content: "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
+              content:
+                  "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
             ),
           ],
         );
@@ -535,8 +572,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             Text(
               _getIntroText(),
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -546,7 +584,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
@@ -577,12 +617,21 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                               )
                             : null,
                         label: Text(info.label ?? info.package,
-                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF6366F1))),
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF6366F1))),
                         onDeleted: () => _removeSelectedApp(info.package),
-                        deleteIconColor: isDark ? Colors.white70 : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                        backgroundColor: (isDark ? Colors.white : const Color(0xFF6366F1)).withValues(alpha: 0.1),
+                        deleteIconColor: isDark
+                            ? Colors.white70
+                            : const Color(0xFF6366F1).withValues(alpha: 0.7),
+                        backgroundColor:
+                            (isDark ? Colors.white : const Color(0xFF6366F1))
+                                .withValues(alpha: 0.1),
                         side: BorderSide.none,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       );
                     }).toList(),
                   );
@@ -604,7 +653,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.9),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
@@ -666,7 +717,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             isDark: isDark,
             onTap: () {
               if (_pageController.hasClients) {
-                _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+                _pageController.animateToPage(1,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
               }
             },
           ),
@@ -692,7 +745,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -719,7 +774,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AvoidAdultContentNotificationsScreen(),
+                        builder: (context) =>
+                            const AvoidAdultContentNotificationsScreen(),
                       ),
                     );
                   },
@@ -733,7 +789,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.bar_chart_rounded,
-                  label: "Estatisticas",
+                  label: "Estatísticas",
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _showStatisticsMenu,
@@ -742,12 +798,18 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionButton(
-                  icon: _gamificationRunning ? Icons.power_settings_new : Icons.power_off,
-                  label: _gamificationRunning ? "Desativar Módulo" : "Ativar Módulo",
+                  icon: _gamificationRunning
+                      ? Icons.power_settings_new
+                      : Icons.power_off,
+                  label: _gamificationRunning
+                      ? "Desativar Módulo"
+                      : "Ativar Módulo",
                   color: _gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
                   isDestructive: _gamificationRunning,
-                  onTap: _gamificationRunning ? _desativarNichoMonitoramento : _ativarNichoMonitoramento,
+                  onTap: _gamificationRunning
+                      ? _desativarNichoMonitoramento
+                      : _ativarNichoMonitoramento,
                 ),
               ),
             ],
@@ -770,7 +832,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.1),
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: color.withValues(alpha: isDark ? 0.3 : 0.2),
@@ -828,7 +892,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressAdultContent()),
+                  MaterialPageRoute(
+                      builder: (_) => const MyProgressAdultContent()),
                 );
               },
             ),

@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 /// Serviço para persistência do Desafio da Poupança
 /// Suporta armazenamento local (SharedPreferences) e cloud (Supabase)
 /// Agora suporta múltiplos desafios simultâneos.
-class MoneySavingChallengeService {
+class MoneySavingChallengeService extends ChangeNotifier {
   static const String _localKey = 'money_saving_challenge_list_data';
   static const String _oldLocalKey = 'money_saving_challenge_data';
   static const String _moduleId = 'money_saving_challenge';
@@ -16,71 +16,84 @@ class MoneySavingChallengeService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final _uuid = const Uuid();
 
+  List<MoneySavingChallengeModel> _challenges = [];
+  MoneySavingChallengeModel? _activeChallenge;
+  bool _initialized = false;
+
+  List<MoneySavingChallengeModel> get challengesList => _challenges;
+  MoneySavingChallengeModel? get activeChallenge => _activeChallenge;
+
   /// Carrega os desafios do usuário (cloud primeiro, fallback para local)
-  Future<List<MoneySavingChallengeModel>> getChallenges() async {
+  Future<List<MoneySavingChallengeModel>> getChallenges(
+      {bool forceRefresh = false}) async {
+    if (_initialized && !forceRefresh) return _challenges;
+
     try {
       final userId = _supabase.auth.currentUser?.id;
+      List<MoneySavingChallengeModel> fetchedChallenges = [];
 
       // Se não tem usuário logado, usa armazenamento local
       if (userId == null) {
-        return await _getLocalChallenges();
+        fetchedChallenges = await _getLocalChallenges();
+      } else {
+        // Tenta carregar do Supabase
+        final response = await _supabase
+            .from('user_module_settings')
+            .select()
+            .eq('user_id', userId)
+            .eq('module_id', _moduleId)
+            .maybeSingle();
+
+        if (response == null) {
+          fetchedChallenges = await _getLocalChallenges();
+        } else {
+          final jsonData = response['module_data'];
+          final decoded = jsonData is String ? jsonDecode(jsonData) : jsonData;
+
+          if (decoded is Map<String, dynamic> &&
+              decoded.containsKey('challenges')) {
+            final list = decoded['challenges'] as List;
+            fetchedChallenges =
+                list.map((e) => MoneySavingChallengeModel.fromJson(e)).toList();
+          } else if (decoded is List) {
+            fetchedChallenges = decoded
+                .map((e) => MoneySavingChallengeModel.fromJson(e))
+                .toList();
+          } else if (decoded is Map<String, dynamic>) {
+            // Formato antigo: um único desafio
+            final single = MoneySavingChallengeModel.fromJson(decoded);
+            fetchedChallenges = [
+              single.copyWith(id: single.id.isEmpty ? _uuid.v4() : single.id)
+            ];
+          }
+        }
       }
 
-      // Tenta carregar do Supabase
-      final response = await _supabase
-          .from('user_module_settings')
-          .select()
-          .eq('user_id', userId)
-          .eq('module_id', _moduleId)
-          .maybeSingle();
-
-      if (response == null) {
-        // Tenta pegar do local como fallback
-        return await _getLocalChallenges();
+      _challenges = fetchedChallenges;
+      try {
+        _activeChallenge = _challenges.firstWhere((c) => c.isActive);
+      } catch (_) {
+        _activeChallenge = _challenges.isNotEmpty ? _challenges.first : null;
       }
 
-      // Deserializa do campo JSON
-      final jsonData = response['module_data'];
-      if (jsonData == null) return [];
-
-      final decoded = jsonData is String ? jsonDecode(jsonData) : jsonData;
-
-      List<MoneySavingChallengeModel> challenges = [];
-
-      if (decoded is Map<String, dynamic> &&
-          decoded.containsKey('challenges')) {
-        // Formato novo: lista dentro de um objeto
-        final list = decoded['challenges'] as List;
-        challenges =
-            list.map((e) => MoneySavingChallengeModel.fromJson(e)).toList();
-      } else if (decoded is List) {
-        // Formato intermediário: lista direta
-        challenges =
-            decoded.map((e) => MoneySavingChallengeModel.fromJson(e)).toList();
-      } else if (decoded is Map<String, dynamic>) {
-        // Formato antigo: um único desafio
-        final single = MoneySavingChallengeModel.fromJson(decoded);
-        challenges = [
-          single.copyWith(id: single.id.isEmpty ? _uuid.v4() : single.id)
-        ];
-      }
-
-      // Salva localmente para cache
-      await _saveLocalChallenges(challenges);
-
-      return challenges;
+      _initialized = true;
+      await _saveLocalChallenges(_challenges);
+      notifyListeners();
+      return _challenges;
     } catch (e) {
       debugPrint('❌ Erro ao carregar desafios: $e');
-      // Fallback para local em caso de erro
-      return await _getLocalChallenges();
+      _challenges = await _getLocalChallenges();
+      _initialized = true;
+      notifyListeners();
+      return _challenges;
     }
   }
 
   /// Atalho para buscar um desafio específico por ID
   Future<MoneySavingChallengeModel?> getChallenge(String id) async {
-    final list = await getChallenges();
+    if (!_initialized) await getChallenges();
     try {
-      return list.firstWhere((c) => c.id == id);
+      return _challenges.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
     }
@@ -88,20 +101,23 @@ class MoneySavingChallengeService {
 
   /// Busca o desafio ativo no momento
   Future<MoneySavingChallengeModel?> getActiveChallenge() async {
-    final list = await getChallenges();
-    try {
-      return list.firstWhere((c) => c.isActive);
-    } catch (_) {
-      // Se não tiver nenhum ativo mas tiver desafios, ativa o primeiro (opcional) ou retorna null
-      return list.isNotEmpty ? list.first : null;
-    }
+    if (!_initialized) await getChallenges();
+    return _activeChallenge;
   }
 
   /// Salva a lista completa de desafios (cloud + local)
   Future<void> saveChallenges(
       List<MoneySavingChallengeModel> challenges) async {
+    _challenges = challenges;
+    try {
+      _activeChallenge = _challenges.firstWhere((c) => c.isActive);
+    } catch (_) {
+      _activeChallenge = _challenges.isNotEmpty ? _challenges.first : null;
+    }
+
     // Sempre salva localmente primeiro (para garantir persistência imediata)
-    await _saveLocalChallenges(challenges);
+    await _saveLocalChallenges(_challenges);
+    notifyListeners();
 
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -111,7 +127,7 @@ class MoneySavingChallengeService {
         'user_id': userId,
         'module_id': _moduleId,
         'module_data': {
-          'challenges': challenges.map((e) => e.toJson()).toList()
+          'challenges': _challenges.map((e) => e.toJson()).toList()
         },
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
@@ -127,22 +143,22 @@ class MoneySavingChallengeService {
 
   /// Salva ou atualiza um único desafio na lista
   Future<void> saveChallenge(MoneySavingChallengeModel challenge) async {
-    final list = await getChallenges();
-    final index = list.indexWhere((c) => c.id == challenge.id);
+    if (!_initialized) await getChallenges(); // Ensure _challenges is populated
+    final index = _challenges.indexWhere((c) => c.id == challenge.id);
 
     if (index >= 0) {
-      list[index] = challenge;
+      _challenges[index] = challenge;
     } else {
-      list.add(challenge);
+      _challenges.add(challenge);
     }
 
-    await saveChallenges(list);
+    await saveChallenges(_challenges);
   }
 
   /// Define qual desafio é o ativo (e desativa os outros)
   Future<void> setActiveChallenge(String id) async {
-    final list = await getChallenges();
-    final updated = list.map((c) {
+    if (!_initialized) await getChallenges();
+    final updated = _challenges.map((c) {
       return c.copyWith(isActive: c.id == id);
     }).toList();
 
@@ -168,9 +184,41 @@ class MoneySavingChallengeService {
 
   /// Deleta um desafio específico
   Future<void> deleteChallenge(String id) async {
-    final list = await getChallenges();
-    list.removeWhere((c) => c.id == id);
-    await saveChallenges(list);
+    if (!_initialized) await getChallenges();
+    _challenges.removeWhere((c) => c.id == id);
+    await saveChallenges(_challenges);
+  }
+
+  /// Deleta TODOS os desafios (usado na desativação do módulo)
+  Future<void> deleteAllChallenges() async {
+    _challenges = [];
+    _activeChallenge = null;
+
+    // Limpa localmente
+    await removeAllLocal();
+
+    // Notifica listeners para limpar UI imediatamente
+    notifyListeners();
+
+    // Sincroniza com Cloud (enviando lista vazia)
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final data = {
+        'user_id': userId,
+        'module_id': _moduleId,
+        'module_data': {'challenges': []},
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      await _supabase.from('user_module_settings').upsert(
+            data,
+            onConflict: 'user_id, module_id',
+          );
+    } catch (e) {
+      debugPrint('❌ Erro ao limpar desafios no cloud: $e');
+    }
   }
 
   /// Cria um novo desafio com as configurações fornecidas e adiciona à lista
@@ -184,15 +232,48 @@ class MoneySavingChallengeService {
     required double maxValue,
     String currency = 'R\$',
     bool isActive = true,
+    String? id,
   }) async {
-    final cellValues = MoneySavingChallengeModel.generateCellValues(
+    MoneySavingChallengeModel? existing;
+    if (id != null) {
+      existing = await getChallenge(id);
+    }
+
+    double oldTotalSaved = 0;
+    if (existing != null) {
+      oldTotalSaved = existing.totalSaved;
+    }
+
+    List<double> cellValues;
+    List<int> markedCells = [];
+
+    // Sempre geramos novos valores se gridSize, min ou max mudarem,
+    // mas agora também reconstruímos o progresso com base na soma.
+    cellValues = MoneySavingChallengeModel.generateCellValues(
       gridSize: gridSize,
       minValue: minValue,
       maxValue: maxValue,
+      targetAmount: targetAmount,
     );
 
+    // Se houve mudança ou se é uma edição com saldo preservado:
+    if (oldTotalSaved > 0) {
+      double currentSum = 0;
+      // Marcamos as células até atingir o montante anterior
+      for (int i = 0; i < cellValues.length; i++) {
+        if (currentSum + cellValues[i] <= oldTotalSaved + 0.01) {
+          // 0.01 gap de tolerância
+          markedCells.add(i);
+          currentSum += cellValues[i];
+        } else {
+          // Opcional: poderíamos tentar achar uma célula menor, mas por simplicidade, paramos aqui
+          break;
+        }
+      }
+    }
+
     final challenge = MoneySavingChallengeModel(
-      id: _uuid.v4(),
+      id: id ?? _uuid.v4(),
       title: title,
       targetAmount: targetAmount,
       periodValue: periodValue,
@@ -200,22 +281,23 @@ class MoneySavingChallengeService {
       gridSize: gridSize,
       minValue: minValue,
       maxValue: maxValue,
-      markedCells: [],
+      markedCells: markedCells,
       cellValues: cellValues,
-      createdAt: DateTime.now(),
+      createdAt: existing?.createdAt ?? DateTime.now(),
       currency: currency,
       isActive: isActive,
     );
 
-    // Se o novo desafio for ativo, desativa os outros
+    // Se o novo desafio for ativo, desativa os outros primeiro
     if (isActive) {
-      final list = await getChallenges();
-      final updatedList = list.map((c) => c.copyWith(isActive: false)).toList();
-      updatedList.add(challenge);
-      await saveChallenges(updatedList);
-    } else {
-      await saveChallenge(challenge);
+      if (!_initialized) await getChallenges();
+      // Desativa todos na memória local para que saveChallenge persista o novo como o único ativo
+      _challenges =
+          _challenges.map((c) => c.copyWith(isActive: false)).toList();
     }
+
+    // saveChallenge já lida com substituição se o ID existir ou adição se for novo
+    await saveChallenge(challenge);
 
     return challenge;
   }

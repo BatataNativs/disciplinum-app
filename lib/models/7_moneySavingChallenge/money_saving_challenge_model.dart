@@ -60,8 +60,8 @@ class MoneySavingChallengeModel {
   /// Número total de células no grid
   int get totalCells => gridSize * gridSize;
 
-  /// Verifica se o desafio foi concluído (todas as células marcadas)
-  bool get isComplete => markedCells.length >= totalCells;
+  /// Verifica se o desafio foi concluído (progresso atingiu 100%)
+  bool get isComplete => progressPercent >= 1.0;
 
   /// Cria uma cópia com célula marcada/desmarcada
   MoneySavingChallengeModel toggleCell(int index) {
@@ -114,31 +114,65 @@ class MoneySavingChallengeModel {
     );
   }
 
-  /// Gera os valores das células distribuídos entre min e max
   static List<double> generateCellValues({
     required int gridSize,
     required double minValue,
     required double maxValue,
+    required double targetAmount,
   }) {
-    final totalCells = gridSize * gridSize;
-    final values = <double>[];
-
-    if (totalCells <= 0 || minValue >= maxValue) {
-      return List.filled(totalCells, minValue);
+    final totalCellsCount = gridSize * gridSize;
+    if (totalCellsCount <= 0 || targetAmount <= 0) {
+      return List.filled(totalCellsCount, 0.0);
     }
 
-    final range = maxValue - minValue;
+    // 1. Definimos o mínimo real respeitando a média
+    final averagePerCell = targetAmount / totalCellsCount;
+    double actualMin = minValue;
+    if (actualMin > averagePerCell) {
+      actualMin =
+          averagePerCell * 0.8; // Se o min for impossível, usamos 80% da média
+    }
+    if (actualMin < 0.01) actualMin = 0.01;
 
-    // Gera valores em ordem crescente com pequena variação
-    for (int i = 0; i < totalCells; i++) {
-      // Distribui proporcionalmente do min ao max
-      final baseValue = minValue + (range * i / (totalCells - 1));
-      // Arredonda para valores "bonitos"
-      final roundedValue = _roundToNiceValue(baseValue);
-      values.add(roundedValue);
+    // 2. Preenchemos todas as células com o valor mínimo inicial
+    final values = List<double>.filled(totalCellsCount, actualMin);
+    double currentSum = actualMin * totalCellsCount;
+
+    // 3. Distribuímos o restante (targetAmount - currentSum)
+    double remainingToDistribute = targetAmount - currentSum;
+
+    if (remainingToDistribute > 0) {
+      // Usamos uma distribuição ponderada (linear crescente) para dar variedade
+      final double totalWeight = (totalCellsCount * (totalCellsCount - 1)) / 2;
+
+      for (int i = 0; i < totalCellsCount; i++) {
+        double weight = i.toDouble();
+        double share = (weight / totalWeight) * remainingToDistribute;
+
+        // Somamos a parte desta célula e arredondamos
+        double newValue = values[i] + share;
+        double roundedValue = _roundToNiceValue(newValue);
+
+        // Não podemos exceder o targetAmount aqui
+        double diff = roundedValue - values[i];
+        if (currentSum + diff > targetAmount) {
+          diff = targetAmount - currentSum;
+          roundedValue = values[i] + diff;
+        }
+
+        values[i] = double.parse(roundedValue.toStringAsFixed(2));
+        currentSum += diff;
+      }
     }
 
-    // Embaralha um pouco para não ficar tão linear, mas mantém tendência crescente
+    // 4. Ajuste fino final caso tenha sobrado algum centavo de arredondamento
+    double finalDiff = targetAmount - currentSum;
+    if (finalDiff.abs() > 0.001) {
+      values[totalCellsCount - 1] = double.parse(
+          (values[totalCellsCount - 1] + finalDiff).toStringAsFixed(2));
+    }
+
+    // 5. Embaralha para ficar visualmente interessante
     values.shuffle();
 
     return values;
@@ -146,8 +180,9 @@ class MoneySavingChallengeModel {
 
   /// Arredonda para valores mais "bonitos" (múltiplos de 5, 10, 25, 50, 100)
   static double _roundToNiceValue(double value) {
+    if (value <= 0) return 0.01; // Mínimo de 1 centavo
     if (value < 10) {
-      return (value).roundToDouble();
+      return double.parse(value.toStringAsFixed(2));
     } else if (value < 50) {
       return (value / 5).round() * 5.0;
     } else if (value < 100) {

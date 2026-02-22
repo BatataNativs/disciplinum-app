@@ -124,7 +124,7 @@ class _MoneySavingChallengeNotificationsScreenState
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Text(
-                                  'Lembre-se: este é um tracker manual. As marcações no grid refletem seus depósitos reais na vida real.',
+                                  'Lembre-se: este é um tracker manual. As marcações no grid devem refletir seus depósitos reais na vida real, em instituições financeiras de sua escolha, conforme você os informa no app.',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: isDark

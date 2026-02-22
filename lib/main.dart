@@ -14,6 +14,7 @@ import 'package:disciplinum/services/user_privacy/privacy_service.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/services/4_spending/spending_service.dart';
 import 'package:disciplinum/services/9_reading/reading_service.dart';
+import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/app.dart';
 import 'package:disciplinum/app_router.dart';
@@ -108,10 +109,13 @@ Future<void> main() async {
           ),
         ),
         ChangeNotifierProvider(
-          create: (context) => SpendingService(prefs),
+          create: (context) => ReadingService(prefs),
+        ),
+        ChangeNotifierProvider<MoneySavingChallengeService>(
+          create: (_) => MoneySavingChallengeService(),
         ),
         ChangeNotifierProvider(
-          create: (context) => ReadingService(prefs),
+          create: (context) => SpendingService(prefs),
         ),
 
         ChangeNotifierProvider(

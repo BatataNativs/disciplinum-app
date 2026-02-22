@@ -117,6 +117,7 @@ class _ReadingScreenState extends State<ReadingScreen>
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
                               ),
                             ),
                           ),
