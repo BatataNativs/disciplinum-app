@@ -44,7 +44,7 @@ class SmokingService {
       'module_id': 'smoking',
       'smoking_pack_price': settings.packPrice,
       'smoking_packs_per_day': settings.packsPerDay,
-      'smoking_quit_date': settings.quitDate.toUtc().toIso8601String(),
+      'smoking_quit_date': settings.quitDate.toIso8601String(),
       'smoking_currency': settings.currency,
       // Preserva o histórico ao salvar novas configurações
       'last_pack_price': settings.lastPackPrice,
@@ -52,8 +52,8 @@ class SmokingService {
       'last_quit_date': settings.lastQuitDate?.toIso8601String(),
       'last_currency': settings.lastCurrency,
       'last_saved_total': settings.lastSavedTotal,
-      'last_end_date': settings.lastEndDate?.toUtc().toIso8601String(),
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      'last_end_date': settings.lastEndDate?.toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
     };
 
     await _supabase.from('user_module_settings').upsert(
@@ -72,7 +72,7 @@ class SmokingService {
     if (userId == null) return;
 
     // Data de "agora" para ser o novo início (zerado)
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now();
 
     final archivedData = {
       'user_id': userId,

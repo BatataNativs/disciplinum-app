@@ -242,7 +242,7 @@ class ProcrastinationService extends ChangeNotifier {
         'user_id': userId,
         'module_id': _moduleId,
         'module_data': cloudData,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id, module_id');
     } catch (e) {
       debugPrint('Erro ao sincronizar com nuvem (save): $e');
