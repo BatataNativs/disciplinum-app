@@ -1132,9 +1132,9 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         gamification.resetMedals(
           NicheId.procrastination,
           deactivate: true,
-          notificationTitle: 'Progresso reiniciado',
+          notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
-              'Você desativou o módulo de Procrastinação. Seu progresso foi resetado.',
+              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         );
         _tabController.animateTo(0);
 

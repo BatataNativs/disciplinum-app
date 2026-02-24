@@ -197,9 +197,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       // Reset medals and deactivate
       gamification.resetMedals(
         _niche.id,
-        notificationTitle: 'Módulo Desativado',
+        notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
-            'Seu progresso foi zerado e o módulo desativado. Mantenha a disciplina!',
+            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         deactivate: true,
       );
 

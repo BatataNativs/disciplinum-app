@@ -98,7 +98,7 @@ class LojinhaScreen extends StatelessWidget {
               context,
               title: "AdFree (Vitalício)",
               description: "Remova anúncios do app permanentemente.",
-              price: iap.isAdFreePermanent ? "Adquirido" : "R\$ 19,90",
+              price: iap.isAdFreePermanent ? "Adquirido" : "R\$ 19,99",
               icon: Icons.block_flipped,
               color: Colors.redAccent,
               isAcquired: iap.isAdFreePermanent,
@@ -113,7 +113,7 @@ class LojinhaScreen extends StatelessWidget {
               description: iap.isAdFreeLiteActive
                   ? "Ativo até: ${_formatDate(iap.adFreeLiteExpiration)}"
                   : "Sem anúncios por uma semana.",
-              price: iap.isAdFreeLiteActive ? "Ativo" : "R\$ 2,90",
+              price: iap.isAdFreeLiteActive ? "Ativo" : "R\$ 2,99",
               icon: Icons.hourglass_top_rounded,
               color: Colors.orangeAccent,
               isAcquired: iap.isAdFreeLiteActive,
@@ -127,7 +127,7 @@ class LojinhaScreen extends StatelessWidget {
               context,
               title: "Dark Mode 🌙",
               description: "Desbloqueie o tema escuro.",
-              price: iap.isDarkModeUnlocked ? "Adquirido" : "R\$ 9,90",
+              price: iap.isDarkModeUnlocked ? "Adquirido" : "R\$ 4,99",
               icon: Icons.dark_mode_rounded,
               color: Colors.indigoAccent,
               isAcquired: iap.isDarkModeUnlocked,
@@ -139,9 +139,9 @@ class LojinhaScreen extends StatelessWidget {
             // --- ITEM 4: Notificações ---
             _buildProductItem(
               context,
-              title: "Notificações Custom",
-              description: "Personalize suas mensagens de check-in.",
-              price: iap.isCustomNotifUnlocked ? "Adquirido" : "R\$ 4,90",
+              title: "Notificações Personalizáveis",
+              description: "Personalize os textos das notificações.",
+              price: iap.isCustomNotifUnlocked ? "Adquirido" : "R\$ 2,99",
               icon: Icons.notifications_active_rounded,
               color: Colors.teal,
               isAcquired: iap.isCustomNotifUnlocked,

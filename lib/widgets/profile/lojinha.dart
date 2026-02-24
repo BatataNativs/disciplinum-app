@@ -157,12 +157,11 @@ class Lojinha extends StatelessWidget {
                       ),
                       const Divider(),
 
-                      // Notificações Customizadas
+                      // Notificações Personalizáveis
                       _buildShopItem(
                         context,
-                        title: '🔔 Notificações Customizadas',
-                        description:
-                            'Personalize a mensagem de check-in diário para cada módulo!',
+                        title: '🔔 Notificações Personalizáveis',
+                        description: 'Personalize os textos das notificações.',
                         isAcquired: iap.isCustomNotifUnlocked,
                         titleColor: isDark
                             ? const Color(0xFFFFFFFF)

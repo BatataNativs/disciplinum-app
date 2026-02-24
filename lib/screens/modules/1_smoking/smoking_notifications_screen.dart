@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../models/niche_id.dart';
 import '../../../models/niche.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
-import '../../../screens/schedule_screen.dart';
+import 'package:disciplinum/screens/modules/1_smoking/frases_motivacionais.dart';
 import 'package:disciplinum/widgets/home/neon_card.dart';
 
 class SmokingNotificationsScreen extends StatefulWidget {
@@ -175,36 +173,14 @@ class _SmokingNotificationsScreenState
   }
 
   Future<void> _openSchedule() async {
-    final nicheId = _niche.id.id + 100;
-    const maxSlots = 8;
-    const title = 'Horários de Motivação';
-
-    final initialItems =
-        await CloudSyncService.loadUserNicheTimes(nicheId: nicheId);
-    final initialTimes = initialItems
-        .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
-        .toList();
-
     if (!mounted) return;
 
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ScheduleScreen(
-          args: ScheduleScreenArgs(
-            nicheId: nicheId,
-            maxSlots: maxSlots,
-            title: title,
-            initialTimes: initialTimes,
-            onChanged: (times) {
-              _loadCounts();
-              // Notifica o GamificationService para recarregar
-              Provider.of<GamificationService>(context, listen: false)
-                  .restoreMonitoringSession();
-            },
-          ),
-        ),
+        builder: (_) => const FrasesMotivacionaisScreen(),
       ),
     );
+    _loadCounts();
   }
 }

@@ -70,8 +70,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       });
 
       if (settings != null) {
-        _priceController.text =
-            settings!.packPrice.toStringAsFixed(2).replaceAll('.', ',');
+        _selectedCurrency = settings!.currency;
+        _formatCurrencyInput(settings!.packPrice.toStringAsFixed(2));
         _packsController.text = settings!.packsPerDay.toString();
 
         if (!_gamificationRunning) {
@@ -79,8 +79,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
         } else {
           _selectedDate = settings!.quitDate;
         }
-
-        _selectedCurrency = settings!.currency;
 
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
       }
@@ -106,11 +104,37 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     }
 
     double val = double.parse(numbers) / 100;
-    String formatted =
-        val.toStringAsFixed(2).replaceAll('.', ',').replaceAllMapped(
-              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-              (Match m) => '${m[1]}.',
-            );
+
+    String formatted;
+    switch (_selectedCurrency) {
+      case 'R\$':
+      case 'ARS\$':
+        formatted =
+            val.toStringAsFixed(2).replaceAll('.', ',').replaceAllMapped(
+                  RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                  (match) => '${match.group(1)}.',
+                );
+        break;
+      case 'US\$':
+        String baseText = val.toStringAsFixed(2);
+        List<String> parts = baseText.split('.');
+        String integerPart = parts[0];
+        String decimalPart = parts.length > 1 ? parts[1] : '';
+
+        integerPart = integerPart.replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (match) => '${match.group(1)},',
+        );
+
+        formatted =
+            decimalPart.isNotEmpty ? '$integerPart.$decimalPart' : integerPart;
+        break;
+      case 'EUR':
+        formatted = val.toStringAsFixed(2).replaceAll('.', ',');
+        break;
+      default:
+        formatted = val.toStringAsFixed(2);
+    }
 
     _priceController.value = TextEditingValue(
       text: formatted,
@@ -269,9 +293,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
         gamification.resetMedals(
           NicheId.smoking,
-          notificationTitle: 'Progresso reiniciado neste módulo',
+          notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
-              'Você desativou o módulo. Se reativar no futuro, seu progresso começará novamente do zero.',
+              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
           deactivate: true,
         );
 
@@ -664,6 +688,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                     if (newValue != null) {
                                       setState(() {
                                         _selectedCurrency = newValue;
+                                        _formatCurrencyInput(
+                                            _priceController.text);
                                       });
                                     }
                                   },
@@ -676,13 +702,13 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                                         currencyName = 'Real';
                                         break;
                                       case 'US\$':
-                                        currencyName = 'Dólar';
+                                        currencyName = 'Dólar Americano';
                                         break;
                                       case 'EUR':
                                         currencyName = 'Euro';
                                         break;
                                       case 'ARS\$':
-                                        currencyName = 'Peso';
+                                        currencyName = 'Peso Argentino';
                                         break;
                                     }
                                     return DropdownMenuItem<String>(
@@ -905,9 +931,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 : () {
                     if (_priceController.text.isNotEmpty &&
                         _packsController.text.isNotEmpty) {
-                      String cleanPrice = _priceController.text
-                          .replaceAll(RegExp(r'[^\d,]'), '')
-                          .replaceAll(',', '.');
+                      String cleanPrice = _priceController.text;
+                      if (_selectedCurrency == 'US\$') {
+                        cleanPrice = cleanPrice.replaceAll(',', '');
+                      } else {
+                        cleanPrice =
+                            cleanPrice.replaceAll('.', '').replaceAll(',', '.');
+                      }
+                      // Fallback caso sobre algo (ex letras)
+                      cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
 
                       _saveSettings(
                         double.tryParse(cleanPrice) ?? 0.0,

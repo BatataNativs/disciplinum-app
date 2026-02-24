@@ -227,7 +227,6 @@ class MoneySavingChallengeService extends ChangeNotifier {
     required double targetAmount,
     required int periodValue,
     required String periodType,
-    required int gridSize,
     required double minValue,
     required double maxValue,
     String currency = 'R\$',
@@ -250,7 +249,6 @@ class MoneySavingChallengeService extends ChangeNotifier {
     // Sempre geramos novos valores se gridSize, min ou max mudarem,
     // mas agora também reconstruímos o progresso com base na soma.
     cellValues = MoneySavingChallengeModel.generateCellValues(
-      gridSize: gridSize,
       minValue: minValue,
       maxValue: maxValue,
       targetAmount: targetAmount,
@@ -278,7 +276,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
       targetAmount: targetAmount,
       periodValue: periodValue,
       periodType: periodType,
-      gridSize: gridSize,
+      gridSize: 1, // Não é mais utilizado no cálculo
       minValue: minValue,
       maxValue: maxValue,
       markedCells: markedCells,

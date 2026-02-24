@@ -493,9 +493,9 @@ class _ReadingScreenState extends State<ReadingScreen>
         gamification.resetMedals(
           NicheId.reading,
           deactivate: true,
-          notificationTitle: 'Módulo Desativado',
+          notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
-              'Seu progresso de leitura foi zerado e o módulo desativado.',
+              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         );
         _tabController.animateTo(0);
 
