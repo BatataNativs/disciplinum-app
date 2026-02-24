@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 
 class IapService extends ChangeNotifier {
   static final IapService _instance = IapService._internal();
@@ -167,42 +168,44 @@ class IapService extends ChangeNotifier {
   Future<void> _setEntitlement(String productId) async {
     final prefs = await SharedPreferences.getInstance();
 
+    String? entitlementType;
+    DateTime? expiresAt;
+
     if (productId == productIdDarkMode) {
       _darkModeUnlocked = true;
       await prefs.setBool(_kPrefsDarkMode, true);
-    }
-
-    if (productId == productIdAdFree) {
+      entitlementType = 'dark_mode';
+    } else if (productId == productIdAdFree) {
       _adFreePermanent = true;
       await prefs.setBool(_kPrefsAdFree, true);
-    }
-
-    // Lógica do AdFree Lite (7 Dias)
-    if (productId == productIdAdFreeLite) {
-      // Se já tiver uma expiração válida futura, soma +7 dias a ela.
-      // Senão, começa de agora + 7 dias.
-      DateTime baseDate = DateTime.now();
-      if (_adFreeLiteExpiration != null &&
-          _adFreeLiteExpiration!.isAfter(baseDate)) {
-        baseDate = _adFreeLiteExpiration!;
-      }
-
-      final newExpiration = baseDate.add(const Duration(days: 7));
-      _adFreeLiteExpiration = newExpiration;
-
-      // Salva em millis
-      await prefs.setInt(
-          _kPrefsAdFreeLiteExp, newExpiration.millisecondsSinceEpoch);
-    }
-
-    if (productId == productIdCustomNotif) {
+      entitlementType = 'ad_free';
+    } else if (productId == productIdAdFreeLite) {
+      _adFreeLiteExpiration = DateTime.now().add(const Duration(days: 7));
+      await prefs.setString(_kPrefsAdFreeLiteExp, _adFreeLiteExpiration!.toIso8601String());
+      entitlementType = 'ad_free_lite';
+      expiresAt = _adFreeLiteExpiration;
+    } else if (productId == productIdCustomNotif) {
       _customNotifUnlocked = true;
       await prefs.setBool(_kPrefsCustomNotif, true);
-    }
-
-    if (productId == productIdMotivationPhrases) {
+      entitlementType = 'custom_notifications';
+    } else if (productId == productIdMotivationPhrases) {
       _motivationPhrasesUnlocked = true;
       await prefs.setBool(_kPrefsMotivationPhrases, true);
+      entitlementType = 'motivation_phrases';
+    }
+
+    // Sincroniza com a nuvem se for um entitlement válido
+    if (entitlementType != null) {
+      try {
+        await CloudSyncService.addEntitlement(
+          entitlementType: entitlementType,
+          source: 'iap',
+          expiresAt: expiresAt,
+          metadata: {'product_id': productId},
+        );
+      } catch (e) {
+        debugPrint('❌ Erro ao sincronizar entitlement $entitlementType: $e');
+      }
     }
 
     notifyListeners();

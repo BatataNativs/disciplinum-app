@@ -44,12 +44,9 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
       _slots = [];
 
       if (serverTimes.isEmpty) {
-        // Se não tiver nada salvo, inicia com 1 slot padrão (para não ficar vazio)
-        // Mas o usuário pode apagar se quiser depois.
-        _slots.add(PhraseSlot(
-          text: getModuleMessage(_niche.id),
-          time: const TimeOfDay(hour: 9, minute: 0),
-        ));
+        // Se não tiver nada salvo, NÃO cria slot padrão automaticamente
+        // Isso evita o problema do horário 09:00 "preso"
+        // O usuário pode adicionar manualmente se quiser
       } else {
         for (int i = 0; i < serverTimes.length; i++) {
           final t = serverTimes[i];
@@ -135,6 +132,11 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     setState(() {
       _slots.removeAt(index);
     });
+    
+    // Auto-salvar quando a lista fica vazia para evitar recriação do 09:00
+    if (_slots.isEmpty) {
+      _saveData();
+    }
   }
 
   Future<void> _pickTime(int index) async {
