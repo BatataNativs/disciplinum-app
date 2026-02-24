@@ -121,9 +121,9 @@ Future<bool> requestNotificationPermissionIfNeeded() async {
   if (androidPlugin != null) {
     final granted = await androidPlugin.requestNotificationsPermission();
     await androidPlugin.requestExactAlarmsPermission();
-    return granted ?? false;
+        return granted ?? false;
   }
-  return false;
+    return false;
 }
 
 Future<void> sendModuleNotification(String body,
@@ -228,18 +228,12 @@ class NotificationService {
         scheduledDate,
         fln.NotificationDetails(android: androidPlatformChannelSpecifics),
         androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
-        // REMOVIDO: uiLocalNotificationDateInterpretation
-        // Motivo: Não é necessário para Android e estava causando erro de compilação
-        // Se precisar dar suporte a iOS no futuro, precisaremos verificar a versão do plugin
-
         matchDateTimeComponents: fln.DateTimeComponents.time,
         payload: payload,
       );
       debugPrint('Agendado: $title para $scheduledDate (ID: $id)');
     } catch (e) {
       debugPrint('ERRO ao agendar notificação: $e');
-      // Dica: Se der erro dizendo que precisa do uiLocalNotificationDateInterpretation em tempo de execução
-      // (o que é raro no Android), avise-me. Mas a compilação vai passar agora.
     }
   }
 
