@@ -129,7 +129,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
         'module_data': {
           'challenges': _challenges.map((e) => e.toJson()).toList()
         },
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       };
 
       await _supabase.from('user_module_settings').upsert(
@@ -209,7 +209,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
         'user_id': userId,
         'module_id': _moduleId,
         'module_data': {'challenges': []},
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       };
 
       await _supabase.from('user_module_settings').upsert(
