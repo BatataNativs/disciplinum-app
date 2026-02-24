@@ -167,6 +167,15 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     _filteredApps = sorted;
   }
 
+  String get _systemAppsSubtitle {
+    if (_nicheId == NicheId.spending) {
+      return 'Ex: Mercado Livre, Amazon, Shopee...';
+    } else if (_nicheId == NicheId.bingeEating) {
+      return 'Ex: iFood, Rappi, Zé Delivery...';
+    }
+    return 'Ex: Configurações, Relógio, Câmera...';
+  }
+
   void _toggle(String packageName) {
     setState(() {
       if (_selected.contains(packageName)) {
@@ -282,12 +291,14 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
                     ),
                     SwitchListTile(
                       title: const Text(
-                        'Mostrar apps do sistema',
-                        style: TextStyle(fontSize: 14),
+                        'Exibir aplicativos nativos do dispositivo',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600),
                       ),
-                      subtitle: const Text(
-                        'Ex: Chrome, YouTube, Relógio...',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      subtitle: Text(
+                        _systemAppsSubtitle,
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       activeThumbColor: Colors.green,
                       dense: true,
@@ -317,7 +328,8 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
                             )
                           : ListView.separated(
                               itemCount: _filteredApps.length,
-                              separatorBuilder: (_, __) => const Divider(),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 6),
                               itemBuilder: (context, index) {
                                 final app = _filteredApps[index];
                                 final selected =
@@ -328,76 +340,121 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
                                   onLongPress: selected
                                       ? () => _removeApp(app.packageName)
                                       : null,
-                                  child: CheckboxListTile(
-                                    value: selected,
-                                    onChanged: (_) => _toggle(app.packageName),
-                                    title: Row(
+                                  onTap: () => _toggle(app.packageName),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? (isDark
+                                              ? Colors.green
+                                                  .withValues(alpha: 0.15)
+                                              : Colors.green
+                                                  .withValues(alpha: 0.1))
+                                          : (isDark
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.05)
+                                              : Colors.white),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: selected
+                                            ? Colors.green
+                                                .withValues(alpha: 0.5)
+                                            : (isDark
+                                                ? Colors.white10
+                                                : Colors.black
+                                                    .withValues(alpha: 0.05)),
+                                        width: selected ? 1.5 : 1.0,
+                                      ),
+                                      boxShadow: [
+                                        if (!isDark && !selected)
+                                          BoxShadow(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.03),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                      ],
+                                    ),
+                                    child: Row(
                                       children: [
-                                        AsyncAppIcon(
-                                          packageName: app.packageName,
-                                          isDark: isDark,
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.1),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: AsyncAppIcon(
+                                            packageName: app.packageName,
+                                            isDark: isDark,
+                                          ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: 16),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      app.name,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                      style:
-                                                          textTheme.titleSmall,
-                                                    ),
-                                                  ),
-                                                  if (selected)
-                                                    Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.green,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                      ),
-                                                      child: const Text(
-                                                        'Ativo',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
+                                              Text(
+                                                app.name,
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                                style: textTheme.titleMedium
+                                                    ?.copyWith(
+                                                  fontWeight: selected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w600,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : Colors.black87,
+                                                  fontSize: 15,
+                                                ),
                                               ),
+                                              const SizedBox(height: 4),
                                               Text(
                                                 app.packageName,
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 1,
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 11,
                                                   color: isDark
                                                       ? Colors.white54
-                                                      : Colors.grey[600],
+                                                      : Colors.black54,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
+                                        const SizedBox(width: 12),
+                                        Container(
+                                          width: 28,
+                                          height: 28,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: selected
+                                                ? Colors.green
+                                                : (isDark
+                                                    ? Colors.white12
+                                                    : Colors.black.withValues(
+                                                        alpha: 0.05)),
+                                          ),
+                                          child: selected
+                                              ? const Icon(Icons.check,
+                                                  size: 16, color: Colors.white)
+                                              : const Icon(Icons.add,
+                                                  size: 16, color: Colors.grey),
+                                        ),
                                       ],
                                     ),
-                                    checkColor: Colors.white,
-                                    activeColor: Colors.green,
                                   ),
                                 );
                               },

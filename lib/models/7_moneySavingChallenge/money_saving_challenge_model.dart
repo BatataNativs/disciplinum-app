@@ -58,7 +58,7 @@ class MoneySavingChallengeModel {
   }
 
   /// Número total de células no grid
-  int get totalCells => gridSize * gridSize;
+  int get totalCells => cellValues.length;
 
   /// Verifica se o desafio foi concluído (progresso atingiu 100%)
   bool get isComplete => progressPercent >= 1.0;
@@ -115,14 +115,19 @@ class MoneySavingChallengeModel {
   }
 
   static List<double> generateCellValues({
-    required int gridSize,
     required double minValue,
     required double maxValue,
     required double targetAmount,
   }) {
-    final totalCellsCount = gridSize * gridSize;
-    if (totalCellsCount <= 0 || targetAmount <= 0) {
-      return List.filled(totalCellsCount, 0.0);
+    if (targetAmount <= 0) return [];
+
+    double avgAporte = (minValue + maxValue) / 2.0;
+    if (avgAporte <= 0) avgAporte = 1.0;
+
+    int totalCellsCount = (targetAmount / avgAporte).ceil();
+    if (totalCellsCount < 1) totalCellsCount = 1;
+    if (totalCellsCount > 500) {
+      totalCellsCount = 500; // Proteção contra loops gigantes
     }
 
     // 1. Definimos o mínimo real respeitando a média
@@ -132,7 +137,9 @@ class MoneySavingChallengeModel {
       actualMin =
           averagePerCell * 0.8; // Se o min for impossível, usamos 80% da média
     }
-    if (actualMin < 0.01) actualMin = 0.01;
+    if (actualMin < 0.01) {
+      actualMin = 0.01;
+    }
 
     // 2. Preenchemos todas as células com o valor mínimo inicial
     final values = List<double>.filled(totalCellsCount, actualMin);

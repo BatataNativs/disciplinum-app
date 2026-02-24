@@ -23,4 +23,10 @@ class AppConfig {
     'ADMOB_BANNER_UNIT_ID',
     defaultValue: 'ca-app-pub-3940256099942544/6300978111',
   );
+
+  // Rewarded Ad de teste do Google como fallback (dev).
+  static const String admobRewardedUnitId = String.fromEnvironment(
+    'ADMOB_REWARDED_UNIT_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/5224354917',
+  );
 }

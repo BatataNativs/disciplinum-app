@@ -255,9 +255,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
-        notificationTitle: "Progresso reiniciado neste módulo",
+        notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
-            "Você desativou o módulo ${_niche.name}. Se reativar no futuro, seu progresso começará novamente do zero.",
+            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         deactivate: true,
       );
 

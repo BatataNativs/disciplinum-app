@@ -8,6 +8,7 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import '../../../widgets/home/neon_card.dart';
 import '../../../widgets/profile/lojinha.dart';
+import 'package:disciplinum/services/ads/ad_service.dart';
 
 class FrasesMotivacionaisScreen extends StatefulWidget {
   const FrasesMotivacionaisScreen({super.key});
@@ -55,7 +56,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
           String phraseText;
           if (iap.isMotivationPhrasesUnlocked) {
-            // Se for premium, tenta pegar a frase customizada salva
+            // Se for Personalização, tenta pegar a frase customizada salva
             phraseText = (i < customPhrases.length)
                 ? customPhrases[i]
                 : getModuleMessage(_niche.id);
@@ -161,8 +162,11 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final iap = Provider.of<IapService>(context);
 
-    // Define se o usuário pode EDITAR O TEXTO
-    final bool canEditText = iap.isMotivationPhrasesUnlocked;
+    final gamification = Provider.of<GamificationService>(context);
+
+    // Define se o usuário pode EDITAR O TEXTO (IAP Global ou Desbloqueio Local via Ad)
+    final bool canEditText = iap.isMotivationPhrasesUnlocked ||
+        gamification.isMotivationUnlocked(_niche.id);
 
     return Container(
       decoration: BoxDecoration(
@@ -200,7 +204,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Personalize seus lembretes',
+                      'Personalize suas notificações motivacionais',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -253,13 +257,13 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                                       key: ValueKey(
                                           'phrase_${index}_$canEditText'),
                                       initialValue: slot.text,
-                                      // Se não for premium, fica ReadOnly (não abre teclado)
+                                      // Se não for Personalização, fica ReadOnly (não abre teclado)
                                       readOnly: !canEditText,
                                       maxLines: 2,
                                       onChanged: (val) => slot.text = val,
                                       // Se tocar no campo ReadOnly (Free), abre o dialog
                                       onTap: !canEditText
-                                          ? _showPremiumFeatureDialog
+                                          ? _showUnlockDialog
                                           : null,
                                       style: TextStyle(
                                         fontSize: 15,
@@ -366,32 +370,79 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     return NotificationMessageEditor(nicheId: _niche.id);
   }
 
-  void _showPremiumFeatureDialog() {
+  void _showUnlockDialog() {
+    final adService = Provider.of<AdService>(context, listen: false);
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+
+    adService.loadRewardedAd();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Recurso pago 💰'),
+        title: const Text('Desbloquear Personalização'),
         content: const Text(
-          'A personalização de mensagens é um recurso pago. '
-          '\nDeseja conhecer nossa lojinha?',
+          'Você pode assistir a um rápido vídeo para liberar a personalização de motivação DESTE módulo, '
+          'ou conhecer nossa Lojinha para comprar as Notificações Personalizáveis e liberar TODOS de uma vez.',
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Agora não'),
+            child: const Text('Voltar'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              showDialog(
-                context: context,
-                builder: (_) => const Lojinha(),
-              );
-            },
-            child: const Text('Ir para Lojinha'),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow, size: 18),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _handleAdUnlock(gamification, adService);
+                },
+                label: const Text('Assistir Vídeo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                icon: const Icon(Icons.diamond_outlined, size: 18),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  showDialog(
+                    context: context,
+                    builder: (_) => const Lojinha(),
+                  );
+                },
+                label: const Text('Ir para Lojinha'),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  void _handleAdUnlock(GamificationService gamification, AdService adService) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Carregando anúncio...')),
+    );
+
+    adService.showRewardedAd(
+      onUserEarnedReward: () {
+        gamification.unlockMotivation(_niche.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Personalização desbloqueada! 🎉')),
+          );
+        }
+      },
+      onAdDismissed: () {
+        // Nada de extra precisa ser feito ao fechar o ad
+      },
     );
   }
 

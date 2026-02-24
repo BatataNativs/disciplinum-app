@@ -4,6 +4,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
+import 'package:disciplinum/services/ads/ad_service.dart';
 
 class NotificationMessageEditor extends StatelessWidget {
   final NicheId nicheId;
@@ -14,7 +15,12 @@ class NotificationMessageEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final iap = Provider.of<IapService>(context);
     final gamification = Provider.of<GamificationService>(context);
+    final adService = Provider.of<AdService>(context, listen: false);
     final currentMsg = getModuleMessage(nicheId);
+
+    // Verifica se tem iap global OU se liberou esse módulo nas prefs locais
+    final bool hasAccess = iap.isCustomNotifUnlocked ||
+        gamification.isNotificationUnlocked(nicheId);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -39,7 +45,7 @@ class NotificationMessageEditor extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              if (!iap.isCustomNotifUnlocked)
+              if (!hasAccess)
                 const Icon(Icons.lock_outline, size: 16, color: Colors.white),
             ],
           ),
@@ -58,16 +64,14 @@ class NotificationMessageEditor extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                if (iap.isCustomNotifUnlocked) {
+                if (hasAccess) {
                   _openEditMessageDialog(context, gamification);
                 } else {
-                  _showPremiumFeatureDialog(context);
+                  _showPremiumFeatureDialog(context, gamification, adService);
                 }
               },
               label: Text(
-                iap.isCustomNotifUnlocked
-                    ? 'Editar Mensagem'
-                    : 'Personalizar 🔓',
+                hasAccess ? 'Editar Mensagem' : 'Personalizar 🔓',
                 style: const TextStyle(color: Colors.white),
               ),
               style: OutlinedButton.styleFrom(
@@ -83,32 +87,80 @@ class NotificationMessageEditor extends StatelessWidget {
     );
   }
 
-  void _showPremiumFeatureDialog(BuildContext context) {
+  void _showPremiumFeatureDialog(BuildContext context,
+      GamificationService gamification, AdService adService) {
+    // Tenta pré-carregar o vídeo nos bastidores caso ainda não tenha sido
+    adService.loadRewardedAd();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Recurso pago 💰'),
+        title: const Text('Desbloquear Personalização'),
         content: const Text(
-          'A personalização de mensagens é um recurso pago. '
-          '\nDeseja conhecer nossa lojinha?',
+          'Você pode assistir a um rápido vídeo para liberar a personalização DESTE módulo, '
+          'ou conhecer nossa Lojinha para adquirir as Notificações Personalizáveis e liberar TODOS de uma vez.',
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Agora não'),
+            child: const Text('Voltar'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              showDialog(
-                context: context,
-                builder: (_) => const Lojinha(),
-              );
-            },
-            child: const Text('Ir para Lojinha'),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow, size: 18),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _handleAdUnlock(context, gamification, adService);
+                },
+                label: const Text('Assistir Vídeo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                icon: const Icon(Icons.diamond_outlined, size: 18),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  showDialog(
+                    context: context,
+                    builder: (_) => const Lojinha(),
+                  );
+                },
+                label: const Text('Ir para Lojinha'),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  void _handleAdUnlock(BuildContext context, GamificationService gamification,
+      AdService adService) {
+    // Se quiser você pode mostrar um loading aqui (ex: CircularProgressIndicator)
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Carregando anúncio...')),
+    );
+
+    adService.showRewardedAd(
+      onUserEarnedReward: () {
+        gamification.unlockNotification(nicheId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Personalização desbloqueada! 🎉')),
+          );
+        }
+      },
+      onAdDismissed: () {
+        // Nada de extra precisa ser feito ao fechar o ad sem recompensa,
+        // mas você poderia avisar 'Vídeo fechado antes do fim' se quiser.
+      },
     );
   }
 

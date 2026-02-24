@@ -99,6 +99,9 @@ class GamificationService extends ChangeNotifier {
   final Map<NicheId, DateTime> _moduleStartDates = {};
   final Map<NicheId, String> _customMessages = {};
   final Map<NicheId, List<String>> _customPhrases = {};
+  final Set<NicheId> _unlockedNotifications =
+      {}; // Novo: Módulos desbloqueados por Ad
+  final Set<NicheId> _unlockedMotivations = {}; // NOVO
 
   // Fila de medalhas pendentes de visualização (Popup)
   final List<Map<String, dynamic>> _pendingMedals = [];
@@ -115,6 +118,9 @@ class GamificationService extends ChangeNotifier {
   // Prefixo para o status de cada módulo (Local-First)
   static const String _prefsModuleStatusPrefix = 'module_status_';
   static const String _prefsPendingMedalsKey = 'pending_medals';
+  static const String _prefsUnlockedNotifsKey = 'unlocked_notifications';
+  static const String _prefsUnlockedMotivationsKey =
+      'unlocked_motivations'; // NOVO
 
   // Controle de monitoramento
   bool _isModuleActive = false;
@@ -181,6 +187,24 @@ class GamificationService extends ChangeNotifier {
       }
     }
 
+    // Carrega nichos desbloqueados por anúncios
+    final unlockedIds = prefs.getStringList(_prefsUnlockedNotifsKey);
+    if (unlockedIds != null) {
+      for (final idStr in unlockedIds) {
+        final nid = NicheId.tryFromInt(int.parse(idStr));
+        if (nid != null) _unlockedNotifications.add(nid);
+      }
+    }
+
+    final unlockedMotivationsIds =
+        prefs.getStringList(_prefsUnlockedMotivationsKey);
+    if (unlockedMotivationsIds != null) {
+      for (final idStr in unlockedMotivationsIds) {
+        final nid = NicheId.tryFromInt(int.parse(idStr));
+        if (nid != null) _unlockedMotivations.add(nid);
+      }
+    }
+
     // Carrega medalhas pendentes
     final pendingJson = prefs.getString(_prefsPendingMedalsKey);
     if (pendingJson != null) {
@@ -230,6 +254,40 @@ class GamificationService extends ChangeNotifier {
 
     // 2. Enviar notificação com ações
     _sendMedalNotificationWithActions(nicheId, medal);
+
+    notifyListeners();
+  }
+
+  // --- Desbloqueio de Notificações por Ads ---
+  bool isNotificationUnlocked(NicheId nicheId) {
+    return _unlockedNotifications.contains(nicheId);
+  }
+
+  Future<void> unlockNotification(NicheId nicheId) async {
+    _unlockedNotifications.add(nicheId);
+
+    // Salva na persistência local
+    final prefs = await SharedPreferences.getInstance();
+    final idsAsString =
+        _unlockedNotifications.map((n) => n.id.toString()).toList();
+    await prefs.setStringList(_prefsUnlockedNotifsKey, idsAsString);
+
+    notifyListeners();
+  }
+
+  // --- Desbloqueio de Motivações por Ads ---
+  bool isMotivationUnlocked(NicheId nicheId) {
+    return _unlockedMotivations.contains(nicheId);
+  }
+
+  Future<void> unlockMotivation(NicheId nicheId) async {
+    _unlockedMotivations.add(nicheId);
+
+    // Salva na persistência local
+    final prefs = await SharedPreferences.getInstance();
+    final idsAsString =
+        _unlockedMotivations.map((n) => n.id.toString()).toList();
+    await prefs.setStringList(_prefsUnlockedMotivationsKey, idsAsString);
 
     notifyListeners();
   }
@@ -812,7 +870,7 @@ class GamificationService extends ChangeNotifier {
 
     // 2. Agendar Motivações (Frases) - REVISADO E FORÇADO
     final motivations = motivationSchedulesByModule[nicheId];
-    if (motivations != null) {
+    if (motivations != null && motivations.isNotEmpty) {
       debugPrint(
           '📝 Agendando ${motivations.length} frases motivacionais para ${nicheId.name}');
       for (int i = 0; i < motivations.length; i++) {
@@ -832,6 +890,7 @@ class GamificationService extends ChangeNotifier {
           body: phrase,
         );
       }
+    } else {
       debugPrint(
           '⚠️ Nenhuma lista de motivação encontrada para ${nicheId.name} no momento do agendamento.');
     }
@@ -940,7 +999,8 @@ class GamificationService extends ChangeNotifier {
 
   String _getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
     if (allowCustom) {
-      if (IapService().isCustomNotifUnlocked) {
+      if (IapService().isCustomNotifUnlocked ||
+          isNotificationUnlocked(nicheId)) {
         final custom = _customMessages[nicheId];
         if (custom != null && custom.isNotEmpty) return custom;
       }
@@ -948,13 +1008,14 @@ class GamificationService extends ChangeNotifier {
     return moduleMessages[nicheId] ?? 'Conquista em progresso!';
   }
 
-  // --- BUSCA FRASE CORRETA (Free ou Premium) ---
+  // --- BUSCA FRASE CORRETA (Free ou Personalizada) ---
   String getMotivationalPhrase(NicheId nicheId, TimeOfDay time) {
     // 1. Tenta pegar a lista de horários
     final schedules = motivationSchedulesByModule[nicheId];
 
-    // 2. Se for Premium, tenta pegar a frase customizada correspondente ao índice
-    if (IapService().isMotivationPhrasesUnlocked) {
+    // 2. Se estiver desbloqueado (IAP ou Ad), tenta pegar a frase customizada correspondente ao índice
+    if (IapService().isMotivationPhrasesUnlocked ||
+        isMotivationUnlocked(nicheId)) {
       final phrases = _customPhrases[nicheId];
       if (phrases != null && schedules != null && phrases.isNotEmpty) {
         // Encontra qual "slot" é esse horário
@@ -1435,10 +1496,8 @@ class GamificationService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
-
       final status = UserModuleStatus(
-        userId: user.id,
+        userId: user?.id ?? 'local_user',
         nicheId: nicheId.id,
         isActive: isModuleActive(nicheId),
         consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
@@ -1448,7 +1507,8 @@ class GamificationService extends ChangeNotifier {
 
       await prefs.setString('$_prefsModuleStatusPrefix${nicheId.id}',
           jsonEncode(status.toJson()));
-      debugPrint('💾 Status local salvo para $nicheId');
+      debugPrint(
+          '💾 Status local salvo para $nicheId (User: ${user?.id ?? 'local_user'})');
     } catch (e) {
       debugPrint('Erro ao salvar status local: $e');
     }

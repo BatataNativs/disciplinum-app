@@ -44,7 +44,6 @@ class _MoneySavingChallengeScreenState
   final TextEditingController _minValueController = TextEditingController();
   final TextEditingController _maxValueController = TextEditingController();
   String _selectedPeriodType = 'mês(es)';
-  int _selectedGridSize = 10;
   String _selectedCurrency = 'R\$';
 
   final List<String> _periodTypes = [
@@ -54,7 +53,6 @@ class _MoneySavingChallengeScreenState
     'ano(s)',
     'indeterminado'
   ];
-  final List<int> _gridSizeOptions = [8, 10, 12, 15];
   final List<String> _currencyOptions = ['R\$', 'US\$', '€', '\$'];
   final Map<String, String> _currencyNames = {
     'R\$': 'R\$ - Real',
@@ -167,7 +165,6 @@ class _MoneySavingChallengeScreenState
           _maxValueController.text =
               _formatValue(active.maxValue, active.currency);
           _selectedPeriodType = active.periodType;
-          _selectedGridSize = active.gridSize;
           _selectedCurrency = active.currency;
         }
       }
@@ -219,7 +216,6 @@ class _MoneySavingChallengeScreenState
         targetAmount: target,
         periodValue: periodValue,
         periodType: _selectedPeriodType,
-        gridSize: _selectedGridSize,
         minValue: minValue,
         maxValue: maxValue,
         currency: _selectedCurrency,
@@ -234,6 +230,13 @@ class _MoneySavingChallengeScreenState
         _showSnackBar(editId == null
             ? 'Desafio criado e ativado!'
             : 'Desafio atualizado!');
+
+        // --- ATIVAÇÃO DE GAMIFICAÇÃO NOVO DESAFIO ---
+        if (editId == null) {
+          final gamification =
+              Provider.of<GamificationService>(context, listen: false);
+          gamification.startModuleCycle(nicheId: _niche.id);
+        }
 
         // Vai para a aba do grid (agora via botão, mas podemos mudar para tab 1 se preferir)
         if (_pageController.hasClients) {
@@ -321,7 +324,7 @@ class _MoneySavingChallengeScreenState
           deactivate: true,
           notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
-              'O módulo foi desativado e todos os dados foram limpos conforme solicitado.',
+              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         );
 
         // Cancela notificações específicas
@@ -529,7 +532,6 @@ class _MoneySavingChallengeScreenState
       _maxValueController.text =
           _formatValue(challenge.maxValue, challenge.currency);
       _selectedPeriodType = challenge.periodType;
-      _selectedGridSize = challenge.gridSize;
       _selectedCurrency = challenge.currency;
     });
 
@@ -563,6 +565,19 @@ class _MoneySavingChallengeScreenState
     if (confirmed == true) {
       await _service.deleteChallenge(challenge.id);
       await _loadChallenge();
+
+      if (_service.challengesList.isEmpty && mounted) {
+        final gamification =
+            Provider.of<GamificationService>(context, listen: false);
+        gamification.resetMedals(
+          _niche.id,
+          deactivate: true,
+          notificationTitle: 'Módulo Desativado 🛑',
+          notificationBody:
+              'O último desafio foi excluído e o módulo foi desativado automaticamente.',
+        );
+      }
+
       _showSnackBar('Desafio excluído');
     }
   }
@@ -578,7 +593,6 @@ class _MoneySavingChallengeScreenState
       _minValueController.clear();
       _maxValueController.clear();
       _selectedPeriodType = 'mês(es)';
-      _selectedGridSize = 10;
       _selectedCurrency = 'R\$';
     }
 
@@ -729,10 +743,6 @@ class _MoneySavingChallengeScreenState
                               _buildPeriodTypeDropdownForModal(setModalState)),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Tamanho do Grid
-                  _buildGridSizeSelectorForModal(setModalState),
                   const SizedBox(height: 20),
 
                   // Valores Mínimo e Máximo
@@ -962,55 +972,6 @@ class _MoneySavingChallengeScreenState
           }).toList(),
         ),
       ),
-    );
-  }
-
-  Widget _buildGridSizeSelectorForModal(StateSetter setModalState) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: _gridSizeOptions.map((size) {
-        final isSelected = _selectedGridSize == size;
-        return GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            setModalState(() => _selectedGridSize = size);
-            setState(() => _selectedGridSize = size);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color(0xFF15B7D1)
-                  : (isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFFDF2FF)),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF15B7D1)
-                      : Colors.purple.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              children: [
-                if (isSelected)
-                  const Icon(Icons.check, color: Colors.white, size: 16),
-                if (isSelected) const SizedBox(width: 4),
-                Text(
-                  '${size}x$size',
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white70 : Colors.black87),
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
