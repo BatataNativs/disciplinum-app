@@ -4,6 +4,7 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/user_module_status.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/models/user_entitlement.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
 final supabase = Supabase.instance.client;
@@ -220,6 +221,119 @@ class CloudSyncService {
     } catch (e) {
       debugPrint('❌ Erro durante sincronização global: $e');
       return false;
+    }
+  }
+
+  // --- ENTITLEMENTS ---
+  static Future<void> addEntitlement({
+    required String entitlementType,
+    int? nicheId,
+    required String source,
+    DateTime? expiresAt,
+    Map<String, dynamic>? metadata,
+  }) async {
+    await _retryOperation(() async {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+      await supabase.from('user_entitlements').insert({
+        'user_id': user.id,
+        'entitlement_type': entitlementType,
+        'niche_id': nicheId,
+        'source': source,
+        'expires_at': expiresAt?.toIso8601String(),
+        'metadata': metadata ?? {},
+      });
+    });
+  }
+
+  static Future<void> removeEntitlement({
+    required String entitlementType,
+    int? nicheId,
+  }) async {
+    await _retryOperation(() async {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+      final matchData = <String, Object>{
+        'user_id': user.id,
+        'entitlement_type': entitlementType,
+      };
+      if (nicheId != null) {
+        matchData['niche_id'] = nicheId;
+      }
+      await supabase.from('user_entitlements').delete().match(matchData);
+    });
+  }
+
+  static Future<List<UserEntitlement>> loadEntitlements({
+    String? entitlementType,
+    int? nicheId,
+  }) async {
+    return await _retryOperation(() async {
+          final user = supabase.auth.currentUser;
+          if (user == null) return <UserEntitlement>[];
+          
+          var query = supabase
+              .from('user_entitlements')
+              .select()
+              .eq('user_id', user.id);
+          
+          if (entitlementType != null) {
+            query = query.eq('entitlement_type', entitlementType);
+          }
+          
+          if (nicheId != null) {
+            query = query.eq('niche_id', nicheId);
+          }
+          
+          final result = await query;
+          return (result as List)
+              .map((row) => UserEntitlement.fromJson(row))
+              .where((entitlement) => entitlement.isValid)
+              .toList();
+        }) ??
+        [];
+  }
+
+  static Future<void> syncAllEntitlements() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      debugPrint('🔄 Sincronizando entitlements do usuário...');
+
+      // Carrega todos os entitlements da nuvem
+      final cloudEntitlements = await loadEntitlements();
+
+      // Sincroniza com GamificationService
+      final gamification = GamificationService.instance;
+      
+      // Sincroniza desbloqueios por Ads
+      final notificationEntitlements = cloudEntitlements
+          .where((e) => e.entitlementType == 'notification');
+      final motivationEntitlements = cloudEntitlements
+          .where((e) => e.entitlementType == 'motivation');
+      
+      for (final entitlement in notificationEntitlements) {
+        if (entitlement.nicheId != null) {
+          final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
+          if (nicheId != null) {
+            await gamification.unlockNotification(nicheId);
+          }
+        }
+      }
+      
+      for (final entitlement in motivationEntitlements) {
+        if (entitlement.nicheId != null) {
+          final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
+          if (nicheId != null) {
+            await gamification.unlockMotivation(nicheId);
+          }
+        }
+      }
+
+      debugPrint('✅ Sincronização de entitlements concluída.');
+    } catch (e) {
+      debugPrint('❌ Erro na sincronização de entitlements: $e');
     }
   }
 }

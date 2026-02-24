@@ -272,6 +272,17 @@ class GamificationService extends ChangeNotifier {
         _unlockedNotifications.map((n) => n.id.toString()).toList();
     await prefs.setStringList(_prefsUnlockedNotifsKey, idsAsString);
 
+    // Sincroniza com a nuvem
+    try {
+      await CloudSyncService.addEntitlement(
+        entitlementType: 'notification',
+        nicheId: nicheId.id,
+        source: 'ad',
+      );
+    } catch (e) {
+      debugPrint('❌ Erro ao sincronizar desbloqueio de notificação: $e');
+    }
+
     notifyListeners();
   }
 
@@ -288,6 +299,17 @@ class GamificationService extends ChangeNotifier {
     final idsAsString =
         _unlockedMotivations.map((n) => n.id.toString()).toList();
     await prefs.setStringList(_prefsUnlockedMotivationsKey, idsAsString);
+
+    // Sincroniza com a nuvem
+    try {
+      await CloudSyncService.addEntitlement(
+        entitlementType: 'motivation',
+        nicheId: nicheId.id,
+        source: 'ad',
+      );
+    } catch (e) {
+      debugPrint('❌ Erro ao sincronizar desbloqueio de motivação: $e');
+    }
 
     notifyListeners();
   }
@@ -496,6 +518,9 @@ class GamificationService extends ChangeNotifier {
 
       // 4. Módulo 7 (Poupança) - Puxa via serviço dedicado para garantir lógica de migração
       await MoneySavingChallengeService().getChallenges();
+
+      // Sincroniza entitlements (desbloqueios por Ads e IAP)
+      await CloudSyncService.syncAllEntitlements();
 
       // Persiste as mudanças básicas localmente
       await _saveAllToLocalCache();
