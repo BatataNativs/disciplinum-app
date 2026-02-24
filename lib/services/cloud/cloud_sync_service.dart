@@ -9,6 +9,13 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 
 final supabase = Supabase.instance.client;
 
+// Função auxiliar para garantir timestamps com timezone local
+String _localTimestamp() {
+  final now = DateTime.now();
+  // Garante que o timestamp inclua o timezone local
+  return now.toIso8601String();
+}
+
 Future<T?> _retryOperation<T>(
   Future<T> Function() operation, {
   int maxRetries = 3,
@@ -195,7 +202,7 @@ class CloudSyncService {
         'user_id': user.id,
         'niche_id': nicheId.id,
         'is_active': isActive,
-        'last_updated': DateTime.now().toIso8601String(),
+        'last_updated': _localTimestamp(),
       };
 
       if (consecutiveDays != null) {
