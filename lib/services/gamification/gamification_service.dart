@@ -877,9 +877,23 @@ class GamificationService extends ChangeNotifier {
           ];
           body = 'Hora da refeição das $timeStr! Você fez/fará esta refeição?';
 
-          final dt = DateTime(2024, 1, 1, time.hour, time.minute)
-              .subtract(const Duration(minutes: 30));
-          finalTime = TimeOfDay(hour: dt.hour, minute: dt.minute);
+          // CORREÇÃO: Usar data atual com timezone local para calcular 30min antes
+          final now = DateTime.now();
+          var scheduledDateTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            time.hour,
+            time.minute,
+          );
+          
+          // Subtrai 30 minutos (lida corretamente com mudança de dia)
+          scheduledDateTime = scheduledDateTime.subtract(const Duration(minutes: 30));
+          
+          finalTime = TimeOfDay(
+            hour: scheduledDateTime.hour, 
+            minute: scheduledDateTime.minute,
+          );
         }
 
         await NotificationService.scheduleDailyNotification(
