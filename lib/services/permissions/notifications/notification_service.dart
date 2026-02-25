@@ -51,6 +51,10 @@ Future<void> initNotifications() async {
         NotificationService.onRelapseDetected?.call(response.payload);
       }
 
+      if (response.actionId == actionIdSim) {
+        NotificationService.onCheckInSim?.call(response.payload);
+      }
+
       // Lógica para abrir módulo de Procrastinação na aba correta (Check-in Diário)
       if (response.payload == 'procrastination_checkin' ||
           response.actionId == 'ver_itens') {
@@ -121,9 +125,9 @@ Future<bool> requestNotificationPermissionIfNeeded() async {
   if (androidPlugin != null) {
     final granted = await androidPlugin.requestNotificationsPermission();
     await androidPlugin.requestExactAlarmsPermission();
-        return granted ?? false;
+    return granted ?? false;
   }
-    return false;
+  return false;
 }
 
 Future<void> sendModuleNotification(String body,
@@ -173,6 +177,7 @@ Future<void> sendModuleNotification(String body,
 class NotificationService {
   static bool soundEnabled = true;
   static void Function(String?)? onRelapseDetected;
+  static void Function(String?)? onCheckInSim;
 
   static Future<void> init() async => initNotifications();
 
