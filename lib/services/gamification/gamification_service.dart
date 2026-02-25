@@ -15,6 +15,7 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
+import 'package:disciplinum/services/1_smoking/smoking_checkin_service.dart';
 
 // Mensagens por módulo
 final Map<NicheId, String> moduleMessages = {
@@ -91,6 +92,7 @@ class GamificationService extends ChangeNotifier {
   GamificationService._internal() {
     _loadPreferences();
     NotificationService.onRelapseDetected = _handleRelapseFromNotification;
+    NotificationService.onCheckInSim = _handleCheckInSimFromNotification;
   }
 
   // Cache local das medalhas e dias
@@ -139,35 +141,37 @@ class GamificationService extends ChangeNotifier {
 
   void _handleRelapseFromNotification(String? payload) {
     if (payload != null && payload.startsWith('medal_ack')) {
-      // Apenas limpamos a notificação, nada especial a fazer aqui
-      // O popup será mostrado quando o app abrir
       return;
     }
 
     NicheId? nicheId;
     if (payload != null) {
-      // Tenta parsing do ID
       nicheId = NicheId.values.firstWhere(
         (e) => e.id.toString() == payload,
-        orElse: () =>
-            NicheId.smoking, // Fallback, mas idealmente tratamos melhor
+        orElse: () => NicheId.smoking,
       );
     } else {
       nicheId = currentNicheId;
     }
 
     if (nicheId == NicheId.smoking && !payload!.startsWith('reading')) {
-      // proteção simples
       final niche = NicheRepository.getById(nicheId!);
+      // Apaga check-ins ao resetar por recaída
+      SmokingCheckinService().clearAllCheckins();
       resetMedals(
         nicheId,
-        notificationTitle: 'Recaída registrada 😟',
+        notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
-            'Sua contagem foi zerada e o módulo desativado. Confira no app o quanto economizou nessa tentativa!',
+            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         iconPath: niche.iconPath,
         deactivate: true,
       );
     }
+  }
+
+  void _handleCheckInSimFromNotification(String? payload) {
+    SmokingCheckinService().recordCheckin();
+    debugPrint('✅ Check-in "Sim" registrado pela notificação.');
   }
 
   Future<void> _loadPreferences() async {
@@ -886,12 +890,13 @@ class GamificationService extends ChangeNotifier {
             time.hour,
             time.minute,
           );
-          
+
           // Subtrai 30 minutos (lida corretamente com mudança de dia)
-          scheduledDateTime = scheduledDateTime.subtract(const Duration(minutes: 30));
-          
+          scheduledDateTime =
+              scheduledDateTime.subtract(const Duration(minutes: 30));
+
           finalTime = TimeOfDay(
-            hour: scheduledDateTime.hour, 
+            hour: scheduledDateTime.hour,
             minute: scheduledDateTime.minute,
           );
         }

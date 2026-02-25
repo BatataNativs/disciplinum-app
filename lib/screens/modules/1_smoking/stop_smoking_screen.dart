@@ -15,6 +15,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 import '../../schedule_screen.dart';
+import 'package:disciplinum/screens/modules/1_smoking/daily_checkins_stats.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   final String? heroTag;
@@ -38,8 +39,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   final TextEditingController _priceController =
       TextEditingController(text: '0,00');
-  final TextEditingController _packsController =
-      TextEditingController(text: '0');
+  final TextEditingController _packsController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedCurrency = 'R\$';
 
@@ -72,7 +72,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       if (settings != null) {
         _selectedCurrency = settings!.currency;
         _formatCurrencyInput(settings!.packPrice.toStringAsFixed(2));
-        _packsController.text = settings!.packsPerDay.toString();
+        _packsController.text =
+            settings!.packsPerDay > 0 ? settings!.packsPerDay.toString() : '';
 
         if (!_gamificationRunning) {
           _selectedDate = DateTime.now();
@@ -154,7 +155,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
     gamification.scheduleByModule[NicheId.smoking] =
         times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
 
-    if (onlySyncSchedules) return;
+    if (onlySyncSchedules) {
+      if (_gamificationRunning) {
+        await gamification.restoreMonitoringSession();
+      }
+      return;
+    }
 
     if (times.isNotEmpty && _gamificationRunning) {
       await PermissionService.ensurePermissions(context);
@@ -758,15 +764,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.black),
-                          onChanged: (val) {
-                            if (val.isEmpty) {
-                              _packsController.value = const TextEditingValue(
-                                text: '0',
-                                selection: TextSelection.collapsed(offset: 1),
-                              );
-                            }
-                          },
                           decoration: InputDecoration(
+                            hintText: '0',
                             contentPadding:
                                 const EdgeInsets.symmetric(horizontal: 8),
                             border: OutlineInputBorder(
@@ -1229,6 +1228,20 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             const SizedBox(height: 20),
             _buildMenuTile(
+              icon: Icons.calendar_month_rounded,
+              label: 'Estatísticas dos Check-ins',
+              color: const Color(0xFF6366F1),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DailyCheckinsStats(),
+                  ),
+                );
+              },
+            ),
+            _buildMenuTile(
               icon: Icons.savings_outlined,
               label: 'Economia',
               color: Colors.green,
@@ -1249,7 +1262,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             _buildMenuTile(
               icon: Icons.health_and_safety_outlined,
-              label: 'Saude',
+              label: 'Saúde',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
