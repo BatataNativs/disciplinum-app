@@ -4,14 +4,17 @@ import 'package:provider/provider.dart';
 import 'package:usage_stats/usage_stats.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/screens/modules/2_bingeEating/binge_eating_notifications_screen.dart';
+import 'package:disciplinum/screens/modules/2_bingeEating/days_without_food_delivery.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
+import 'dart:async';
 
 class BingeEatingScreen extends StatefulWidget {
   final String? heroTag;
@@ -21,12 +24,16 @@ class BingeEatingScreen extends StatefulWidget {
   State<BingeEatingScreen> createState() => _BingeEatingScreenState();
 }
 
-class _BingeEatingScreenState extends State<BingeEatingScreen> {
+class _BingeEatingScreenState extends State<BingeEatingScreen>
+    with WidgetsBindingObserver {
   final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
   final List<String> _selectedApps = [];
   bool _gamificationRunning = false;
   bool _loadingData = true;
   bool _isLoadingData = false;
+
+  // Cache dos horários como no módulo Focus
+  TimeOfDay? _checkinTime;
 
   late PageController _pageController;
   int _selectedIndex = 0;
@@ -34,18 +41,99 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    WidgetsBinding.instance.addObserver(this);
+    _pageController = PageController();
     _loadAllPersistentData();
+    _startGamificationCycle();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Força atualização quando a app volta para o primeiro plano
+      if (mounted) {
+        _reloadCheckinData();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(BingeEatingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Força atualização quando o widget é reconstruído (volta de outras telas)
+    if (mounted) {
+      _reloadCheckinData();
+    }
+  }
+
+  Future<void> _reloadCheckinData() async {
+    try {
+      final checkinTimes = await CloudSyncService.loadUserNicheTimes(
+          nicheId: _niche.id.id + 200);
+
+      TimeOfDay? newCheckinTime;
+      if (checkinTimes.isNotEmpty) {
+        newCheckinTime = TimeOfDay(
+            hour: checkinTimes[0].hour, minute: checkinTimes[0].minute);
+      }
+
+      // Só atualiza se realmente mudou
+      if (_checkinTime != newCheckinTime) {
+        if (mounted) {
+          setState(() {
+            _checkinTime = newCheckinTime;
+          });
+        }
+      }
+    } catch (e) {
+      // Silenciosamente ignora erros de carregamento
+    }
+  }
+
+  Future<void> _syncCheckInWithGamification(
+      {bool onlySyncSchedules = false}) async {
+    final times =
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+    if (!mounted) return;
+
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+
+    gamification.scheduleByModule[_niche.id] =
+        times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
+
+    if (onlySyncSchedules) {
+      if (_gamificationRunning) {
+        await gamification.restoreMonitoringSession();
+      }
+      // Força atualização da UI quando apenas sincroniza horários
+      if (mounted) {
+        setState(() {});
+      }
+      return;
+    }
+
+    if (times.isNotEmpty && _gamificationRunning) {
+      await PermissionService.ensurePermissions(context);
+      gamification.startModuleCycle(nicheId: _niche.id);
+
+      if (!gamification.isGeneralMonitoringActive) {
+        gamification.startMonitoringApps(
+            nicheId: _niche.id,
+            horarios: gamification.scheduleByModule[_niche.id]!);
+      }
+    }
+  }
+
   String _getIntroText() {
-    return 'Apps monitorados:';
+    return 'Aplicativos monitorados:';
   }
 
   Future<void> _loadAllPersistentData() async {
@@ -91,6 +179,20 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
       }
     } finally {
       _isLoadingData = false;
+    }
+
+    // Sincroniza check-in com gamification como no módulo de Parar de Fumar
+    _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
+
+    // Carrega horários de check-in como no módulo Focus
+    final checkinTimes =
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+
+    if (checkinTimes.isNotEmpty) {
+      _checkinTime =
+          TimeOfDay(hour: checkinTimes[0].hour, minute: checkinTimes[0].minute);
+    } else {
+      _checkinTime = null;
     }
   }
 
@@ -485,13 +587,17 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           return Expanded(
             child: GestureDetector(
               onTap: () {
-                HapticFeedback.selectionClick();
-                if (_pageController.hasClients) {
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutQuad);
+                HapticFeedback.lightImpact();
+                if (!isSelected) {
+                  _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutQuad,
+                  );
                 } else {
-                  setState(() => _selectedIndex = index);
+                  setState(() {
+                    _selectedIndex = index;
+                  });
                 }
               },
               child: AnimatedContainer(
@@ -565,6 +671,10 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
           ],
         );
       case 1:
+        // Força recarregar dados do check-in quando a aba Compulsão alimentar é exibida
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _reloadCheckinData();
+        });
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -636,6 +746,8 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                   );
                 },
               ),
+            const SizedBox(height: 24),
+            _buildCheckinSection(isDark),
           ],
         );
       default:
@@ -696,6 +808,147 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               color: isDark ? Colors.white70 : Colors.black54,
               height: 1.6,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckinSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Check-in Diário',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_checkinTime != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Horário configurado:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _showDeleteTimeDialog(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: Colors.red.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Configure este horário no botão "Notificações"',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Horário não configurado',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Acesse "Notificações" para configurar seu check-in diário',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteTimeDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Excluir horário?"),
+        content: Text(
+          "Deseja excluir o horário ${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')} do seu check-in diário?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Não"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+
+              // Remove o horário específico
+              await CloudSyncService.removeUserNicheTime(
+                nicheId: _niche.id.id + 200,
+                hour: _checkinTime!.hour,
+                minute: _checkinTime!.minute,
+              );
+
+              // Atualiza a variável de estado
+              if (mounted) {
+                setState(() {
+                  _checkinTime = null;
+                });
+              }
+            },
+            child: const Text("Sim"),
           ),
         ],
       ),
@@ -776,7 +1029,10 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
                         builder: (context) =>
                             const BingeEatingNotificationsScreen(),
                       ),
-                    );
+                    ).then((_) {
+                      // Força atualização do check-in ao voltar da tela de notificações
+                      _reloadCheckinData();
+                    });
                   },
                 ),
               ),
@@ -883,6 +1139,19 @@ class _BingeEatingScreenState extends State<BingeEatingScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            _buildMenuTile(
+              icon: Icons.no_food_rounded,
+              label: "Dias sem pedir delivery",
+              color: Colors.green,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const DaysWithoutFoodDelivery()),
+                );
+              },
+            ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
               label: "Meu progresso",

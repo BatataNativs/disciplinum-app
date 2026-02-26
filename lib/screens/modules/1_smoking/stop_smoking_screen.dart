@@ -1117,7 +1117,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'O que e?',
+              'O que é?',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1159,7 +1159,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.access_time_rounded,
-                    label: 'Configurar Horario',
+                    label: 'Configurar Horário',
                     color: const Color(0xFF6366F1),
                     isDark: isDark,
                     onTap: () async {
@@ -1181,7 +1181,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                             args: ScheduleScreenArgs(
                               nicheId: nicheId,
                               maxSlots: 1,
-                              title: 'Horario de Check-in',
+                              title: 'Horário de Check-in',
                               initialTimes: initialTimes,
                               onChanged: (times) {
                                 _syncCheckInWithGamification(
@@ -1219,7 +1219,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatisticas',
+              'Estatísticas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
