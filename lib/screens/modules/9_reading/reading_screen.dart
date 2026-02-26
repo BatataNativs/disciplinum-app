@@ -1,13 +1,16 @@
-import 'package:disciplinum/models/niche_id.dart';
-import 'package:disciplinum/screens/modules/9_reading/my_shelf_screen.dart';
-import 'package:disciplinum/screens/modules/9_reading/reading_settings_screen.dart';
-import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart';
-import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/models/niche.dart';
+import 'package:disciplinum/models/niche_id.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/screens/modules/9_reading/my_shelf_screen.dart';
+import 'package:disciplinum/screens/modules/9_reading/reading_settings_screen.dart';
+import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart';
+import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
+import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
+import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
   final String? heroTag;
@@ -24,20 +27,79 @@ class ReadingScreen extends StatefulWidget {
 }
 
 class _ReadingScreenState extends State<ReadingScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  final Niche _niche = NicheRepository.getById(NicheId.reading);
   late TabController _tabController;
+
+  // Cache dos horários como no módulo Focus
+  TimeOfDay? _reminderTime;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(
         length: 2, vsync: this, initialIndex: widget.initialTabIndex);
+    WidgetsBinding.instance.addObserver(this);
+    _loadReminderData();
+    
+    // Adiciona listener para recarregar dados quando mudar de aba
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _loadReminderData();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Força atualização quando a app volta para o primeiro plano
+      if (mounted) {
+        _loadReminderData();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(ReadingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Força atualização quando o widget é reconstruído (volta de outras telas)
+    if (mounted) {
+      _loadReminderData();
+    }
+  }
+
+  Future<void> _loadReminderData() async {
+    try {
+      final reminderTimes = await CloudSyncService.loadUserNicheTimes(
+          nicheId: _niche.id.id + 200);
+
+      TimeOfDay? newReminderTime;
+      if (reminderTimes.isNotEmpty) {
+        newReminderTime = TimeOfDay(
+            hour: reminderTimes[0].hour, minute: reminderTimes[0].minute);
+      }
+
+      // Só atualiza se realmente mudou
+      if (_reminderTime != newReminderTime) {
+        if (mounted) {
+          setState(() {
+            _reminderTime = newReminderTime;
+          });
+        }
+      }
+    } catch (e) {
+      // Silenciosamente ignora erros de carregamento
+    }
   }
 
   @override
@@ -124,6 +186,8 @@ class _ReadingScreenState extends State<ReadingScreen>
                         ),
                         const SizedBox(height: 8),
                         const Expanded(child: MyShelfScreen()),
+                        const SizedBox(height: 12),
+                        _buildReminderSection(isDark),
                         _buildBottomButtons(isDark, isActive),
                       ],
                     ),
@@ -574,5 +638,151 @@ class _ReadingScreenState extends State<ReadingScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildReminderSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Lembrete Diário',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_reminderTime != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Horário configurado:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _showDeleteTimeDialog(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: Colors.red.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Configure este horário no botão "Notificações"',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Horário não configurado',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Acesse "Notificações" para configurar seu lembrete diário',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDeleteTimeDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Excluir horário?"),
+        content: Text(
+          "Deseja excluir o horário ${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')} do seu lembrete diário?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () async {
+              // Remove o horário específico
+              await CloudSyncService.removeUserNicheTime(
+                nicheId: _niche.id.id + 200,
+                hour: _reminderTime!.hour,
+                minute: _reminderTime!.minute,
+              );
+
+              // Atualiza a variável de estado
+              if (mounted) {
+                setState(() {
+                  _reminderTime = null;
+                });
+              }
+              
+              // Força atualização do lembrete ao voltar da tela de notificações
+              _loadReminderData();
+            },
+            child: const Text('Sim, excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+    }
   }
 }

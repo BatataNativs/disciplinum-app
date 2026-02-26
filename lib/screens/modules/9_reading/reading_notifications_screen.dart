@@ -2,39 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/niche.dart';
-import 'package:disciplinum/widgets/notifications/notification_message_editor.dart';
-import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/schedule_screen.dart';
+import 'package:disciplinum/widgets/notifications/notification_message_editor.dart';
 
-class BingeEatingNotificationsScreen extends StatefulWidget {
-  const BingeEatingNotificationsScreen({super.key});
+class ReadingNotificationsScreen extends StatefulWidget {
+  const ReadingNotificationsScreen({super.key});
 
   @override
-  State<BingeEatingNotificationsScreen> createState() =>
-      _BingeEatingNotificationsScreenState();
+  State<ReadingNotificationsScreen> createState() =>
+      _ReadingNotificationsScreenState();
 }
 
-class _BingeEatingNotificationsScreenState
-    extends State<BingeEatingNotificationsScreen> {
-  final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
-  int _checkinCount = 0;
+class _ReadingNotificationsScreenState
+    extends State<ReadingNotificationsScreen> {
+  final Niche _niche = NicheRepository.getById(NicheId.reading);
+  int _reminderCount = 0;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCounts();
+    _loadCount();
   }
 
-  Future<void> _loadCounts() async {
-    // Carrega horários de check-in (ID + 200)
-    final checkinTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+  Future<void> _loadCount() async {
+    final reminderTimes =
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id);
 
     if (mounted) {
       setState(() {
-        _checkinCount = checkinTimes.length;
+        _reminderCount = reminderTimes.length;
         _isLoading = false;
       });
     }
@@ -106,23 +105,15 @@ class _BingeEatingNotificationsScreenState
                     ),
                     const SizedBox(height: 8),
 
-                    // Seção: Check-in Diário
+                    // Seção: Lembrete Diário
                     _buildSectionHeader(
-                      title: 'Check-in Diário',
+                      title: 'Lembrete Diário',
                       subtitle: 'Configure seus horários de acompanhamento',
-                      icon: Icons.no_food_rounded,
+                      icon: Icons.menu_book_rounded,
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    _buildCheckinCard(),
-                    const SizedBox(height: 8),
-
-                    // Como funciona - Check-in
-                    _buildMinimalInfoCard(
-                      description:
-                          'Receba notificação diária no horário configurado. Responda "Resisti às tentações" para registrar seu progresso ou "Não resisti" para resetar as estatísticas.',
-                      isDark: isDark,
-                    ),
+                    _buildReminderCard(),
                   ],
                 ),
               ),
@@ -226,7 +217,7 @@ class _BingeEatingNotificationsScreenState
     );
   }
 
-  Widget _buildCheckinCard() {
+  Widget _buildReminderCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -237,34 +228,34 @@ class _BingeEatingNotificationsScreenState
           MaterialPageRoute(
             builder: (_) => ScheduleScreen(
               args: ScheduleScreenArgs(
-                nicheId: _niche.id.id + 200, // ID específico para check-in
-                maxSlots: 3,
-                title: 'Check-in Diário',
+                nicheId: _niche.id.id, // ID 9
+                maxSlots: 1,
+                title: 'Lembrete Diário',
                 initialTimes: [], // ScheduleScreen carrega automaticamente
-                onChanged: (times) async {
+                onChanged: (times) {
                   // Salva os novos horários
                   CloudSyncService.removeAllTimesForNiche(
-                      nicheId: _niche.id.id + 200);
+                      nicheId: _niche.id.id);
                   for (final time in times) {
                     CloudSyncService.addUserNicheTime(
-                      nicheId: _niche.id.id + 200,
+                      nicheId: _niche.id.id,
                       hour: time.hour,
                       minute: time.minute,
-                      phrase: 'Você resistiu às tentações de delivery hoje?',
+                      phrase: '📚 Hora da leitura diária! Mantenha sua mente ativa.',
                     );
                   }
                   // Reagendar notificações
-                  final gamification = Provider.of<GamificationService>(context, listen: false);
-                  await gamification.restoreMonitoringSession();
+                  Provider.of<GamificationService>(context, listen: false)
+                      .restoreMonitoringSession();
                   // Atualiza o contador
-                  _loadCounts();
+                  _loadCount();
                 },
               ),
             ),
           ),
         ).then((_) {
           // Força atualização ao voltar do ScheduleScreen
-          _loadCounts();
+          _loadCount();
         });
       },
       child: Container(
@@ -273,20 +264,20 @@ class _BingeEatingNotificationsScreenState
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.green.withValues(alpha: 0.05),
-              Colors.green.withValues(alpha: 0.02),
+              Colors.purple.withValues(alpha: 0.05),
+              Colors.purple.withValues(alpha: 0.02),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.green.withValues(alpha: 0.2),
+            color: Colors.purple.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withValues(alpha: 0.15),
+              color: Colors.purple.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -302,21 +293,21 @@ class _BingeEatingNotificationsScreenState
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.green,
-                        Colors.green.shade700,
+                        Colors.purple,
+                        Colors.purple.shade700,
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.3),
+                        color: Colors.purple.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: const Icon(
-                    Icons.no_food_rounded,
+                    Icons.menu_book_rounded,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -338,7 +329,7 @@ class _BingeEatingNotificationsScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Configure horário para seu \ncheck-in diário',
+                        'Defina um horário para ser lembrado de seguir com seu hábito de leitura diária',
                         style: TextStyle(
                           fontSize: 14,
                           color:
@@ -352,12 +343,12 @@ class _BingeEatingNotificationsScreenState
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.green,
+                    color: Colors.purple,
                     size: 16,
                   ),
                 ),
@@ -372,25 +363,25 @@ class _BingeEatingNotificationsScreenState
                     : Colors.white.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: Colors.purple.withValues(alpha: 0.1),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.schedule_rounded,
-                    color: Colors.green,
+                    color: Colors.purple,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _checkinCount > 0
-                        ? '$_checkinCount horário configurado'
+                    _reminderCount > 0
+                        ? '$_reminderCount horário configurado'
                         : 'Nenhum horário configurado',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _checkinCount > 0
+                      color: _reminderCount > 0
                           ? Colors.black
                           : isDark
                               ? Colors.white70
