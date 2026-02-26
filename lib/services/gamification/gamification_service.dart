@@ -635,6 +635,15 @@ class GamificationService extends ChangeNotifier {
             .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
             .toList();
 
+        // Carrega Horários Check-in Específicos (ex: BingeEating +200)
+        final checkinSpecificTimes = await CloudSyncService.loadUserNicheTimes(
+            nicheId: nicheId.id + 200);
+        if (checkinSpecificTimes.isNotEmpty) {
+          scheduleByModule[nicheId] = checkinSpecificTimes
+              .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
+              .toList();
+        }
+
         // Atualiza cache de frases vindas do banco
         final cloudPhrases = motivationTimes
             .map((t) => t.phrase ?? '')
@@ -899,6 +908,14 @@ class GamificationService extends ChangeNotifier {
             hour: scheduledDateTime.hour,
             minute: scheduledDateTime.minute,
           );
+        }
+
+        if (nicheId == NicheId.reading) {
+          // Payload com horário do lembrete
+          final timeStr =
+              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+          payload = 'reading_reminder_$timeStr';
+          body = '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?';
         }
 
         await NotificationService.scheduleDailyNotification(
@@ -1245,7 +1262,16 @@ class GamificationService extends ChangeNotifier {
     // 1. Tenta carregar dados existentes primeiro
     await _syncWithCloud(nicheId);
 
-    // 2. Se não houver dados (novo módulo ou desativado), inicializa
+    // 2. Carrega horários de check-in específicos (ex: BingeEating +200)
+    final checkinSpecificTimes = await CloudSyncService.loadUserNicheTimes(
+        nicheId: nicheId.id + 200);
+    if (checkinSpecificTimes.isNotEmpty) {
+      scheduleByModule[nicheId] = checkinSpecificTimes
+          .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
+          .toList();
+    }
+
+    // 3. Se não houver dados (novo módulo ou desativado), inicializa
     if (!_diasConsecutivosByModule.containsKey(nicheId)) {
       debugPrint('🐣 Novo módulo detectado, inicializando streak: $nicheId');
       _diasConsecutivosByModule[nicheId] = 0;
@@ -1255,7 +1281,7 @@ class GamificationService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_prefsActiveNicheKey, nicheId.id);
 
-    // 3. Salva o status garantindo que isModuleActive(nicheId) será true
+    // 4. Salva o status garantindo que isModuleActive(nicheId) será true
     await _saveLocalStatus(nicheId);
     CloudSyncService.saveModuleStatus(
       nicheId: nicheId,
@@ -1263,7 +1289,7 @@ class GamificationService extends ChangeNotifier {
       consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
     );
 
-    // 4. Agenda as notificações nativas (Check-in, Lembretes)
+    // 5. Agenda as notificações nativas (Check-in, Lembretes)
     await _scheduleNativeNotifications(nicheId);
 
     notifyListeners();
