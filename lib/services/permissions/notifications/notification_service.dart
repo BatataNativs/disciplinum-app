@@ -18,12 +18,15 @@ import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/services/3_diet/meal_tracking_service.dart';
+import 'package:disciplinum/services/2_bingeEating/binge_eating_checkin_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     fln.FlutterLocalNotificationsPlugin();
 
 const String actionIdSim = 'CHECKIN_SIM';
 const String actionIdNao = 'CHECKIN_NAO';
+const String actionIdBingeSim = 'BINGE_CHECKIN_SIM';
+const String actionIdBingeNao = 'BINGE_CHECKIN_NAO';
 
 Future<void> initNotifications() async {
   if (kIsWeb) return;
@@ -53,6 +56,15 @@ Future<void> initNotifications() async {
 
       if (response.actionId == actionIdSim) {
         NotificationService.onCheckInSim?.call(response.payload);
+      }
+
+      // Actions para check-in do módulo Compulsão Alimentar
+      if (response.actionId == actionIdBingeSim) {
+        BingeEatingCheckinService().recordCheckin();
+      }
+
+      if (response.actionId == actionIdBingeNao) {
+        NotificationService.onBingeRelapseDetected?.call(response.payload);
       }
 
       // Lógica para abrir módulo de Procrastinação na aba correta (Check-in Diário)
@@ -178,6 +190,7 @@ class NotificationService {
   static bool soundEnabled = true;
   static void Function(String?)? onRelapseDetected;
   static void Function(String?)? onCheckInSim;
+  static void Function(String?)? onBingeRelapseDetected;
 
   static Future<void> init() async => initNotifications();
 
@@ -409,5 +422,50 @@ class NotificationService {
       );
       await fallback.launch();
     }
+  }
+
+  /// Envia notificação de check-in para o módulo Compulsão Alimentar
+  static Future<void> sendBingeCheckinNotification({
+    String title = 'Check-in Diário',
+    String body = 'Você resistiu às tentações de delivery hoje?',
+    String? iconPath,
+    int id = 3000,
+  }) async {
+    if (kIsWeb) return;
+
+    final actions = [
+      fln.AndroidNotificationAction(
+        actionIdBingeSim,
+        'Resisti às tentações',
+        showsUserInterface: false,
+      ),
+      fln.AndroidNotificationAction(
+        actionIdBingeNao,
+        'Não resisti',
+        showsUserInterface: false,
+      ),
+    ];
+
+    final androidDetails = fln.AndroidNotificationDetails(
+      'binge_checkin_channel',
+      'Check-in Compulsão Alimentar',
+      channelDescription: 'Notificações de check-in diário para controle de compulsão alimentar',
+      importance: fln.Importance.high,
+      priority: fln.Priority.high,
+      enableVibration: true,
+      playSound: soundEnabled,
+      actions: actions,
+      styleInformation: fln.BigTextStyleInformation(body),
+    );
+
+    final platformDetails = fln.NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      platformDetails,
+      payload: 'binge_checkin',
+    );
   }
 }
