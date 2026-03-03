@@ -9,6 +9,7 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import '../../../widgets/home/neon_card.dart';
 import '../../../widgets/profile/lojinha.dart';
 import 'package:disciplinum/services/ads/ad_service.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class FrasesMotivacionaisScreen extends StatefulWidget {
   const FrasesMotivacionaisScreen({super.key});
@@ -110,9 +111,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Configurações salvas com sucesso!')),
-      );
+      SnackBarHelper.showSuccess(context, 'Configurações salvas com sucesso!');
       Navigator.pop(context);
     }
   }
@@ -132,7 +131,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     setState(() {
       _slots.removeAt(index);
     });
-    
+
     // Auto-salvar quando a lista fica vazia para evitar recriação do 09:00
     if (_slots.isEmpty) {
       _saveData();
@@ -184,7 +183,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Frases Motivacionais'),
+          title: const Text('Notificações'),
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -215,7 +214,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Defina frases que te ajudem a manter o foco nos momentos de maior fissura.',
+                      'Defina frases que te ajudem a manter o foco nos momentos de maior fissura (você pode configurar até 8 horários).',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.white70 : Colors.black54,
@@ -429,17 +428,14 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   void _handleAdUnlock(GamificationService gamification, AdService adService) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Carregando anúncio...')),
-    );
+    SnackBarHelper.showInfo(context, 'Carregando anúncio...');
 
     adService.showRewardedAd(
       onUserEarnedReward: () {
         gamification.unlockMotivation(_niche.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Personalização desbloqueada! 🎉')),
-          );
+          SnackBarHelper.showSuccess(
+              context, 'Personalização desbloqueada! 🎉');
         }
       },
       onAdDismissed: () {

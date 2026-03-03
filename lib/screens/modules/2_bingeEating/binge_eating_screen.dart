@@ -14,6 +14,8 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
+import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
+import 'package:disciplinum/models/user_niche_time.dart';
 import 'dart:async';
 
 class BingeEatingScreen extends StatefulWidget {
@@ -44,7 +46,6 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
     _loadAllPersistentData();
-    _startGamificationCycle();
   }
 
   @override
@@ -75,8 +76,16 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
-      final checkinTimes = await CloudSyncService.loadUserNicheTimes(
-          nicheId: _niche.id.id + 200);
+      final isGuest = await PreferencesService.isGuestMode();
+      final List<UserNicheTime> checkinTimes;
+
+      if (isGuest) {
+        checkinTimes = await PreferencesService.loadUserNicheTimes(
+            nicheId: _niche.id.id + 200);
+      } else {
+        checkinTimes = await CloudSyncService.loadUserNicheTimes(
+            nicheId: _niche.id.id + 200);
+      }
 
       TimeOfDay? newCheckinTime;
       if (checkinTimes.isNotEmpty) {
@@ -99,8 +108,16 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
   Future<void> _syncCheckInWithGamification(
       {bool onlySyncSchedules = false}) async {
-    final times =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+    final isGuest = await PreferencesService.isGuestMode();
+    final List<UserNicheTime> times;
+
+    if (isGuest) {
+      times = await PreferencesService.loadUserNicheTimes(
+          nicheId: _niche.id.id + 200);
+    } else {
+      times = await CloudSyncService.loadUserNicheTimes(
+          nicheId: _niche.id.id + 200);
+    }
     if (!mounted) return;
 
     final gamification =
@@ -185,15 +202,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
 
     // Carrega horários de check-in como no módulo Focus
-    final checkinTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
-
-    if (checkinTimes.isNotEmpty) {
-      _checkinTime =
-          TimeOfDay(hour: checkinTimes[0].hour, minute: checkinTimes[0].minute);
-    } else {
-      _checkinTime = null;
-    }
+    await _reloadCheckinData();
   }
 
   void _removeSelectedApp(String packageName) async {
@@ -934,12 +943,22 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
             onPressed: () async {
               Navigator.pop(ctx);
 
+              final isGuest = await PreferencesService.isGuestMode();
+
               // Remove o horário específico
-              await CloudSyncService.removeUserNicheTime(
-                nicheId: _niche.id.id + 200,
-                hour: _checkinTime!.hour,
-                minute: _checkinTime!.minute,
-              );
+              if (isGuest) {
+                await PreferencesService.removeUserNicheTime(
+                  nicheId: _niche.id.id + 200,
+                  hour: _checkinTime!.hour,
+                  minute: _checkinTime!.minute,
+                );
+              } else {
+                await CloudSyncService.removeUserNicheTime(
+                  nicheId: _niche.id.id + 200,
+                  hour: _checkinTime!.hour,
+                  minute: _checkinTime!.minute,
+                );
+              }
 
               // Atualiza a variável de estado
               if (mounted) {

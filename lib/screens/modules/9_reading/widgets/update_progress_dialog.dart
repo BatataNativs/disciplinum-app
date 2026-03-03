@@ -2,6 +2,7 @@ import 'package:disciplinum/models/9_reading/reading_model.dart';
 import 'package:disciplinum/services/9_reading/reading_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class UpdateProgressDialog extends StatefulWidget {
   final ReadingBook book;
@@ -27,10 +28,7 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
     if (newPage != null) {
       // Validação simples
       if (newPage > widget.book.totalPages) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Página não pode ser maior que o total!')),
-        );
+        SnackBarHelper.showError(context, 'Página não pode ser maior que o total!');
         return;
       }
 

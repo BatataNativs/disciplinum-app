@@ -863,16 +863,19 @@ class ProcrastinationService extends ChangeNotifier {
           'done',
           'concluído ✅',
           showsUserInterface: true,
+          cancelNotification: true,
         ),
         const fln.AndroidNotificationAction(
           'delete',
           'Apagar',
           showsUserInterface: true,
+          cancelNotification: true,
         ),
         const fln.AndroidNotificationAction(
           'postpone',
           'Adiar',
           showsUserInterface: true,
+          cancelNotification: true,
         ),
       ],
     );

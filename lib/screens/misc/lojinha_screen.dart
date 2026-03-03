@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class LojinhaScreen extends StatelessWidget {
   const LojinhaScreen({super.key});
@@ -61,10 +62,7 @@ class LojinhaScreen extends StatelessWidget {
                 InkWell(
                   onTap: () {
                     iap.restorePurchases();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Buscando compras anteriores...')),
-                    );
+                    SnackBarHelper.showInfo(context, 'Buscando compras anteriores...');
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
@@ -482,13 +480,7 @@ class LojinhaScreen extends StatelessWidget {
                             Clipboard.setData(
                                 const ClipboardData(text: chavePix));
                             Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Chave Pix copiada com sucesso!'),
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                            SnackBarHelper.showSuccess(context, 'Chave Pix copiada com sucesso!');
                           },
                           icon: const Icon(Icons.copy),
                           label: const Text("Copiar Chave Pix"),

@@ -5,6 +5,7 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
 import 'package:disciplinum/services/ads/ad_service.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class NotificationMessageEditor extends StatelessWidget {
   final NicheId nicheId;
@@ -144,17 +145,13 @@ class NotificationMessageEditor extends StatelessWidget {
   void _handleAdUnlock(BuildContext context, GamificationService gamification,
       AdService adService) {
     // Se quiser você pode mostrar um loading aqui (ex: CircularProgressIndicator)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Carregando anúncio...')),
-    );
+    SnackBarHelper.showInfo(context, 'Carregando anúncio...');
 
     adService.showRewardedAd(
       onUserEarnedReward: () {
         gamification.unlockNotification(nicheId);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Personalização desbloqueada! 🎉')),
-          );
+          SnackBarHelper.showSuccess(context, 'Personalização desbloqueada! 🎉');
         }
       },
       onAdDismissed: () {
@@ -190,9 +187,7 @@ class NotificationMessageEditor extends StatelessWidget {
                 await gamification.setCustomMessage(nicheId, controller.text);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Mensagem atualizada!')),
-                  );
+                  SnackBarHelper.showSuccess(context, 'Mensagem atualizada!');
                 }
               }
             },

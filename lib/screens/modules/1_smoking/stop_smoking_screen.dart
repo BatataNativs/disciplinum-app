@@ -13,9 +13,12 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
-import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/screens/modules/1_smoking/frases_motivacionais.dart';
 import '../../schedule_screen.dart';
 import 'package:disciplinum/screens/modules/1_smoking/daily_checkins_stats.dart';
+import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
+import 'package:disciplinum/models/user_niche_time.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   final String? heroTag;
@@ -25,12 +28,15 @@ class StopSmokingScreen extends StatefulWidget {
   State<StopSmokingScreen> createState() => _StopSmokingScreenState();
 }
 
-class _StopSmokingScreenState extends State<StopSmokingScreen> {
+class _StopSmokingScreenState extends State<StopSmokingScreen>
+    with WidgetsBindingObserver {
   SmokingSettingsModel? settings;
   bool isLoading = true;
   bool _gamificationRunning = false;
   bool isSaving = false;
   final SmokingService _service = SmokingService();
+
+  TimeOfDay? _checkinTime;
 
   late PageController _pageController;
   int _selectedIndex = 0;
@@ -46,16 +52,66 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pageController = PageController(initialPage: 0);
     _loadSettings();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _priceController.dispose();
     _packsController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) {
+        _reloadCheckinData();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(StopSmokingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (mounted) {
+      _reloadCheckinData();
+    }
+  }
+
+  Future<void> _reloadCheckinData() async {
+    try {
+      final isGuest = await PreferencesService.isGuestMode();
+      final List<UserNicheTime> checkinTimes;
+
+      if (isGuest) {
+        checkinTimes = await PreferencesService.loadUserNicheTimes(
+            nicheId: NicheId.smoking.id);
+      } else {
+        checkinTimes = await CloudSyncService.loadUserNicheTimes(
+            nicheId: NicheId.smoking.id);
+      }
+
+      TimeOfDay? newCheckinTime;
+      if (checkinTimes.isNotEmpty) {
+        newCheckinTime = TimeOfDay(
+            hour: checkinTimes[0].hour, minute: checkinTimes[0].minute);
+      }
+
+      if (_checkinTime != newCheckinTime) {
+        if (mounted) {
+          setState(() {
+            _checkinTime = newCheckinTime;
+          });
+        }
+      }
+    } catch (e) {
+      // Ignorar
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -81,6 +137,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
           _selectedDate = settings!.quitDate;
         }
 
+        _reloadCheckinData();
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
       }
     }
@@ -145,8 +202,16 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
   Future<void> _syncCheckInWithGamification(
       {bool onlySyncSchedules = false}) async {
-    final times =
-        await CloudSyncService.loadUserNicheTimes(nicheId: NicheId.smoking.id);
+    final isGuest = await PreferencesService.isGuestMode();
+    final List<UserNicheTime> times;
+
+    if (isGuest) {
+      times = await PreferencesService.loadUserNicheTimes(
+          nicheId: NicheId.smoking.id);
+    } else {
+      times = await CloudSyncService.loadUserNicheTimes(
+          nicheId: NicheId.smoking.id);
+    }
     if (!mounted) return;
 
     final gamification =
@@ -185,7 +250,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
       currency: currency,
     );
 
-    final messenger = ScaffoldMessenger.of(context);
     try {
       await _service.saveSettings(newSettings);
       if (mounted) {
@@ -196,16 +260,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
 
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Informacoes salvas com sucesso!')),
-        );
+        if (mounted) {
+          SnackBarHelper.showSuccess(
+              context, 'Informacoes salvas com sucesso!');
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => isSaving = false);
-        messenger.showSnackBar(
-          SnackBar(content: Text("Erro ao salvar: \$e")),
-        );
+        SnackBarHelper.showError(context, 'Erro ao salvar: \$e');
       }
     }
   }
@@ -259,7 +322,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final messenger = ScaffoldMessenger.of(context);
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     final confirmed = await showDialog<bool>(
@@ -320,17 +382,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                 curve: Curves.easeOutCubic);
           }
 
-          messenger.showSnackBar(
-            const SnackBar(
-                content: Text("Módulo desativado e progresso zerado.")),
-          );
+          if (mounted) {
+            SnackBarHelper.showSuccess(
+                context, "Módulo desativado e progresso zerado.");
+          }
         }
       } catch (e) {
         if (mounted) {
           setState(() => isLoading = false);
-          messenger.showSnackBar(
-            SnackBar(content: Text("Erro ao desativar: $e")),
-          );
+          SnackBarHelper.showError(context, "Erro ao desativar: $e");
         }
       }
     }
@@ -591,7 +651,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               isDark,
               icon: Icons.check_box_outlined,
               title:
-                  'Em "Check-in diario", selecione horario para o Check-in diario',
+                  'Em "Check-in diário", selecione horario para o Check-in diário',
               content:
                   'No horário configurado, você receberá uma notificação para que você faça o "check-in diário" da sua disciplina, informando se você fumou ou não no dia.',
             ),
@@ -829,6 +889,8 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            _buildCheckinSection(isDark),
+            const SizedBox(height: 24),
           ],
         );
       default:
@@ -889,6 +951,149 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               color: isDark ? Colors.white70 : Colors.black54,
               height: 1.6,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckinSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.grey[300]!,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Check-in Diário',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_checkinTime != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Horário configurado:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _showDeleteTimeDialog(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: Colors.red.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Configure este horário no botão "Check-in diário"',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Horário não configurado',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Acesse "Check-in diário" abaixo para configurar seu check-in diário',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteTimeDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Excluir horário?"),
+        content: Text(
+          "Deseja excluir o horário ${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')} do seu check-in diário?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Não"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+
+              await CloudSyncService.removeUserNicheTime(
+                nicheId: NicheId.smoking.id,
+                hour: _checkinTime!.hour,
+                minute: _checkinTime!.minute,
+              );
+
+              if (mounted) {
+                setState(() {
+                  _checkinTime = null;
+                });
+                await _syncCheckInWithGamification(onlySyncSchedules: true);
+              }
+            },
+            child: const Text("Sim"),
           ),
         ],
       ),
@@ -971,7 +1176,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.check_circle_outline,
-                  label: 'Check-in diario',
+                  label: 'Check-in diário',
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _openCheckInManager,
@@ -988,8 +1193,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const SmokingNotificationsScreen(),
+                        builder: (context) => const FrasesMotivacionaisScreen(),
                       ),
                     );
                   },
@@ -1186,6 +1390,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen> {
                               onChanged: (times) {
                                 _syncCheckInWithGamification(
                                     onlySyncSchedules: true);
+                                _reloadCheckinData();
                               },
                             ),
                           ),

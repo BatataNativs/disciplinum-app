@@ -10,8 +10,8 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_notifications_screen.dart';
-
 import 'package:disciplinum/utils/app_info_helper.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? heroTag;
@@ -127,12 +127,7 @@ class _FocusScreenState extends State<FocusScreen> {
 
     final label = await getAppLabel(packageName) ?? packageName;
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('App removido: $label'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      SnackBarHelper.showInfo(context, 'App removido: $label');
     }
   }
 
@@ -266,15 +261,7 @@ class _FocusScreenState extends State<FocusScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-                'Módulo desativado — Você não receberá mais alertas'),
-            duration: const Duration(seconds: 3),
-            backgroundColor: Colors.red.withValues(alpha: 0.95),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackBarHelper.showWarning(context, 'Módulo desativado — Você não receberá mais alertas');
       }
     }
   }
@@ -412,12 +399,7 @@ class _FocusScreenState extends State<FocusScreen> {
     await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Intervalo de foco removido'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      SnackBarHelper.showInfo(context, 'Intervalo de foco removido');
     }
   }
 

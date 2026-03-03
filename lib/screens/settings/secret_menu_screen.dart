@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 
 import 'package:disciplinum/services/auth/auth_service.dart'; // Import do seu serviço de Auth
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class SecretMenuScreen extends StatefulWidget {
   const SecretMenuScreen({super.key});
@@ -75,10 +76,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Não foi possível abrir o app de e-mail.')),
-        );
+        SnackBarHelper.showError(context, 'Não foi possível abrir o app de e-mail.');
       }
     }
   }
@@ -97,14 +95,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
     if (_tapCount > 3 && _tapCount < 7) {
       int remaining = 7 - _tapCount;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Faltam $remaining toques...",
-              style: const TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF202020),
-          duration: const Duration(milliseconds: 800),
-        ),
-      );
+      SnackBarHelper.showInfo(context, "Faltam $remaining toques...");
     }
 
     if (_tapCount == 7) {
@@ -140,10 +131,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
         _inputSequence.clear();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Sequência incorreta. Resetando..."),
-            duration: Duration(milliseconds: 500),
-            backgroundColor: Colors.red));
+        SnackBarHelper.showError(context, "Sequência incorreta. Resetando...");
       }
     } else {
       if (_inputSequence.length == _correctSequence.length) {

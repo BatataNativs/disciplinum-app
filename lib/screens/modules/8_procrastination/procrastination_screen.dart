@@ -12,6 +12,7 @@ import 'package:disciplinum/screens/modules/8_procrastination/procrastination_no
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_stats_screen.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class ProcrastinationScreen extends StatefulWidget {
   final String? heroTag;
@@ -1139,15 +1140,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         _tabController.animateTo(0);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                  'Módulo desativado - Você não receberá mais notificações de alerta'),
-              duration: const Duration(seconds: 3),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          SnackBarHelper.showWarning(context, 'Módulo desativado - Você não receberá mais notificações de alerta');
         }
       }
     } else {
@@ -1165,13 +1158,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         );
         gamification.startModuleCycle(nicheId: NicheId.procrastination);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Módulo de Procrastinação ativado!'),
-            duration: Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');
       } else {
         if (!mounted) return;
         showDialog(

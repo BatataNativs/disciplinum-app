@@ -14,6 +14,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/screens/opening/onboarding_screen.dart';
@@ -62,9 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nenhum app de e-mail encontrado.')),
-        );
+        SnackBarHelper.showError(context, 'Nenhum app de e-mail encontrado.');
       }
     }
   }
@@ -94,13 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!auth.isAuthenticated) {
       if (mounted) {
         setState(() => _isSyncing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Faça login para sincronizar seus dados na nuvem.'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackBarHelper.showWarning(context, 'Faça login para sincronizar seus dados na nuvem.');
       }
       return;
     }
@@ -113,26 +106,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Força atualização da UI do GamificationService via Provider se necessário
     // mas refreshAllDataFromCloud já chama notifyListeners()
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              ok ? Icons.cloud_done : Icons.cloud_off,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              ok
-                  ? 'Dados sincronizados com sucesso!'
-                  : 'Não foi possível sincronizar agora.',
-            ),
-          ],
-        ),
-        backgroundColor: ok ? Colors.green : Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (ok) {
+      SnackBarHelper.showSuccess(context, 'Dados sincronizados com sucesso!');
+    } else {
+      SnackBarHelper.showError(context, 'Não foi possível sincronizar agora.');
+    }
   }
 
   // OBS: _exportarDados foi removido daqui e movido para secret_menu_screen.dart
@@ -227,9 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const ClipboardData(text: chavePix),
                           );
                           Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Pix copiado!')),
-                          );
+                          SnackBarHelper.showSuccess(context, 'Pix copiado!');
                         },
                       ),
                     ],
@@ -629,13 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTap: () {
                             Provider.of<ThemeController>(context, listen: false)
                                 .toggleTheme();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    "Dev, lembre-se de remover esse botão antes de publicar o app!"),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
+                            SnackBarHelper.showInfo(context, "Dev, lembre-se de remover esse botão antes de publicar o app!");
                           },
                           child: Icon(
                             isDark ? Icons.light_mode : Icons.dark_mode,
