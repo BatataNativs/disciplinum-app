@@ -12,6 +12,7 @@ import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_
 import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_stats.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class MoneySavingChallengeScreen extends StatefulWidget {
   final String? heroTag;
@@ -976,13 +977,7 @@ class _MoneySavingChallengeScreenState
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    SnackBarHelper.showInfo(context, message);
   }
 
   @override
@@ -1762,9 +1757,7 @@ class _FullScreenGridPageState extends State<_FullScreenGridPage> {
   Future<void> _toggleCell(int index) async {
     if (_isProcessing) return;
     if (!_currentChallenge.isActive) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ative o desafio para marcar células!')),
-      );
+      SnackBarHelper.showWarning(context, 'Ative o desafio para marcar células!');
       return;
     }
 
@@ -1793,10 +1786,7 @@ class _FullScreenGridPageState extends State<_FullScreenGridPage> {
         if (updated.isComplete) {
           HapticFeedback.heavyImpact();
           _confettiController.play();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('🎉 Parabéns! Você completou o desafio!')),
-          );
+          SnackBarHelper.showSuccess(context, '🎉 Parabéns! Você completou o desafio!');
         }
       }
     } catch (e) {

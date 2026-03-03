@@ -62,6 +62,20 @@ class MealTrackingService {
     }
   }
 
+  /// Limpa todos os registros de refeições do usuário
+  Future<void> clearAllMeals() async {
+    if (_userId == null) return;
+    try {
+      await _supabase
+          .from('user_meal_records')
+          .delete()
+          .eq('user_id', _userId!);
+      debugPrint('🗑️ Todo o histórico de refeições foi apagado.');
+    } catch (e) {
+      debugPrint('❌ Erro ao apagar histórico de refeições: $e');
+    }
+  }
+
   /// Busca os registros de refeições de hoje
   Future<List<MealRecord>> getTodayMeals(List<TimeOfDay> scheduledTimes) async {
     if (_userId == null) return [];

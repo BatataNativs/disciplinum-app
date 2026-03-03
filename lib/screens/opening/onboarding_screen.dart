@@ -28,16 +28,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 60,
-          width: 60,
+          height: 64,
+          width: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            // Simpler shadow or none for clean look
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                spreadRadius: 1,
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
               )
             ],
           ),
@@ -182,26 +182,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemCount: _totalPages,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Spacer(flex: 1),
+
                         // --- ÁREA DO ASSET (Expandida) ---
                         Expanded(
-                          flex: 7,
-                          child: Center(
+                          flex: 5,
+                          child: Align(
+                            alignment: Alignment.topCenter,
                             child: Builder(builder: (context) {
                               if (index == 0) {
-                                return UnconstrainedBox(
-                                  child: Image.asset(
+                                return Image.asset(
                                     'assets/disciplinado.png',
-                                    height: 200,
-                                    width: 200,
+                                    height: 210,
+                                    width: 210,
                                     fit: BoxFit.contain,
-                                  ),
-                                );
+                                  );
                               } else if (index == 1) {
                                 return Center(
                                   child: SingleChildScrollView(
@@ -212,13 +212,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       children: [
                                         _buildMedal('assets/medal_bronze.png',
                                             'Bronze'),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 20),
                                         _buildMedal(
                                             'assets/medal_silver.png', 'Prata'),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 20),
                                         _buildMedal(
                                             'assets/medal_gold.png', 'Ouro'),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 20),
                                         _buildMedal('assets/medal_diamond.png',
                                             'Diamante'),
                                       ],
@@ -228,8 +228,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               } else {
                                 return Image.asset(
                                   'assets/warning1.png',
-                                  height: 250,
-                                  width: 250,
+                                  height: 210,
+                                  width: 210,
                                   fit: BoxFit.contain,
                                 );
                               }
@@ -237,7 +237,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
 
                         // --- ÁREA DO TÍTULO ---
                         Align(
@@ -257,13 +257,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               pageTitle,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 30,
                                 color: isDark
                                     ? const Color(0xFFFFFFFF)
                                     : const Color(0xFF1F2937),
-                                letterSpacing: -0.5,
-                                height: 1.1,
+                                letterSpacing: -0.8,
+                                height: 1.2,
                               ),
                             );
                           }),
@@ -278,10 +278,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             final bodyStyle =
                                 theme.textTheme.bodyLarge?.copyWith(
                               color: isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF4B5563),
-                              height: 1.5,
-                              fontSize: 16,
+                                  ? const Color(0xFF94A3B8).withValues(alpha: 0.9)
+                                  : const Color(0xFF4B5563).withValues(alpha: 0.85),
+                              height: 1.4,
+                              fontSize: 15,
+                              letterSpacing: 0.1,
                             );
 
                             if (index == 0) {
@@ -289,15 +290,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 textAlign: TextAlign.center,
                                 text: TextSpan(
                                   style: bodyStyle,
-                                  text:
-                                      'Transforme seus hábitos diários e seja mais disciplinado!\n\n'
-                                      'Este app pode te ajudar a:\n\n'
-                                      '• Evitar compras impulsivas.\n'
-                                      '• Manter o foco em atividades produtivas.\n'
-                                      '• Parar de fumar.\n'
-                                      '• Evitar conteúdo adulto.\n'
-                                      '• Evitar procrastinação.\n\n'
-                                      '• E muito mais!',
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Transforme seus hábitos diários\ne seja mais disciplinado!\n',
+                                    ),
+                                    const TextSpan(
+                                      text: 'Este app pode te ajudar a:\n',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    const TextSpan(text: '• Evitar compras impulsivas\n'),
+                                    const TextSpan(text: '• Manter o foco em atividades produtivas\n'),
+                                    const TextSpan(text: '• Parar de fumar\n'),
+                                    const TextSpan(text: '• Evitar conteúdo adulto\n'),
+                                    const TextSpan(text: '• Evitar procrastinação\n'),
+                                    const TextSpan(
+                                      text: '• E muito mais!',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
                                 ),
                               );
                             } else if (index == 1) {
@@ -307,8 +317,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   children: [
                                     const TextSpan(
-                                      text:
-                                          'O app dispõe de medalhas, insígnias e troféus ',
+                                      text: 'O app dispõe de medalhas, insígnias e troféus ',
                                     ),
                                     const TextSpan(
                                       text: '(FICTÍCIOS)',
@@ -318,8 +327,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       ),
                                     ),
                                     const TextSpan(
-                                      text:
-                                          ' que você pode conquistar ao atingir metas e marcos de progresso.\nApenas uma forma lúdica de te motivar a evoluir e manter consistência.\n\nE sempre que você quebrar sua sequência de bons hábitos e disciplina, seu progresso e suas conquistas são zerados/reiniciados',
+                                      text: 'que você pode conquistar\n',
+                                    ),
+                                    const TextSpan(
+                                      text: 'ao atingir metas e progresso.\n',
+                                    ),
+                                    const TextSpan(
+                                      text: 'Forma lúdica de te motivar\na evoluir e manter consistência.\n',
+                                      style: TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                    const TextSpan(
+                                      text: 'Ao quebrar sua sequência,\nseu progresso é zerado.',
+                                      style: TextStyle(fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -332,12 +351,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   children: [
                                     const TextSpan(
-                                      text:
-                                          'Este app é apenas uma ferramenta de apoio à disciplina, não substitui acompanhamento profissional.\n\n'
-                                          'E, caso queira saber um pouco mais sobre como funciona antes de continuar,\nclique ',
+                                      text: 'Este app é uma ferramenta\nde apoio à disciplina,\nnão substitui acompanhamento.\n',
+                                    ),
+                                    const TextSpan(
+                                      text: 'Para saber mais sobre\ncomo funciona, ',
                                     ),
                                     TextSpan(
-                                      text: 'aqui',
+                                      text: 'clique aqui',
                                       style: const TextStyle(
                                         color: Colors.blueAccent,
                                         fontWeight: FontWeight.bold,
@@ -361,7 +381,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                           }),
                         ),
-                        const Spacer(flex: 2),
+                        const Spacer(flex: 1),
                       ],
                     ),
                   );
@@ -369,7 +389,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
             // Indicadores de Página (Dots)
             Row(
@@ -378,30 +398,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _totalPages,
                 (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 100),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 32 : 8,
-                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  width: _currentPage == index ? 36 : 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: _currentPage == index
                         ? (isDark
                             ? const Color(0xFF6366F1)
                             : const Color.fromARGB(255, 23, 23, 23))
                         : (isDark
-                            ? const Color(0xFF6366F1).withValues(alpha: 0.2)
+                            ? const Color(0xFF6366F1).withValues(alpha: 0.25)
                             : const Color.fromARGB(255, 36, 36, 36)
-                                .withValues(alpha: 0.2)),
-                    borderRadius: BorderRadius.circular(4),
+                                .withValues(alpha: 0.25)),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
             // Botões de Navegação
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                  const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
               child: Row(
                 children: [
                   // Botão Pular / Voltar
@@ -413,7 +433,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           foregroundColor: (isDark
                                   ? const Color(0xFFFFFFFF)
                                   : const Color(0xFF1F2937))
-                              .withValues(alpha: 0.7),
+                              .withValues(alpha: 0.8),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: Text(
                           skipButtonText,
@@ -425,23 +446,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   else
                     const Spacer(),
 
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 20),
 
                   // Botão Principal (Próximo / Entrar)
                   Expanded(
                     flex: 2,
                     child: Container(
-                      height: 56,
+                      height: 60,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
                             color: (isDark
                                     ? const Color(0xFF6366F1)
                                     : const Color.fromARGB(255, 16, 16, 17))
-                                .withValues(alpha: 0.3), // Sombra suavizada
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                                .withValues(alpha: 0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
@@ -462,7 +483,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               : const Color.fromARGB(255, 32, 32, 32),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(36),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                         child: Row(

@@ -7,6 +7,7 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/misc/system_stuff/installed_app_service.dart';
 import '../models/niche_id.dart';
 import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class SelectAppsScreenArgs {
   final List<String> initiallySelected;
@@ -211,9 +212,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     if (!mounted) return;
     Navigator.pop(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Apps selecionados salvos!')),
-    );
+    SnackBarHelper.showSuccess(context, 'Apps selecionados salvos!');
   }
 
   Future<void> _removeApp(String packageName) async {
@@ -236,9 +235,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('App removido: $packageName')),
-    );
+    SnackBarHelper.showInfo(context, 'App removido: $packageName');
   }
 
   @override

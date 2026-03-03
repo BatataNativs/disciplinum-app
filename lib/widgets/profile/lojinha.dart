@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/scroll_indicator_arrow.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class Lojinha extends StatelessWidget {
   const Lojinha({super.key});
@@ -217,9 +218,7 @@ class Lojinha extends StatelessWidget {
           TextButton(
             onPressed: () {
               iap.restorePurchases();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Buscando compras anteriores...')),
-              );
+              SnackBarHelper.showInfo(context, 'Buscando compras anteriores...');
             },
             child: Text('Restaurar compras',
                 style: TextStyle(
@@ -427,9 +426,7 @@ class Lojinha extends StatelessWidget {
                             const ClipboardData(text: chavePix),
                           );
                           Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Pix copiado!')),
-                          );
+                          SnackBarHelper.showSuccess(context, 'Pix copiado!');
                         },
                       ),
                     ],

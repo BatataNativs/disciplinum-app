@@ -18,7 +18,6 @@ import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/8_procrastination/procrastination_service.dart';
 import 'package:disciplinum/services/3_diet/meal_tracking_service.dart';
-import 'package:disciplinum/services/2_bingeEating/binge_eating_checkin_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     fln.FlutterLocalNotificationsPlugin();
@@ -60,7 +59,7 @@ Future<void> initNotifications() async {
 
       // Actions para check-in do módulo Compulsão Alimentar
       if (response.actionId == actionIdBingeSim) {
-        BingeEatingCheckinService().recordCheckin();
+        NotificationService.onBingeCheckInSim?.call(response.payload);
       }
 
       if (response.actionId == actionIdBingeNao) {
@@ -191,6 +190,7 @@ class NotificationService {
   static void Function(String?)? onRelapseDetected;
   static void Function(String?)? onCheckInSim;
   static void Function(String?)? onBingeRelapseDetected;
+  static void Function(String?)? onBingeCheckInSim;
 
   static Future<void> init() async => initNotifications();
 
@@ -434,22 +434,25 @@ class NotificationService {
     if (kIsWeb) return;
 
     final actions = [
-      fln.AndroidNotificationAction(
+      const fln.AndroidNotificationAction(
         actionIdBingeSim,
         'Resisti às tentações',
-        showsUserInterface: false,
+        showsUserInterface: true,
+        cancelNotification: true,
       ),
-      fln.AndroidNotificationAction(
+      const fln.AndroidNotificationAction(
         actionIdBingeNao,
         'Não resisti',
-        showsUserInterface: false,
+        showsUserInterface: true,
+        cancelNotification: true,
       ),
     ];
 
     final androidDetails = fln.AndroidNotificationDetails(
       'binge_checkin_channel',
       'Check-in Compulsão Alimentar',
-      channelDescription: 'Notificações de check-in diário para controle de compulsão alimentar',
+      channelDescription:
+          'Notificações de check-in diário para controle de compulsão alimentar',
       importance: fln.Importance.high,
       priority: fln.Priority.high,
       enableVibration: true,

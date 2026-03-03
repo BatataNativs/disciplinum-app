@@ -78,10 +78,28 @@ class PermissionService {
 
       if (effectiveContext.mounted) {
         ScaffoldMessenger.of(effectiveContext).showSnackBar(
-          const SnackBar(
-            content: Text(
-                '✅ Permissão de uso detectada! O app agora pode monitorar seus hábitos.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Permissão de uso detectada! O app agora pode monitorar seus hábitos.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.all(16),
           ),
         );
       }
@@ -98,36 +116,174 @@ class PermissionService {
     final bool? wentToSettings = await showDialog<bool>(
       context: dialogContext,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Text("⚙️ Acesso necessário"),
-          ],
-        ),
-        content: const Text(
-          "Para o app funcionar corretamente, "
-          "o Android exige que você ative manualmente o:\n'Acesso a dados de uso'.\n\n"
-          "Clique no botão abaixo e, na próxima tela, ative a chave.",
-          style: TextStyle(fontSize: 15),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 20,
+        shadowColor: Colors.black.withValues(alpha: 0.15),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                // cores degradê (imitar esse degradê em outros locais do app)
+                Colors.white,
+                const Color.fromARGB(255, 96, 107, 135),
+              ],
             ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Ir para Configurações"),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Agora não (app não funcionará)",
-                style: TextStyle(color: Colors.grey)),
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ícone
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF6366F1).withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.warning_rounded,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Título premium
+              Text(
+                "Ação Necessária",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1F2937),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Conteúdo
+              Text(
+                "Para o app Disciplinum funcionar corretamente, o Android exige que você ative manualmente a seguinte permissão:",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFFE5E7EB)),
+                ),
+                child: Text(
+                  "Acesso a dados de uso",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                "Clique no botão abaixo e, na próxima tela, ative a chave.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  height: 1.4,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Botões premium
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: Color(0xFFE5E7EB)),
+                        ),
+                      ),
+                      child: Text(
+                        "Agora não",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding:
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                      ),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.settings, size: 16),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              "Configurações",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -140,11 +296,28 @@ class PermissionService {
       final scaffoldContext = navigatorKey.currentContext ?? context;
       if (scaffoldContext.mounted) {
         ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-          const SnackBar(
-            content: Text(
-                '⚠️ Sem essa permissão, o app não funcionará corretamente. '
-                'Você precisará ativá-la ao usar os módulos.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Sem essa permissão, o app não funcionará corretamente. Você precisará ativá-la ao usar os módulos.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF6366F1),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.all(16),
             duration: Duration(seconds: 4),
           ),
         );

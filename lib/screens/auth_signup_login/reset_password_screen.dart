@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth/auth_service.dart';
 import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -30,17 +31,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final confirmPass = _confirmPasswordController.text;
 
     if (newPass.isEmpty || newPass.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('A senha deve ter pelo menos 6 caracteres')),
-      );
+      SnackBarHelper.showError(context, 'A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
     if (newPass != confirmPass) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('As senhas não conferem')),
-      );
+      SnackBarHelper.showError(context, 'As senhas não conferem');
       return;
     }
 
@@ -71,9 +67,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       }
     } else {
       final msg = authService.errorMessage ?? 'Erro ao atualizar senha.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: Colors.red),
-      );
+      SnackBarHelper.showError(context, msg);
     }
   }
 

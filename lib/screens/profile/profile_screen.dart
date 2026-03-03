@@ -8,6 +8,7 @@ import 'package:disciplinum/app_router.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/widgets/profile/edit_profile_dialog.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 import 'package:disciplinum/widgets/profile/lojinha.dart';
 
@@ -38,15 +39,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _iapService = Provider.of<IapService>(context, listen: false);
       _iapService!.onPurchaseResult = (success) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success
-                ? '🛒 Compra realizada com sucesso!'
-                : '❌ Compra não concluída.'),
-            backgroundColor: success ? Colors.green : Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (success) {
+          SnackBarHelper.showSuccess(context, '🛒 Compra realizada com sucesso!');
+        } else {
+          SnackBarHelper.showError(context, '❌ Compra não concluída.');
+        }
       };
     });
   }
@@ -138,9 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showAccountOptions(BuildContext context, AuthService authService) {
     if (!authService.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Faça login para acessar esta opção.')),
-      );
+      SnackBarHelper.showWarning(context, 'Faça login para acessar esta opção.');
       return;
     }
 
@@ -148,139 +143,530 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              // Puxador visual (opcional)
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark ? const Color(0xFF1F2937) : Colors.white,
+                isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFF),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
               ),
-              const SizedBox(height: 20),
-
-              // Título
-              Text(
-                'Minha Conta',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Editar Perfil
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Editar perfil'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showEditProfileDialog(context, authService);
-                },
-              ),
-
-              // Sair da Conta
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('Sair da conta'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  authService.logout();
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRouter.authWrapper,
-                    (route) => false,
-                  );
-                },
-              ),
-
-              const Divider(),
-
-              // Deletar Conta
-              ListTile(
-                leading: const Icon(Icons.delete_forever, color: Colors.red),
-                title: const Text(
-                  'Deletar conta',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showDeleteAccountDialog(context, authService);
-                },
-              ),
-              const SizedBox(height: 20),
             ],
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
+                
+                // Puxador visual premium
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6366F1),
+                        const Color(0xFF8B5CF6),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Título premium
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6366F1).withValues(alpha: 0.1),
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    'Minha Conta',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Opções com design premium
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      // Editar Perfil
+                      _buildPremiumOption(
+                        icon: Icons.edit_rounded,
+                        iconColor: const Color(0xFF6366F1),
+                        title: 'Editar perfil',
+                        subtitle: 'Atualizar suas informações pessoais',
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showEditProfileDialog(context, authService);
+                        },
+                        isDark: isDark,
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Sair da Conta
+                      _buildPremiumOption(
+                        icon: Icons.logout_rounded,
+                        iconColor: const Color(0xFFF59E0B),
+                        title: 'Sair da conta',
+                        subtitle: 'Fazer logout do aplicativo',
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          authService.logout();
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRouter.authWrapper,
+                            (route) => false,
+                          );
+                        },
+                        isDark: isDark,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Divisor
+                      Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              const Color(0xFF6366F1).withValues(alpha: 0.3),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Deletar Conta
+                      _buildPremiumOption(
+                        icon: Icons.delete_forever_rounded,
+                        iconColor: const Color(0xFFEF4444),
+                        title: 'Deletar conta',
+                        subtitle: 'Remover permanentemente sua conta e dados',
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showDeleteAccountDialog(context, authService);
+                        },
+                        isDark: isDark,
+                        isDestructive: true,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context, AuthService authService) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Deletar Conta'),
-        content: const Text(
-          'Tem certeza que deseja deletar sua conta? Esta ação é irreversível e todos os seus dados serão perdidos.',
+  Widget _buildPremiumOption({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required bool isDark,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            isDestructive 
+                ? const Color(0xFFEF4444).withValues(alpha: 0.05)
+                : const Color(0xFF6366F1).withValues(alpha: 0.05),
+            isDestructive 
+                ? const Color(0xFFEF4444).withValues(alpha: 0.02)
+                : const Color(0xFF6366F1).withValues(alpha: 0.02),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final rootNavigator = Navigator.of(context);
-              final dialogNavigator = Navigator.of(ctx);
-
-              dialogNavigator.pop();
-
-              final success = await authService.deleteAccount();
-
-              if (!mounted) return;
-
-              if (success) {
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Conta deletada com sucesso')),
-                );
-                rootNavigator.pushNamedAndRemoveUntil(
-                  AppRouter.authWrapper,
-                  (route) => false,
-                );
-              } else {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text('Erro: ${authService.errorMessage}'),
-                    backgroundColor: Colors.red,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDestructive 
+              ? const Color(0xFFEF4444).withValues(alpha: 0.2)
+              : const Color(0xFF6366F1).withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        iconColor.withValues(alpha: 0.1),
+                        iconColor.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: iconColor.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
-                );
-              }
-            },
-            child: const Text(
-              'Deletar',
-              style: TextStyle(color: Colors.red),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark 
+                              ? Colors.white.withValues(alpha: 0.7)
+                              : const Color(0xFF6B7280),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark 
+                      ? Colors.white.withValues(alpha: 0.5)
+                      : const Color(0xFF9CA3AF),
+                  size: 20,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, AuthService authService) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark ? const Color(0xFF1F2937) : Colors.white,
+                isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFF),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ícone de aviso
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFEF4444),
+                      const Color(0xFFDC2626),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.warning_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Título
+              Text(
+                'Deletar Conta',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Mensagem
+              Text(
+                'Tem certeza que deseja deletar sua conta?\nEsta ação é irreversível e todos os seus dados serão perdidos.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF6B7280),
+                  height: 1.5,
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Botões
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: isDark ? Colors.white.withValues(alpha: 0.3) : const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await authService.deleteAccount();
+                        if (context.mounted) {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRouter.authWrapper,
+                            (route) => false,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                      ),
+                      child: const Text(
+                        'Deletar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   void _showLojinhaDialog(BuildContext context, IapService iap) {
-    showDialog(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => const Lojinha(),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark ? const Color(0xFF1F2937) : Colors.white,
+                isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFF),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
+                
+                // Puxador visual premium
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6366F1),
+                        const Color(0xFF8B5CF6),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Título premium
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6366F1).withValues(alpha: 0.1),
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.storefront_rounded,
+                        color: const Color(0xFF6366F1),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Loja do App',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Descrição
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Desbloqueie recursos premium e apoie o desenvolvimento do aplicativo',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark 
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : const Color(0xFF6B7280),
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Conteúdo da Lojinha
+                const Lojinha(),
+                
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

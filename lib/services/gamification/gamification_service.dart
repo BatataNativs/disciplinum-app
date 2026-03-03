@@ -16,6 +16,8 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challenge_service.dart';
 import 'package:disciplinum/services/1_smoking/smoking_checkin_service.dart';
+import 'package:disciplinum/services/2_bingeEating/binge_eating_checkin_service.dart';
+import 'package:disciplinum/services/3_diet/meal_tracking_service.dart';
 
 // Mensagens por módulo
 final Map<NicheId, String> moduleMessages = {
@@ -93,6 +95,10 @@ class GamificationService extends ChangeNotifier {
     _loadPreferences();
     NotificationService.onRelapseDetected = _handleRelapseFromNotification;
     NotificationService.onCheckInSim = _handleCheckInSimFromNotification;
+    NotificationService.onBingeRelapseDetected =
+        _handleBingeRelapseFromNotification;
+    NotificationService.onBingeCheckInSim =
+        _handleBingeCheckInSimFromNotification;
   }
 
   // Cache local das medalhas e dias
@@ -167,6 +173,30 @@ class GamificationService extends ChangeNotifier {
         deactivate: true,
       );
     }
+  }
+
+  void _handleBingeRelapseFromNotification(String? payload) {
+    if (payload == 'binge_checkin') {
+      final nicheId = NicheId.bingeEating;
+      final niche = NicheRepository.getById(nicheId);
+
+      // Apaga check-ins ao resetar por recaída
+      BingeEatingCheckinService().clearAllCheckins();
+      resetMedals(
+        nicheId,
+        notificationTitle: 'Módulo Desativado 🛑',
+        notificationBody:
+            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+        iconPath: niche.iconPath,
+        deactivate: true,
+      );
+    }
+  }
+
+  void _handleBingeCheckInSimFromNotification(String? payload) {
+    BingeEatingCheckinService().recordCheckin();
+    debugPrint(
+        '✅ Check-in "Sim" (Compulsão Alimentar) registrado pela notificação.');
   }
 
   void _handleCheckInSimFromNotification(String? payload) {
@@ -480,7 +510,15 @@ class GamificationService extends ChangeNotifier {
         final minute = row['minute'] as int;
         final phrase = row['phrase'] as String?;
 
-        if (nicheIdRaw > 100) {
+        if (nicheIdRaw > 200) {
+          // Check-in Específico (ex: BingeEating + 200)
+          final nicheId = NicheId.tryFromInt(nicheIdRaw - 200);
+          if (nicheId != null) {
+            scheduleByModule.putIfAbsent(nicheId, () => []);
+            scheduleByModule[nicheId]!
+                .add(TimeOfDay(hour: hour, minute: minute));
+          }
+        } else if (nicheIdRaw > 100) {
           // Motivação
           final nicheId = NicheId.tryFromInt(nicheIdRaw - 100);
           if (nicheId != null) {
@@ -856,12 +894,23 @@ class GamificationService extends ChangeNotifier {
             const AndroidNotificationAction(actionIdNao, 'Não, tive recaída',
                 showsUserInterface: true, cancelNotification: true),
           ];
+        } else if (nicheId == NicheId.bingeEating) {
+          payload = 'binge_checkin';
+          actions = [
+            const AndroidNotificationAction(actionIdBingeSim, 'Resisti',
+                showsUserInterface: true, cancelNotification: true),
+            const AndroidNotificationAction(actionIdBingeNao, 'Não resisti',
+                showsUserInterface: true, cancelNotification: true),
+          ];
         }
 
         String body = _getModuleMessage(nicheId);
         if (nicheId == NicheId.smoking) {
           body =
               'Manteve-se disciplinado hoje? \n\nLembre-se de conferir seu progresso no app 🚀.';
+        } else if (nicheId == NicheId.bingeEating) {
+          body =
+              'Você resistiu às tentações de delivery hoje? \n\nMarque "resisti" e registre seu progresso no app 🚀.';
         }
 
         if (nicheId == NicheId.procrastination) {
@@ -884,9 +933,9 @@ class GamificationService extends ChangeNotifier {
           payload = 'diet_meal_$timeStr';
           actions = [
             const AndroidNotificationAction('DIET_SIM', 'Fiz/Farei refeição',
-                showsUserInterface: false, cancelNotification: true),
+                showsUserInterface: true, cancelNotification: true),
             const AndroidNotificationAction('DIET_NAO', 'Não fiz/não farei',
-                showsUserInterface: false, cancelNotification: true),
+                showsUserInterface: true, cancelNotification: true),
           ];
           body = 'Hora da refeição das $timeStr! Você fez/fará esta refeição?';
 
@@ -915,7 +964,8 @@ class GamificationService extends ChangeNotifier {
           final timeStr =
               '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
           payload = 'reading_reminder_$timeStr';
-          body = '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?';
+          body =
+              '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?';
         }
 
         await NotificationService.scheduleDailyNotification(
@@ -1263,8 +1313,8 @@ class GamificationService extends ChangeNotifier {
     await _syncWithCloud(nicheId);
 
     // 2. Carrega horários de check-in específicos (ex: BingeEating +200)
-    final checkinSpecificTimes = await CloudSyncService.loadUserNicheTimes(
-        nicheId: nicheId.id + 200);
+    final checkinSpecificTimes =
+        await CloudSyncService.loadUserNicheTimes(nicheId: nicheId.id + 200);
     if (checkinSpecificTimes.isNotEmpty) {
       scheduleByModule[nicheId] = checkinSpecificTimes
           .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
@@ -1405,6 +1455,14 @@ class GamificationService extends ChangeNotifier {
       scheduleByModule.remove(nicheId);
       _moduleStartDates.remove(nicheId);
       _maxMedalByModule.remove(nicheId);
+
+      if (nicheId == NicheId.smoking) {
+        SmokingCheckinService().clearAllCheckins();
+      } else if (nicheId == NicheId.bingeEating) {
+        BingeEatingCheckinService().clearAllCheckins();
+      } else if (nicheId == NicheId.diet) {
+        MealTrackingService.instance.clearAllMeals();
+      }
 
       if (currentNicheId == nicheId) {
         stopMonitoringApps();

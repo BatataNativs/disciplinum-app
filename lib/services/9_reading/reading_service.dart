@@ -377,7 +377,7 @@ class ReadingService extends ChangeNotifier {
         const AndroidNotificationAction(
           'reading_skip',
           'Não vou ler hoje',
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: true,
         ),
       ],
