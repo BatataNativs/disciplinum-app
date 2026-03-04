@@ -1,37 +1,52 @@
 class UserProfile {
   final String name;
-  final String? avatarPath;
-  final int totalPoints;
-  final int streakDays;
+  final String? avatarUrl;
+  final String? bio;
+  final bool showEmail;
+  final bool showAvatar;
 
   const UserProfile({
     this.name = 'Usuário Disciplinum',
-    this.avatarPath,
-    this.totalPoints = 0,
-    this.streakDays = 0,
+    this.avatarUrl,
+    this.bio,
+    this.showEmail = true,
+    this.showAvatar = true,
   });
 
-  // Adicionado para facilitar integração com Supabase
+  // Facilita a integração com os dados retornados pelo Supabase
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       name: map['name'] ?? 'Usuário Disciplinum',
-      avatarPath: map['avatar_url'], // Note que no banco deve ser avatar_url
-      totalPoints: map['total_points'] ?? 0,
-      streakDays: map['streak_days'] ?? 0,
+      avatarUrl: map['avatar_url'],
+      bio: map['bio'],
+      showEmail: map['show_email'] ?? true,
+      showAvatar: map['show_avatar'] ?? true,
     );
   }
 
   UserProfile copyWith({
     String? name,
-    String? avatarPath,
-    int? totalPoints,
-    int? streakDays,
+    String? avatarUrl,
+    String? bio,
+    bool? showEmail,
+    bool? showAvatar,
   }) {
     return UserProfile(
       name: name ?? this.name,
-      avatarPath: avatarPath ?? this.avatarPath,
-      totalPoints: totalPoints ?? this.totalPoints,
-      streakDays: streakDays ?? this.streakDays,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bio: bio ?? this.bio,
+      showEmail: showEmail ?? this.showEmail,
+      showAvatar: showAvatar ?? this.showAvatar,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'avatar_url': avatarUrl,
+      'bio': bio,
+      'show_email': showEmail,
+      'show_avatar': showAvatar,
+    };
   }
 }

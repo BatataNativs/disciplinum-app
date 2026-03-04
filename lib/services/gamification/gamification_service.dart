@@ -18,6 +18,8 @@ import 'package:disciplinum/services/7_moneySavingChallenge/money_saving_challen
 import 'package:disciplinum/services/1_smoking/smoking_checkin_service.dart';
 import 'package:disciplinum/services/2_bingeEating/binge_eating_checkin_service.dart';
 import 'package:disciplinum/services/3_diet/meal_tracking_service.dart';
+import 'package:disciplinum/models/gamification/medal.dart';
+import 'package:disciplinum/models/gamification/insignia.dart';
 
 // Mensagens por módulo
 final Map<NicheId, String> moduleMessages = {
@@ -54,36 +56,6 @@ String getModuleMessage(NicheId nicheId, {bool allowCustom = true}) {
   return 'Conquista em progresso!';
 }
 
-enum GamificationMedal { bronze, prata, ouro, diamante }
-
-extension GamificationMedalExtension on GamificationMedal {
-  String get nameBr {
-    switch (this) {
-      case GamificationMedal.bronze:
-        return 'Bronze';
-      case GamificationMedal.prata:
-        return 'Prata';
-      case GamificationMedal.ouro:
-        return 'Ouro';
-      case GamificationMedal.diamante:
-        return 'Diamante';
-    }
-  }
-
-  String get asset {
-    switch (this) {
-      case GamificationMedal.bronze:
-        return 'assets/medal_bronze.png';
-      case GamificationMedal.prata:
-        return 'assets/medal_silver.png';
-      case GamificationMedal.ouro:
-        return 'assets/medal_gold.png';
-      case GamificationMedal.diamante:
-        return 'assets/medal_diamond.png';
-    }
-  }
-}
-
 class GamificationService extends ChangeNotifier {
   // Singleton pattern
   static final GamificationService _instance = GamificationService._internal();
@@ -116,6 +88,16 @@ class GamificationService extends ChangeNotifier {
   List<Map<String, dynamic>> get pendingMedals =>
       List.unmodifiable(_pendingMedals);
 
+  // Insígnias de Foco conquistadas
+  final Set<FocusInsignia> _earnedFocusInsignias = {};
+  Set<FocusInsignia> get earnedFocusInsignias =>
+      Set.unmodifiable(_earnedFocusInsignias);
+
+  // Fila de insígnias pendentes de visualização (Popup)
+  final List<Map<String, dynamic>> _pendingInsignias = [];
+  List<Map<String, dynamic>> get pendingInsignias =>
+      List.unmodifiable(_pendingInsignias);
+
   Map<NicheId, String> get customMessages => _customMessages;
   Map<NicheId, List<String>> get customPhrases => _customPhrases;
 
@@ -129,6 +111,7 @@ class GamificationService extends ChangeNotifier {
   static const String _prefsUnlockedNotifsKey = 'unlocked_notifications';
   static const String _prefsUnlockedMotivationsKey =
       'unlocked_motivations'; // NOVO
+  static const String _prefsFocusInsigniasKey = 'focus_insignias_earned';
 
   // Controle de monitoramento
   bool _isModuleActive = false;
@@ -250,6 +233,18 @@ class GamificationService extends ChangeNotifier {
       }
     }
 
+    // Carrega insígnias de Foco conquistadas
+    final insigniasJson = prefs.getStringList(_prefsFocusInsigniasKey);
+    if (insigniasJson != null) {
+      for (final name in insigniasJson) {
+        try {
+          _earnedFocusInsignias.add(FocusInsignia.values.firstWhere(
+            (e) => e.toString().split('.').last == name,
+          ));
+        } catch (_) {}
+      }
+    }
+
     notifyListeners();
 
     // Tenta restaurar TODOS os módulos ativos e horários
@@ -264,6 +259,110 @@ class GamificationService extends ChangeNotifier {
   void consumePendingMedal(Map<String, dynamic> medal) {
     _pendingMedals.remove(medal);
     _savePendingMedals();
+    notifyListeners();
+  }
+
+  // =============================================
+  // INSÍGNIAS - SISTEMA DE CONQUISTAS (FOCO)
+  // =============================================
+
+  Future<void> _saveFocusInsignias() async {
+    final prefs = await SharedPreferences.getInstance();
+    final names =
+        _earnedFocusInsignias.map((e) => e.toString().split('.').last).toList();
+    await prefs.setStringList(_prefsFocusInsigniasKey, names);
+  }
+
+  /// Concede uma insígnia de Foco ao usuário, enviando notificação e colocando na fila de popup.
+  Future<void> awardInsignia(FocusInsignia insignia) async {
+    // Evita conceder duplicata
+    if (_earnedFocusInsignias.contains(insignia)) return;
+
+    _earnedFocusInsignias.add(insignia);
+    await _saveFocusInsignias();
+
+    final niche = NicheRepository.getById(NicheId.focus);
+    final data = {
+      'type': 'focus_insignia',
+      'insignia_name': insignia.nameBr,
+      'insignia_key': insignia.toString().split('.').last,
+      'insignia_asset': insignia.asset,
+      'module_name': niche.name,
+      'awarded_at': DateTime.now().toIso8601String(),
+    };
+
+    // Adiciona à fila de popup pendentes
+    _pendingInsignias.add(data);
+
+    // Envia notificação local
+    await _sendInsigniaNotification(insignia, niche.name);
+
+    // Sincroniza com o Supabase
+    await CloudSyncService.saveModuleStatus(
+      nicheId: NicheId.focus,
+      isActive: true,
+      earnedInsignias: _earnedFocusInsignias
+          .map((e) => e.toString().split('.').last)
+          .toList(),
+    );
+
+    notifyListeners();
+  }
+
+  Future<void> _sendInsigniaNotification(
+      FocusInsignia insignia, String moduleName) async {
+    AndroidBitmap<Uint8List>? largeIcon;
+    try {
+      final ByteData data = await rootBundle.load(insignia.asset);
+      largeIcon = ByteArrayAndroidBitmap(data.buffer.asUint8List());
+    } catch (_) {}
+
+    final body =
+        'Parabéns 🎊 Você obteve a insígnia ${insignia.nameBr} no módulo $moduleName!';
+
+    final androidDetails = AndroidNotificationDetails(
+      'disciplinum_insignias',
+      'Insígnias Disciplinum',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: NotificationService.soundEnabled,
+      enableVibration: true,
+      largeIcon: largeIcon,
+      styleInformation: BigTextStyleInformation(body),
+      actions: [
+        const AndroidNotificationAction(
+          'view_insignia',
+          'Ver no app',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
+    );
+    final details = NotificationDetails(android: androidDetails);
+    final id = 5000 + insignia.index; // IDs 5000-5007 para insígnias de Foco
+    await flutterLocalNotificationsPlugin.show(
+        id, 'Nova Insígnia Conquistada! 🎖️', body, details);
+  }
+
+  void consumePendingInsignia(Map<String, dynamic> insignia) {
+    _pendingInsignias.remove(insignia);
+    notifyListeners();
+  }
+
+  /// Reseta todas as insígnias de Foco (ao desativar módulo ou recaída).
+  Future<void> resetFocusInsignias() async {
+    _earnedFocusInsignias.clear();
+    _pendingInsignias.clear();
+    await _saveFocusInsignias();
+
+    // Sincroniza com o Supabase
+    await CloudSyncService.saveModuleStatus(
+      nicheId: NicheId.focus,
+      isActive:
+          false, // Se resetamos, provavelmente estamos desativando ou recaindo
+      earnedInsignias: [],
+    );
+
     notifyListeners();
   }
 
@@ -485,9 +584,24 @@ class GamificationService extends ChangeNotifier {
         if (nicheId != null) {
           if (status.isActive) {
             _diasConsecutivosByModule[nicheId] = status.consecutiveDays;
+
+            // Carrega insígnias de Foco se for o módulo correspondente
+            if (nicheId == NicheId.focus) {
+              _earnedFocusInsignias.clear();
+              for (final name in status.earnedInsignias) {
+                try {
+                  final ins = FocusInsignia.values.firstWhere(
+                    (e) => e.toString().split('.').last == name,
+                  );
+                  _earnedFocusInsignias.add(ins);
+                } catch (_) {}
+              }
+              _saveFocusInsignias(); // Atualiza cache local
+            }
+
             if (status.maxMedal != null) {
               _maxMedalByModule[nicheId] = GamificationMedal.values.firstWhere(
-                (m) => m.nameBr == status.maxMedal,
+                (m) => m.toString().split('.').last == status.maxMedal,
                 orElse: () => GamificationMedal.bronze,
               );
             }
@@ -1103,6 +1217,11 @@ class GamificationService extends ChangeNotifier {
       await _checkRetroactiveViolations(nicheId);
     }
 
+    // Concede insígnia Ferro ao configurar e ativar o módulo de Foco
+    if (nicheId == NicheId.focus) {
+      awardInsignia(FocusInsignia.ferro);
+    }
+
     // Reinicia o timer se necessário
     _monitorTimer?.cancel();
     _monitorTimer = Timer.periodic(const Duration(seconds: 2), _monitorLoop);
@@ -1414,6 +1533,21 @@ class GamificationService extends ChangeNotifier {
         notifyListeners();
       }
     }
+
+    // Verifica insígnias de Foco por períodos respeitados
+    if (nicheId == NicheId.focus) {
+      _verificaInsigniasFoco(dias);
+    }
+  }
+
+  void _verificaInsigniasFoco(int dias) {
+    // A lógica: 'dias consecutivos' no módulo Foco = períodos de foco respeitados
+    for (final insignia in FocusInsignia.values) {
+      if (insignia == FocusInsignia.ferro) continue; // Ferro é dado ao ativar
+      if (dias >= insignia.requiredDays) {
+        awardInsignia(insignia); // Evita duplicata internamente
+      }
+    }
   }
 
   bool _hasNotifiedToday(String key) {
@@ -1462,6 +1596,8 @@ class GamificationService extends ChangeNotifier {
         BingeEatingCheckinService().clearAllCheckins();
       } else if (nicheId == NicheId.diet) {
         MealTrackingService.instance.clearAllMeals();
+      } else if (nicheId == NicheId.focus) {
+        resetFocusInsignias();
       }
 
       if (currentNicheId == nicheId) {

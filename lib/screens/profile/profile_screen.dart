@@ -1164,7 +1164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                           icon: const Icon(Icons.bar_chart_rounded, size: 28),
                           label: const Text(
-                            'MEU PROGRESSO',
+                            'CONQUISTAS',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
