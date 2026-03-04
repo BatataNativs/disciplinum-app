@@ -90,6 +90,7 @@ flutter:
     - assets/warning1.png
     - assets/warning2.png
     - assets/screenshots/
+    - assets/insignias/
     - assets/Auth/
     - assets/secret_menu/
 

@@ -8,8 +8,6 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
-import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
-import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/misc/system_stuff/installed_app_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
@@ -70,41 +68,6 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
         }
       }
     });
-  }
-
-  void _mostrarDialogoLoja() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.credit_card_outlined,
-                color: Color.fromARGB(255, 27, 10, 211)),
-            SizedBox(width: 8),
-            Text('Recurso Pago ⚠️'),
-          ],
-        ),
-        content: const Text(
-          'O Dark Mode é um recurso pago (compra única).\n\n'
-          'Ao adquirir o Dark Mode, o botão de alternância funcionará. Deseja comprar agora?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Depois'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              final iapService =
-                  Provider.of<IapService>(context, listen: false);
-              iapService.buyByProductId(IapService.productIdDarkMode);
-            },
-            child: const Text('Comprar agora!'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _handleNicheTap(Niche niche, String heroTag) async {
@@ -363,41 +326,6 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                   ),
                 ),
               ],
-            ),
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 10,
-              right: 10,
-              child: Consumer<ThemeController>(
-                builder: (context, themeController, child) {
-                  final isDark = themeController.isDarkMode;
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      if (isDark) {
-                        themeController.toggleTheme();
-                      } else {
-                        final iapService =
-                            Provider.of<IapService>(context, listen: false);
-                        if (iapService.isDarkModeUnlocked) {
-                          themeController.toggleTheme();
-                        } else {
-                          _mostrarDialogoLoja();
-                        }
-                      }
-                    },
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: FittedBox(
-                        child: Icon(
-                          isDark ? Icons.light_mode : Icons.dark_mode,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),
