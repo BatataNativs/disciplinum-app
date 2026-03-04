@@ -5,8 +5,43 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/scroll_indicator_arrow.dart';
 import 'package:disciplinum/utils/snackbar_helper.dart';
 
-class Lojinha extends StatelessWidget {
+class Lojinha extends StatefulWidget {
   const Lojinha({super.key});
+
+  @override
+  State<Lojinha> createState() => _LojinhaState();
+}
+
+class _LojinhaState extends State<Lojinha> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final iap = Provider.of<IapService>(context, listen: false);
+      iap.onPurchaseResult = (success) {
+        if (!mounted) return;
+        if (success) {
+          SnackBarHelper.showSuccess(context, 'Compra realizada com sucesso!');
+        } else {
+          SnackBarHelper.showError(context, 'Erro no processamento da compra.');
+        }
+      };
+    });
+  }
+
+  @override
+  void dispose() {
+    final iap = Provider.of<IapService>(context, listen: false);
+    if (iap.onPurchaseResult != null) {
+      iap.onPurchaseResult = null;
+    }
+    super.dispose();
+  }
+
+  void _handleBuyAction(VoidCallback buyAction, String productName) {
+    SnackBarHelper.showInfo(context, 'Iniciando compra de $productName...');
+    buyAction();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,217 +55,221 @@ class Lojinha extends StatelessWidget {
     final iap = Provider.of<IapService>(context);
     final ScrollController shopScrollController = ScrollController();
 
-    return Align(
-      // Move o dialog mais para cima (-0.35 no eixo Y)
-      alignment: const Alignment(0.0, -0.35),
-      child: AlertDialog(
-        // Ajuste fino do padding para "colar" o conteúdo nos botões
-        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-
-        title: const Text('🛒 Bem-vindo(a) à lojinha do Disciplinum:'),
-        titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: isDark
-              ? const Color(0xFF6366F1)
-              : const Color(0xFF4F46E5), // cor do título da lojinha
-        ),
-        // SizedBox com altura fixa para garantir a "janelinha" e permitir scroll interno
-        content: SizedBox(
-          height: 400,
-          width: double.maxFinite,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: shopScrollController,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // AdFree Permanente
-                      _buildShopItem(
-                        context,
-                        title: '🚫 AdFree (Sem anúncios)',
-                        description: 'Remova anúncios do app permanentemente.',
-                        isAcquired: iap.isAdFreePermanent,
-                        titleColor: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color(0xFF1F2937),
-                        descColor: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
-                        acquiredColor: Colors.green,
-                        previewColor: Colors.blueAccent,
-                        onTap: iap.isAdFreePermanent
-                            ? null
-                            : () => iap.buyAdFree(),
-                        titleSize: shopTitleFontSize,
-                        descriptionSize: shopDescFontSize,
-                        acquiredSize: shopAcquiredStatusFontSize,
-                        previewSize: shopPreviewButtonFontSize,
-                      ),
-                      const Divider(),
-
-                      // AdFree Lite (7 Dias)
-                      _buildShopItem(
-                        context,
-                        title: '⏳ AdFree Lite (7 dias)',
-                        description: iap.isAdFreeLiteActive
-                            ? 'Ativo até: ${_formatDate(iap.adFreeLiteExpiration)}'
-                            : 'Remover anúncios por apenas 7 dias.',
-                        isAcquired: iap.isAdFreeLiteActive,
-                        titleColor: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color(0xFF1F2937),
-                        descColor: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
-                        acquiredColor: Colors.green,
-                        previewColor: Colors.blueAccent,
-                        onTap: iap.isAdFree ? null : () => iap.buyAdFreeLite(),
-                        titleSize: shopTitleFontSize,
-                        descriptionSize: shopDescFontSize,
-                        acquiredSize: shopAcquiredStatusFontSize,
-                        previewSize: shopPreviewButtonFontSize,
-                      ),
-                      const Divider(),
-
-                      // Dark Mode
-                      _buildShopItem(
-                        context,
-                        title: '🌙 Dark Mode (Tema escuro)',
-                        description: 'Desbloqueie o tema escuro. ',
-                        isAcquired: iap.isDarkModeUnlocked,
-                        titleColor: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color(0xFF1F2937),
-                        descColor: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
-                        acquiredColor: Colors.green,
-                        previewColor: Colors.blueAccent,
-                        onTap: iap.isDarkModeUnlocked
-                            ? null
-                            : () => iap.buyDarkMode(),
-                        titleSize: shopTitleFontSize,
-                        descriptionSize: shopDescFontSize,
-                        acquiredSize: shopAcquiredStatusFontSize,
-                        previewSize: shopPreviewButtonFontSize,
-                        onPreviewTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => Dialog(
-                              backgroundColor: Colors.transparent,
-                              insetPadding: const EdgeInsets.all(16),
-                              child: Stack(
-                                alignment: Alignment.topLeft,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.asset(
-                                      'assets/screenshots/captura_tela.png',
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.black54,
-                                      radius: 16,
-                                      child: IconButton(
-                                        padding: EdgeInsets.zero,
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 28,
-                                        ),
-                                        onPressed: () => Navigator.pop(ctx),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const Divider(),
-
-                      // Notificações Personalizáveis
-                      _buildShopItem(
-                        context,
-                        title: '🔔 Notificações Personalizáveis',
-                        description: 'Personalize os textos das notificações.',
-                        isAcquired: iap.isCustomNotifUnlocked,
-                        titleColor: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color(0xFF1F2937),
-                        descColor: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
-                        acquiredColor: Colors.green,
-                        previewColor: Colors.blueAccent,
-                        onTap: iap.isCustomNotifUnlocked
-                            ? null
-                            : () => iap.buyCustomNotif(),
-                        titleSize: shopTitleFontSize,
-                        descriptionSize: shopDescFontSize,
-                        acquiredSize: shopAcquiredStatusFontSize,
-                        previewSize: shopPreviewButtonFontSize,
-                      ),
-                      const Divider(),
-
-                      // Apoie o Desenvolvedor
-                      _buildShopItem(
-                        context,
-                        title: '☕ Apoie o desenvolvedor',
-                        description:
-                            'Contribua com o projeto pagando um "café" (Pix).',
-                        isAcquired: false,
-                        titleColor: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color(0xFF1F2937),
-                        descColor: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
-                        acquiredColor: Colors.green,
-                        previewColor: Colors.blueAccent,
-                        onTap: () {
-                          Navigator.pop(context); // Fecha Lojinha
-                          _mostrarModalCafezinho(context);
-                        },
-                        titleSize: shopTitleFontSize,
-                        descriptionSize: shopDescFontSize,
-                        acquiredSize: shopAcquiredStatusFontSize,
-                        previewSize: shopPreviewButtonFontSize,
-                      ),
-                    ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      // Layout flexível para garantir que o scroll funcione independente da altura da tela
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              controller: shopScrollController,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // AdFree Permanente
+                  _buildShopItem(
+                    context,
+                    title: '🚫 AdFree (Sem anúncios)',
+                    description: 'Remova anúncios do app permanentemente.',
+                    isAcquired: iap.isAdFreePermanent,
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.blueAccent,
+                    onTap: iap.isAdFreePermanent
+                        ? null
+                        : () => _handleBuyAction(iap.buyAdFree, "AdFree"),
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
                   ),
-                ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
+                  // AdFree Lite (7 Dias)
+                  _buildShopItem(
+                    context,
+                    title: '⏳ AdFree Lite (7 dias)',
+                    description: iap.isAdFreeLiteActive
+                        ? 'Ativo até: ${_formatDate(iap.adFreeLiteExpiration)}'
+                        : 'Remover anúncios por apenas 7 dias.',
+                    isAcquired: iap.isAdFreeLiteActive,
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.blueAccent,
+                    onTap: iap.isAdFree
+                        ? null
+                        : () =>
+                            _handleBuyAction(iap.buyAdFreeLite, "AdFree Lite"),
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                  ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
+                  // Dark Mode
+                  _buildShopItem(
+                    context,
+                    title: '🌙 Dark Mode (Tema escuro)',
+                    description: 'Desbloqueie o tema escuro. ',
+                    isAcquired: iap.isDarkModeUnlocked,
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.blueAccent,
+                    onTap: iap.isDarkModeUnlocked
+                        ? null
+                        : () => _handleBuyAction(iap.buyDarkMode, "Dark Mode"),
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                    onPreviewTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: const EdgeInsets.all(16),
+                          child: Stack(
+                            alignment: Alignment.topLeft,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/screenshots/print_tela_dark_mode.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black54,
+                                  radius: 16,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
+                  // Notificações Personalizáveis
+                  _buildShopItem(
+                    context,
+                    title: '🔔 Notificações Personalizáveis',
+                    description: 'Personalize os textos das notificações.',
+                    isAcquired: iap.isCustomNotifUnlocked,
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.blueAccent,
+                    onTap: iap.isCustomNotifUnlocked
+                        ? null
+                        : () => _handleBuyAction(
+                            iap.buyCustomNotif, "Notificações"),
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                  ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
+                  // Apoie o Desenvolvedor
+                  _buildShopItem(
+                    context,
+                    title: '☕ Apoie o desenvolvedor',
+                    description:
+                        'Contribua com o projeto pagando um "café" (Pix).',
+                    isAcquired: false,
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.blueAccent,
+                    onTap: () {
+                      Navigator.pop(context); // Fecha Lojinha
+                      _mostrarModalCafezinho(context);
+                    },
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                  ),
+                ],
               ),
-              ScrollIndicatorArrow(controller: shopScrollController),
+            ),
+          ),
+          ScrollIndicatorArrow(controller: shopScrollController),
+          const SizedBox(height: 8),
+          // Action Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  iap.restorePurchases();
+                  SnackBarHelper.showInfo(
+                      context, 'Buscando compras anteriores...');
+                },
+                child: Text('Restaurar compras',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    )),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Depois',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    )),
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              iap.restorePurchases();
-              SnackBarHelper.showInfo(context, 'Buscando compras anteriores...');
-            },
-            child: Text('Restaurar compras',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                )),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Depois',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                )),
           ),
         ],
       ),

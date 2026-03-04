@@ -11,6 +11,7 @@ import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dart';
 import 'package:disciplinum/screens/modules/3_diet/meal_streak_screen.dart';
 import 'package:disciplinum/screens/schedule_screen.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   final String? heroTag;
@@ -219,9 +220,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               curve: Curves.easeOutCubic);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("Módulo desativado e progresso zerado.")),
+        SnackBarHelper.showError(
+          context,
+          "Módulo desativado e progresso zerado.",
         );
       }
     }
@@ -299,12 +300,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         );
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
-          duration: const Duration(seconds: 2),
-        ),
+      SnackBarHelper.showInfo(
+        context,
+        'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
       );
     }
   }

@@ -40,7 +40,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _iapService!.onPurchaseResult = (success) {
         if (!mounted) return;
         if (success) {
-          SnackBarHelper.showSuccess(context, '🛒 Compra realizada com sucesso!');
+          SnackBarHelper.showSuccess(
+              context, '🛒 Compra realizada com sucesso!');
         } else {
           SnackBarHelper.showError(context, '❌ Compra não concluída.');
         }
@@ -66,8 +67,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     if (userId.isEmpty) return;
 
-    final messenger = ScaffoldMessenger.of(context);
-
     final file = await AvatarService.pickAvatar();
 
     if (file != null) {
@@ -82,16 +81,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _loadingAvatar = false;
       });
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            ok
-                ? 'Foto de perfil atualizada!'
-                : 'Erro ao enviar foto de perfil!',
-          ),
-          backgroundColor: ok ? Colors.green : Colors.red,
-        ),
-      );
+      if (ok) {
+        SnackBarHelper.showSuccess(context, 'Foto de perfil atualizada!');
+      } else {
+        SnackBarHelper.showError(context, 'Erro ao enviar foto de perfil!');
+      }
     }
   }
 
@@ -135,159 +129,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showAccountOptions(BuildContext context, AuthService authService) {
     if (!authService.isAuthenticated) {
-      SnackBarHelper.showWarning(context, 'Faça login para acessar esta opção.');
+      SnackBarHelper.showWarning(
+          context, 'Faça login para acessar esta opção.');
       return;
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
       builder: (ctx) {
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                isDark ? const Color(0xFF1F2937) : Colors.white,
-                isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFF),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          alignment: const Alignment(0, -0.6),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color.fromARGB(255, 30, 30, 40),
+                        const Color.fromARGB(255, 15, 15, 20),
+                      ]
+                    : [
+                        Colors.white,
+                        const Color.fromARGB(255, 230, 235, 240),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color.fromARGB(164, 255, 255, 255)
+                    : Colors.black12,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
               ],
             ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 20),
-                
-                // Puxador visual premium
-                Container(
-                  width: 50,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF6366F1),
-                        const Color(0xFF8B5CF6),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+                // Título
+                Text(
+                  'Minha Conta',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Título premium
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF6366F1).withValues(alpha: 0.1),
-                        const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'Minha Conta',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : const Color(0xFF1F2937),
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+                // Editar Perfil
+                _buildPremiumOptionRow(
+                  icon: Icons.edit_rounded,
+                  iconColor: const Color(0xFF6366F1),
+                  title: 'Editar perfil',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showEditProfileDialog(context, authService);
+                  },
+                  isDark: isDark,
                 ),
-                const SizedBox(height: 24),
 
-                // Opções com design premium
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // Editar Perfil
-                      _buildPremiumOption(
-                        icon: Icons.edit_rounded,
-                        iconColor: const Color(0xFF6366F1),
-                        title: 'Editar perfil',
-                        subtitle: 'Atualizar suas informações pessoais',
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _showEditProfileDialog(context, authService);
-                        },
-                        isDark: isDark,
+                const SizedBox(height: 12),
+
+                // Sair da Conta
+                _buildPremiumOptionRow(
+                  icon: Icons.logout_rounded,
+                  iconColor: const Color(0xFFF59E0B),
+                  title: 'Sair da conta',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    authService.logout();
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRouter.authWrapper,
+                      (route) => false,
+                    );
+                  },
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 12),
+                const Divider(color: Colors.black12),
+                const SizedBox(height: 12),
+
+                // Deletar Conta
+                _buildPremiumOptionRow(
+                  icon: Icons.delete_forever_rounded,
+                  iconColor: const Color(0xFFEF4444),
+                  title: 'Deletar conta',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showDeleteAccountDialog(context, authService);
+                  },
+                  isDark: isDark,
+                  isDestructive: true,
+                ),
+
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      'Fechar',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        fontWeight: FontWeight.bold,
                       ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Sair da Conta
-                      _buildPremiumOption(
-                        icon: Icons.logout_rounded,
-                        iconColor: const Color(0xFFF59E0B),
-                        title: 'Sair da conta',
-                        subtitle: 'Fazer logout do aplicativo',
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          authService.logout();
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            AppRouter.authWrapper,
-                            (route) => false,
-                          );
-                        },
-                        isDark: isDark,
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Divisor
-                      Container(
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              const Color(0xFF6366F1).withValues(alpha: 0.3),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Deletar Conta
-                      _buildPremiumOption(
-                        icon: Icons.delete_forever_rounded,
-                        iconColor: const Color(0xFFEF4444),
-                        title: 'Deletar conta',
-                        subtitle: 'Remover permanentemente sua conta e dados',
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _showDeleteAccountDialog(context, authService);
-                        },
-                        isDark: isDark,
-                        isDestructive: true,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                
-                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -296,114 +259,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPremiumOption({
+  Widget _buildPremiumOptionRow({
     required IconData icon,
     required Color iconColor,
     required String title,
-    required String subtitle,
     required VoidCallback onTap,
     required bool isDark,
     bool isDestructive = false,
   }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            isDestructive 
-                ? const Color(0xFFEF4444).withValues(alpha: 0.05)
-                : const Color(0xFF6366F1).withValues(alpha: 0.05),
-            isDestructive 
-                ? const Color(0xFFEF4444).withValues(alpha: 0.02)
-                : const Color(0xFF6366F1).withValues(alpha: 0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDestructive 
-              ? const Color(0xFFEF4444).withValues(alpha: 0.2)
-              : const Color(0xFF6366F1).withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        iconColor.withValues(alpha: 0.1),
-                        iconColor.withValues(alpha: 0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: iconColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 24,
-                  ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : const Color(0xFF1F2937),
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark 
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : const Color(0xFF6B7280),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark 
-                      ? Colors.white.withValues(alpha: 0.5)
-                      : const Color(0xFF9CA3AF),
-                  size: 20,
-                ),
-              ],
+              ),
             ),
-          ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white38 : Colors.black26,
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // Removido _buildPremiumOption não utilizado
+
   void _showDeleteAccountDialog(BuildContext context, AuthService authService) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -457,9 +358,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   size: 30,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Título
               Text(
                 'Deletar Conta',
@@ -470,22 +371,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   letterSpacing: -0.5,
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Mensagem
               Text(
                 'Tem certeza que deseja deletar sua conta?\nEsta ação é irreversível e todos os seus dados serão perdidos.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: isDark ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF6B7280),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.8)
+                      : const Color(0xFF6B7280),
                   height: 1.5,
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Botões
               Row(
                 children: [
@@ -497,7 +400,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: isDark ? Colors.white.withValues(alpha: 0.3) : const Color(0xFF6B7280),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : const Color(0xFF6B7280),
                           ),
                         ),
                       ),
@@ -506,7 +411,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1F2937),
                         ),
                       ),
                     ),
@@ -554,115 +460,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showLojinhaDialog(BuildContext context, IapService iap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    showModalBottomSheet(
+
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
       builder: (ctx) {
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                isDark ? const Color(0xFF1F2937) : Colors.white,
-                isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFF),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          alignment: const Alignment(0,
+              -0.6), // Movendo ainda mais pra cima para não conflitar com Snackbars
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark // degradê de fundo da lojinha
+                    ? [
+                        const Color.fromARGB(255, 30, 30, 40),
+                        const Color.fromARGB(255, 15, 15, 20),
+                      ]
+                    : [
+                        Colors.white,
+                        const Color.fromARGB(255, 177, 179, 181),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color.fromARGB(164, 255, 255, 255)
+                    : Colors.black,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
               ],
             ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 20),
-                
-                // Puxador visual premium
-                Container(
-                  width: 50,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF6366F1),
-                        const Color(0xFF8B5CF6),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 24),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 24),
 
-                // Título premium
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF6366F1).withValues(alpha: 0.1),
-                        const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.storefront_rounded,
-                        color: const Color(0xFF6366F1),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Loja do App',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF1F2937),
-                          letterSpacing: -0.5,
+                  // Título premium
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.storefront_rounded,
+                          color: const Color(0xFF6366F1),
+                          size: 24,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Descrição
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Desbloqueie recursos premium e apoie o desenvolvimento do aplicativo',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark 
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : const Color(0xFF6B7280),
-                      height: 1.4,
+                        const SizedBox(width: 12),
+                        Text(
+                          'Loja do App',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1F2937),
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Conteúdo da Lojinha
-                const Lojinha(),
-                
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 24),
+
+                  // Descrição
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Desbloqueie recursos pagos e apoie o desenvolvimento do aplicativo',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Conteúdo da Lojinha
+                  const Flexible(child: Lojinha()),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         );

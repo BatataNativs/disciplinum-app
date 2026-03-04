@@ -12,6 +12,7 @@ import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class AvoidAdultContentScreen extends StatefulWidget {
   final String? heroTag;
@@ -108,12 +109,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     final label = await getAppLabel(packageName) ?? packageName;
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("App removido: $label"),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      SnackBarHelper.showInfo(context, "App removido: $label");
     }
   }
 
@@ -121,16 +117,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     HapticFeedback.mediumImpact();
 
     if (_selectedApps.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Primeiro, deve-se selecionar apps a monitorar..",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: Colors.white,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
+      SnackBarHelper.showInfo(
+        context,
+        "Primeiro, deve-se selecionar apps a monitorar..",
       );
       return;
     }

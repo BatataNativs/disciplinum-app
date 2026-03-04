@@ -8,7 +8,6 @@ import 'package:disciplinum/app_router.dart';
 import 'package:disciplinum/models/niche.dart';
 import 'package:disciplinum/models/niche_id.dart';
 
-import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
@@ -215,62 +214,91 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildNicheCard(
       Niche niche, bool isDark, TextTheme textTheme, String heroTag) {
-    return NeonCard(
+    return GestureDetector(
       onTap: () => _handleNicheTap(niche, heroTag),
-      contentOpacity: 1.0,
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        children: [
-          // Container com altura fixa para garantir que todos os ícones fiquem alinhados
-          // horizontalmente, independente do número de linhas do texto abaixo.
-          SizedBox(
-            height: 110,
-            child: Center(
-              child: Transform.scale(
-                scale: niche.scale,
-                child: Hero(
-                  tag: heroTag,
-                  child: Image.asset(
-                    niche.iconPath,
-                    height: 60, // Aumentado tamanho base
-                    fit: BoxFit.contain,
+      child: Material(
+        color: Colors.transparent,
+        elevation: 20,
+        shadowColor: Colors.black.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      const Color.fromARGB(255, 30, 30, 40),
+                      const Color.fromARGB(255, 15, 15, 20),
+                    ]
+                  : [
+                      Colors.white,
+                      const Color.fromARGB(255, 230, 235, 255),
+                    ],
+            ),
+            border: Border.all(
+              color: isDark
+                  ? const Color.fromARGB(164, 255, 255, 255)
+                  : Colors.black,
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+              // horizontalmente, independente do número de linhas do texto abaixo.
+              SizedBox(
+                height: 110,
+                child: Center(
+                  child: Transform.scale(
+                    scale: niche.scale,
+                    child: Hero(
+                      tag: heroTag,
+                      child: Image.asset(
+                        niche.iconPath,
+                        height: 60, // Aumentado tamanho base
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Área de texto com altura flexível mas alinhada
-          Text(
-            niche.name,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 12.5,
-              color: isDark ? Colors.white : Colors.black,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                niche.homePhrase,
+              const SizedBox(height: 8),
+              // Área de texto com altura flexível mas alinhada
+              Text(
+                niche.name,
                 textAlign: TextAlign.center,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: textTheme.bodySmall?.copyWith(
-                  color: isDark ? Colors.white60 : Colors.black54,
-                  fontSize: 9.5,
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.5,
+                  color: isDark ? Colors.white : Colors.black87,
                   height: 1.1,
                 ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    niche.homePhrase,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: isDark ? Colors.white60 : Colors.black54,
+                      fontSize: 9.5,
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -323,40 +351,51 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Stack(
-                        children: [
-                          Text(
-                            'Disciplinum',
-                            style: textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 24,
-                              letterSpacing: 1.3,
-                              foreground: Paint()
-                                ..style = PaintingStyle.stroke
-                                ..strokeWidth = 1.2
-                                ..color = isDark ? Colors.white : Colors.black,
-                            ),
+                      if (isDark)
+                        Text(
+                          'Disciplinum',
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 24,
+                            letterSpacing: 1.3,
+                            color: Colors.white,
                           ),
-                          ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [
-                                Color.fromARGB(255, 0, 0, 0),
-                                Color.fromARGB(255, 67, 67, 67)
-                              ],
-                            ).createShader(bounds),
-                            blendMode: BlendMode.srcIn,
-                            child: Text(
+                        )
+                      else
+                        Stack(
+                          children: [
+                            Text(
                               'Disciplinum',
                               style: textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 24,
                                 letterSpacing: 1.3,
-                                color: Colors.white,
+                                foreground: Paint()
+                                  ..style = PaintingStyle.stroke
+                                  ..strokeWidth = 1.2
+                                  ..color = Colors.black,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [
+                                  Color.fromARGB(255, 0, 0, 0),
+                                  Color.fromARGB(255, 67, 67, 67)
+                                ],
+                              ).createShader(bounds),
+                              blendMode: BlendMode.srcIn,
+                              child: Text(
+                                'Disciplinum',
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 24,
+                                  letterSpacing: 1.3,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -364,7 +403,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final allCategories = List<NicheCategory>.from(categories);
+                      final allCategories =
+                          List<NicheCategory>.from(categories);
 
                       return ListView.separated(
                         padding: const EdgeInsets.only(
@@ -377,8 +417,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             return Selector<GamificationService, List<NicheId>>(
                               selector: (_, gamificationService) {
                                 return NicheId.values
-                                    .where(
-                                        (id) => gamificationService.isModuleActive(id))
+                                    .where((id) =>
+                                        gamificationService.isModuleActive(id))
                                     .toList(growable: false);
                               },
                               shouldRebuild: (prev, next) =>
@@ -529,28 +569,57 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: SizedBox(
         width: 150,
         height: 195,
-        child: NeonCard(
-          onTap: () {}, // No action
-          contentOpacity: 0.5,
-          padding: const EdgeInsets.all(8),
-          child: SizedBox.expand(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '🚫',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 40),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Sem módulos ativos',
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: isDark ? Colors.white54 : Colors.black45,
+        child: Material(
+          color: Colors.transparent,
+          elevation: 20,
+          shadowColor: Colors.black.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color.fromARGB(255, 30, 30, 40),
+                        const Color.fromARGB(255, 15, 15, 20),
+                      ]
+                    : [
+                        Colors.white,
+                        const Color.fromARGB(255, 230, 235, 255),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color.fromARGB(164, 255, 255, 255)
+                    : Colors.black,
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: SizedBox.expand(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '🚫',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 40),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sem módulos ativos',
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? const Color.fromARGB(85, 255, 255, 255)
+                          : Colors.black45,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:usage_stats/usage_stats.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/main.dart'; // Para acessar o navigatorKey
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class PermissionService {
   static bool _isChecking = false;
@@ -77,30 +78,9 @@ class PermissionService {
       await prefs.setBool('asked_usage_permission_onboarding', true);
 
       if (effectiveContext.mounted) {
-        ScaffoldMessenger.of(effectiveContext).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Permissão de uso detectada! O app agora pode monitorar seus hábitos.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: EdgeInsets.all(16),
-          ),
+        SnackBarHelper.showSuccess(
+          effectiveContext,
+          'Permissão de uso detectada! O app agora pode monitorar seus hábitos.',
         );
       }
     }
@@ -295,31 +275,9 @@ class PermissionService {
       // Usa o context global para o SnackBar também
       final scaffoldContext = navigatorKey.currentContext ?? context;
       if (scaffoldContext.mounted) {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Sem essa permissão, o app não funcionará corretamente. Você precisará ativá-la ao usar os módulos.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Color(0xFF6366F1),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: EdgeInsets.all(16),
-            duration: Duration(seconds: 4),
-          ),
+        SnackBarHelper.showInfo(
+          scaffoldContext,
+          'Sem essa permissão, o app não funcionará corretamente. Você precisará ativá-la ao usar os módulos.',
         );
       }
       return true;

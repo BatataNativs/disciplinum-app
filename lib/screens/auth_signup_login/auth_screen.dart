@@ -5,6 +5,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class AuthScreen extends StatefulWidget {
   final int initialAuthMode;
@@ -122,12 +123,11 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _showSnack(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: isError ? Colors.red : null,
-      ),
-    );
+    if (isError) {
+      SnackBarHelper.showError(context, msg);
+    } else {
+      SnackBarHelper.showInfo(context, msg);
+    }
   }
 
   Widget _buildSuccessDialog(BuildContext context) {

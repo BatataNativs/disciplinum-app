@@ -16,6 +16,7 @@ import 'package:disciplinum/screens/modules/4_spending/fixed_expenses_screen.dar
 import 'package:disciplinum/services/4_spending/spending_service.dart';
 import 'package:disciplinum/models/4_spending/fixed_expense_model.dart';
 import 'package:disciplinum/screens/modules/4_spending/fixed_bills_stats_screen.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class SpendingScreen extends StatefulWidget {
   final String? heroTag;
@@ -260,14 +261,9 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            const Text('Módulo desativado — Você não receberá mais alertas'),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.red.withValues(alpha: 0.95),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackBarHelper.showError(
+      context,
+      'Módulo desativado — Você não receberá mais alertas',
     );
   }
 

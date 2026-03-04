@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/app_router.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final AuthService authService;
@@ -97,7 +98,8 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     HapticFeedback.vibrate();
     setState(() => _isLoading = true);
 
-    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
     final navigator = Navigator.of(context);
 
     final success = await widget.authService.updateProfile(
@@ -110,17 +112,12 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
-        );
+        SnackBarHelper.showSuccess(context, 'Perfil atualizado com sucesso!');
         navigator.pop(true);
       } else {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-                widget.authService.errorMessage ?? 'Erro ao atualizar perfil'),
-            backgroundColor: Colors.redAccent,
-          ),
+        SnackBarHelper.showError(
+          context,
+          widget.authService.errorMessage ?? 'Erro ao atualizar perfil',
         );
       }
     }
@@ -131,179 +128,291 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Definição de cores para reutilizar e garantir consistência
     final Color textColor = isDark ? Colors.white : Colors.black;
     final Color subtitleColor = isDark ? Colors.white70 : Colors.black54;
 
-    return AlertDialog(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      title: Row(
-        children: [
-          Icon(Icons.edit_note_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Text('Editar Perfil',
-              style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            const Text('NOME',
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.1)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              style: TextStyle(color: textColor), // Cor do texto digitado
-              decoration: InputDecoration(
-                hintText: 'Como quer ser chamado?',
-                hintStyle:
-                    TextStyle(color: subtitleColor.withValues(alpha: 0.5)),
-                prefixIcon:
-                    Icon(Icons.person_outline, size: 20, color: subtitleColor),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.3),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      alignment: const Alignment(0, -0.2),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    const Color.fromARGB(255, 30, 30, 40),
+                    const Color.fromARGB(255, 15, 15, 20),
+                  ]
+                : [
+                    Colors.white,
+                    const Color.fromARGB(255, 230, 235, 240),
+                  ],
+          ),
+          border: Border.all(
+            color: isDark
+                ? const Color.fromARGB(164, 255, 255, 255)
+                : Colors.black12,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
             ),
-            const SizedBox(height: 20),
-            const Text('CONFIGURAÇÕES',
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.1)),
-            const SizedBox(height: 4),
-            SwitchListTile(
-              activeThumbColor: isDark ? Colors.white : Colors.black,
-              activeTrackColor: isDark
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.3),
-              title: Text('Exibir e-mail',
-                  style: TextStyle(fontSize: 14, color: textColor)),
-              subtitle: Text(
-                  'Caso desmarcado,\nseu e-mail não será exibido publicamente',
-                  style: TextStyle(fontSize: 11, color: subtitleColor)),
-              value: _showEmail,
-              onChanged: (val) {
-                HapticFeedback.selectionClick();
-                setState(() => _showEmail = val);
-              },
-              contentPadding: EdgeInsets.zero,
-              secondary: Icon(Icons.alternate_email_rounded,
-                  size: 20, color: textColor),
-            ),
-            SwitchListTile(
-              activeThumbColor: isDark ? Colors.white : Colors.black,
-              activeTrackColor: isDark
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.3),
-              title: Text('Exibir minha foto',
-                  style: TextStyle(fontSize: 14, color: textColor)),
-              subtitle: Text(
-                  'Caso desmarcado,\nsua foto não será exibida publicamente',
-                  style: TextStyle(fontSize: 11, color: subtitleColor)),
-              value: _showAvatar,
-              onChanged: (val) {
-                HapticFeedback.selectionClick();
-                setState(() => _showAvatar = val);
-              },
-              contentPadding: EdgeInsets.zero,
-              secondary:
-                  Icon(Icons.face_unlock_rounded, size: 20, color: textColor),
-            ),
-            const Divider(),
-            ListTile(
-              title: Text('Frase a ser exibida\nno seu perfil:',
-                  style: TextStyle(fontSize: 14, color: textColor)),
-              subtitle: Text(
-                _bioController.text.isEmpty
-                    ? 'Clique para adicionar uma frase'
-                    : _bioController.text,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: subtitleColor),
-              ),
-              trailing: Icon(Icons.edit, size: 16, color: subtitleColor),
-              contentPadding: EdgeInsets.zero,
-              leading:
-                  Icon(Icons.format_quote_rounded, size: 20, color: textColor),
-              onTap: () async {
-                HapticFeedback.lightImpact();
-                final updatedBio = await _showBioDialog();
-                if (updatedBio != null) {
-                  setState(() {
-                    _bioController.text = updatedBio;
-                  });
-                }
-              },
-            ),
-            if (widget.authService.isEmailUser) ...[
-              const Divider(),
-              ListTile(
-                title: Text('Alterar Senha',
-                    style: TextStyle(fontSize: 14, color: textColor)),
-                subtitle: Text('Redefina sua senha de acesso',
-                    style: TextStyle(fontSize: 11, color: subtitleColor)),
-                trailing: Icon(Icons.chevron_right_rounded,
-                    size: 20, color: textColor),
-                contentPadding: EdgeInsets.zero,
-                leading:
-                    Icon(Icons.lock_reset_rounded, size: 20, color: textColor),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRouter.resetPassword);
-                },
-              ),
-            ],
           ],
         ),
-      ),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(
-            foregroundColor: textColor,
-          ),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor:
-                Colors.white, // Texto do botão primary geralmente é branco
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          onPressed: _isLoading ? null : _save,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(color: Colors.white))
-              : const Text('Confirmar',
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Cabeçalho
+              Row(
+                children: [
+                  Icon(Icons.edit_note_rounded,
+                      color: theme.colorScheme.primary, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Editar Perfil',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: textColor,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Campo de Nome
+              const Text('NOME',
                   style: TextStyle(
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white)), // Forçando branco no botão primary
+                      color: Colors.grey,
+                      letterSpacing: 2.0)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nameController,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  hintText: 'Como quer ser chamado?',
+                  hintStyle:
+                      TextStyle(color: subtitleColor.withValues(alpha: 0.5)),
+                  prefixIcon: Icon(Icons.person_outline,
+                      size: 20, color: subtitleColor),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Configurações
+              const Text('VISIBILIDADE',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 2.0)),
+              const SizedBox(height: 8),
+              _buildSwitchOption(
+                title: 'Exibir e-mail',
+                value: _showEmail,
+                icon: Icons.alternate_email_rounded,
+                onChanged: (val) => setState(() => _showEmail = val),
+                isDark: isDark,
+              ),
+              const SizedBox(height: 8),
+              _buildSwitchOption(
+                title: 'Exibir minha foto',
+                value: _showAvatar,
+                icon: Icons.face_unlock_rounded,
+                onChanged: (val) => setState(() => _showAvatar = val),
+                isDark: isDark,
+              ),
+              const SizedBox(height: 24),
+
+              // Frase
+              const Text('FRASE DO PERFIL',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 2.0)),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  final updatedBio = await _showBioDialog();
+                  if (updatedBio != null) {
+                    setState(() => _bioController.text = updatedBio);
+                  }
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white10
+                        : Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.format_quote_rounded,
+                          size: 20, color: subtitleColor),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _bioController.text.isEmpty
+                              ? 'Adicionar uma frase...'
+                              : _bioController.text,
+                          style: TextStyle(
+                            color: _bioController.text.isEmpty
+                                ? subtitleColor.withValues(alpha: 0.6)
+                                : textColor,
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(Icons.edit, size: 16, color: subtitleColor),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (widget.authService.isEmailUser) ...[
+                const SizedBox(height: 24),
+                const Text('SEGURANÇA',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 2.0)),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRouter.resetPassword);
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.lock_reset_rounded,
+                            size: 20, color: textColor),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Alterar Senha',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded,
+                            color: subtitleColor, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // Botões
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                            color: subtitleColor, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: _isLoading ? null : _save,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text('Salvar',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildSwitchOption({
+    required String title,
+    required bool value,
+    required IconData icon,
+    required ValueChanged<bool> onChanged,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: SwitchListTile(
+        title: Text(title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        value: value,
+        onChanged: (val) {
+          HapticFeedback.selectionClick();
+          onChanged(val);
+        },
+        secondary: Icon(icon, size: 20),
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+      ),
     );
   }
 }

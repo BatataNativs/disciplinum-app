@@ -10,6 +10,7 @@ import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import 'package:disciplinum/services/1_smoking/smoking_service.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 
 class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
@@ -45,13 +46,11 @@ class AuthService extends ChangeNotifier {
   // ========================= UTILIDADES =========================
   void showMessage(BuildContext context, String message,
       {bool success = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: success ? Colors.green : Colors.red,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (success) {
+      SnackBarHelper.showSuccess(context, message);
+    } else {
+      SnackBarHelper.showError(context, message);
+    }
   }
 
   // ====================== INICIALIZAÇÃO =========================
