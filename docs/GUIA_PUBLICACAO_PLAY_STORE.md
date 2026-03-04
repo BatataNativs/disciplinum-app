@@ -1,7 +1,7 @@
 # 📱 Guia Completo: Publicando Disciplinum na Google Play Store
 
-> **Versão**: 1.0  
-> **Data**: Dezembro 2024  
+> **Versão**: 2.0  
+> **Data**: Março 2026  
 > **App**: Disciplinum  
 > **Autor**: Gerado por IA para Douglas
 
@@ -30,7 +30,7 @@
 ### 💰 Custos
 
 | Item | Valor | Frequência |
-|------|-------|------------|
+| ------ | ------- | ------------ |
 | Taxa de desenvolvedor Google | **$25 USD** | Única (vitalícia) |
 | Upload de apps | Grátis | - |
 | Testes (Internal/Closed/Open) | Grátis | - |
@@ -39,7 +39,7 @@
 ### 📊 Faixas de Teste
 
 | Faixa | Limite | Aprovação | Visibilidade |
-|-------|--------|-----------|--------------|
+| ------- | -------- | ----------- | -------------- |
 | **Internal Testing** | 100 testadores | Instantânea | Só convidados |
 | **Closed Testing** | Ilimitado | ~3 dias | Grupos/Links |
 | **Open Testing** | Ilimitado | ~3 dias | Qualquer um pode entrar |
@@ -63,7 +63,7 @@
 
 ### 📁 Arquivos que você vai gerar
 
-```
+```text
 disciplinum_app/
 ├── android/
 │   ├── app/
@@ -83,14 +83,14 @@ disciplinum_app/
 
 ### Passo a passo
 
-1. **Acesse**: https://play.google.com/console
+1. **Acesse**: <https://play.google.com/console>
 
 2. **Clique em "Começar"** ou "Get Started"
 
 3. **Escolha o tipo de conta**:
    - **Pessoal**: Para você mesmo
    - **Organização**: Para empresas (exige verificação)
-   
+
    > Para começar, escolha **Pessoal** - é mais rápido.
 
 4. **Preencha os dados**:
@@ -120,6 +120,7 @@ disciplinum_app/
 ### O que é Keystore?
 
 É uma "chave digital" que assina seu app. **IMPORTANTÍSSIMO**:
+
 - ⚠️ Se você perder a keystore, **nunca mais poderá atualizar seu app**
 - ⚠️ Faça backup em lugar seguro (Google Drive, OneDrive, etc.)
 - ⚠️ Nunca compartilhe com ninguém
@@ -140,7 +141,7 @@ keytool -genkey -v -keystore upload-keystore.jks -storetype JKS -keyalg RSA -key
 
 O comando vai pedir várias informações:
 
-```
+```text
 Enter keystore password: [CRIE UMA SENHA FORTE - ANOTE!]
 Re-enter new password: [REPITA A SENHA]
 What is your first and last name? Douglas [SEU NOME]
@@ -154,7 +155,7 @@ Is CN=Douglas, OU=Development, O=Disciplinum, L=..., ST=..., C=BR correct? yes
 
 ### 📝 ANOTE ESTAS INFORMAÇÕES (MUITO IMPORTANTE!)
 
-```
+```text
 KEYSTORE FILE: upload-keystore.jks
 KEYSTORE PASSWORD: _________________ (anote!)
 KEY ALIAS: upload
@@ -178,7 +179,7 @@ storeFile=app/upload-keystore.jks
 
 Abra `android/.gitignore` e adicione:
 
-```
+```text
 key.properties
 app/upload-keystore.jks
 ```
@@ -191,7 +192,7 @@ app/upload-keystore.jks
 
 Abra `android/app/build.gradle` e faça as seguintes alterações:
 
-#### 1. Adicione no topo (antes de `android {`):
+#### 1. Adicione no topo (antes de `android {`)
 
 ```groovy
 // Carrega as propriedades da keystore
@@ -202,7 +203,7 @@ if (keystorePropertiesFile.exists()) {
 }
 ```
 
-#### 2. Dentro de `android {`, adicione (antes de `buildTypes`):
+#### 2. Dentro de `android {`, adicione (antes de `buildTypes`)
 
 ```groovy
 signingConfigs {
@@ -215,7 +216,7 @@ signingConfigs {
 }
 ```
 
-#### 3. Modifique o `buildTypes`:
+#### 3. Modifique o `buildTypes`
 
 ```groovy
 buildTypes {
@@ -228,7 +229,7 @@ buildTypes {
 }
 ```
 
-### Exemplo completo do build.gradle (seção relevante):
+### Exemplo completo do build.gradle (seção relevante)
 
 ```groovy
 // No topo do arquivo, após os plugins
@@ -285,7 +286,8 @@ flutter build appbundle --release
 ### Onde encontrar o arquivo
 
 O arquivo gerado estará em:
-```
+
+```text
 build\app\outputs\bundle\release\app-release.aab
 ```
 
@@ -306,7 +308,7 @@ Deve mostrar informações do certificado que você criou.
 
 ### Acessando a Play Console
 
-1. Vá para: https://play.google.com/console
+1. Vá para: <https://play.google.com/console>
 2. Faça login com sua conta de desenvolvedor
 
 ### Criando novo app
@@ -322,7 +324,7 @@ Deve mostrar informações do certificado que você criou.
 3. **Declarações**:
    - ✅ Diretrizes de conteúdo do desenvolvedor
    - ✅ Leis de exportação dos EUA
-   
+
 4. Clique em **"Criar app"**
 
 ### Preenchendo informações obrigatórias
@@ -332,33 +334,33 @@ Após criar, você precisa preencher várias seções:
 #### 📝 Ficha do app (Store Listing)
 
 - **Título**: Disciplinum
-- **Descrição breve** (80 chars): 
-  ```
+- **Descrição breve** (80 chars):
+
+  ```text
   Controle seus hábitos, bloqueie distrações e conquiste medalhas!
   ```
+
 - **Descrição completa** (4000 chars):
-  ```
+
+  ```text
   Disciplinum é seu companheiro de autocontrole e disciplina pessoal.
   
-  🎯 FUNCIONALIDADES PRINCIPAIS:
+  🎯 MÓDULOS DE AUTOCONTROLE:
   
-  • Bloqueie apps que te distraem
-  • Defina horários de foco por categoria
-  • Acompanhe seu progresso diário
-  • Conquiste medalhas (Bronze → Prata → Ouro → Diamante)
-  • Áreas: Foco, Dieta, Finanças, e mais
+  • Pare de Fumar: Rastrei tempo limpo e dinheiro economizado
+  • Compulsão Alimentar: Acompanhe e registre refeições
+  • Desafio da Economia: Controle e gere o hábito de poupar
   
-  💎 INTERFACE PREMIUM:
+  💎 EXPERIÊNCIA PREMIUM:
   
-  • Design moderno com tema neon
-  • Animações suaves
-  • Experiência intuitiva
+  • Design moderno com efeitos Neon e temas Claro/Escuro
+  • Estatísticas de calendário mensais para cada módulo
+  • Personalização de notificações e fases motivacionais
   
-  🔒 PRIVACIDADE:
+  🔒 PRIVACIDADE E DADOS:
   
-  • Seus dados ficam seguros
-  • Login com Google
-  • Sincronização na nuvem
+  • Login seguro com e-mail 
+  • Sincronização em nuvem e histórico preservado
   
   Comece sua jornada de disciplina hoje!
   ```
@@ -366,7 +368,7 @@ Após criar, você precisa preencher várias seções:
 #### 🖼️ Recursos gráficos
 
 | Recurso | Tamanho | Obrigatório |
-|---------|---------|-------------|
+| --------- | --------- | ------------- |
 | Ícone | 512x512 PNG | ✅ Sim |
 | Feature Graphic | 1024x500 PNG | ✅ Sim |
 | Screenshots (telefone) | Mín. 2, 16:9 ou 9:16 | ✅ Sim |
@@ -377,6 +379,7 @@ Após criar, você precisa preencher várias seções:
 #### 🔒 Política de privacidade
 
 Você precisa de uma URL com política de privacidade. Opções:
+
 - Criar uma página no GitHub Pages (grátis)
 - Usar serviços como TermsFeed ou Iubenda
 - Criar uma página simples em qualquer hospedagem
@@ -413,7 +416,8 @@ Você precisa de uma URL com política de privacidade. Opções:
    - Aguarde o processamento
 
 5. **Notas da versão**:
-   ```
+
+   ```text
    Versão 0.1.0 - Teste Interno
    - Primeira versão para testes internos
    - Funcionalidades principais implementadas
@@ -443,21 +447,23 @@ Você precisa de uma URL com política de privacidade. Opções:
 3. **Preencha os detalhes**:
 
    | Campo | Valor |
-   |-------|-------|
-   | ID do produto | `premium_dark_mode` |
+   | ------- | ------- |
+   | ID do produto | `dark_mode_unlock` |
    | Nome | Modo Escuro Premium |
-   | Descrição | Desbloqueie o modo escuro premium permanentemente |
+   | Descrição | Desbloqueie o modo escuro permanentemente |
    | Preço | R$ 9,99 (ou o valor que preferir) |
+
+   > **Dica:** O projeto possui outros produtos no código que você precisará criar com ID idênticos: `ad_free_unlock`, `ad_free_lite`, `custom_notifications_unlock`, `motivation_phrases_unlock`.
 
 4. Clique em **"Salvar"** e depois **"Ativar"**
 
 ### ⚠️ Importante sobre o ID do produto
 
-O ID do produto (`premium_dark_mode`) deve ser **exatamente igual** ao que está no código do app:
+O ID do produto (`dark_mode_unlock`) deve ser **exatamente igual** ao que está no código do app:
 
 ```dart
 // No seu iap_service.dart
-static const String _productId = 'premium_dark_mode';
+static const String productIdDarkMode = 'dark_mode_unlock';
 ```
 
 ---
@@ -475,7 +481,7 @@ static const String _productId = 'premium_dark_mode';
 4. **Adicione e-mails**:
    - Seu próprio e-mail
    - E-mails de amigos/família que vão testar
-   
+
    > ⚠️ Os e-mails devem ser contas Google (Gmail)
 
 5. Clique em **"Salvar alterações"**
@@ -594,7 +600,8 @@ Para testar compras sem cobrar de verdade:
 
 **Causa**: O ID do produto não coincide ou o produto não está ativo
 
-**Solução**: 
+**Solução**:
+
 1. Verifique se o ID é exatamente igual no código e na Play Console
 2. Certifique-se de que o produto está "Ativo"
 3. Aguarde ~1 hora após criar o produto
@@ -624,11 +631,12 @@ Para testar compras sem cobrar de verdade:
 
 ---
 
-## 🎉 Parabéns!
+## 🎉 Parabéns
 
 Se você seguiu todos os passos, seu app está pronto para testes na Google Play Store!
 
 **Próximos passos sugeridos**:
+
 1. Teste bem no Internal Testing
 2. Corrija bugs encontrados
 3. Evolua para Closed Testing (mais testadores)
@@ -640,4 +648,4 @@ Se você seguiu todos os passos, seu app está pronto para testes na Google Play
 
 ---
 
-*Guia gerado em Dezembro 2024 para o app Disciplinum*
+Guia gerado originalmente em Dezembro 2024 (Revisado em Março 2026) para o app Disciplinum

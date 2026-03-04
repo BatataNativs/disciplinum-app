@@ -76,7 +76,8 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(context, 'Não foi possível abrir o app de e-mail.');
+        SnackBarHelper.showError(
+            context, 'Não foi possível abrir o app de e-mail.');
       }
     }
   }
@@ -261,9 +262,25 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
 // Boa tarde, Cel. Machado.
 Informo que a missão de exploração da caverna da Colina Alta, do interior do estado, precisou ser interrompida, pois quatro dos nossos soldados morreram subitamente. Causas ainda não determinadas pelos legistas. 
 
-Eles, em depoimento colhido pelo Oficial-de-Dia, às 1809Z da tarde de 11 de agosto de 2025, horas após retornarem do nível baixo da gruta, relataram ter entrado em luta corporal com uma criatura humanoide de cerca de 1,20m - estatura semelhante a de uma criança, mas com braços e dedos longos, cabeça desproporcionalmente grande e bastante força física. 
+Com isso, não haverá mais exploração local até a segunda ordem. 
 
-A criatura emitiu um tipo de zumbido, como uma abelha, que causou tontura e certa confusão mental em três deles. Estes não sabiam nem dizer qual era a equipe de serviço ou a data do dia. 2 dias depois, à noite, os quatro vieram a óbito. E, segundo familiares próximos, um deles (o soldado Wallace) chegou a gravar uma fita de áudio que pode conter detalhes sobre a criatura e sobre o caso. Coletaremos o material hoje à noite, para que não precisemos "conversar" com a mídia local para não tocarem no assunto. Mas, caso necessário, iniciaremos protocolo de desinformação e descredibilidade via chacota sobre os familiares e terceiros envolvidos. Designaremos os agentes Número #02 e Número #37, em veículo descaracterizado da divisão de abordagem de testemunhas, e em trajes visualmente intimidatórios (terno e chapéu pretos), respeitando as normas da publicação de linguagem corporal e sugestividade. Aguardo parecer do senhor para demais diligências necessárias. 
+Esses soldados, em depoimento colhido pelo Oficial-de-Dia, às 1809Z da tarde de 11 de agosto de 2025, horas após retornarem do nível baixo da gruta, relataram ter entrado em luta corporal com uma criatura humanoide de cerca de 1,20m - estatura semelhante a de uma criança, mas com braços e dedos longos, cabeça desproporcionalmente grande e bastante força física. 
+
+A certo ponto da contenda, a criatura emitiu um tipo de zumbido, como o de uma abelha, bem alto, que causou tontura e certa confusão mental em três deles (que começaram a se morder e gritar, de acordo com o quarto soldado). 
+
+Estes não sabiam nem dizer qual era a equipe de serviço ou a data do dia, em depoimento. Mas relataram a mesma história. 
+
+Dois dias depois, à noite, os quatro vieram a óbito. 
+
+E, segundo familiares próximos, irmã e irmão de um deles, (do soldado Wallace Mendes), o mesmo chegou a gravar uma fita de áudio que pode conter detalhes sobre a criatura e sobre o caso. 
+
+Coletaremos tal material hoje à noite, para que não precisemos "conversar" com a mídia local para não tocarem no assunto, nem mais com tais parentes do militar. 
+
+E, caso necessário, iniciaremos protocolo de desinformação e acobertamento, fazendo o release de descrédito sobre esses familiares e terceiros envolvidos. 
+
+Designaremos os agentes Número #02 e Número #37, em veículo descaracterizado da divisão de abordagem de testemunhas, e em trajes visualmente intimidatórios (terno e óculos pretos), respeitando as normas da publicação de linguagem corporal e sugestividade. 
+
+Aguardo parecer do senhor para demais diligências necessárias. 
 
 Respeitosamente, 
 Maj P. Herivelto
@@ -317,9 +334,9 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
         title: const Text("Parabéns!", style: TextStyle(color: Colors.green)),
         content: Text(
           "Parabéns, $userName!\n\n"
-          "Você, não só encontrou esse Easter Egg, como também resolveu o pequeno puzzle de luz! "
-          "(Isso indica que já assistiu a série Fringe. Tem bom gosto haha).\n\n"
-          "Obviamente, tudo isso é falso.\n\n"
+          "Você, não só encontrou esse Easter Egg, como também resolveu o pequeno puzzle dos botões verde e vermelho! "
+          "(Isso indica que já assistiu a série Fringe. Tem bom gosto 😉).\n\n"
+          "Obviamente, tudo isso mostrado é fake.\n\n"
           "Ou será que não ......",
           style: const TextStyle(color: Colors.white70),
         ),

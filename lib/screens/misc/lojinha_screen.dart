@@ -5,8 +5,46 @@ import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/utils/snackbar_helper.dart';
 
-class LojinhaScreen extends StatelessWidget {
+class LojinhaScreen extends StatefulWidget {
   const LojinhaScreen({super.key});
+
+  @override
+  State<LojinhaScreen> createState() => _LojinhaScreenState();
+}
+
+class _LojinhaScreenState extends State<LojinhaScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Configura o callback para mostrar snackbars de resultado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final iap = Provider.of<IapService>(context, listen: false);
+      iap.onPurchaseResult = (success) {
+        if (!mounted) return;
+        if (success) {
+          SnackBarHelper.showSuccess(context, 'Compra realizada com sucesso!');
+        } else {
+          SnackBarHelper.showError(
+              context, 'A compra foi cancelada ou ocorreu um erro.');
+        }
+      };
+    });
+  }
+
+  @override
+  void dispose() {
+    // Limpa o callback ao sair da tela para evitar chamadas com context inválido
+    final iap = Provider.of<IapService>(context, listen: false);
+    if (iap.onPurchaseResult != null) {
+      iap.onPurchaseResult = null;
+    }
+    super.dispose();
+  }
+
+  void _handleBuyAction(VoidCallback buyAction, String productName) {
+    SnackBarHelper.showInfo(context, 'Iniciando compra de $productName...');
+    buyAction();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,14 +93,14 @@ class LojinhaScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    // Título fora do card continua branco no dark mode
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
                 InkWell(
                   onTap: () {
                     iap.restorePurchases();
-                    SnackBarHelper.showInfo(context, 'Buscando compras anteriores...');
+                    SnackBarHelper.showInfo(
+                        context, 'Buscando compras anteriores...');
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
@@ -100,7 +138,8 @@ class LojinhaScreen extends StatelessWidget {
               icon: Icons.block_flipped,
               color: Colors.redAccent,
               isAcquired: iap.isAdFreePermanent,
-              onTap: () => iap.buyAdFree(),
+              onTap: () =>
+                  _handleBuyAction(iap.buyAdFree, "AdFree (Vitalício)"),
             ),
             const SizedBox(height: 12),
 
@@ -115,7 +154,7 @@ class LojinhaScreen extends StatelessWidget {
               icon: Icons.hourglass_top_rounded,
               color: Colors.orangeAccent,
               isAcquired: iap.isAdFreeLiteActive,
-              onTap: () => iap.buyAdFreeLite(),
+              onTap: () => _handleBuyAction(iap.buyAdFreeLite, "AdFree Lite"),
               isDisabled: iap.isAdFreePermanent,
             ),
             const SizedBox(height: 12),
@@ -129,7 +168,7 @@ class LojinhaScreen extends StatelessWidget {
               icon: Icons.dark_mode_rounded,
               color: Colors.indigoAccent,
               isAcquired: iap.isDarkModeUnlocked,
-              onTap: () => iap.buyDarkMode(),
+              onTap: () => _handleBuyAction(iap.buyDarkMode, "Dark Mode"),
               onPreviewTap: () => _showPreview(context),
             ),
             const SizedBox(height: 12),
@@ -143,7 +182,7 @@ class LojinhaScreen extends StatelessWidget {
               icon: Icons.notifications_active_rounded,
               color: Colors.teal,
               isAcquired: iap.isCustomNotifUnlocked,
-              onTap: () => iap.buyCustomNotif(),
+              onTap: () => _handleBuyAction(iap.buyCustomNotif, "Notificações"),
             ),
           ],
         ),
@@ -387,7 +426,7 @@ class LojinhaScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/screenshots/captura_tela.png',
+                'assets/screenshots/print_tela_dark_mode.png',
                 fit: BoxFit.contain,
               ),
             ),
@@ -480,7 +519,8 @@ class LojinhaScreen extends StatelessWidget {
                             Clipboard.setData(
                                 const ClipboardData(text: chavePix));
                             Navigator.pop(ctx);
-                            SnackBarHelper.showSuccess(context, 'Chave Pix copiada com sucesso!');
+                            SnackBarHelper.showSuccess(
+                                context, 'Chave Pix copiada com sucesso!');
                           },
                           icon: const Icon(Icons.copy),
                           label: const Text("Copiar Chave Pix"),

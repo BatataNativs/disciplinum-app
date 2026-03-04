@@ -10,6 +10,7 @@ import 'package:disciplinum/screens/modules/9_reading/reading_settings_screen.da
 import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart';
 import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
+import 'package:disciplinum/utils/snackbar_helper.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _ReadingScreenState extends State<ReadingScreen>
         length: 2, vsync: this, initialIndex: widget.initialTabIndex);
     WidgetsBinding.instance.addObserver(this);
     _loadReminderData();
-    
+
     // Adiciona listener para recarregar dados quando mudar de aba
     _tabController.addListener(() {
       if (_tabController.index == 1 && mounted) {
@@ -564,14 +565,9 @@ class _ReadingScreenState extends State<ReadingScreen>
         _tabController.animateTo(0);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                  'Módulo desativado — Você não receberá mais notificações'),
-              duration: const Duration(seconds: 3),
-              backgroundColor: Colors.red.withValues(alpha: 0.95),
-              behavior: SnackBarBehavior.floating,
-            ),
+          SnackBarHelper.showError(
+            context,
+            'Módulo desativado — Você não receberá mais notificações',
           );
         }
       }
@@ -770,7 +766,7 @@ class _ReadingScreenState extends State<ReadingScreen>
                   _reminderTime = null;
                 });
               }
-              
+
               // Força atualização do lembrete ao voltar da tela de notificações
               _loadReminderData();
             },
