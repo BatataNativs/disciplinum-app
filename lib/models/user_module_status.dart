@@ -5,6 +5,7 @@ class UserModuleStatus {
   final int consecutiveDays;
   final DateTime? lastUpdated;
   final String? maxMedal;
+  final List<String> earnedInsignias;
 
   UserModuleStatus({
     required this.userId,
@@ -13,6 +14,7 @@ class UserModuleStatus {
     this.consecutiveDays = 0,
     this.lastUpdated,
     this.maxMedal,
+    this.earnedInsignias = const [],
   });
 
   factory UserModuleStatus.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,10 @@ class UserModuleStatus {
           ? DateTime.parse(json['last_updated'] as String)
           : null,
       maxMedal: json['max_medal'] as String?,
+      earnedInsignias: (json['earned_insignias'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 
@@ -36,6 +42,7 @@ class UserModuleStatus {
       'consecutive_days': consecutiveDays,
       if (lastUpdated != null) 'last_updated': lastUpdated!.toIso8601String(),
       if (maxMedal != null) 'max_medal': maxMedal,
+      'earned_insignias': earnedInsignias,
     };
   }
 }

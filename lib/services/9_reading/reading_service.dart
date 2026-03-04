@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:disciplinum/models/9_reading/reading_model.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/models/gamification/medal.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';

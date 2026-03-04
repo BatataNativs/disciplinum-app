@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:confetti/confetti.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/app_router.dart';
 
@@ -21,10 +22,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _permissionsChecked = false;
+  late final ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       InstalledAppService().preload();
@@ -33,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _confettiController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -42,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       PermissionService.verifyPermissionAfterReturn(context);
       _checkPendingMedals();
+      _checkPendingInsignias();
     }
   }
 
@@ -56,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         // Verifica medalhas pendentes assim que a tela monta
         _checkPendingMedals();
+        _checkPendingInsignias();
 
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
@@ -146,6 +153,106 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _checkPendingInsignias() {
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
+    final pending = gamification.pendingInsignias;
+    if (pending.isNotEmpty) {
+      _showInsigniaDialog(pending.first);
+    }
+  }
+
+  void _showInsigniaDialog(Map<String, dynamic> insigniaData) {
+    _confettiController.play();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            emissionFrequency: 0.05,
+            numberOfParticles: 20,
+            gravity: 0.3,
+            colors: const [
+              Color(0xFF6366F1),
+              Color(0xFFEC4899),
+              Color(0xFFF59E0B),
+              Color(0xFF10B981),
+            ],
+          ),
+          AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1E1E2E)
+                : Colors.white,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Nova Insígnia! 🎖️',
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Image.asset(
+                  insigniaData['insignia_asset'],
+                  height: 100,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.shield,
+                      size: 100, color: Color(0xFF6366F1)),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  insigniaData['insignia_name'],
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Módulo: ${insigniaData['module_name']}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      _confettiController.stop();
+                      Provider.of<GamificationService>(context, listen: false)
+                          .consumePendingInsignia(insigniaData);
+                      Navigator.of(ctx).pop();
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted) _checkPendingInsignias();
+                      });
+                    },
+                    child: const Text('Ok, guardar!',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

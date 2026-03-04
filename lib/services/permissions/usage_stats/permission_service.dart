@@ -190,7 +190,7 @@ class PermissionService {
               const SizedBox(height: 16),
 
               Text(
-                "Clique no botão abaixo e, na próxima tela, ative a chave.",
+                "Basta clicar no botão abaixo e, na próxima tela, ativar a chave 👇🏻",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

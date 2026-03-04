@@ -35,7 +35,7 @@ class MyProgressScreen extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Meu Progresso'),
+        title: const Text('Conquistas'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,

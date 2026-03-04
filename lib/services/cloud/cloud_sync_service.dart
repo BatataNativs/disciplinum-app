@@ -192,6 +192,7 @@ class CloudSyncService {
     required bool isActive,
     int? consecutiveDays,
     String? maxMedal,
+    List<String>? earnedInsignias,
     bool forceClearMedal = false,
   }) async {
     await _retryOperation(() async {
@@ -213,6 +214,10 @@ class CloudSyncService {
         partialData['max_medal'] = null;
       } else if (maxMedal != null) {
         partialData['max_medal'] = maxMedal;
+      }
+
+      if (earnedInsignias != null) {
+        partialData['earned_insignias'] = earnedInsignias;
       }
 
       await supabase.from('user_module_status').upsert(
@@ -278,20 +283,20 @@ class CloudSyncService {
     return await _retryOperation(() async {
           final user = supabase.auth.currentUser;
           if (user == null) return <UserEntitlement>[];
-          
+
           var query = supabase
               .from('user_entitlements')
               .select()
               .eq('user_id', user.id);
-          
+
           if (entitlementType != null) {
             query = query.eq('entitlement_type', entitlementType);
           }
-          
+
           if (nicheId != null) {
             query = query.eq('niche_id', nicheId);
           }
-          
+
           final result = await query;
           return (result as List)
               .map((row) => UserEntitlement.fromJson(row))
@@ -313,13 +318,13 @@ class CloudSyncService {
 
       // Sincroniza com GamificationService
       final gamification = GamificationService.instance;
-      
+
       // Sincroniza desbloqueios por Ads
-      final notificationEntitlements = cloudEntitlements
-          .where((e) => e.entitlementType == 'notification');
-      final motivationEntitlements = cloudEntitlements
-          .where((e) => e.entitlementType == 'motivation');
-      
+      final notificationEntitlements =
+          cloudEntitlements.where((e) => e.entitlementType == 'notification');
+      final motivationEntitlements =
+          cloudEntitlements.where((e) => e.entitlementType == 'motivation');
+
       for (final entitlement in notificationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
@@ -328,7 +333,7 @@ class CloudSyncService {
           }
         }
       }
-      
+
       for (final entitlement in motivationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
