@@ -11,6 +11,7 @@ import 'package:disciplinum/widgets/profile/edit_profile_dialog.dart';
 import 'package:disciplinum/utils/snackbar_helper.dart';
 
 import 'package:disciplinum/widgets/profile/lojinha.dart';
+import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -458,6 +459,296 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _mostrarDialogoLoja() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.credit_card_outlined,
+                color: Color.fromARGB(255, 27, 10, 211)),
+            SizedBox(width: 8),
+            Text('Recurso Pago ⚠️'),
+          ],
+        ),
+        content: const Text(
+          'O Dark Mode é um recurso pago (compra única).\n\n'
+          'Ao adquirir o Dark Mode, o botão de alternância funcionará. Deseja comprar agora?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Depois'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              final iapService =
+                  Provider.of<IapService>(context, listen: false);
+              iapService.buyByProductId(IapService.productIdDarkMode);
+            },
+            child: const Text('Comprar agora!'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showThemeOptionsDialog(BuildContext context, IapService iap) {
+    final themeController =
+        Provider.of<ThemeController>(context, listen: false);
+    final isDark = themeController.isDarkMode;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          alignment: const Alignment(0, -0.2),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color.fromARGB(255, 30, 30, 40),
+                        const Color.fromARGB(255, 15, 15, 20),
+                      ]
+                    : [
+                        Colors.white,
+                        const Color.fromARGB(255, 230, 235, 240),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color.fromARGB(164, 255, 255, 255)
+                    : Colors.black12,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Título
+                  Row(
+                    children: [
+                      Icon(Icons.palette_rounded,
+                          color: isDark ? Colors.white : Colors.black87),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Temas',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : Colors.black87,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Opção Claro
+                  _buildThemeOption(
+                    title: 'Tema Claro',
+                    isSelected: !isDark,
+                    onTap: () {
+                      if (isDark) {
+                        themeController.toggleTheme();
+                      }
+                      Navigator.pop(ctx);
+                    },
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Opção Escuro
+                  _buildThemeOption(
+                    title: 'Tema Escuro',
+                    isSelected: isDark,
+                    onTap: () {
+                      if (!isDark) {
+                        if (iap.isDarkModeUnlocked) {
+                          themeController.toggleTheme();
+                        } else {
+                          Navigator.pop(ctx);
+                          _mostrarDialogoLoja();
+                        }
+                      } else {
+                        Navigator.pop(ctx);
+                      }
+                    },
+                    isDark: isDark,
+                    showLock: !iap.isDarkModeUnlocked,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Opção Rosa
+                  _buildThemeOption(
+                    title: 'Tema Rosa',
+                    isSelected: false,
+                    isComingSoon: true,
+                    onTap: () {},
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Opção Halloween
+                  _buildThemeOption(
+                    title: 'Tema Halloween',
+                    isSelected: false,
+                    isComingSoon: true,
+                    onTap: () {},
+                    isDark: isDark,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Botão Fechar
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 32),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Fechar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+    bool isComingSoon = false,
+    bool showLock = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isComingSoon ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? Colors.white24 : Colors.black12)
+                : (isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.05)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? (isDark ? Colors.white54 : Colors.black38)
+                  : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Radio button imitado
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? (isDark ? Colors.white : Colors.black87)
+                        : (isDark ? Colors.white38 : Colors.black38),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isComingSoon
+                            ? (isDark ? Colors.white38 : Colors.black38)
+                            : (isDark ? Colors.white : Colors.black87),
+                        fontStyle:
+                            isComingSoon ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                    if (isComingSoon) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '(Disponível em breve)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (showLock && !isComingSoon)
+                Icon(Icons.lock_outline_rounded,
+                    size: 18, color: isDark ? Colors.white54 : Colors.black54),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showLojinhaDialog(BuildContext context, IapService iap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -598,6 +889,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           systemOverlayStyle: isDark
               ? SystemUiOverlayStyle.light
               : SystemUiOverlayStyle.dark, // Ícones da barra de status
+          actions: [
+            IconButton(
+              onPressed: () => _showThemeOptionsDialog(context, iap),
+              icon: const Text('🎨', style: TextStyle(fontSize: 32)),
+            ),
+          ],
         ),
         body: SafeArea(
           child: LayoutBuilder(

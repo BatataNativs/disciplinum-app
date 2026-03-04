@@ -21,7 +21,6 @@ import 'package:disciplinum/screens/modules/4_spending/spending_screen.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_screen.dart';
 import 'package:disciplinum/screens/modules/6_adultContent/avoid_adult_content_screen.dart';
 import 'package:disciplinum/screens/modules/7_moneySavingChallenge/money_saving_challenge_screen.dart';
-import 'package:disciplinum/screens/modules/1_smoking/smoking_notifications_screen.dart';
 import 'package:disciplinum/screens/modules/8_procrastination/procrastination_screen.dart';
 import 'package:disciplinum/screens/modules/9_reading/reading_screen.dart';
 
@@ -44,8 +43,6 @@ class AppRouter {
   static const String stopSmoking = '/stop_smoking';
   static const String reading = '/reading'; // Módulo 9
   static const String shop = '/lojinha'; // Rota da lojinha
-
-  static const String smokingNotifications = '/smoking_notifications';
   static const String auth = '/auth';
 
   static const String login = '/auth';
@@ -79,11 +76,6 @@ class AppRouter {
       case AppRouter.stopSmoking:
         return FastMaterialPageRoute(
           builder: (_) => const StopSmokingScreen(),
-        );
-
-      case AppRouter.smokingNotifications:
-        return FastMaterialPageRoute(
-          builder: (_) => const SmokingNotificationsScreen(),
         );
 
       case AppRouter.nicheDetail:
