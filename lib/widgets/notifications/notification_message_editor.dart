@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/gamification/gamification_messages.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/widgets/profile/lojinha.dart';
@@ -17,7 +18,12 @@ class NotificationMessageEditor extends StatelessWidget {
     final iap = Provider.of<IapService>(context);
     final gamification = Provider.of<GamificationService>(context);
     final adService = Provider.of<AdService>(context, listen: false);
-    final currentMsg = getModuleMessage(nicheId);
+    final currentMsg = GamificationMessages.getModuleMessage(
+      nicheId,
+      isUnlocked: iap.isCustomNotifUnlocked ||
+          gamification.isNotificationUnlocked(nicheId),
+      customMessages: gamification.customMessages,
+    );
 
     // Verifica se tem iap global OU se liberou esse módulo nas prefs locais
     final bool hasAccess = iap.isCustomNotifUnlocked ||
@@ -151,7 +157,8 @@ class NotificationMessageEditor extends StatelessWidget {
       onUserEarnedReward: () {
         gamification.unlockNotification(nicheId);
         if (context.mounted) {
-          SnackBarHelper.showSuccess(context, 'Personalização desbloqueada! 🎉');
+          SnackBarHelper.showSuccess(
+              context, 'Personalização desbloqueada! 🎉');
         }
       },
       onAdDismissed: () {
@@ -163,7 +170,14 @@ class NotificationMessageEditor extends StatelessWidget {
 
   void _openEditMessageDialog(
       BuildContext context, GamificationService gamification) {
-    final controller = TextEditingController(text: getModuleMessage(nicheId));
+    final iap = Provider.of<IapService>(context, listen: false);
+    final controller = TextEditingController(
+        text: GamificationMessages.getModuleMessage(
+      nicheId,
+      isUnlocked: iap.isCustomNotifUnlocked ||
+          gamification.isNotificationUnlocked(nicheId),
+      customMessages: gamification.customMessages,
+    ));
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

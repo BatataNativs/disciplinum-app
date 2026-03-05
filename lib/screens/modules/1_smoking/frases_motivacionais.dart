@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../models/niche_id.dart';
 import '../../../models/niche.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/gamification/gamification_messages.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import '../../../widgets/home/neon_card.dart';
@@ -57,10 +58,20 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
             // Se for Personalização, tenta pegar a frase customizada salva
             phraseText = (i < customPhrases.length)
                 ? customPhrases[i]
-                : getModuleMessage(_niche.id);
+                : GamificationMessages.getModuleMessage(
+                    _niche.id,
+                    isUnlocked: iap.isCustomNotifUnlocked ||
+                        gamification.isNotificationUnlocked(_niche.id),
+                    customMessages: gamification.customMessages,
+                  );
           } else {
             // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
-            phraseText = getModuleMessage(_niche.id);
+            phraseText = GamificationMessages.getModuleMessage(
+              _niche.id,
+              isUnlocked: iap.isCustomNotifUnlocked ||
+                  gamification.isNotificationUnlocked(_niche.id),
+              customMessages: gamification.customMessages,
+            );
           }
 
           _slots.add(PhraseSlot(
@@ -118,9 +129,17 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
   void _addSlot() {
     if (_slots.length >= 8) return;
+    final iap = Provider.of<IapService>(context, listen: false);
+    final gamification =
+        Provider.of<GamificationService>(context, listen: false);
     setState(() {
       _slots.add(PhraseSlot(
-        text: getModuleMessage(_niche.id),
+        text: GamificationMessages.getModuleMessage(
+          _niche.id,
+          isUnlocked: iap.isCustomNotifUnlocked ||
+              gamification.isNotificationUnlocked(_niche.id),
+          customMessages: gamification.customMessages,
+        ),
         time: const TimeOfDay(hour: 12, minute: 0),
       ));
     });

@@ -32,23 +32,24 @@ extension FocusInsigniaExtension on FocusInsignia {
   }
 
   String get asset {
+    const prefix = 'assets/insignias/';
     switch (this) {
       case FocusInsignia.ferro:
-        return 'assets/escudo_ferro.png';
+        return '${prefix}escudo_ferro.png';
       case FocusInsignia.aluminio:
-        return 'assets/escudo_aluminio.png';
+        return '${prefix}escudo_aluminio.png';
       case FocusInsignia.latao:
-        return 'assets/escudo_latao.png';
+        return '${prefix}escudo_latao.png';
       case FocusInsignia.bronze:
-        return 'assets/escudo_bronze.png';
+        return '${prefix}escudo_bronze.png';
       case FocusInsignia.prata:
-        return 'assets/escudo_prata.png';
+        return '${prefix}escudo_prata.png';
       case FocusInsignia.ouro:
-        return 'assets/escudo_ouro.png';
+        return '${prefix}escudo_ouro.png';
       case FocusInsignia.diamante:
-        return 'assets/escudo_diamante.png';
+        return '${prefix}escudo_diamante.png';
       case FocusInsignia.disciplinum:
-        return 'assets/escudo_disciplinum.png';
+        return '${prefix}escudo_disciplinum.png';
     }
   }
 

@@ -38,6 +38,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
   Timer? _cursorTimer;
   int _countdownSeconds = 160; // Timer ajustado para 160s
   bool _dialogShown = false;
+  int _terminalTapCount = 0;
 
   @override
   void dispose() {
@@ -272,9 +273,9 @@ Estes não sabiam nem dizer qual era a equipe de serviço ou a data do dia, em d
 
 Dois dias depois, à noite, os quatro vieram a óbito. 
 
-E, segundo familiares próximos, irmã e irmão de um deles, (do soldado Wallace Mendes), o mesmo chegou a gravar uma fita de áudio que pode conter detalhes sobre a criatura e sobre o caso. 
+E, segundo familiares próximos - irmã e irmão - do soldado Wallace Mendes, ele chegou a gravar uma fita de áudio que pode conter detalhes sobre a criatura e sobre o caso. 
 
-Coletaremos tal material hoje à noite, para que não precisemos "conversar" com a mídia local para não tocarem no assunto, nem mais com tais parentes do militar. 
+Coletaremos tal material hoje à noite, para que não precisemos "conversar" com a mídia local a fim de que não toquem no assunto, nem mais com tais parentes do militar. 
 
 E, caso necessário, iniciaremos protocolo de desinformação e acobertamento, fazendo o release de descrédito sobre esses familiares e terceiros envolvidos. 
 
@@ -334,10 +335,10 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
         title: const Text("Parabéns!", style: TextStyle(color: Colors.green)),
         content: Text(
           "Parabéns, $userName!\n\n"
-          "Você, não só encontrou esse Easter Egg, como também resolveu o pequeno puzzle dos botões verde e vermelho! "
-          "(Isso indica que já assistiu a série Fringe. Tem bom gosto 😉).\n\n"
+          "Você não só encontrou esse Easter Egg, como também resolveu o pequeno puzzle dos botões verde e vermelho! "
+          "(Isso indica que já assistiu à série Fringe. Tem bom gosto 😉).\n\n"
           "Obviamente, tudo isso mostrado é fake.\n\n"
-          "Ou será que não ......",
+          "Ou será que não? ......",
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -449,7 +450,7 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Assistiu a série Fringe?",
+                "Assistiu à série Fringe?",
                 style: TextStyle(color: Colors.white54, letterSpacing: 2),
               ),
               const SizedBox(height: 60),
@@ -483,41 +484,54 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
   Widget _buildTerminalView(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 40),
-            Expanded(
-              child: SingleChildScrollView(
-                reverse: true,
-                child: Text.rich(TextSpan(
-                    text: _terminalText,
-                    style: const TextStyle(
-                      color: Color(0xFF00FF00),
-                      fontFamily: 'Courier',
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                    children: [
-                      if (_showCursor)
-                        const TextSpan(
-                          text: "█",
-                          style: TextStyle(color: Color(0xFF00FF00)),
-                        )
-                    ])),
+      body: GestureDetector(
+        onTap: () {
+          if (_currentStage == ScreenStage.terminal) {
+            setState(() {
+              _terminalTapCount++;
+            });
+            if (_terminalTapCount >= 20 && !_dialogShown) {
+              _showEasterEggDialog();
+            }
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+              Expanded(
+                child: SingleChildScrollView(
+                  reverse: true,
+                  child: Text.rich(TextSpan(
+                      text: _terminalText,
+                      style: const TextStyle(
+                        color: Color(0xFF00FF00),
+                        fontFamily: 'Courier',
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                      children: [
+                        if (_showCursor)
+                          const TextSpan(
+                            text: "█",
+                            style: TextStyle(color: Color(0xFF00FF00)),
+                          )
+                      ])),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Text(
-                "AUTO-DESTRUCT IN: ${_countdownSeconds}s",
-                style: const TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.bold),
+              const SizedBox(height: 20),
+              Center(
+                child: Text(
+                  "Esta mensagem vai se autodestruir em: ${_countdownSeconds}s",
+                  style: const TextStyle(
+                      color: Colors.red, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
