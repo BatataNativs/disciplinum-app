@@ -93,7 +93,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!auth.isAuthenticated) {
       if (mounted) {
         setState(() => _isSyncing = false);
-        SnackBarHelper.showWarning(context, 'Faça login para sincronizar seus dados na nuvem.');
+        SnackBarHelper.showWarning(
+            context, 'Faça login para sincronizar seus dados na nuvem.');
       }
       return;
     }
@@ -222,28 +223,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final gamification = Provider.of<GamificationService>(context);
-    final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     Widget sectionHeader(String title) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
         child: Text(
           title.toUpperCase(),
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.blueAccent : Colors.black,
-            letterSpacing: 1.2,
+            color: isDark ? Colors.white54 : Colors.black54,
+            letterSpacing: 1.1,
           ),
         ),
       );
     }
 
+    Widget settingContainer(List<Widget> children) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.black : Colors.grey.withValues(alpha: 0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Column(children: children),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
-        // cor de fundo
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -254,407 +276,260 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor:
-            Colors.transparent, // Transparente para ver o gradiente
+        backgroundColor: Colors.transparent,
         extendBody: true,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Configurações'),
-          backgroundColor: Colors.transparent, // AppBar Transparente
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          systemOverlayStyle: isDark
-              ? SystemUiOverlayStyle.light
-              : SystemUiOverlayStyle.dark, // Ícones da barra de status
+          systemOverlayStyle:
+              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         ),
         body: SafeArea(
+          bottom: false,
           child: ListView(
-            padding: const EdgeInsets.only(top: 0),
+            padding: const EdgeInsets.only(top: 8, bottom: 120),
             children: [
               const SettingsBannerAd(),
               sectionHeader('Notificações'),
-// 1. Switch: Pausar notificações
-              SwitchListTile(
-                // --- ESTILO PADRONIZADO ---
-                activeThumbColor: isDark
-                    ? const Color.fromARGB(255, 255, 255, 255)
-                    : const Color.fromARGB(
-                        255, 0, 0, 0), // Cor da bolinha quando ativo
-                activeTrackColor: isDark
-                    ? Colors.white.withValues(alpha: 0.4)
-                    : Colors.black
-                        .withValues(alpha: 0.2), // Cor do fundo quando ativo
-                inactiveThumbColor: isDark
-                    ? Colors.grey
-                    : const Color.fromARGB(
-                        255, 255, 255, 255), // Cor da bolinha quando inativo
-                inactiveTrackColor: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : const Color.fromARGB(255, 0, 0, 0)
-                        .withValues(alpha: 0.2), // Cor do fundo quando inativo
-                // ---------------------------
-
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text(
-                  'Pausar notificações temporariamente',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? const Color(0xFFFFFFFF)
-                        : const Color(0xFF1F2937),
-                  ),
-                ),
-                subtitle: Text(
-                  'Não receber alertas mesmo com módulo ativado',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? const Color(0xFF9CA3AF)
-                        : const Color.fromARGB(255, 96, 96, 96),
-                  ),
-                ),
-                secondary: Icon(
-                  Icons.pause_circle_outline,
-                  color: isDark
-                      ? const Color(0xFF9CA3AF)
-                      : const Color.fromARGB(255, 0, 0, 0),
-                ),
-                value: gamification.notificationsPaused,
-                onChanged: (val) {
-                  gamification.setNotificationsPaused(val);
-                  setState(() {});
-                },
-              ),
-
-              // 2. Switch: Sons de alerta
-              SwitchListTile(
-                // --- ESTILO PADRONIZADO (IDÊNTICO AO DE CIMA) ---
-                activeThumbColor: isDark
-                    ? const Color.fromARGB(255, 255, 255, 255)
-                    : const Color.fromARGB(
-                        255, 0, 0, 0), // Cor da bolinha quando ativo
-                activeTrackColor: isDark
-                    ? Colors.white.withValues(alpha: 0.4)
-                    : Colors.black
-                        .withValues(alpha: 0.4), // Cor do fundo quando ativo
-                inactiveThumbColor: isDark
-                    ? Colors.grey
-                    : const Color.fromARGB(
-                        255, 255, 255, 255), // Cor da bolinha quando inativo
-                inactiveTrackColor: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black
-                        .withValues(alpha: 0.2), // Cor do fundo quando inativo
-                // -----------------------------------------------
-
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text(
-                  'Sons de alerta',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? const Color(0xFFFFFFFF)
-                        : const Color(0xFF1F2937),
-                  ),
-                ),
-                subtitle: Text(
-                  _soundEnabled ? 'Som e vibração' : 'Apenas vibração',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? const Color(0xFF9CA3AF)
-                        : const Color.fromARGB(255, 96, 96, 96),
-                  ),
-                ),
-                secondary: Icon(
-                  _soundEnabled ? Icons.volume_up : Icons.vibration,
-                  color: isDark
-                      ? const Color(0xFF9CA3AF)
-                      : const Color.fromARGB(255, 0, 0, 0),
-                ),
-                value: _soundEnabled,
-                onChanged: (val) {
-                  setState(() => _soundEnabled = val);
-                  NotificationService.setSoundEnabled(val);
-                },
-              ),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Config. de estilo de notificações do Android',
+              settingContainer([
+                SwitchListTile(
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: Colors.green,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
+                  dense: true,
+                  title: Text(
+                    'Pausar notificações',
                     style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Gerenciar acesso a notificações',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: Icon(Icons.settings_applications,
-                    color: isDark
-                        ? const Color(0xFF9CA3AF)
-                        : const Color.fromARGB(255, 0, 0, 0)),
-                trailing: Icon(Icons.arrow_forward_ios,
-                    size: 16,
-                    color: isDark
-                        ? const Color(0xFF9CA3AF)
-                        : const Color.fromARGB(255, 0, 0, 0)),
-                onTap: NotificationService.openNotificationSettings,
-              ),
-              sectionHeader('Sincronização'),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Sincronizar agora',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Validar conexão com a nuvem',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: _isSyncing
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(Icons.sync,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 0, 0, 0)),
-                onTap: _isSyncing ? null : _sincronizarAgora,
-              ),
-              sectionHeader('Sobre o Projeto'),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Avalie o App',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Avalie-o na Google Play Store',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: const Icon(Icons.star_rate, color: Colors.amber),
-                onTap: _avaliarApp,
-              ),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Enviar Feedback / Bug / Comentário / Sugestão',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Enviar um e-mail para o desenvolvedor',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: const Icon(
-                  Icons.bug_report,
-                  color: Color.fromARGB(255, 237, 65, 65),
-                ),
-                onTap: _enviarFeedback,
-              ),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Apoie o Desenvolvedor 💲',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Pagar um "café" (Pix)',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: const Icon(
-                  Icons.coffee,
-                  color: Color.fromARGB(255, 119, 185, 205),
-                ),
-                onTap: () => _mostrarModalCafezinho(context),
-              ),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Como funciona',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text(
-                    'Breve explicação sobre como funciona o aplicativo',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: const Icon(
-                  Icons.help_outline_rounded,
-                  color: Color.fromARGB(255, 78, 244, 66),
-                ),
-                onTap: _mostrarDialogoComoFunciona,
-              ),
-              ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                title: Text('Rever tela de apresentação',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFFFFFFF)
-                            : const Color.fromARGB(255, 0, 0, 0))),
-                subtitle: Text('Reveja a tela de apresentação do app',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : const Color.fromARGB(255, 96, 96, 96))),
-                leading: const Icon(
-                  Icons.add_to_home_screen,
-                  color: Color.fromARGB(255, 108, 179, 250),
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const OnboardingScreen(isReviewMode: true)),
-                ),
-              ),
-
-              // Rodapé com frase versão
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20.0, 1.0, 20.0, 10.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '“A disciplina é a mãe do sucesso.” – Ésquilo',
-                          style: textTheme.bodySmall?.copyWith(
-                            fontStyle: FontStyle.italic,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? Colors.white70
-                                : const Color.fromARGB(255, 25, 25, 25),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(width: 8),
-                        // BOTÃO DEV (permite testar temas)
-                        GestureDetector(
-                          onTap: () {
-                            Provider.of<ThemeController>(context, listen: false)
-                                .toggleTheme();
-                            SnackBarHelper.showInfo(context, "Dev, lembre-se de remover esse botão antes de publicar o app!");
-                          },
-                          child: Icon(
-                            isDark ? Icons.light_mode : Icons.dark_mode,
-                            size: 23,
-                            color: const Color.fromARGB(255, 236, 19, 19)
-                                .withValues(alpha: 1.0),
-                          ),
-                        ),
-                      ],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
-
-                    // AQUI ESTÁ A MUDANÇA PRINCIPAL:
-                    InkWell(
-                      // Agora navega para a tela nova
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SecretMenuScreen())),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 2,
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Disciplinum v1.0.0',
-                              style: textTheme.labelSmall?.copyWith(
-                                color: isDark
-                                    ? const Color.fromARGB(255, 255, 255, 255)
-                                    : const Color.fromARGB(255, 40, 40, 40),
-                              ),
+                  ),
+                  subtitle: const Text('Silenciar alertas temporariamente'),
+                  secondary: Icon(Icons.notifications_paused_outlined,
+                      color: isDark ? Colors.white70 : Colors.black54),
+                  value: gamification.notificationsPaused,
+                  onChanged: (val) =>
+                      setState(() => gamification.setNotificationsPaused(val)),
+                ),
+                Divider(
+                    height: 1,
+                    color: isDark ? Colors.black : Colors.grey[100],
+                    indent: 56),
+                SwitchListTile(
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: Colors.green,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
+                  dense: true,
+                  title: Text(
+                    'Sons de alerta',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: Text(_soundEnabled ? 'Som e vibração' : 'Mudo'),
+                  secondary: Icon(
+                      _soundEnabled ? Icons.volume_up : Icons.vibration,
+                      color: isDark ? Colors.white70 : Colors.black54),
+                  value: _soundEnabled,
+                  onChanged: (val) {
+                    setState(() => _soundEnabled = val);
+                    NotificationService.setSoundEnabled(val);
+                  },
+                ),
+                Divider(
+                    height: 1,
+                    color: isDark ? Colors.black : Colors.grey[300],
+                    indent: 56),
+                ListTile(
+                  dense: true,
+                  leading: Icon(Icons.settings_suggest_outlined,
+                      color: isDark ? Colors.white70 : Colors.black54),
+                  title: Text(
+                    'Configurações do Android',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: const Text('Gerenciar permissões do sistema'),
+                  trailing: const Icon(Icons.chevron_right, size: 20),
+                  onTap: NotificationService.openNotificationSettings,
+                ),
+              ]),
+              sectionHeader('Sincronização'),
+              settingContainer([
+                ListTile(
+                  dense: true,
+                  leading: _isSyncing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : Icon(Icons.cloud_sync_outlined,
+                          color: isDark ? Colors.white70 : Colors.black54),
+                  title: Text(
+                    'Sincronizar agora',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: const Text('Backup manual na nuvem'),
+                  trailing: const Icon(Icons.chevron_right, size: 20),
+                  onTap: _isSyncing ? null : _sincronizarAgora,
+                ),
+              ]),
+              sectionHeader('Suporte e Feedback'),
+              settingContainer([
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.star_outline, color: Colors.amber),
+                  title: Text(
+                    'Avalie o App',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  onTap: _avaliarApp,
+                ),
+                Divider(
+                    height: 1,
+                    color: isDark ? Colors.black : Colors.grey[100],
+                    indent: 56),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.mail_outline, color: Colors.blue),
+                  title: Text(
+                    'Enviar Feedback',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  onTap: _enviarFeedback,
+                ),
+                Divider(
+                    height: 1,
+                    color: isDark ? Colors.black : Colors.grey[100],
+                    indent: 56),
+                ListTile(
+                  dense: true,
+                  leading:
+                      const Icon(Icons.coffee_outlined, color: Colors.brown),
+                  title: Text(
+                    'Apoie o Desenvolvedor',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  onTap: () => _mostrarModalCafezinho(context),
+                ),
+              ]),
+              sectionHeader('Sobre'),
+              settingContainer([
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.info_outline, color: Colors.green),
+                  title: Text(
+                    'Como funciona',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  onTap: _mostrarDialogoComoFunciona,
+                ),
+                Divider(
+                    height: 1,
+                    color: isDark ? Colors.black : Colors.grey[100],
+                    indent: 56),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.auto_awesome_outlined,
+                      color: Colors.purple),
+                  title: Text(
+                    'Ver apresentação',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            const OnboardingScreen(isReviewMode: true)),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 32),
+              Column(
+                children: [
+                  Text(
+                    '“A disciplina é a mãe do sucesso.” – Ésquilo',
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SecretMenuScreen())),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Disciplinum v1.0.0',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white12 : Colors.black12,
                             ),
-                            Icon(
-                              Icons.menu_book_rounded,
-                              size: 20,
-                              color: isDark
-                                  ? const Color.fromARGB(255, 255, 255, 255)
-                                      .withValues(alpha: 0.2)
-                                  : const Color.fromARGB(255, 55, 55, 55)
-                                      .withValues(alpha: 0.2),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 4),
+                          Icon(
+                            Icons.menu_book_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white10 : Colors.black12,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  // Botão de Tema (Somente para Dev)
+                  IconButton(
+                    icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                    onPressed: () {
+                      Provider.of<ThemeController>(context, listen: false)
+                          .toggleTheme();
+                      SnackBarHelper.showInfo(context,
+                          "Dev, lembre-se de remover esse botão antes de publicar o app!");
+                    },
+                    color: Colors.red.withValues(alpha: 0.2),
+                  ),
+                ],
               ),
             ],
           ),

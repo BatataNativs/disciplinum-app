@@ -1,276 +1,291 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/models/gamification/insignia.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
+import 'package:disciplinum/models/gamification/medal.dart';
 
 class MyProgressFocus extends StatelessWidget {
   const MyProgressFocus({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final gamification = Provider.of<GamificationService>(context);
+    final authService = Provider.of<AuthService>(context);
     final dias = gamification.diasConsecutivosByModule[NicheId.focus] ?? 0;
-    final isActive = gamification.isModuleActive(NicheId.focus);
-    final earned = gamification.earnedFocusInsignias;
+    final earnedInsignias = gamification.earnedFocusInsignias;
+
+    // Lógica para obter o primeiro nome
+    String fullName = authService.userProfile?['name'] ?? 'Usuário';
+    String firstName = fullName.split(' ').first;
+    if (firstName.isEmpty) firstName = 'Usuário';
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Conquistas'),
+        title: const Text('Conquistas', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // --- Card de progresso ---
-                NeonCard(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/icons/niche_foco.png',
-                        height: 64,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        isActive
-                            ? '$dias períodos respeitados'
-                            : 'Módulo desativado',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isActive
-                              ? const Color.fromARGB(255, 105, 139, 240)
-                              : Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _getMedalText(dias),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // --- Grid de Insígnias ---
-                Text(
-                  'Insígnias de Foco',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Ganhe insígnias ao respeitar seus períodos de foco.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white54 : Colors.black45,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  children: FocusInsignia.values.map((insignia) {
-                    final isEarned = earned.contains(insignia);
-                    return _InsigniaGridItem(
-                      insignia: insignia,
-                      isEarned: isEarned,
-                      isDark: isDark,
-                    );
-                  }).toList(),
-                ),
-              ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Título do Módulo ---
+            const Text(
+              'Foco e Produtividade',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            const Text(
+              'Seu progresso no módulo',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // --- Seção: Medalhas ---
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E), // Cinza escuro/grafite
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.8,
+                children: GamificationMedal.values.map((medal) {
+                  final isEarned =
+                      (medal == GamificationMedal.bronze && dias >= 3) ||
+                          (medal == GamificationMedal.prata && dias >= 5) ||
+                          (medal == GamificationMedal.ouro && dias >= 7) ||
+                          (medal == GamificationMedal.diamante && dias >= 10);
+
+                  return _AwardItem(
+                    asset: medal.asset,
+                    label: medal.nameBr,
+                    isEarned: isEarned,
+                    requirement: _getMedalRequirement(medal),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // --- Seção: Insígnias ---
+            const Text(
+              'Insígnias',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E), // Cinza escuro/grafite
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.8,
+                children: FocusInsignia.values.map((insignia) {
+                  final isEarned = earnedInsignias.contains(insignia);
+                  return _AwardItem(
+                    asset: insignia.asset,
+                    label: insignia.nameBr.split(' ').last,
+                    isEarned: isEarned,
+                    requirement: _getInsigniaRequirement(insignia),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  String _getMedalText(int dias) {
-    if (dias >= 10) {
-      return '💎 Você alcançou o nível Diamante!';
+  String _getMedalRequirement(GamificationMedal medal) {
+    switch (medal) {
+      case GamificationMedal.bronze:
+        return '3 dias consecutivos';
+      case GamificationMedal.prata:
+        return '5 dias consecutivos';
+      case GamificationMedal.ouro:
+        return '7 dias consecutivos';
+      case GamificationMedal.diamante:
+        return '10 dias consecutivos';
     }
-    if (dias >= 7) {
-      return '🥇 Medalha de Ouro! Faltam ${10 - dias} dias para Diamante.';
-    }
-    if (dias >= 5) {
-      return '🥈 Medalha de Prata! Faltam ${7 - dias} dias para Ouro.';
-    }
-    if (dias >= 3) {
-      return '🥉 Medalha de Bronze! Faltam ${5 - dias} dias para Prata.';
-    }
-    return 'Faltam ${3 - dias} dias para sua primeira medalha (Bronze).';
+  }
+
+  String _getInsigniaRequirement(FocusInsignia insignia) {
+    if (insignia == FocusInsignia.ferro) return 'Ative o módulo de Foco';
+    return '${insignia.requiredDays} períodos de foco respeitados';
   }
 }
 
-// --- Widget individual da insígnia no grid ---
-class _InsigniaGridItem extends StatelessWidget {
-  final FocusInsignia insignia;
+class _AwardItem extends StatelessWidget {
+  final String asset;
+  final String label;
   final bool isEarned;
-  final bool isDark;
+  final String requirement;
 
-  const _InsigniaGridItem({
-    required this.insignia,
+  const _AwardItem({
+    required this.asset,
+    required this.label,
     required this.isEarned,
-    required this.isDark,
+    required this.requirement,
   });
-
-  static const _grayscaleMatrix = <double>[
-    0.2126,
-    0.7152,
-    0.0722,
-    0.0,
-    0.0,
-    0.2126,
-    0.7152,
-    0.0722,
-    0.0,
-    0.0,
-    0.2126,
-    0.7152,
-    0.0722,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-  ];
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showTooltip(context),
+      onTap: () => _showDetail(context),
       child: Column(
         children: [
           Expanded(
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: isEarned ? 1.0 : 0.35,
-              child: isEarned
-                  ? Image.asset(
-                      insignia.asset,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.shield,
-                        color: Color(0xFF6366F1),
-                        size: 40,
-                      ),
-                    )
-                  : ColorFiltered(
-                      colorFilter: const ColorFilter.matrix(_grayscaleMatrix),
-                      child: Image.asset(
-                        insignia.asset,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.shield,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
-                    ),
+            child: ColorFiltered(
+              colorFilter: isEarned
+                  ? const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply)
+                  : const ColorFilter.matrix(<double>[
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ]),
+              child: Padding(
+                padding: const EdgeInsets.all(
+                    14), // Controle o tamanho aqui (maior padding = menor imagem)
+                child: Opacity(
+                  opacity: isEarned ? 1.0 : 0.4,
+                  child: Image.asset(asset, fit: BoxFit.contain),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
-            insignia.nameBr.split(' ').last,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: isEarned
-                  ? (isDark ? Colors.white70 : Colors.black87)
-                  : Colors.grey,
-            ),
+            label,
             textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: isEarned ? Colors.white : Colors.grey,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showTooltip(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  void _showDetail(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            isEarned
-                ? Image.asset(insignia.asset,
-                    height: 80,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.shield, size: 80))
-                : ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(_grayscaleMatrix),
-                    child: Image.asset(insignia.asset,
-                        height: 80,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.shield, size: 80)),
-                  ),
+            ColorFiltered(
+              colorFilter: isEarned
+                  ? const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply)
+                  : const ColorFilter.matrix(<double>[
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ]),
+              child: Opacity(
+                opacity: isEarned ? 1.0 : 0.4,
+                child: Image.asset(asset, height: 100),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
-              insignia.nameBr,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              isEarned
-                  ? '✅ Conquistada!'
-                  : insignia == FocusInsignia.ferro
-                      ? 'Configure e ative o módulo de Foco.'
-                      : 'Respeite ${insignia.requiredDays} período${insignia.requiredDays > 1 ? 's' : ''} de foco sem'
-                          ' abrir apps proibidos.',
+              isEarned ? '✅ Conquistada!' : 'Requisito:\n$requirement',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Ok'),
+            child: const Text('Ok', style: TextStyle(color: Color(0xFF6366F1))),
           ),
         ],
       ),

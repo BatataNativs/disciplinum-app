@@ -41,15 +41,8 @@ class MyProgressScreen extends StatelessWidget {
         elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
-          ),
+        decoration: const BoxDecoration(
+          color: Colors.black,
         ),
         child: SafeArea(
           child: Padding(
@@ -59,19 +52,19 @@ class MyProgressScreen extends StatelessWidget {
               children: [
                 // SAUDAÇÃO
                 Text(
-                  'Olá, $firstName! 📊',
-                  style: TextStyle(
+                  'Olá, $firstName!',
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Acompanhe seu progresso em cada módulo:',
+                const Text(
+                  'Acompanhe suas conquistas em cada módulo:',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -123,79 +116,54 @@ class MyProgressScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromARGB(255, 30, 30, 40),
+              Color.fromARGB(255, 15, 15, 20),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.black,
+            width: 1.5,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Ícone do módulo
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.grey[800]!.withValues(alpha: 0.5)
-                    : Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
+            // Ícone do módulo (Aumentado e sem container circular)
+            Expanded(
               child: Image.asset(
                 niche.iconPath,
-                height: 28,
-                width: 28,
                 fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 6),
-            // Nome do módulo (truncado)
-            SizedBox(
-              height: 32,
-              child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  niche.name,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            // Dias ou status
+            const SizedBox(height: 8),
+            // Nome do módulo
             Text(
-              isActive ? '$dias dias' : 'Desativado',
-              style: TextStyle(
-                fontSize: 10,
+              niche.name,
+              style: const TextStyle(
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isActive
-                    ? (isDark ? Colors.greenAccent : Colors.green)
-                    : Colors.grey,
+                color: Colors.white,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            // Espaço reservado para Medalha (para manter alinhamento)
-            SizedBox(
-              height: 24,
-              child: (isActive && dias >= 3)
-                  ? Center(
-                      child: Text(
-                        _getMedalEmoji(dias),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    )
-                  : null,
+            const SizedBox(height: 4),
+            // Status Ativado/Desativado
+            Text(
+              isActive ? 'Ativado' : 'Desativado',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: isActive ? Colors.greenAccent : Colors.grey,
+              ),
             ),
           ],
         ),
@@ -240,13 +208,5 @@ class MyProgressScreen extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (_) => detailScreen),
     );
-  }
-
-  String _getMedalEmoji(int dias) {
-    if (dias >= 10) return '💎';
-    if (dias >= 7) return '🥇';
-    if (dias >= 5) return '🥈';
-    if (dias >= 3) return '🥉';
-    return '';
   }
 }

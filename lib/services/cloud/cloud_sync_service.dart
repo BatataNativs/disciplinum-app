@@ -229,7 +229,8 @@ class CloudSyncService {
 
   static Future<bool> syncNow() async {
     try {
-      return await GamificationService.instance.refreshAllDataFromCloud();
+      await GamificationService.instance.refreshAllDataFromCloud();
+      return true;
     } catch (e) {
       debugPrint('❌ Erro durante sincronização global: $e');
       return false;
