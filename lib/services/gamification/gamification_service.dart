@@ -273,6 +273,10 @@ class GamificationService extends ChangeNotifier {
         consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0);
     await NotificationScheduler.instance
         .scheduleNativeNotifications(nicheId, this);
+
+    // Força checagem imediata para premiar insígnias de "Dia 0" (ex: Ferro)
+    GamificationAwardEngine.instance.checkTimeBasedMedals(nicheId, this);
+
     notifyListeners();
   }
 

@@ -23,25 +23,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   static const int _totalPages = 3;
 
+  Widget _buildListItem(String text, TextStyle? style) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 14,
+            color: isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981),
+          ),
+          const SizedBox(width: 10),
+          Text(text, style: style),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMedal(String assetPath, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 64,
-          width: 64,
+          height: 32,
+          width: 32,
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 16,
-                spreadRadius: 0,
+                color: (isDark ? Colors.black : Colors.blueGrey)
+                    .withValues(alpha: 0.15),
+                blurRadius: 10,
                 offset: const Offset(0, 4),
               )
             ],
+            border: Border.all(
+              color:
+                  (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981))
+                      .withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
           child: Image.asset(assetPath, fit: BoxFit.contain),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
         ),
       ],
     );
@@ -184,60 +227,111 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: index == 2 ? MainAxisAlignment.start : MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Spacer(flex: 1),
+                        if (index == 2) const SizedBox(height: 80),
+                        if (index != 2) const Spacer(flex: 1),
 
                         // --- ÁREA DO ASSET (Expandida) ---
-                        Expanded(
-                          flex: 5,
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: Builder(builder: (context) {
-                              if (index == 0) {
-                                return Image.asset(
-                                    'assets/disciplinado.png',
-                                    height: 210,
-                                    width: 210,
-                                    fit: BoxFit.contain,
-                                  );
-                              } else if (index == 1) {
-                                return Center(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        _buildMedal('assets/medal_bronze.png',
-                                            'Bronze'),
-                                        const SizedBox(width: 20),
-                                        _buildMedal(
-                                            'assets/medal_silver.png', 'Prata'),
-                                        const SizedBox(width: 20),
-                                        _buildMedal(
-                                            'assets/medal_gold.png', 'Ouro'),
-                                        const SizedBox(width: 20),
-                                        _buildMedal('assets/medal_diamond.png',
-                                            'Diamante'),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Image.asset(
-                                  'assets/warning1.png',
-                                  height: 210,
-                                  width: 210,
-                                  fit: BoxFit.contain,
-                                );
-                              }
-                            }),
-                          ),
-                        ),
+                        Builder(builder: (context) {
+                          if (index == 2) {
+                            // Última tela - Container simples
+                            return Container(
+                              height: 160,
+                              alignment: Alignment.topCenter,
+                              child: Image.asset(
+                                'assets/warning1.png',
+                                height: 140,
+                                width: 140,
+                                fit: BoxFit.contain,
+                              ),
+                            );
+                          } else {
+                            // Páginas 0 e 1 - Expanded normal
+                            return Expanded(
+                              flex: 5,
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Builder(builder: (context) {
+                                  if (index == 0) {
+                                    return Image.asset(
+                                      'assets/disciplinado.png',
+                                      height: 210,
+                                      width: 210,
+                                      fit: BoxFit.contain,
+                                    );
+                                  } else {
+                                    return Center(
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            // Medalhas
+                                            const Text(
+                                              'Medalhas',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF6366F1),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            GridView.count(
+                                              shrinkWrap: true,
+                                              physics: const NeverScrollableScrollPhysics(),
+                                              crossAxisCount: 4,
+                                              mainAxisSpacing: 12,
+                                              crossAxisSpacing: 12,
+                                              childAspectRatio: 1,
+                                              children: [
+                                                _buildMedal('assets/medal_bronze.png', 'Bronze'),
+                                                _buildMedal('assets/medal_silver.png', 'Prata'),
+                                                _buildMedal('assets/medal_gold.png', 'Ouro'),
+                                                _buildMedal('assets/medal_diamond.png', 'Diamante'),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 1),
+                                            // Insígnias
+                                            const Text(
+                                              'Insígnias',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF6366F1),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            GridView.count(
+                                              shrinkWrap: true,
+                                              physics: const NeverScrollableScrollPhysics(),
+                                              crossAxisCount: 4,
+                                              mainAxisSpacing: 12,
+                                              crossAxisSpacing: 12,
+                                              childAspectRatio: 1,
+                                              children: [
+                                                _buildMedal('assets/insignias/escudo_madeira.png', 'Madeira'),
+                                                _buildMedal('assets/insignias/escudo_ferro.png', 'Ferro'),
+                                                _buildMedal('assets/insignias/escudo_aluminio.png', 'Alumínio'),
+                                                _buildMedal('assets/insignias/escudo_bronze.png', 'Bronze'),
+                                                _buildMedal('assets/insignias/escudo_latao.png', 'Latão'),
+                                                _buildMedal('assets/insignias/escudo_prata.png', 'Prata'),
+                                                _buildMedal('assets/insignias/escudo_ouro.png', 'Ouro'),
+                                                _buildMedal('assets/insignias/escudo_diamante.png', 'Diamante'),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }),
+                              ),
+                            );
+                          }
+                        }),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 8),
 
                         // --- ÁREA DO TÍTULO ---
                         Align(
@@ -247,8 +341,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (index == 0) {
                               pageTitle = 'Disciplina, foco e bons hábitos';
                             } else if (index == 1) {
-                              pageTitle =
-                                  'Gamificação e incentivos ao seu progresso';
+                              pageTitle = 'Gamificação pra incentivar seu progresso';
                             } else {
                               pageTitle = 'Atenção!';
                             }
@@ -256,10 +349,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             return Text(
                               pageTitle,
                               textAlign: TextAlign.center,
-                              style: theme.textTheme.headlineMedium?.copyWith(
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 30,
-                                color: isDark
+                                color: Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFFFFFFFF)
                                     : const Color(0xFF1F2937),
                                 letterSpacing: -0.8,
@@ -269,15 +362,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           }),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
 
                         // --- ÁREA DA DESCRIÇÃO ---
                         Align(
                           alignment: Alignment.topCenter,
                           child: Builder(builder: (context) {
                             final bodyStyle =
-                                theme.textTheme.bodyLarge?.copyWith(
-                              color: isDark
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFF94A3B8).withValues(alpha: 0.9)
                                   : const Color(0xFF4B5563).withValues(alpha: 0.85),
                               height: 1.4,
@@ -286,62 +379,147 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
 
                             if (index == 0) {
-                              return RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  style: bodyStyle,
-                                  children: [
-                                    const TextSpan(
-                                      text: 'Transforme seus hábitos diários\ne seja mais disciplinado!\n',
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Transforme seus hábitos diários\ne seja mais disciplinado!',
+                                    textAlign: TextAlign.center,
+                                    style: bodyStyle,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Este app pode te ajudar a:',
+                                    textAlign: TextAlign.center,
+                                    style: bodyStyle?.copyWith(
+                                        fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // Bloco de itens com alinhamento à esquerda, mas centralizado no eixo X
+                                  IntrinsicWidth(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildListItem(
+                                            'Evitar compras impulsivas',
+                                            bodyStyle),
+                                        _buildListItem(
+                                            'Juntar dinheiro', bodyStyle),
+                                        _buildListItem(
+                                            'Focar em tarefas produtivas',
+                                            bodyStyle),
+                                        _buildListItem(
+                                            'Parar de fumar', bodyStyle),
+                                        _buildListItem('Evitar conteúdo adulto',
+                                            bodyStyle),
+                                        _buildListItem(
+                                            'Evitar procrastinação', bodyStyle),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.add_circle_outline_rounded,
+                                              size: 16,
+                                              color: (Theme.of(context).brightness == Brightness.dark
+                                                      ? const Color(0xFF6366F1)
+                                                      : const Color.fromARGB(
+                                                          255, 32, 32, 32))
+                                                  .withValues(alpha: 0.8),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'E muito mais!',
+                                              style: bodyStyle?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: Theme.of(context).brightness == Brightness.dark
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    const TextSpan(
-                                      text: 'Este app pode te ajudar a:\n',
-                                      style: TextStyle(fontWeight: FontWeight.w600),
-                                    ),
-                                    const TextSpan(text: '• Evitar compras impulsivas\n'),
-                                    const TextSpan(text: '• Manter o foco em atividades produtivas\n'),
-                                    const TextSpan(text: '• Parar de fumar\n'),
-                                    const TextSpan(text: '• Evitar conteúdo adulto\n'),
-                                    const TextSpan(text: '• Evitar procrastinação\n'),
-                                    const TextSpan(
-                                      text: '• E muito mais!',
-                                      style: TextStyle(fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               );
                             } else if (index == 1) {
-                              return RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  style: bodyStyle,
-                                  children: [
-                                    const TextSpan(
-                                      text: 'O app dispõe de medalhas, insígnias e troféus ',
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.star_rounded,
+                                          color: Colors.amber, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Recompensas Fictícias',
+                                        style: bodyStyle?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: Theme.of(context).brightness == Brightness.dark
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  IntrinsicWidth(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildListItem(
+                                            'Conquiste medalhas, insígnias e troféus',
+                                            bodyStyle),
+                                        _buildListItem(
+                                            'Motive-se visualmente', bodyStyle),
+                                        _buildListItem(
+                                            'Atinga metas de evolução',
+                                            bodyStyle),
+                                        _buildListItem(
+                                            'Mantenha sua disciplina viva',
+                                            bodyStyle),
+                                      ],
                                     ),
-                                    const TextSpan(
-                                      text: '(FICTÍCIOS)',
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontWeight: FontWeight.bold,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color:
+                                            Colors.red.withValues(alpha: 0.2),
                                       ),
                                     ),
-                                    const TextSpan(
-                                      text: 'que você pode conquistar\n',
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.warning_amber_rounded,
+                                            color: Colors.red, size: 20),
+                                        const SizedBox(width: 12),
+                                        Flexible(
+                                          child: Text(
+                                            'Atenção:\nse quebrar a sequência em algum módulo, o progresso naquele módulo é zerado.',
+                                            style: bodyStyle?.copyWith(
+                                              color: Theme.of(context).brightness == Brightness.dark
+                                                  ? Colors.red[300]
+                                                  : Colors.red[700],
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const TextSpan(
-                                      text: 'ao atingir metas e progresso.\n',
-                                    ),
-                                    const TextSpan(
-                                      text: 'Forma lúdica de te motivar\na evoluir e manter consistência.\n',
-                                      style: TextStyle(fontWeight: FontWeight.w500),
-                                    ),
-                                    const TextSpan(
-                                      text: 'Ao quebrar sua sequência,\nseu progresso é zerado.',
-                                      style: TextStyle(fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               );
                             } else {
                               // Página 2: Atenção
@@ -351,7 +529,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: bodyStyle,
                                   children: [
                                     const TextSpan(
-                                      text: 'Este app é uma ferramenta\nde apoio à disciplina,\nnão substitui acompanhamento.\n',
+                                      text:
+                                          'Este app é uma ferramenta\nde apoio à disciplina,\nnão substitui acompanhamento.\n',
                                     ),
                                     const TextSpan(
                                       text: 'Para saber mais sobre\ncomo funciona, ',
@@ -381,7 +560,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                           }),
                         ),
-                        const Spacer(flex: 1),
                       ],
                     ),
                   );
@@ -389,7 +567,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
             // Indicadores de Página (Dots)
             Row(
@@ -416,12 +594,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
 
             // Botões de Navegação
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+                  const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
               child: Row(
                 children: [
                   // Botão Pular / Voltar

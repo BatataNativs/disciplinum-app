@@ -460,10 +460,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     indent: 56),
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.auto_awesome_outlined,
-                      color: Colors.purple),
+                  leading: const Icon(Icons.replay_outlined,
+                      color: Colors.orange),
                   title: Text(
-                    'Ver apresentação',
+                    'Rever tela de apresentação',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

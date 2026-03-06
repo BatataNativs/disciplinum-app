@@ -1,4 +1,5 @@
 enum FocusInsignia {
+  madeira,
   ferro,
   aluminio,
   latao,
@@ -12,6 +13,8 @@ enum FocusInsignia {
 extension FocusInsigniaExtension on FocusInsignia {
   String get nameBr {
     switch (this) {
+      case FocusInsignia.madeira:
+        return 'Focado Madeira';
       case FocusInsignia.ferro:
         return 'Focado Ferro';
       case FocusInsignia.aluminio:
@@ -34,6 +37,8 @@ extension FocusInsigniaExtension on FocusInsignia {
   String get asset {
     const prefix = 'assets/insignias/';
     switch (this) {
+      case FocusInsignia.madeira:
+        return '${prefix}escudo_madeira.png';
       case FocusInsignia.ferro:
         return '${prefix}escudo_ferro.png';
       case FocusInsignia.aluminio:
@@ -55,22 +60,24 @@ extension FocusInsigniaExtension on FocusInsignia {
 
   int get requiredDays {
     switch (this) {
-      case FocusInsignia.ferro:
+      case FocusInsignia.madeira:
         return 0; // Ganha ao configurar e ativar o módulo
-      case FocusInsignia.aluminio:
+      case FocusInsignia.ferro:
         return 1;
-      case FocusInsignia.latao:
+      case FocusInsignia.aluminio:
         return 2;
-      case FocusInsignia.bronze:
+      case FocusInsignia.latao:
         return 3;
-      case FocusInsignia.prata:
+      case FocusInsignia.bronze:
         return 4;
-      case FocusInsignia.ouro:
+      case FocusInsignia.prata:
         return 5;
-      case FocusInsignia.diamante:
+      case FocusInsignia.ouro:
         return 9;
-      case FocusInsignia.disciplinum:
+      case FocusInsignia.diamante:
         return 10;
+      case FocusInsignia.disciplinum:
+        return 11;
     }
   }
 }
