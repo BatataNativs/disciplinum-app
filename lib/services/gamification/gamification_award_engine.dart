@@ -123,7 +123,6 @@ class GamificationAwardEngine {
     if (startDate == null) return;
 
     final daysActive = DateTime.now().difference(startDate).inDays;
-    if (daysActive <= 0) return;
 
     if (daysActive != service.diasConsecutivosByModule[nicheId]) {
       service.updateConsecutiveDays(nicheId, daysActive);
@@ -155,7 +154,6 @@ class GamificationAwardEngine {
 
   void _verificaInsigniasFoco(int dias, GamificationService service) {
     for (final insignia in FocusInsignia.values) {
-      if (insignia == FocusInsignia.ferro) continue;
       if (dias >= insignia.requiredDays) awardInsignia(insignia, service);
     }
   }

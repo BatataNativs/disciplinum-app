@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HowItWorksScreen extends StatefulWidget {
   const HowItWorksScreen({super.key});
@@ -10,8 +11,13 @@ class HowItWorksScreen extends StatefulWidget {
 class _HowItWorksScreenState extends State<HowItWorksScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-
   final int _totalPages = 3;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,25 +27,33 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Como funciona',
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.close, color: isDark ? Colors.white : Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Como funciona',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+
+            // PageView
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -50,14 +64,12 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: SingleChildScrollView(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildHeader(index, theme),
                           const SizedBox(height: 24),
                           _buildContent(index, theme),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -66,91 +78,60 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _totalPages,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 32 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? (isDark
-                            ? const Color(0xFF6366F1)
-                            : const Color.fromARGB(255, 23, 23, 23))
-                        : (isDark
-                            ? const Color(0xFF6366F1).withValues(alpha: 0.2)
-                            : const Color.fromARGB(255, 36, 36, 36)
-                                .withValues(alpha: 0.2)),
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: _currentPage == index
-                        ? [
-                            BoxShadow(
-                              color: (isDark
-                                      ? const Color(0xFF6366F1)
-                                      : const Color.fromARGB(255, 34, 34, 34))
-                                  .withValues(alpha: 0.9),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            )
-                          ]
-                        : [],
+            // Indicadores de Página
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _totalPages,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: _currentPage == index ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? const Color(0xFF6366F1)
+                          : Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 24),
-
-            // Botão Ação
+            // Botão
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: Container(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
                 width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isDark
-                              ? const Color(0xFF6366F1)
-                              : const Color.fromARGB(255, 16, 16, 17))
-                          .withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: FilledButton(
+                height: 50,
+                child: ElevatedButton(
                   onPressed: () {
+                    HapticFeedback.lightImpact();
                     if (isLastPage) {
                       Navigator.pop(context);
                     } else {
                       _pageController.nextPage(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.fastOutSlowIn,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
                       );
                     }
                   },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isDark
-                        ? const Color(0xFF6366F1)
-                        : const Color.fromARGB(255, 32, 32, 32),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 0,
                   ),
                   child: Text(
                     isLastPage ? 'Entendi' : 'Próximo',
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -162,209 +143,168 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
     );
   }
 
-  Widget _buildMedal(String assetPath) {
-    return Container(
-      height: 60,
-      width: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-          )
-        ],
-      ),
-      child: Image.asset(assetPath, fit: BoxFit.contain),
-    );
-  }
-
   Widget _buildHeader(int index, ThemeData theme) {
-    // Variáveis para configurar o que será exibido
-    Widget? visualContent;
-    String title = '';
     final isDark = theme.brightness == Brightness.dark;
-
+    
     switch (index) {
       case 0:
-        title = 'Monitoramento de apps selecionados';
-        // Emoji '👁️'
-        visualContent = const Padding(
-          padding: EdgeInsets.only(bottom: 0),
-          child: Text('👁️', style: TextStyle(fontSize: 70)),
-        );
-        break;
-
-      case 1:
-        title = 'Incentivo ao seu progresso';
-        // Linha com as medalhas
-        visualContent = SizedBox(
-          height: 100,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildMedal('assets/medal_bronze.png'),
-              _buildMedal('assets/medal_silver.png'),
-              _buildMedal('assets/medal_gold.png'),
-              _buildMedal('assets/medal_diamond.png'),
-            ],
-          ),
-        );
-        break;
-
-      case 2:
-        title = '🚨 Atenção a essas regras:';
-        // Imagem de warning
-        visualContent = Padding(
-          padding: const EdgeInsets.only(bottom: 0),
-          child: SizedBox(
-            height: 80,
-            width: 80,
-            child: Image.asset(
-              'assets/warning2.png',
-              fit: BoxFit.contain,
+        return Column(
+          children: [
+            Icon(
+              Icons.psychology_rounded,
+              size: 80,
+              color: const Color(0xFF6366F1),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              'Monitoramento Inteligente',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         );
-        break;
+      case 1:
+        return Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Image.asset('assets/medal_bronze.png', width: 40, height: 40),
+                Image.asset('assets/medal_silver.png', width: 40, height: 40),
+                Image.asset('assets/medal_gold.png', width: 40, height: 40),
+                Image.asset('assets/medal_diamond.png', width: 40, height: 40),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Sistema de Conquistas',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      case 2:
+        return Column(
+          children: [
+            Icon(
+              Icons.warning_rounded,
+              size: 80,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Regras Importantes',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      default:
+        return const SizedBox.shrink();
     }
-
-    return Column(
-      children: [
-        if (visualContent != null) visualContent,
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            fontSize: 22,
-            color: isDark ? const Color(0xFFFFFFFF) : const Color(0xFF1F2937),
-            letterSpacing: -0.5,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
   }
 
   Widget _buildContent(int index, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
-    final styleBase = theme.textTheme.bodyLarge?.copyWith(
+    final textStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: isDark ? Colors.white70 : Colors.black87,
       height: 1.5,
-      fontSize: 12,
-      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
     );
 
-    final styleBold =
-        styleBase?.copyWith(fontWeight: FontWeight.bold, fontSize: 12);
-
     switch (index) {
-      case 0: // Monitoramento
+      case 0:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'O Disciplinum tem módulos categorizados que funcionam te mandando notificações contextualizadas, seja detectando se os apps (selecionados por VOCÊ) estão abertos, seja em horários específicos (também selecionados por VOCÊ), para te ajudar a criar disciplina.',
-              style: styleBase,
-              textAlign: TextAlign.left,
+              'O Disciplinum monitora apps selecionados e envia notificações para ajudar você a criar disciplina.',
+              style: textStyle,
             ),
-            const SizedBox(height: 16),
-            Text('Os módulos (e seus funcionamentos) são:', style: styleBold),
-            const SizedBox(height: 8),
-            _buildListItem(
-                '1. Parar de fumar',
-                'Selecione horários que mais costumam te dar vontade (horários próximos às refeições, por exemplo) para receber alertas.',
-                styleBase,
-                styleBold),
-            _buildListItem(
-                '2. Compulsão alimentar',
-                'Selecione seus apps de delivery para receber alertas quando os abrir.',
-                styleBase,
-                styleBold),
-            _buildListItem(
-                '3. Manter dieta',
-                'Selecione horários para receber alertas (30 minutos antes, pra dar tempo de preparar ou esquentar sua refeição), a fim de não pular refeições e manter a dieta.',
-                styleBase,
-                styleBold),
-            _buildListItem(
-                '4. Controlar gastos',
-                'Selecione seus apps de compras online para receber alertas quando os abrir.',
-                styleBase,
-                styleBold),
-            _buildListItem(
-                '5. Foco e produtividade',
-                'Selecione uma faixa de tempo para receber alertas se abrir um app que você selecionar (ex: redes sociais), para manter o foco e a produtividade.',
-                styleBase,
-                styleBold),
-            _buildListItem(
-                '6. Evitar conteúdo adulto',
-                'Selecione seus navegadores ou outros apps que possam te levar a conteúdo adulto, e receba alertas quando os abrir.',
-                styleBase,
-                styleBold),
+            const SizedBox(height: 20),
             Text(
-              'Mais módulos em breve!',
-              style: styleBase?.copyWith(fontWeight: FontWeight.bold),
+              'Módulos disponíveis:',
+              style: textStyle?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Text('Dicas:', style: styleBold),
-            const SizedBox(height: 8),
-            _buildBulletItem(
-                'Você pode selecionar mais de um app para cada módulo (e ter mais de um módulo ativado), para receber alertas quando abrir qualquer um deles e/ou nos horários selecionados.',
-                styleBase),
-            _buildBulletItem(
-                'Você pode ir em Configurações e marcar o "Pausar notificações temporariamente" para desativar temporariamente os alertas, caso realmente precise usar um app selecionado sem receber alertas.',
-                styleBase),
+            const SizedBox(height: 12),
+            _buildModuleItem('🚭 Deixar de Fumar', 'Alertas em horários críticos', textStyle),
+            _buildModuleItem('💰 Controle Financeiro', 'Monitore apps de compras', textStyle),
+            _buildModuleItem('🎯 Foco e Produtividade', 'Evite distrações', textStyle),
+            _buildModuleItem('🍎 Alimentação Saudável', 'Lembretes para refeições', textStyle),
+            _buildModuleItem('🔒 Conteúdo Responsável', 'Controle de acesso', textStyle),
+            _buildModuleItem('⏰ Gestão de Tempo', 'Organize sua rotina', textStyle),
           ],
         );
-      case 1: // Progresso
+      case 1:
         return Column(
           children: [
             Text(
-              'Como forma de incentivo, o app possui medalhas, insígnias, troféus e etc (FICTÍCIOS) que são concedidos quando você atinge certos níveis e metas de progresso.',
-              style: styleBase,
+              'Conquiste medalhas e insígnias mantendo sua disciplina!',
+              style: textStyle,
               textAlign: TextAlign.center,
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '\nAs medalhas disponíveis são:',
-                style: styleBase,
+            const SizedBox(height: 20),
+            
+            // Medalhas
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('🏅 Medalhas de Progresso', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  _buildMedalItem('🥉 Bronze', '3 dias sem falhar'),
+                  _buildMedalItem('🥈 Prata', '7 dias consecutivos'),
+                  _buildMedalItem('🥇 Ouro', '14 dias de disciplina'),
+                  _buildMedalItem('💎 Diamante', '30 dias imbatível'),
+                ],
               ),
             ),
+            
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildBadgeInfo(
-                    '🥉 Bronze', '3 dias', styleBase?.copyWith(fontSize: 13)),
-                _buildBadgeInfo(
-                    '🥈 Prata', '5 dias', styleBase?.copyWith(fontSize: 13)),
-                _buildBadgeInfo(
-                    '🥇 Ouro', '7 dias', styleBase?.copyWith(fontSize: 13)),
-                _buildBadgeInfo('💎 Diamante', '10 dias',
-                    styleBase?.copyWith(fontSize: 13)),
-              ],
+            
+            // Insígnias
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('🛡️ Insígnias Especiais', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  _buildMedalItem('🪵 Madeira', 'Ao configurar e ativar o módulo'),
+                  _buildMedalItem('⚙️ Ferro', 'Primeiro dia de foco'),
+                  _buildMedalItem('🔩 Alumínio', 'Iniciando consistência'),
+                  _buildMedalItem('� Bronze', 'Dedicado à disciplina'),
+                  _buildMedalItem('🔩 Latão', 'Avançando com foco'),
+                  _buildMedalItem('🥈 Prata', 'Controle e maestria'),
+                  _buildMedalItem('🥇 Ouro', 'Enorme disciplina'),
+                  _buildMedalItem('💎 Diamante', 'Lendário e inabalável'),
+                  _buildMedalItem('🏆 Disciplinum', 'Supremo absoluto'),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Há também diversas insígnias e troféus que você pode receber ao longo do tempo, cumprindo objetivos e marcos menores. '
-              'Tudo pra você se sentir motivado a continuar disciplinado!\n\n',
-              style: styleBase,
-              textAlign: TextAlign.justify,
-            ),
-            // colocar assets de algumas insígnias e troféus aqui
-            Text(
-                '\n\nAcesse seu progresso em "Meu progresso", na tela de Perfil.',
-                style: styleBase,
-                textAlign: TextAlign.justify),
           ],
         );
-      case 2: // Regras
+      case 2:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
@@ -375,29 +315,69 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               ),
               child: Column(
                 children: [
-                  const SizedBox(height: 4),
+                  Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
+                  const SizedBox(height: 12),
                   Text(
-                    '➜ Se você desativar um módulo, seu progresso naquele módulo é reiniciado',
-                    style: styleBase?.copyWith(fontSize: 15),
+                    '⚠️ Progresso Reiniciado',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ao desativar um módulo, seu progresso naquele módulo será zerado.',
+                    style: textStyle,
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
+            
             const SizedBox(height: 16),
+            
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
+                  Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
+                  const SizedBox(height: 12),
                   Text(
-                    '➜ Em caso de uso de um app selecionado por você para ter o uso monitorado, você terá 30 segundos para fechá-lo. Se permanecer por mais tempo, o seu progresso reinicia! (a gamificação das medalhas, insígnias, troféus, etc, será resetada)',
-                    style: styleBase?.copyWith(fontSize: 15),
+                    '⏱️ Janela de 30 Segundos',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ao abrir um app monitorado, você terá 30 segundos para fechá-lo. Se permanecer aberto, seu progresso será reiniciado.',
+                    style: textStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.lightbulb_rounded, color: const Color(0xFF6366F1), size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Dica: Use a pausa temporária em Configurações quando precisar usar um app monitorado.',
+                      style: textStyle?.copyWith(fontWeight: FontWeight.w500),
+                    ),
                   ),
                 ],
               ),
@@ -409,48 +389,42 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
     }
   }
 
-  Widget _buildListItem(String title, String description, TextStyle? baseStyle,
-      TextStyle? boldStyle) {
+  Widget _buildModuleItem(String title, String description, TextStyle? style) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: RichText(
-        textAlign: TextAlign.justify,
-        text: TextSpan(
-          style: baseStyle,
-          children: [
-            TextSpan(text: '$title\n', style: boldStyle),
-            TextSpan(text: description),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBulletItem(String text, TextStyle? style) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('• ', style: style),
           Expanded(
-              child: Text(text, style: style, textAlign: TextAlign.justify)),
+            child: Text(
+              '$title: $description',
+              style: style,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBadgeInfo(String title, String days, TextStyle? style) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.2)),
+  Widget _buildMedalItem(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              description,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ),
+        ],
       ),
-      child: Text('$title: $days',
-          style: style?.copyWith(fontWeight: FontWeight.w600)),
     );
   }
 }
