@@ -13,7 +13,7 @@ class MyProgressFocus extends StatelessWidget {
   Widget build(BuildContext context) {
     final gamification = Provider.of<GamificationService>(context);
     final authService = Provider.of<AuthService>(context);
-    final dias = gamification.diasConsecutivosByModule[NicheId.focus] ?? 0;
+    final periodosRespeitados = gamification.getRespectedFocusPeriods(NicheId.focus); // NOVO: Usar períodos de foco
     final earnedInsignias = gamification.earnedFocusInsignias;
 
     // Lógica para obter o primeiro nome
@@ -79,10 +79,10 @@ class MyProgressFocus extends StatelessWidget {
                 childAspectRatio: 0.8,
                 children: GamificationMedal.values.map((medal) {
                   final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                      (medal == GamificationMedal.bronze && periodosRespeitados >= 3) ||
+                          (medal == GamificationMedal.prata && periodosRespeitados >= 5) ||
+                          (medal == GamificationMedal.ouro && periodosRespeitados >= 7) ||
+                          (medal == GamificationMedal.diamante && periodosRespeitados >= 10);
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -139,18 +139,18 @@ class MyProgressFocus extends StatelessWidget {
   String _getMedalRequirement(GamificationMedal medal) {
     switch (medal) {
       case GamificationMedal.bronze:
-        return '3 dias consecutivos';
+        return '3 períodos de foco'; // CORRIGIDO: períodos em vez de dias
       case GamificationMedal.prata:
-        return '5 dias consecutivos';
+        return '5 períodos de foco';
       case GamificationMedal.ouro:
-        return '7 dias consecutivos';
+        return '7 períodos de foco';
       case GamificationMedal.diamante:
-        return '10 dias consecutivos';
+        return '10 períodos de foco';
     }
   }
 
   String _getInsigniaRequirement(FocusInsignia insignia) {
-    if (insignia == FocusInsignia.ferro) return 'Ative o módulo de Foco';
+    if (insignia == FocusInsignia.madeira) return 'Ative o módulo de Foco'; // CORRIGIDO: madeira em vez de ferro
     return '${insignia.requiredDays} períodos de foco respeitados';
   }
 }

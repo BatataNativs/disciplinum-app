@@ -66,6 +66,17 @@ Future<void> initNotifications() async {
         NotificationService.onBingeRelapseDetected?.call(response.payload);
       }
 
+      // NOVO: Handlers para notificações de insígnias
+      if (response.actionId == 'view_insignia') {
+        // Abrir home e exibir insígnia conquistada
+        navigatorKey.currentState?.pushNamed(AppRouter.home);
+      }
+      
+      if (response.actionId == 'dismiss_insignia') {
+        // Apenas fechar notificação (já foi tratada pelo addPendingInsignia)
+        // Não precisa fazer nada adicional
+      }
+
       // Lógica para abrir módulo de Procrastinação na aba correta (Check-in Diário)
       if (response.payload == 'procrastination_checkin' ||
           response.actionId == 'ver_itens') {
