@@ -191,6 +191,7 @@ class CloudSyncService {
     required NicheId nicheId,
     required bool isActive,
     int? consecutiveDays,
+    int? focusPeriodsRespected, // NOVO: Períodos de foco respeitados
     String? maxMedal,
     List<String>? earnedInsignias,
     bool forceClearMedal = false,
@@ -208,6 +209,10 @@ class CloudSyncService {
 
       if (consecutiveDays != null) {
         partialData['consecutive_days'] = consecutiveDays;
+      }
+
+      if (focusPeriodsRespected != null) {
+        partialData['focus_periods_respected'] = focusPeriodsRespected; // NOVO
       }
 
       if (forceClearMedal) {

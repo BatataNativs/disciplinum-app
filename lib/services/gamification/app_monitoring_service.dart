@@ -258,6 +258,111 @@ class AppMonitoringService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_heartbeat', now.millisecondsSinceEpoch);
     _lastHeartbeatSave = now;
+    
+    // NOVO: Verificar se período de foco foi concluído
+    await _checkFocusPeriodCompletion();
+  }
+
+  // NOVO: Verificar conclusão de períodos de foco
+  Future<void> _checkFocusPeriodCompletion() async {
+    final activeNicheId = currentNicheId;
+    if (activeNicheId == null || activeNicheId != NicheId.focus) return;
+    
+    final gamification = GamificationService.instance;
+    final focusInterval = gamification.focusIntervalByModule[activeNicheId];
+    if (focusInterval == null) return;
+    
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    final startMinutes = focusInterval.start.hour * 60 + focusInterval.start.minute;
+    final endMinutes = focusInterval.end.hour * 60 + focusInterval.end.minute;
+    
+    // CORRIGIDO: Verificar se está DENTRO do período de foco (não após)
+    final isInsideFocusPeriod = _isInsideFocusPeriod(currentMinutes, startMinutes, endMinutes);
+    
+    if (!isInsideFocusPeriod) {
+      // Se está fora do período, verificar se o período acabou de terminar
+      final lastCheckKey = 'last_focus_check_${activeNicheId.id}';
+      final prefs = await SharedPreferences.getInstance();
+      final lastCheck = prefs.getInt(lastCheckKey);
+      final lastCheckTime = lastCheck != null 
+          ? DateTime.fromMillisecondsSinceEpoch(lastCheck)
+          : DateTime.now().subtract(const Duration(hours: 24));
+      
+      // Se verificou há menos de 30 minutos, não precisa verificar novamente
+      if (now.difference(lastCheckTime).inMinutes < 30) return;
+      
+      // Calcular quando o período terminou (se cruzou meia-noite, ajustar)
+      DateTime periodEndTime;
+      if (startMinutes <= endMinutes) {
+        // Período normal (ex: 9:00-17:00)
+        periodEndTime = DateTime(
+          now.year, now.month, now.day,
+          focusInterval.end.hour, focusInterval.end.minute
+        );
+      } else {
+        // Período cruza meia-noite (ex: 22:00-6:00)
+        if (currentMinutes < endMinutes) {
+          // Ainda no mesmo dia (ex: agora são 5:00, período terminou 6:00)
+          periodEndTime = DateTime(
+            now.year, now.month, now.day,
+            focusInterval.end.hour, focusInterval.end.minute
+          );
+        } else {
+          // Já passou para o próximo dia (ex: agora são 7:00, período terminou 6:00 de hoje)
+          periodEndTime = DateTime(
+            now.year, now.month, now.day,
+            focusInterval.end.hour, focusInterval.end.minute
+          ).subtract(const Duration(days: 1));
+        }
+      }
+      
+      // Verificar se houve violações DURANTE o período de foco (últimas 2 horas são suficientes)
+      final hadViolations = await _hadViolationsInFocusPeriod(
+        periodEndTime.subtract(const Duration(hours: 2)),
+        periodEndTime,
+      );
+      
+      if (!hadViolations) {
+        // Período respeitado! Adicionar contador
+        gamification.addRespectedFocusPeriod(activeNicheId);
+        debugPrint('✅ Período de foco respeitado! Total: ${gamification.getRespectedFocusPeriods(activeNicheId)}');
+      }
+      
+      // Salvar timestamp desta verificação
+      await prefs.setInt(lastCheckKey, now.millisecondsSinceEpoch);
+    }
+  }
+  
+  // NOVO: Verificar se está DENTRO do período de foco
+  bool _isInsideFocusPeriod(int currentMinutes, int startMinutes, int endMinutes) {
+    if (startMinutes <= endMinutes) {
+      // Período não cruza meia-noite (ex: 9:00-17:00)
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    } else {
+      // Período cruza meia-noite (ex: 22:00-6:00)
+      return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+    }
+  }
+  
+  // NOVO: Verificar se houve violações em um período
+  Future<bool> _hadViolationsInFocusPeriod(DateTime startTime, DateTime endTime) async {
+    try {
+      final usageApps = await UsageStats.queryUsageStats(startTime, endTime);
+      
+      for (final usage in usageApps) {
+        if (monitoredApps.contains(usage.packageName)) {
+          final totalTime = int.tryParse(usage.totalTimeInForeground ?? '0') ?? 0;
+          // Se usou app monitorado por mais de 30 segundos, houve violação
+          if (totalTime > 30000) { // 30 segundos em milissegundos
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao verificar violações: $e');
+    }
+    return false;
   }
 
   Future<void> _checkRetroactiveViolations(NicheId nicheId) async {

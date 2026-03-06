@@ -55,7 +55,7 @@ class GamificationAwardEngine {
     } catch (_) {}
 
     final body =
-        'Parabéns 🎊 Você obteve a insígnia ${insignia.nameBr} no módulo $moduleName!';
+        'Parabéns 🎊 Você obteve a insígnia ${insignia.nameBr.split(' ').last} no módulo $moduleName!';
     final androidDetails = AndroidNotificationDetails(
       'disciplinum_insignias',
       'Insígnias Disciplinum',
@@ -66,7 +66,9 @@ class GamificationAwardEngine {
       styleInformation: BigTextStyleInformation(body),
       actions: [
         const AndroidNotificationAction('view_insignia', 'Ver no app',
-            showsUserInterface: true, cancelNotification: true)
+            showsUserInterface: true, cancelNotification: false), // CORRIGIDO: cancelNotification: false
+        const AndroidNotificationAction('dismiss_insignia', 'Ok. Guardar',
+            showsUserInterface: false, cancelNotification: true),
       ],
     );
     await flutterLocalNotificationsPlugin.show(
@@ -122,6 +124,14 @@ class GamificationAwardEngine {
     final startDate = service.getModuleStartDate(nicheId);
     if (startDate == null) return;
 
+    // Para módulo Foco, usar períodos de foco respeitados em vez de dias
+    if (nicheId == NicheId.focus) {
+      final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
+      _verificaMedalhaDias(nicheId, periodosRespeitados, service);
+      return;
+    }
+
+    // Para outros módulos, manter lógica de dias corridos
     final daysActive = DateTime.now().difference(startDate).inDays;
 
     if (daysActive != service.diasConsecutivosByModule[nicheId]) {
@@ -149,12 +159,20 @@ class GamificationAwardEngine {
       service.setMaxMedal(nicheId, newMedal);
       awardMedal(nicheId, newMedal, service);
     }
-    if (nicheId == NicheId.focus) _verificaInsigniasFoco(dias, service);
+    // REMOVIDO: Insígnias de foco agora são verificadas separadamente
   }
 
   void _verificaInsigniasFoco(int dias, GamificationService service) {
     for (final insignia in FocusInsignia.values) {
       if (dias >= insignia.requiredDays) awardInsignia(insignia, service);
     }
+  }
+
+  // NOVO: Método público para verificar insígnias baseado em períodos de foco respeitados
+  void checkFocusInsigniasByPeriods(NicheId nicheId, GamificationService service) {
+    if (nicheId != NicheId.focus) return;
+    
+    final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
+    _verificaInsigniasFoco(periodosRespeitados, service);
   }
 }
