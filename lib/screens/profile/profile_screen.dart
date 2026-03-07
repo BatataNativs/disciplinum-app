@@ -39,12 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Configura o feedback visual para as compras nesta tela
       _iapService = Provider.of<IapService>(context, listen: false);
       _iapService!.onPurchaseResult = (success) {
-        print('Callback onPurchaseResult chamado! success: $success');
         if (!mounted) return;
         
         if (success) {
           // Cancela o timeout apenas se for sucesso
-          print('Cancelando timeout (sucesso)...');
           _errorTimeout?.cancel();
           _errorTimeout = null;
           
@@ -649,9 +647,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         EnhancedSnackBarHelper.showInfo(context, 'Iniciando compra de Dark Mode...');
                         
                         // Cria timeout para mostrar erro se não receber resposta
-                        print('Criando timeout de 3 segundos...');
                         _errorTimeout = Timer(const Duration(seconds: 3), () {
-                          print('Timeout disparado! Mostrando erro de conexão...');
                           if (mounted) {
                             EnhancedSnackBarHelper.showError(context, 'Erro ao processar compra. Verifique sua conexão ou tente novamente.');
                             _errorTimeout = null;

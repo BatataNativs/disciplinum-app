@@ -150,10 +150,16 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
       case 0:
         return Column(
           children: [
-            Image(image: AssetImage('assets/icons/app_monitoring.png'), width: 100, height: 100),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Image(image: AssetImage('assets/logo.png'), width: 80, height: 80),
+                Image(image: AssetImage('assets/icons/app_monitoring.png'), width: 60, height: 60),
+              ],
+            ),
             const SizedBox(height: 16),
             Text(
-              'Monitoramento de abertura de apps',
+              'Funcionamento do app Disciplinum',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black,
@@ -165,15 +171,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
       case 1:
         return Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Image.asset('assets/medal_bronze.png', width: 40, height: 40),
-                Image.asset('assets/medal_silver.png', width: 40, height: 40),
-                Image.asset('assets/medal_gold.png', width: 40, height: 40),
-                Image.asset('assets/medal_diamond.png', width: 40, height: 40),
-              ],
-            ),
+            const Text('🥇🏆🥈🎖️🥉', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
             Text(
               'Sistema de Conquistas',
@@ -223,11 +221,12 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
           children: [
             Text(
               'O Disciplinum monitora apps selecionados POR VOCÊ ao configurar um módulo e te envia notificação de alerta para você sair deles em até 30 segundos se você os abrir.\n\n'
-              'E esse monitoramento é feito de forma segura e respeita sua privacidade - apenas os apps que você selecionar são monitorados. Não há vigilância contínua da sua tela ou coleta desnecessária de dados não necessários para o funcionamento do app nesse aspecto. O gatilho é a abertura do app pré-configurado por você.\n\n'
+              'Esse monitoramento é feito de forma segura e respeitando sua privacidade - apenas os apps que você selecionar são monitorados. Não há vigilância contínua da sua tela ou coleta desnecessária de dados não necessários para o funcionamento do app nesse aspecto. O gatilho é a abertura do app pré-configurado por você.\n\n'
               'Você pode escolher quantos apps quiser para cada módulo, e usar quantos módulos quiser ao mesmo tempo.\n\n'
               'Cada módulo tem suas próprias configurações, gatilhos de funcionamento e particularidades, permitindo que você gerencie diferentes aspectos da sua vida de forma independente.\n\n'
-              'O tal monitoramento de abertura de apps selecionados é apenas uma das funcionalidades do app. Também tem gestão de gastos fixos (contas, aluguel, etc.) que você registrar no app (valores e vencimentos) e receber lembretes para pagamento.\n'
-              'Ainda sobre finanças, tem também um módulo de criação e acompanhamento de metas, onde você pode registrar metas de valores a juntar e acompanhar seu progresso.',
+              'O tal monitoramento de abertura de apps selecionados é apenas uma das funcionalidades do app. Também tem gestão de gastos fixos (contas, aluguel, etc.) que você registrar no app (valores e vencimentos) e receber lembretes para pagamento.\n\n'
+              'Ainda sobre finanças, tem também um módulo de "Desafio da Poupança", que é para criação e acompanhamento de metas, onde você pode registrar metas de valores a juntar e acompanhar seu progresso.\n\n'
+              'Tem módulo para você registrar livros que está lendo, quantas páginas leu por dia, quanto falta, ver estatísticas sobre seus hábitos de leitura e acompanhar seu progresso. ',
             ),
             const SizedBox(height: 16),
             Text(
@@ -290,17 +289,17 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('🛡️ Insígnias Especiais', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('🛡️ Insígnias', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  _buildMedalItem('🪵 Madeira', 'Ao configurar e ativar o módulo'),
-                  _buildMedalItem('⚙️ Ferro', 'Primeiro dia de foco'),
-                  _buildMedalItem('🔩 Alumínio', 'Iniciando consistência'),
-                  _buildMedalItem('� Bronze', 'Dedicado à disciplina'),
-                  _buildMedalItem('🔩 Latão', 'Avançando com foco'),
-                  _buildMedalItem('🥈 Prata', 'Controle e maestria'),
-                  _buildMedalItem('🥇 Ouro', 'Enorme disciplina'),
-                  _buildMedalItem('💎 Diamante', 'Lendário e inabalável'),
-                  _buildMedalItem('🏆 Disciplinum', 'Supremo absoluto'),
+                  _buildMedalItem('Madeira', 'Ao configurar e ativar o módulo', 'assets/insignias/escudo_madeira.png'),
+                  _buildMedalItem('Ferro', 'Primeiro dia de foco', 'assets/insignias/escudo_ferro.png'),
+                  _buildMedalItem('Alumínio', 'Iniciando consistência', 'assets/insignias/escudo_aluminio.png'),
+                  _buildMedalItem('Bronze', 'Dedicado à disciplina', 'assets/insignias/escudo_bronze.png'),
+                  _buildMedalItem('Latão', 'Avançando com foco', 'assets/insignias/escudo_latao.png'),
+                  _buildMedalItem('Prata', 'Controle e maestria', 'assets/insignias/escudo_prata.png'),
+                  _buildMedalItem('Ouro', 'Enorme disciplina', 'assets/insignias/escudo_ouro.png'),
+                  _buildMedalItem('Diamante', 'Lendário e inabalável', 'assets/insignias/escudo_diamante.png'),
+                  _buildMedalItem('Disciplinum', 'Supremo absoluto', 'assets/insignias/escudo_disciplinum.png'),
                 ],
               ),
             ),
@@ -309,8 +308,34 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
       case 2:
         return Column(
           children: [
+Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
+                  const SizedBox(height: 12),
+                  Text(
+                    '⏱️ Janela de 30 Segundos',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ao abrir um app monitorado, você terá 30 segundos para fechá-lo. Se permanecer aberto, seu progresso será reiniciado.',
+                    style: textStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -335,38 +360,10 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               ),
             ),
             
-            const SizedBox(height: 16),
-            
+            const SizedBox(height: 8),
+                        
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
-                  const SizedBox(height: 12),
-                  Text(
-                    '⏱️ Janela de 30 Segundos',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ao abrir um app monitorado, você terá 30 segundos para fechá-lo. Se permanecer aberto, seu progresso será reiniciado.',
-                    style: textStyle,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -410,15 +407,18 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
     );
   }
 
-  Widget _buildMedalItem(String title, String description) {
+  Widget _buildMedalItem(String title, String description, [String? assetPath]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
+          if (assetPath != null)
+            Image.asset(assetPath, width: 20, height: 20)
+          else
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
