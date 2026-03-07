@@ -194,7 +194,35 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
             ),
             const SizedBox(height: 12),
 
-            // --- ITEM 4: Notificações ---
+            // --- ITEM 4: Tema Rosa ---
+            _buildProductItem(
+              context,
+              title: "Tema Rosa 🌸",
+              description: "Desbloqueie o tema rosa. (Em breve)",
+              price: "Em breve",
+              icon: Icons.palette,
+              color: Colors.pinkAccent,
+              isAcquired: false, // Sempre não adquirido por enquanto
+              onTap: () {}, // Não implementado ainda
+              onPreviewTap: () => _showPreview(context), // Usa mesmo preview do dark mode
+            ),
+            const SizedBox(height: 12),
+
+            // --- ITEM 5: Tema Halloween ---
+            _buildProductItem(
+              context,
+              title: "Tema Halloween 🎃",
+              description: "Desbloqueie o tema Halloween. (Em breve)",
+              price: "Em breve",
+              icon: Icons.palette,
+              color: Colors.orangeAccent,
+              isAcquired: false, // Sempre não adquirido por enquanto
+              onTap: () {}, // Não implementado ainda
+              onPreviewTap: () => _showPreview(context), // Usa mesmo preview do dark mode
+            ),
+            const SizedBox(height: 12),
+
+            // --- ITEM 6: Notificações ---
             _buildProductItem(
               context,
               title: "Notificações Personalizáveis",
