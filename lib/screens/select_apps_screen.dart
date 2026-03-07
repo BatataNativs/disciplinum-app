@@ -7,7 +7,7 @@ import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/misc/system_stuff/installed_app_service.dart';
 import '../models/niche_id.dart';
 import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class SelectAppsScreenArgs {
   final List<String> initiallySelected;
@@ -190,6 +190,15 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
   }
 
   Future<void> _save() async {
+    // VALIDAÇÃO: Verificar se selecionou pelo menos um app
+    if (_selected.isEmpty) {
+      EnhancedSnackBarHelper.showWarning(
+        context,
+        "Escolha pelo menos um app",
+      );
+      return;
+    }
+
     if (_isGuest) {
       await PreferencesService.removeAllAppsForNiche(nicheId: _nicheId);
       for (final app in _selected) {
@@ -212,7 +221,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     if (!mounted) return;
     Navigator.pop(context);
 
-    SnackBarHelper.showSuccess(context, 'Apps selecionados salvos!');
+    EnhancedSnackBarHelper.showSuccess(context, 'Apps selecionados salvos!');
   }
 
   Future<void> _removeApp(String packageName) async {
@@ -235,7 +244,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
 
     if (!mounted) return;
 
-    SnackBarHelper.showInfo(context, 'App removido: $packageName');
+    EnhancedSnackBarHelper.showInfo(context, 'App removido: $packageName');
   }
 
   @override

@@ -11,7 +11,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
@@ -219,7 +219,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
     final label = await getAppLabel(packageName) ?? packageName;
     if (mounted) {
-      SnackBarHelper.showInfo(context, "App removido: $label");
+      EnhancedSnackBarHelper.showInfo(context, "App removido: $label");
     }
   }
 
@@ -227,7 +227,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     HapticFeedback.mediumImpact();
 
     if (_selectedApps.isEmpty) {
-      SnackBarHelper.showInfo(
+      EnhancedSnackBarHelper.showInfo(
         context,
         "Primeiro, deve-se selecionar apps a monitorar..",
       );
@@ -1162,7 +1162,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: "Meu progresso",
+              label: "Conquistas",
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);

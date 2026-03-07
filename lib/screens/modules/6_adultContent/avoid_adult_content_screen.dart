@@ -875,7 +875,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
             const SizedBox(height: 20),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: "Meu progresso",
+              label: "Conquistas",
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);

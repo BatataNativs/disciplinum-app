@@ -11,7 +11,7 @@ import 'package:disciplinum/screens/select_apps_screen.dart';
 import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_notifications_screen.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? heroTag;
@@ -127,12 +127,21 @@ class _FocusScreenState extends State<FocusScreen> {
 
     final label = await getAppLabel(packageName) ?? packageName;
     if (mounted) {
-      SnackBarHelper.showInfo(context, 'App removido: $label');
+      EnhancedSnackBarHelper.showInfo(context, 'App removido: $label');
     }
   }
 
   Future<void> _ativarNichoMonitoramento() async {
     HapticFeedback.mediumImpact();
+
+    // VALIDAÇÃO: Verificar se configurou intervalo de foco e apps
+    if (_focusStart == null || _focusEnd == null || _selectedApps.isEmpty) {
+      EnhancedSnackBarHelper.showInfo(
+        context,
+        "Primeiro, configure intervalo de foco e apps a monitorar.",
+      );
+      return;
+    }
 
     await PermissionService.ensurePermissions(context);
     bool usageGranted = await PermissionService.hasUsagePermission();
@@ -261,7 +270,7 @@ class _FocusScreenState extends State<FocusScreen> {
       );
 
       if (mounted) {
-        SnackBarHelper.showWarning(context, 'Módulo desativado — Você não receberá mais alertas');
+        EnhancedSnackBarHelper.showWarning(context, 'Módulo desativado — Você não receberá mais alertas');
       }
     }
   }
@@ -350,9 +359,15 @@ class _FocusScreenState extends State<FocusScreen> {
     if (start == null) return;
     if (!mounted) return;
 
+    // Calcular hora final como 1 hora à frente da hora inicial
+    final suggestedEnd = TimeOfDay(
+      hour: (start.hour + 1) % 24,
+      minute: start.minute,
+    );
+
     final end = await showTimePicker(
       context: context,
-      initialTime: const TimeOfDay(hour: 0, minute: 0),
+      initialTime: suggestedEnd,
       helpText: 'HORÁRIO DE TÉRMINO',
       builder: (context, child) {
         return MediaQuery(
@@ -399,7 +414,7 @@ class _FocusScreenState extends State<FocusScreen> {
     await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
 
     if (mounted) {
-      SnackBarHelper.showInfo(context, 'Intervalo de foco removido');
+      EnhancedSnackBarHelper.showInfo(context, 'Intervalo de foco removido');
     }
   }
 
@@ -674,7 +689,7 @@ class _FocusScreenState extends State<FocusScreen> {
             const SizedBox(height: 20),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: 'Conquistas',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);

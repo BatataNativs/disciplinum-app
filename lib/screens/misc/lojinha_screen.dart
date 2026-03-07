@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
@@ -13,6 +14,8 @@ class LojinhaScreen extends StatefulWidget {
 }
 
 class _LojinhaScreenState extends State<LojinhaScreen> {
+  Timer? _errorTimeout;
+  
   @override
   void initState() {
     super.initState();
@@ -21,6 +24,11 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
       final iap = Provider.of<IapService>(context, listen: false);
       iap.onPurchaseResult = (success) {
         if (!mounted) return;
+        
+        // Cancela o timeout de erro se receber resposta
+        _errorTimeout?.cancel();
+        _errorTimeout = null;
+        
         if (success) {
           SnackBarHelper.showSuccess(context, 'Compra realizada com sucesso!');
         } else {
@@ -33,6 +41,9 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
 
   @override
   void dispose() {
+    // Cancela o timeout se existir
+    _errorTimeout?.cancel();
+    
     // Limpa o callback ao sair da tela para evitar chamadas com context inválido
     final iap = Provider.of<IapService>(context, listen: false);
     if (iap.onPurchaseResult != null) {
@@ -43,6 +54,16 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
 
   void _handleBuyAction(VoidCallback buyAction, String productName) {
     SnackBarHelper.showInfo(context, 'Iniciando compra de $productName...');
+    
+    // Adiciona um timeout para capturar erros que não disparam o callback
+    _errorTimeout = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        // Se não houve resposta em 3 segundos, assume que deu erro
+        SnackBarHelper.showError(context, 'Erro ao processar compra. Verifique sua conexão ou tente novamente.');
+        _errorTimeout = null;
+      }
+    });
+    
     buyAction();
   }
 

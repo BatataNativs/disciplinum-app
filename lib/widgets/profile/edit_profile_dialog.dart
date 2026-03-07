@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/app_router.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final AuthService authService;
@@ -112,10 +112,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        SnackBarHelper.showSuccess(context, 'Perfil atualizado com sucesso!');
+        EnhancedSnackBarHelper.showSuccess(context, 'Perfil atualizado com sucesso!');
         navigator.pop(true);
       } else {
-        SnackBarHelper.showError(
+        EnhancedSnackBarHelper.showError(
           context,
           widget.authService.errorMessage ?? 'Erro ao atualizar perfil',
         );

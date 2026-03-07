@@ -11,7 +11,7 @@ import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
 import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dart';
 import 'package:disciplinum/screens/modules/3_diet/meal_streak_screen.dart';
 import 'package:disciplinum/screens/schedule_screen.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   final String? heroTag;
@@ -99,6 +99,15 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
   Future<void> _ativarNichoMonitoramento() async {
     HapticFeedback.mediumImpact();
+
+    // VALIDAÇÃO: Verificar se configurou pelo menos um horário
+    if (_times.isEmpty) {
+      EnhancedSnackBarHelper.showWarning(
+        context,
+        "Configure pelo menos um horário de refeição.",
+      );
+      return;
+    }
 
     // Diet module is mostly notification based (schedule), but logic check permission too
     // For consistency we check notification perms.
@@ -220,7 +229,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               curve: Curves.easeOutCubic);
         }
 
-        SnackBarHelper.showError(
+        EnhancedSnackBarHelper.showError(
           context,
           "Módulo desativado e progresso zerado.",
         );
@@ -300,7 +309,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         );
       }
 
-      SnackBarHelper.showInfo(
+      EnhancedSnackBarHelper.showInfo(
         context,
         'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
       );
@@ -894,7 +903,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: 'Conquistas',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);

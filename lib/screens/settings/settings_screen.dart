@@ -14,7 +14,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/auth/auth_service.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/screens/opening/onboarding_screen.dart';
@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(context, 'Nenhum app de e-mail encontrado.');
+        EnhancedSnackBarHelper.showError(context, 'Nenhum app de e-mail encontrado.');
       }
     }
   }
@@ -93,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!auth.isAuthenticated) {
       if (mounted) {
         setState(() => _isSyncing = false);
-        SnackBarHelper.showWarning(
+        EnhancedSnackBarHelper.showWarning(
             context, 'Faça login para sincronizar seus dados na nuvem.');
       }
       return;
@@ -108,9 +108,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // mas refreshAllDataFromCloud já chama notifyListeners()
 
     if (ok) {
-      SnackBarHelper.showSuccess(context, 'Dados sincronizados com sucesso!');
+      EnhancedSnackBarHelper.showSuccess(context, 'Dados sincronizados com sucesso!');
     } else {
-      SnackBarHelper.showError(context, 'Não foi possível sincronizar agora.');
+      EnhancedSnackBarHelper.showError(context, 'Não foi possível sincronizar agora.');
     }
   }
 
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const ClipboardData(text: chavePix),
                           );
                           Navigator.pop(ctx);
-                          SnackBarHelper.showSuccess(context, 'Pix copiado!');
+                          EnhancedSnackBarHelper.showSuccess(context, 'Pix copiado!');
                         },
                       ),
                     ],
@@ -524,7 +524,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       Provider.of<ThemeController>(context, listen: false)
                           .toggleTheme();
-                      SnackBarHelper.showInfo(context,
+                      EnhancedSnackBarHelper.showInfo(context,
                           "Dev, lembre-se de remover esse botão antes de publicar o app!");
                     },
                     color: Colors.red.withValues(alpha: 0.2),

@@ -1399,7 +1399,7 @@ class _MoneySavingChallengeScreenState
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: 'Conquistas',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
