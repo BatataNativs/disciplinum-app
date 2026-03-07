@@ -6,9 +6,10 @@ import 'package:disciplinum/services/auth/avatar_service.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/app_router.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:disciplinum/widgets/home/bottom_nav_bar.dart';
 import 'package:disciplinum/widgets/profile/edit_profile_dialog.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 import 'package:disciplinum/widgets/profile/lojinha.dart';
 import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
@@ -21,16 +22,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late TextEditingController _nameController;
-  late TextEditingController _bioController;
-  IapService? _iapService; // Armazena referência para o dispose seguro
+  final _nameController = TextEditingController();
+  final _bioController = TextEditingController();
+  IapService? _iapService;
   bool _loadingAvatar = false;
+  Timer? _errorTimeout;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _bioController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
       _nameController.text = authService.userProfile?['name'] ?? '';
@@ -39,13 +39,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Configura o feedback visual para as compras nesta tela
       _iapService = Provider.of<IapService>(context, listen: false);
       _iapService!.onPurchaseResult = (success) {
+        print('Callback onPurchaseResult chamado! success: $success');
         if (!mounted) return;
+        
         if (success) {
-          SnackBarHelper.showSuccess(
+          // Cancela o timeout apenas se for sucesso
+          print('Cancelando timeout (sucesso)...');
+          _errorTimeout?.cancel();
+          _errorTimeout = null;
+          
+          EnhancedSnackBarHelper.showSuccess(
               context, '🛒 Compra realizada com sucesso!');
-        } else {
-          SnackBarHelper.showError(context, '❌ Compra não concluída.');
         }
+        // Se não for sucesso, NÃO cancela o timeout - deixa ele mostrar erro de conexão
       };
     });
   }
@@ -83,15 +89,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       if (ok) {
-        SnackBarHelper.showSuccess(context, 'Foto de perfil atualizada!');
+        EnhancedSnackBarHelper.showSuccess(context, 'Foto de perfil atualizada!');
       } else {
-        SnackBarHelper.showError(context, 'Erro ao enviar foto de perfil!');
+        EnhancedSnackBarHelper.showError(context, 'Erro ao enviar foto de perfil!');
       }
     }
   }
 
   @override
   void dispose() {
+    // Cancela o timeout se existir
+    _errorTimeout?.cancel();
+    
     // Limpa o callback usando a referência salva, sem precisar do context
     if (_iapService != null && _iapService!.onPurchaseResult != null) {
       _iapService!.onPurchaseResult = null;
@@ -130,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showAccountOptions(BuildContext context, AuthService authService) {
     if (!authService.isAuthenticated) {
-      SnackBarHelper.showWarning(
+      EnhancedSnackBarHelper.showWarning(
           context, 'Faça login para acessar esta opção.');
       return;
     }
@@ -460,36 +469,226 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _mostrarDialogoLoja() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.credit_card_outlined,
-                color: Color.fromARGB(255, 27, 10, 211)),
-            SizedBox(width: 8),
-            Text('Recurso Pago ⚠️'),
-          ],
-        ),
-        content: const Text(
-          'O Dark Mode é um recurso pago (compra única).\n\n'
-          'Ao adquirir o Dark Mode, o botão de alternância funcionará. Deseja comprar agora?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Depois'),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 20,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [
+                      const Color(0xFF1F2937),
+                      const Color(0xFF111827),
+                    ]
+                  : [
+                      const Color(0xFFFFFFFF),
+                      const Color(0xFFF9FAFB),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              final iapService =
-                  Provider.of<IapService>(context, listen: false);
-              iapService.buyByProductId(IapService.productIdDarkMode);
-            },
-            child: const Text('Comprar agora!'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ícone e título
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF6366F1),
+                      const Color(0xFF8B5CF6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(width: 12),
+                    Icon(
+                      Icons.storefront_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    Text('Recurso Pago',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        )),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Conteúdo
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.02),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.dark_mode_outlined,
+                      size: 48,
+                      color: isDark
+                          ? const Color.fromARGB(255, 29, 29, 29)
+                          : const Color.fromARGB(255, 0, 0, 0),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Dark Mode',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Experiência visual elegante e confortável aos olhos com o tema escuro.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, 
+                              color: Color(0xFF10B981), size: 16),
+                          SizedBox(width: 4),
+                          Text('Compra única',
+                              style: TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Botões
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Depois',
+                        style: TextStyle(
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF6B7280),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        final iapService =
+                            Provider.of<IapService>(context, listen: false);
+                        
+                        // Mostra snackbar de início da compra
+                        EnhancedSnackBarHelper.showInfo(context, 'Iniciando compra de Dark Mode...');
+                        
+                        // Cria timeout para mostrar erro se não receber resposta
+                        print('Criando timeout de 3 segundos...');
+                        _errorTimeout = Timer(const Duration(seconds: 3), () {
+                          print('Timeout disparado! Mostrando erro de conexão...');
+                          if (mounted) {
+                            EnhancedSnackBarHelper.showError(context, 'Erro ao processar compra. Verifique sua conexão ou tente novamente.');
+                            _errorTimeout = null;
+                          }
+                        });
+                        
+                        // Executa a compra
+                        iapService.buyByProductId(IapService.productIdDarkMode);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.shopping_cart_outlined, size: 18),
+                          SizedBox(width: 8),
+                          Text('Comprar agora',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -773,8 +972,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const Color.fromARGB(255, 15, 15, 20),
                       ]
                     : [
-                        Colors.white,
-                        const Color.fromARGB(255, 177, 179, 181),
+                        const Color.fromARGB(255, 255, 255, 255),
+                        const Color.fromARGB(255, 248, 250, 252),
                       ],
               ),
               border: Border.all(
@@ -889,17 +1088,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           systemOverlayStyle: isDark
               ? SystemUiOverlayStyle.light
               : SystemUiOverlayStyle.dark, // Ícones da barra de status
-          actions: [
-            IconButton(
-              onPressed: () => _showThemeOptionsDialog(context, iap),
-              icon: const Text('🎨', style: TextStyle(fontSize: 32)),
-            ),
-          ],
         ),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              const double avatarRadius = 60.0;
+              const double avatarRadius = 70.0; // tamanho da foto de perfil
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -916,7 +1109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           // COLUNA ESQUERDA: AVATAR
                           Expanded(
-                            flex: 4,
+                            flex: 5,
                             child: Column(
                               children: [
                                 Stack(
@@ -1026,8 +1219,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // ESPAÇAMENTO PARA MANTER POSIÇÃO VISUAL (Substituindo Edit e Logout)
-                                const SizedBox(height: 88),
+                                // ESPAÇAMENTO PARA ALINHAR COM ALTURA DA FOTO DE PERFIL
+                                const SizedBox(height: 38),
+
+                                // BOTÃO DE TEMA
+                                _buildThemeButton(context, iap, isDark),
+                                const SizedBox(height: 8),
 
                                 // MINHA CONTA
                                 _buildProfileActionButton(
@@ -1055,60 +1252,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // NOME E BIO
-                      Center(
-                        child: Text(
-                          userName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: isDark
-                                ? const Color(0xFFFFFFFF)
-                                : const Color(0xFF1F2937),
+                      // SEÇÃO DE INFORMAÇÕES DO PERFIL
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [
+                                    const Color(0xFF6366F1).withValues(alpha: 0.1),
+                                    const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                                  ]
+                                : [
+                                    const Color(0xFF4F46E5).withValues(alpha: 0.05),
+                                    const Color(0xFF7C3AED).withValues(alpha: 0.05),
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF6366F1).withValues(alpha: 0.2)
+                                : const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // NOME DO USUÁRIO
+                            Center(
+                              child: Text(
+                                userName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22,
+                                  color: isDark
+                                      ? const Color(0xFFFFFFFF)
+                                      : const Color(0xFF1F2937),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+
+                            // EMAIL
+                            if (authService.isAuthenticated &&
+                                (authService.userProfile?['show_email'] ?? true))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF6366F1).withValues(alpha: 0.15)
+                                        : const Color(0xFF4F46E5).withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    authService.userProfile?['email'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? const Color(0xFF818CF8)
+                                          : const Color(0xFF4F46E5),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // BIO
+                            if (authService.userProfile?['bio'] != null &&
+                                authService.userProfile!['bio'].toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.05)
+                                        : Colors.black.withValues(alpha: 0.02),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.1)
+                                          : Colors.black.withValues(alpha: 0.05),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    authService.userProfile!['bio'],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 15,
+                                      height: 1.4,
+                                      color: isDark
+                                          ? const Color(0xFFE2E8F0)
+                                          : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-
-                      // EMAIL
-                      if (authService.isAuthenticated &&
-                          (authService.userProfile?['show_email'] ?? true))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Center(
-                            child: Text(
-                              authService.userProfile?['email'] ?? '',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color.fromARGB(255, 44, 45, 47),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      if (authService.userProfile?['bio'] != null &&
-                          authService.userProfile!['bio'].toString().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12.0),
-                          child: Center(
-                            child: Text(
-                              authService.userProfile!['bio'],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: isDark
-                                    ? const Color.fromARGB(255, 255, 255, 255)
-                                    : const Color.fromARGB(255, 44, 45, 47),
-                              ),
-                            ),
-                          ),
-                        ),
 
                       if (!authService.isAuthenticated) ...[
                         const SizedBox(height: 10),
@@ -1187,6 +1439,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildThemeButton(
+    BuildContext context,
+    IapService iap,
+    bool isDark,
+  ) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20), // Mais borderRadius que os outros
+        color: Colors.black, // Cor preta como solicitado
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        icon: const Text('🎨', style: TextStyle(fontSize: 20)),
+        label: const Text(
+          'Temas',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        onPressed: () => _showThemeOptionsDialog(context, iap),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileActionButton(
     BuildContext context, {
     required String label,
@@ -1195,27 +1490,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool isDestructive = false,
     required bool isDark,
   }) {
-    return SizedBox(
-      height: 36,
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: isDestructive
+            ? LinearGradient(
+                colors: [
+                  Colors.red.withValues(alpha: 0.8),
+                  Colors.red.withValues(alpha: 0.6),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: isDark
+                    ? [
+                        const Color(0xFF6366F1).withValues(alpha: 0.8),
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.8),
+                      ]
+                    : [
+                        const Color(0xFF4F46E5),
+                        const Color(0xFF7C3AED),
+                      ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        boxShadow: [
+          BoxShadow(
+            color: (isDestructive ? Colors.red : const Color(0xFF6366F1))
+                .withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ElevatedButton.icon(
-        icon: Icon(icon, size: 18),
-        label: Text(label),
+        icon: Icon(icon, size: 20, color: Colors.white),
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDestructive
-              ? (isDark
-                  ? Colors.red.withValues(alpha: 0.2)
-                  : Colors.red.withValues(alpha: 0.1))
-              : (isDark
-                  ? const Color.fromARGB(255, 255, 255, 255)
-                  : const Color.fromARGB(255, 85, 87, 90)),
-          foregroundColor: isDestructive
-              ? Colors.red
-              : (isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 239, 240, 241)),
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );

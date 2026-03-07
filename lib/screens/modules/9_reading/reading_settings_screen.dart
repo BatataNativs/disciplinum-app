@@ -5,7 +5,7 @@ import 'package:disciplinum/widgets/home/neon_card.dart';
 import 'package:disciplinum/widgets/notifications/notification_message_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class ReadingSettingsScreen extends StatefulWidget {
   const ReadingSettingsScreen({super.key});
@@ -42,7 +42,7 @@ class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
           .scheduleDailyReminder(picked);
 
       if (localContext.mounted) {
-        SnackBarHelper.showSuccess(localContext, 'Horário de leitura atualizado! 📚');
+        EnhancedSnackBarHelper.showSuccess(localContext, 'Horário de leitura atualizado! 📚');
       }
     }
   }
@@ -129,7 +129,7 @@ class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
                                 setState(() {
                                   _notificationTime = null;
                                 });
-                                SnackBarHelper.showInfo(context, 'Lembrete removido');
+                                EnhancedSnackBarHelper.showInfo(context, 'Lembrete removido');
                               },
                               icon: const Icon(Icons.delete_outline,
                                   color: Colors.red),

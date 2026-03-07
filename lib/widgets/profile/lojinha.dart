@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/iap/iap_service.dart';
 import 'package:disciplinum/widgets/home/scroll_indicator_arrow.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class Lojinha extends StatefulWidget {
   const Lojinha({super.key});
@@ -13,6 +13,8 @@ class Lojinha extends StatefulWidget {
 }
 
 class _LojinhaState extends State<Lojinha> {
+  OverlayEntry? _currentSnackBarOverlay;
+  
   @override
   void initState() {
     super.initState();
@@ -20,17 +22,103 @@ class _LojinhaState extends State<Lojinha> {
       final iap = Provider.of<IapService>(context, listen: false);
       iap.onPurchaseResult = (success) {
         if (!mounted) return;
-        if (success) {
-          SnackBarHelper.showSuccess(context, 'Compra realizada com sucesso!');
-        } else {
-          SnackBarHelper.showError(context, 'Erro no processamento da compra.');
-        }
+        
+        // Aguarda 2 segundos antes de mostrar resultado
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _clearCurrentSnackBar();
+            _showResultSnackBar(success);
+          }
+        });
       };
     });
   }
 
+  void _showResultSnackBar(bool success) {
+    final overlay = Overlay.of(context);
+    OverlayEntry? overlayEntry;
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 20,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  success ? Icons.check_circle : Icons.error,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    success 
+                        ? 'Compra realizada com sucesso!'
+                        : 'Erro no processamento da compra.',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    overlayEntry?.remove();
+                    _currentSnackBarOverlay = null;
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    overlay.insert(overlayEntry);
+    _currentSnackBarOverlay = overlayEntry;
+    
+    // Auto-remove após 4 segundos
+    Future.delayed(const Duration(seconds: 4), () {
+      if (overlayEntry?.mounted == true) {
+        overlayEntry?.remove();
+        if (_currentSnackBarOverlay == overlayEntry) {
+          _currentSnackBarOverlay = null;
+        }
+      }
+    });
+  }
+
+  void _clearCurrentSnackBar() {
+    if (_currentSnackBarOverlay != null && _currentSnackBarOverlay!.mounted) {
+      _currentSnackBarOverlay!.remove();
+      _currentSnackBarOverlay = null;
+    }
+  }
+
   @override
   void dispose() {
+    _clearCurrentSnackBar();
     final iap = Provider.of<IapService>(context, listen: false);
     if (iap.onPurchaseResult != null) {
       iap.onPurchaseResult = null;
@@ -39,7 +127,62 @@ class _LojinhaState extends State<Lojinha> {
   }
 
   void _handleBuyAction(VoidCallback buyAction, String productName) {
-    SnackBarHelper.showInfo(context, 'Iniciando compra de $productName...');
+    _clearCurrentSnackBar();
+    
+    // Mostra snackbar personalizada que pode ser controlada
+    final overlay = Overlay.of(context);
+    _currentSnackBarOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 20,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Iniciando compra de $productName...',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _clearCurrentSnackBar,
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    overlay.insert(_currentSnackBarOverlay!);
+    
+    // Executa a ação de compra
     buyAction();
   }
 
@@ -189,6 +332,130 @@ class _LojinhaState extends State<Lojinha> {
                     height: 1,
                   ),
 
+                  // Tema Rosa
+                  _buildShopItem(
+                    context,
+                    title: '🌸 Tema Rosa',
+                    description: 'Desbloqueie o tema rosa. (Em breve)',
+                    isAcquired: false, // Sempre não adquirido por enquanto
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.pinkAccent,
+                    onTap: null, // Não implementado ainda
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                    onPreviewTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: const EdgeInsets.all(16),
+                          child: Stack(
+                            alignment: Alignment.topLeft,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/screenshots/print_tela_dark_mode.png', // Usando print do dark mode temporariamente
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black54,
+                                  radius: 16,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
+                  // Tema Halloween
+                  _buildShopItem(
+                    context,
+                    title: '🎃 Tema Halloween',
+                    description: 'Desbloqueie o tema Halloween. (Em breve)',
+                    isAcquired: false, // Sempre não adquirido por enquanto
+                    titleColor: isDark
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF1F2937),
+                    descColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color.fromARGB(255, 49, 49, 49),
+                    acquiredColor: Colors.green,
+                    previewColor: Colors.orangeAccent,
+                    onTap: null, // Não implementado ainda
+                    titleSize: shopTitleFontSize,
+                    descriptionSize: shopDescFontSize,
+                    acquiredSize: shopAcquiredStatusFontSize,
+                    previewSize: shopPreviewButtonFontSize,
+                    onPreviewTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: const EdgeInsets.all(16),
+                          child: Stack(
+                            alignment: Alignment.topLeft,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/screenshots/print_tela_dark_mode.png', // Usando print do dark mode temporariamente
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black54,
+                                  radius: 16,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(
+                    color: Colors.black12,
+                    height: 1,
+                  ),
+
                   // Notificações Personalizáveis
                   _buildShopItem(
                     context,
@@ -254,7 +521,7 @@ class _LojinhaState extends State<Lojinha> {
               TextButton(
                 onPressed: () {
                   iap.restorePurchases();
-                  SnackBarHelper.showInfo(
+                  EnhancedSnackBarHelper.showInfo(
                       context, 'Buscando compras anteriores...');
                 },
                 child: Text('Restaurar compras',
@@ -465,7 +732,7 @@ class _LojinhaState extends State<Lojinha> {
                             const ClipboardData(text: chavePix),
                           );
                           Navigator.pop(ctx);
-                          SnackBarHelper.showSuccess(context, 'Pix copiado!');
+                          EnhancedSnackBarHelper.showSuccess(context, 'Pix copiado!');
                         },
                       ),
                     ],

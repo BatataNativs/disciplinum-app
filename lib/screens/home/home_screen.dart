@@ -167,6 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _showInsigniaDialog(Map<String, dynamic> insigniaData) {
+    _confettiController.stop(); // Parar qualquer confete anterior
     _confettiController.play();
     showDialog(
       context: context,
@@ -240,9 +241,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Provider.of<GamificationService>(context, listen: false)
                           .consumePendingInsignia(insigniaData);
                       Navigator.of(ctx).pop();
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        if (mounted) _checkPendingInsignias();
-                      });
+                      // se houver outra insignia pendente, o diálogo abre novamente
                     },
                     child: const Text('Ok, guardar!',
                         style: TextStyle(

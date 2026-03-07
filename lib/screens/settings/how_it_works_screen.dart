@@ -150,14 +150,10 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
       case 0:
         return Column(
           children: [
-            Icon(
-              Icons.psychology_rounded,
-              size: 80,
-              color: const Color(0xFF6366F1),
-            ),
+            Image(image: AssetImage('assets/icons/app_monitoring.png'), width: 100, height: 100),
             const SizedBox(height: 16),
             Text(
-              'Monitoramento Inteligente',
+              'Monitoramento de abertura de apps',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black,
@@ -226,21 +222,28 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'O Disciplinum monitora apps selecionados e envia notificações para ajudar você a criar disciplina.',
-              style: textStyle,
+              'O Disciplinum monitora apps selecionados POR VOCÊ ao configurar um módulo e te envia notificação de alerta para você sair deles em até 30 segundos se você os abrir.\n\n'
+              'E esse monitoramento é feito de forma segura e respeita sua privacidade - apenas os apps que você selecionar são monitorados. Não há vigilância contínua da sua tela ou coleta desnecessária de dados não necessários para o funcionamento do app nesse aspecto. O gatilho é a abertura do app pré-configurado por você.\n\n'
+              'Você pode escolher quantos apps quiser para cada módulo, e usar quantos módulos quiser ao mesmo tempo.\n\n'
+              'Cada módulo tem suas próprias configurações, gatilhos de funcionamento e particularidades, permitindo que você gerencie diferentes aspectos da sua vida de forma independente.\n\n'
+              'O tal monitoramento de abertura de apps selecionados é apenas uma das funcionalidades do app. Também tem gestão de gastos fixos (contas, aluguel, etc.) que você registrar no app (valores e vencimentos) e receber lembretes para pagamento.\n'
+              'Ainda sobre finanças, tem também um módulo de criação e acompanhamento de metas, onde você pode registrar metas de valores a juntar e acompanhar seu progresso.',
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
-              'Módulos disponíveis:',
+              'Módulos disponíveis no momento:',
               style: textStyle?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _buildModuleItem('🚭 Deixar de Fumar', 'Alertas em horários críticos', textStyle),
-            _buildModuleItem('💰 Controle Financeiro', 'Monitore apps de compras', textStyle),
+            _buildModuleItem('🚭 Parar de Fumar', 'Alertas em horários críticos', textStyle),
+            _buildModuleItem('💰 Controle de Gastos', 'Monitore apps de compras', textStyle),
             _buildModuleItem('🎯 Foco e Produtividade', 'Evite distrações', textStyle),
-            _buildModuleItem('🍎 Alimentação Saudável', 'Lembretes para refeições', textStyle),
-            _buildModuleItem('🔒 Conteúdo Responsável', 'Controle de acesso', textStyle),
-            _buildModuleItem('⏰ Gestão de Tempo', 'Organize sua rotina', textStyle),
+            _buildModuleItem('🍎 Manter Dieta', 'Lembretes para refeições', textStyle),
+            _buildModuleItem('🔒 Evitar Conteúdo Adulto', 'Ajuda a evitar consumo de conteúdo adulto', textStyle),
+            _buildModuleItem('⏰ Evitar Procrastinação', 'Organização e gestão de tempo', textStyle),
+            _buildModuleItem('📚 Leitura', 'Estimular o hábito da leitura e organização', textStyle),
+            _buildModuleItem('🍔 Compulsão Alimentar', 'Ajuda a evitar fastfoods e deliveries por impulso', textStyle),
+            _buildModuleItem('🐖 Desafio da Poupança', 'Forma divertida de aprender a economizar dinheiro', textStyle),
           ],
         );
       case 1:

@@ -530,7 +530,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   children: [
                                     const TextSpan(
                                       text:
-                                          'Este app é uma ferramenta\nde apoio à disciplina,\nnão substitui acompanhamento.\n',
+                                          'Este app é uma ferramenta\nde apoio à disciplina a aos bons hábitos,\nele não foi feito e nem tem a intenção de substituir o acompanhamento de um profissional de saúde ou terapeuta.\n Use-o com responsabilidade e sabedoria.\n\n',
                                     ),
                                     const TextSpan(
                                       text: 'Para saber mais sobre\ncomo funciona, ',

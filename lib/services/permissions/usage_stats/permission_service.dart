@@ -3,7 +3,7 @@ import 'package:usage_stats/usage_stats.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/main.dart'; // Para acessar o navigatorKey
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class PermissionService {
   static bool _isChecking = false;
@@ -78,7 +78,7 @@ class PermissionService {
       await prefs.setBool('asked_usage_permission_onboarding', true);
 
       if (effectiveContext.mounted) {
-        SnackBarHelper.showSuccess(
+        EnhancedSnackBarHelper.showSuccess(
           effectiveContext,
           'Permissão de uso detectada! O app agora pode monitorar seus hábitos.',
         );
@@ -168,21 +168,42 @@ class PermissionService {
               ),
               const SizedBox(height: 12),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                height: 40,
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                 decoration: BoxDecoration(
                   color: Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFFE5E7EB)),
+                  border: Border.all(color: Colors.black, width: 1),
                 ),
-                child: Text(
-                  "Acesso a dados de uso",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                    height: 1.4,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFF3F4F6),
+                    foregroundColor: Color.fromARGB(255, 0, 0, 0),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.settings, size: 16),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          "Acesso a dados de uso",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 0,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -190,7 +211,7 @@ class PermissionService {
               const SizedBox(height: 16),
 
               Text(
-                "Basta clicar no botão abaixo e, na próxima tela, ativar a chave 👇🏻",
+                "Basta clicar no botão acima e, na próxima tela, ativar a chave ☝🏼",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -199,67 +220,28 @@ class PermissionService {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
 
               // Botões premium
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: Color(0xFFE5E7EB)),
-                        ),
-                      ),
-                      child: Text(
-                        "Agora não",
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Color(0xFFE5E7EB)),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        padding:
-                            EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                        shadowColor: Colors.transparent,
-                      ),
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.settings, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              "Configurações",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                  child: Text(
+                    "Agora não",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 0, 0, 0),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -272,11 +254,10 @@ class PermissionService {
       await UsageStats.grantUsagePermission();
       return true;
     } else if (wentToSettings == false) {
-      // Usa o context global para o SnackBar também
-      final scaffoldContext = navigatorKey.currentContext ?? context;
-      if (scaffoldContext.mounted) {
-        SnackBarHelper.showInfo(
-          scaffoldContext,
+      // Mostrar SnackBar antes de fechar o diálogo para garantir contexto válido
+      if (context.mounted) {
+        EnhancedSnackBarHelper.showInfo(
+          context,
           'Sem essa permissão, o app não funcionará corretamente. Você precisará ativá-la ao usar os módulos.',
         );
       }

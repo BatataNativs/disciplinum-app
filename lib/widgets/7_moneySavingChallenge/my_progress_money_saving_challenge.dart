@@ -242,7 +242,9 @@ class _AwardItem extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              isEarned ? '✅ Conquistada!' : 'Requisito:\n$requirement',
+              isEarned 
+                ? '✅ Conquistada!\n\nRequisito:\n$requirement'
+                : 'Requisito:\n$requirement',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),

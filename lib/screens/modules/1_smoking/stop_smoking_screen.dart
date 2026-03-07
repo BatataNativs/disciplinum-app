@@ -13,7 +13,7 @@ import 'package:disciplinum/models/niche_id.dart';
 import 'package:disciplinum/screens/modules/1_smoking/savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/screens/modules/1_smoking/frases_motivacionais.dart';
 import '../../schedule_screen.dart';
 import 'package:disciplinum/screens/modules/1_smoking/daily_checkins_stats.dart';
@@ -261,14 +261,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
         await _syncCheckInWithGamification(onlySyncSchedules: true);
 
         if (mounted) {
-          SnackBarHelper.showSuccess(
+          EnhancedSnackBarHelper.showSuccess(
               context, 'Informacoes salvas com sucesso!');
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => isSaving = false);
-        SnackBarHelper.showError(context, 'Erro ao salvar: \$e');
+        EnhancedSnackBarHelper.showError(context, 'Erro ao salvar: \$e');
       }
     }
   }
@@ -277,6 +277,34 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     HapticFeedback.mediumImpact();
     await PermissionService.ensurePermissions(context);
     if (!mounted) return;
+
+    // VALIDAÇÃO: Verificar se configurou informações de consumo E check-in diário
+    bool hasConsumptionInfo = settings != null;
+    bool hasCheckinConfigured = _checkinTime != null;
+
+    if (!hasConsumptionInfo && !hasCheckinConfigured) {
+      EnhancedSnackBarHelper.showWarning(
+        context,
+        "Configure informações de consumo e check-in diário.",
+      );
+      return;
+    }
+
+    if (!hasConsumptionInfo && hasCheckinConfigured) {
+      EnhancedSnackBarHelper.showWarning(
+        context,
+        "Configure informações de consumo.",
+      );
+      return;
+    }
+
+    if (hasConsumptionInfo && !hasCheckinConfigured) {
+      EnhancedSnackBarHelper.showWarning(
+        context,
+        "Configure check-in diário.",
+      );
+      return;
+    }
 
     bool notificationGranted = await NotificationService.requestPermission();
     if (notificationGranted) {
@@ -383,14 +411,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
           }
 
           if (mounted) {
-            SnackBarHelper.showSuccess(
+            EnhancedSnackBarHelper.showSuccess(
                 context, "Módulo desativado e progresso zerado.");
           }
         }
       } catch (e) {
         if (mounted) {
           setState(() => isLoading = false);
-          SnackBarHelper.showError(context, "Erro ao desativar: $e");
+          EnhancedSnackBarHelper.showError(context, "Erro ao desativar: $e");
         }
       }
     }
@@ -1483,7 +1511,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu Progresso',
+              label: 'Conquistas',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);

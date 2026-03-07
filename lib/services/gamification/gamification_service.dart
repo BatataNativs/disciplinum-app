@@ -467,7 +467,7 @@ class GamificationService extends ChangeNotifier {
     await _saveFocusInsignias();
     _pendingInsignias.add({
       'type': 'focus_insignia',
-      'insignia_name': insignia.nameBr,
+      'insignia_name': insignia.nameBr.split(' ').last, // CORRIGIDO: Pega apenas "Madeira", "Ferro", etc.
       'insignia_key': insignia.name,
       'insignia_asset': insignia.asset
     });

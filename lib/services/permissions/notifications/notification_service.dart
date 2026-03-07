@@ -70,11 +70,20 @@ Future<void> initNotifications() async {
       if (response.actionId == 'view_insignia') {
         // Abrir home e exibir insígnia conquistada
         navigatorKey.currentState?.pushNamed(AppRouter.home);
+        // Cancelar notificação também ao clicar "Ver no app"
+        // ID da notificação de insígnia é 5000 + index, mas não temos acesso ao index aqui
+        // Então vamos cancelar todas as notificações de insígnias (5000-5010)
+        for (int i = 0; i < 15; i++) {
+          flutterLocalNotificationsPlugin.cancel(5000 + i);
+        }
       }
       
       if (response.actionId == 'dismiss_insignia') {
         // Apenas fechar notificação (já foi tratada pelo addPendingInsignia)
-        // Não precisa fazer nada adicional
+        // Cancelar todas as notificações de insígnias
+        for (int i = 0; i < 15; i++) {
+          flutterLocalNotificationsPlugin.cancel(5000 + i);
+        }
       }
 
       // Lógica para abrir módulo de Procrastinação na aba correta (Check-in Diário)

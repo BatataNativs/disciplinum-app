@@ -27,7 +27,7 @@ class GamificationAwardEngine {
     final niche = NicheRepository.getById(NicheId.focus);
     final data = {
       'type': 'focus_insignia',
-      'insignia_name': insignia.nameBr,
+      'insignia_name': insignia.nameBr.split(' ').last, // CORRIGIDO: Pega apenas "Madeira", "Ferro", etc.
       'insignia_key': insignia.toString().split('.').last,
       'insignia_asset': insignia.asset,
       'module_name': niche.name,

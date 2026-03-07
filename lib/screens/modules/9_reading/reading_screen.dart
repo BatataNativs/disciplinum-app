@@ -10,7 +10,7 @@ import 'package:disciplinum/screens/modules/9_reading/reading_settings_screen.da
 import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart';
 import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -464,7 +464,7 @@ class _ReadingScreenState extends State<ReadingScreen>
             ),
             _buildMenuTile(
               icon: Icons.bar_chart_rounded,
-              label: 'Meu progresso',
+              label: 'Conquistas',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
@@ -565,7 +565,7 @@ class _ReadingScreenState extends State<ReadingScreen>
         _tabController.animateTo(0);
 
         if (mounted) {
-          SnackBarHelper.showError(
+          EnhancedSnackBarHelper.showError(
             context,
             'Módulo desativado — Você não receberá mais notificações',
           );

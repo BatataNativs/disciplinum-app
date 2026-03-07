@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 
 import 'package:disciplinum/services/auth/auth_service.dart'; // Import do seu serviço de Auth
-import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
 
 class SecretMenuScreen extends StatefulWidget {
   const SecretMenuScreen({super.key});
@@ -77,7 +77,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(
+        EnhancedSnackBarHelper.showError(
             context, 'Não foi possível abrir o app de e-mail.');
       }
     }
@@ -97,7 +97,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
     if (_tapCount > 3 && _tapCount < 7) {
       int remaining = 7 - _tapCount;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      SnackBarHelper.showInfo(context, "Faltam $remaining toques...");
+      EnhancedSnackBarHelper.showInfo(context, "Faltam $remaining toques...");
     }
 
     if (_tapCount == 7) {
@@ -133,7 +133,7 @@ class _SecretMenuScreenState extends State<SecretMenuScreen> {
         _inputSequence.clear();
       });
       if (mounted) {
-        SnackBarHelper.showError(context, "Sequência incorreta. Resetando...");
+        EnhancedSnackBarHelper.showError(context, "Sequência incorreta. Resetando...");
       }
     } else {
       if (_inputSequence.length == _correctSequence.length) {
