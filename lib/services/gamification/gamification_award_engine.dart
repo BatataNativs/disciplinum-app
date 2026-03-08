@@ -78,8 +78,8 @@ class GamificationAwardEngine {
         NotificationDetails(android: androidDetails));
   }
 
-  void awardMedal(
-      NicheId nicheId, GamificationMedal medal, GamificationService service) {
+  Future<void> awardMedal(
+      NicheId nicheId, GamificationMedal medal, GamificationService service) async {
     final medalData = {
       'niche_id': nicheId.id,
       'medal_name': medal.nameBr,
@@ -88,7 +88,7 @@ class GamificationAwardEngine {
     };
 
     service.addPendingMedal(medalData);
-    _sendMedalNotificationWithActions(nicheId, medal);
+    await _sendMedalNotificationWithActions(nicheId, medal);
   }
 
   Future<void> _sendMedalNotificationWithActions(
@@ -116,7 +116,8 @@ class GamificationAwardEngine {
           const AndroidNotificationAction('dismiss_medal', 'Ok. Apagar',
               showsUserInterface: false, cancelNotification: true),
         ]);
-    await flutterLocalNotificationsPlugin.show(nicheId.id + 900, title, body,
+    final id = DateTime.now().millisecondsSinceEpoch.remainder(1 << 31);
+    await flutterLocalNotificationsPlugin.show(id, title, body,
         NotificationDetails(android: androidDetails));
   }
 

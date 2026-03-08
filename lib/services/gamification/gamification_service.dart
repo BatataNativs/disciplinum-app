@@ -266,7 +266,7 @@ class GamificationService extends ChangeNotifier {
   }
 
   // API Pública para Telas
-  void startModuleCycle({required NicheId nicheId}) async {
+  Future<void> startModuleCycle({required NicheId nicheId}) async {
     currentNicheId = nicheId;
     await _syncWithCloud(nicheId);
     if (!isModuleActive(nicheId)) {
@@ -299,18 +299,32 @@ class GamificationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  void stopModuleCycle({required NicheId nicheId}) async {
+  Future<void> stopModuleCycle({required NicheId nicheId}) async {
     if (currentNicheId == nicheId) {
       currentNicheId = null;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_prefsActiveNicheKey);
       stopMonitoringApps();
     }
+
+    // CORREÇÃO: Limpeza completa de estado órfão
     _diasConsecutivosByModule.remove(nicheId);
+    _maxMedalByModule.remove(nicheId);
+    _moduleStartDates.remove(nicheId);
+    _periodosFocoRespeitados.remove(nicheId);
     scheduleByModule.remove(nicheId);
+    motivationSchedulesByModule.remove(nicheId);
+    focusIntervalByModule.remove(nicheId);
+
     await _saveLocalStatus(nicheId);
     CloudSyncService.saveModuleStatus(
-        nicheId: nicheId, isActive: false, consecutiveDays: 0);
+      nicheId: nicheId,
+      isActive: false,
+      consecutiveDays: 0,
+      focusPeriodsRespected: nicheId == NicheId.focus ? 0 : null,
+      forceClearMedal: true,
+    );
+
     await NotificationScheduler.instance.cancelModuleNotifications(nicheId);
     notifyListeners();
   }
@@ -324,7 +338,9 @@ class GamificationService extends ChangeNotifier {
     if (deactivate) {
       _diasConsecutivosByModule.remove(nicheId);
       _maxMedalByModule.remove(nicheId);
-      if (nicheId == NicheId.focus) resetFocusInsignias();
+      if (nicheId == NicheId.focus) {
+        resetFocusInsignias(); // Já chama resetFocusPeriods() internamente
+      }
       if (currentNicheId == nicheId) stopMonitoringApps();
     } else {
       _diasConsecutivosByModule[nicheId] = 0;
@@ -382,24 +398,48 @@ class GamificationService extends ChangeNotifier {
 
   // Ad Desbloqueios
   Future<void> unlockNotification(NicheId nicheId) async {
-    _unlockedNotifications.add(nicheId);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_prefsUnlockedNotifsKey,
-        _unlockedNotifications.map((n) => n.id.toString()).toList());
-    CloudSyncService.addEntitlement(
-            entitlementType: 'notification', nicheId: nicheId.id, source: 'ad')
+    await _applyLocalUnlockNotification(nicheId);
+    await CloudSyncService.addEntitlement(
+      entitlementType: 'notification', nicheId: nicheId.id, source: 'ad')
         .catchError((e) => debugPrint('Sync Ad Error: $e'));
     notifyListeners();
   }
 
   Future<void> unlockMotivation(NicheId nicheId) async {
+    await _applyLocalUnlockMotivation(nicheId);
+    await CloudSyncService.addEntitlement(
+      entitlementType: 'motivation', nicheId: nicheId.id, source: 'ad')
+        .catchError((e) => debugPrint('Sync Ad Motivation Error: $e'));
+    notifyListeners();
+  }
+
+  // Métodos privados para controle local vs remoto
+  Future<void> _applyLocalUnlockNotification(NicheId nicheId) async {
+    if (_unlockedNotifications.contains(nicheId)) return;
+    _unlockedNotifications.add(nicheId);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_prefsUnlockedNotifsKey,
+        _unlockedNotifications.map((n) => n.id.toString()).toList());
+  }
+
+  Future<void> _applyLocalUnlockMotivation(NicheId nicheId) async {
+    if (_unlockedMotivations.contains(nicheId)) return;
     _unlockedMotivations.add(nicheId);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_prefsUnlockedMotivationsKey,
         _unlockedMotivations.map((n) => n.id.toString()).toList());
-    CloudSyncService.addEntitlement(
-            entitlementType: 'motivation', nicheId: nicheId.id, source: 'ad')
-        .catchError((e) => debugPrint('Sync Ad Motivation Error: $e'));
+  }
+
+  // Métodos públicos para sincronização da nuvem (sem regravar na nuvem)
+  Future<void> syncUnlockNotificationFromCloud(NicheId nicheId) async {
+    await _applyLocalUnlockNotification(nicheId);
+    notifyListeners();
+  }
+
+  Future<void> syncUnlockMotivationFromCloud(NicheId nicheId) async {
+    await _applyLocalUnlockMotivation(nicheId);
     notifyListeners();
   }
 
@@ -430,17 +470,36 @@ class GamificationService extends ChangeNotifier {
   // NOVOS: Métodos para períodos de foco respeitados
   void addRespectedFocusPeriod(NicheId nicheId) {
     final current = _periodosFocoRespeitados[nicheId] ?? 0;
-    _periodosFocoRespeitados[nicheId] = current + 1;
+    final updated = current + 1;
+    _periodosFocoRespeitados[nicheId] = updated;
     _saveLocalStatus(nicheId);
-    notifyListeners();
     
-    // Verificar se ganhou nova insígnia
+    // CORREÇÃO: Sincronizar com cloud
+    CloudSyncService.saveModuleStatus(
+      nicheId: nicheId,
+      isActive: true,
+      consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
+      focusPeriodsRespected: updated,
+      maxMedal: _maxMedalByModule[nicheId]?.name,
+    );
+    
+    notifyListeners();
     GamificationAwardEngine.instance.checkFocusInsigniasByPeriods(nicheId, this);
   }
 
   void resetFocusPeriods(NicheId nicheId) {
     _periodosFocoRespeitados.remove(nicheId);
     _saveLocalStatus(nicheId);
+
+    // CORREÇÃO OBRIGATÓRIA: Sincronizar com cloud
+    CloudSyncService.saveModuleStatus(
+      nicheId: nicheId,
+      isActive: isModuleActive(nicheId),
+      consecutiveDays: _diasConsecutivosByModule[nicheId] ?? 0,
+      focusPeriodsRespected: 0,
+      maxMedal: _maxMedalByModule[nicheId]?.name,
+    );
+
     notifyListeners();
   }
 
@@ -522,17 +581,25 @@ class GamificationService extends ChangeNotifier {
 
   Future<void> sendModuleNotification(String body,
       {String? title, String? iconPath}) async {
-    const android = AndroidNotificationDetails('module_updates', 'Atualizações',
-        importance: Importance.high, priority: Priority.high);
+    final id = DateTime.now().millisecondsSinceEpoch.remainder(1 << 31);
+    const androidDetails = AndroidNotificationDetails(
+      'module_updates', 'Atualizações',
+      importance: Importance.high, 
+      priority: Priority.high
+    );
+  
+    const details = NotificationDetails(android: androidDetails);
+  
     await flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecond,
-        title ?? 'Disciplinum',
-        body,
-        const NotificationDetails(android: android));
+      id,
+      title ?? 'Aviso', 
+      body,
+      details,
+    );
   }
 
   void runProgressCheck() {
-    for (var nid in _diasConsecutivosByModule.keys) {
+    for (final nid in List<NicheId>.from(_diasConsecutivosByModule.keys)) {
       final now = DateTime.now();
       if (_lastMidnightCheckByModule[nid]?.day != now.day) {
         _lastMidnightCheckByModule[nid] = now;
