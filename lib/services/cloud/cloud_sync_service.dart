@@ -7,35 +7,39 @@ import 'package:disciplinum/models/user_niche_time.dart';
 import 'package:disciplinum/models/user_entitlement.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
-final supabase = Supabase.instance.client;
-
-// Função auxiliar para garantir timestamps com timezone local
-String _localTimestamp() {
-  final now = DateTime.now();
-  // Garante que o timestamp inclua o timezone local
-  return now.toIso8601String();
-}
-
-Future<T?> _retryOperation<T>(
-  Future<T> Function() operation, {
-  int maxRetries = 3,
-}) async {
-  for (int i = 0; i < maxRetries; i++) {
-    try {
-      return await operation();
-    } catch (e) {
-      if (i == maxRetries - 1) {
-        debugPrint('❌ Operação falhou após $maxRetries tentativas: $e');
-        return null;
-      }
-      debugPrint('⚠️ Tentativa ${i + 1} falhou, tentando novamente...');
-      await Future.delayed(Duration(seconds: i + 1));
-    }
-  }
-  return null;
-}
-
 class CloudSyncService {
+  static final supabase = Supabase.instance.client;
+
+  // CORRIGIDO: Timestamp UTC para sincronização confiável
+  static String _timestampUtc() {
+    return DateTime.now().toUtc().toIso8601String();
+  }
+
+  // Usar em todos os lugares que salvam timestamp na nuvem
+  static String _localTimestamp() {
+    // Para compatibilidade, manter nome mas documentar que é UTC
+    return _timestampUtc();
+  }
+
+  static Future<T?> _retryOperation<T>(
+    Future<T> Function() operation, {
+    int maxRetries = 3,
+  }) async {
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (e) {
+        if (i == maxRetries - 1) {
+          debugPrint('❌ Operação falhou após $maxRetries tentativas: $e');
+          return null;
+        }
+        debugPrint('⚠️ Tentativa ${i + 1} falhou, tentando novamente...');
+        await Future.delayed(Duration(seconds: i + 1));
+      }
+    }
+    return null;
+  }
+
   // --- APPS ---
   static Future<void> addUserNicheApp({
     required NicheId nicheId,
@@ -168,10 +172,10 @@ class CloudSyncService {
 
   // --- STATUS E MEDALHAS ---
   static Future<UserModuleStatus?> loadModuleStatus(NicheId nicheId) async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return null;
+    final result = await _retryOperation(() async {
+      final user = supabase.auth.currentUser;
+      if (user == null) return null;
 
-    try {
       final data = await supabase
           .from('user_module_status')
           .select()
@@ -181,10 +185,8 @@ class CloudSyncService {
 
       if (data == null) return null;
       return UserModuleStatus.fromJson(data);
-    } catch (e) {
-      debugPrint('Erro ao carregar status do módulo: $e');
-      return null;
-    }
+    });
+    return result;
   }
 
   static Future<void> saveModuleStatus({
@@ -318,37 +320,39 @@ class CloudSyncService {
       if (user == null) return;
 
       debugPrint('🔄 Sincronizando entitlements do usuário...');
-
+      
       // Carrega todos os entitlements da nuvem
       final cloudEntitlements = await loadEntitlements();
-
-      // Sincroniza com GamificationService
+      
+      // Sincroniza com GamificationService usando métodos específicos da nuvem
       final gamification = GamificationService.instance;
-
-      // Sincroniza desbloqueios por Ads
-      final notificationEntitlements =
-          cloudEntitlements.where((e) => e.entitlementType == 'notification');
-      final motivationEntitlements =
-          cloudEntitlements.where((e) => e.entitlementType == 'motivation');
-
+      
+      // Sincroniza desbloqueios por Ads (sem regravar na nuvem)
+      final notificationEntitlements = cloudEntitlements
+        .where((e) => e.entitlementType == 'notification');
+      
       for (final entitlement in notificationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
           if (nicheId != null) {
-            await gamification.unlockNotification(nicheId);
+            await gamification.syncUnlockNotificationFromCloud(nicheId);
           }
         }
       }
-
+      
+      // Sincroniza desbloqueios por Motivações (sem regravar na nuvem)
+      final motivationEntitlements = cloudEntitlements
+        .where((e) => e.entitlementType == 'motivation');
+      
       for (final entitlement in motivationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
           if (nicheId != null) {
-            await gamification.unlockMotivation(nicheId);
+            await gamification.syncUnlockMotivationFromCloud(nicheId);
           }
         }
       }
-
+      
       debugPrint('✅ Sincronização de entitlements concluída.');
     } catch (e) {
       debugPrint('❌ Erro na sincronização de entitlements: $e');
