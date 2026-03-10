@@ -17,6 +17,7 @@ import 'package:disciplinum/services/4_spending/spending_service.dart';
 import 'package:disciplinum/models/4_spending/fixed_expense_model.dart';
 import 'package:disciplinum/screens/modules/4_spending/fixed_bills_stats_screen.dart';
 import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 
 class SpendingScreen extends StatefulWidget {
   final String? heroTag;
@@ -205,28 +206,9 @@ class _SpendingScreenState extends State<SpendingScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Desativar módulo?'),
-        content: const Text(
-          'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n'
-          'Deseja continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sim, desativar e zerar'),
-          ),
-        ],
-      ),
+    final confirmed = await DeactivateModuleDialog.show(
+      context,
+      content: 'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
     );
 
     if (confirmed != true) return;
@@ -263,7 +245,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
     if (!mounted) return;
     SnackBarHelper.showError(
       context,
-      'Módulo desativado — Você não receberá mais alertas',
+      'Módulo desativado',
     );
   }
 

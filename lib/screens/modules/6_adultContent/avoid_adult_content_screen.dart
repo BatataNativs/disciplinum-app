@@ -13,6 +13,7 @@ import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dar
 import 'package:disciplinum/utils/app_info_helper.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/utils/snackbar_helper.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 
 class AvoidAdultContentScreen extends StatefulWidget {
   final String? heroTag;
@@ -214,27 +215,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Desativar módulo?"),
-        content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar e zerar"),
-          ),
-        ],
-      ),
+    final confirmed = await DeactivateModuleDialog.show(
+      context,
+      content: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {
@@ -260,6 +243,10 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         _pageController.animateToPage(0,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic);
+      }
+
+      if (mounted) {
+        SnackBarHelper.showWarning(context, 'Módulo desativado');
       }
     }
   }

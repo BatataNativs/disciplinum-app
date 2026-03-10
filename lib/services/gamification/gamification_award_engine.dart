@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:typed_data';
+import 'dart:async';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/services/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/cloud/cloud_sync_service.dart';
@@ -15,6 +17,20 @@ class GamificationAwardEngine {
   static GamificationAwardEngine get instance => _instance;
 
   GamificationAwardEngine._internal();
+
+  static const Map<int, FocusInsignia> _focusMilestones = {
+    0: FocusInsignia.madeira,
+    1: FocusInsignia.ferro,
+    2: FocusInsignia.aluminio,
+    3: FocusInsignia.latao,
+    4: FocusInsignia.bronze,
+    5: FocusInsignia.prata,
+    6: FocusInsignia.ouro,
+    9: FocusInsignia.diamante,
+    10: FocusInsignia.disciplinum,
+  };
+
+  bool _isReconcilingFocusInsignias = false;
 
   /// Concede uma insígnia de Foco ao usuário.
   Future<void> awardInsignia(
@@ -43,7 +59,7 @@ class GamificationAwardEngine {
       earnedInsignias: service.earnedFocusInsignias
           .map((e) => e.toString().split('.').last)
           .toList(),
-    );
+    ).catchError((e) => debugPrint('Erro Sync awardFocusInsignia: $e'));
   }
 
   Future<void> _sendInsigniaNotification(
@@ -121,14 +137,14 @@ class GamificationAwardEngine {
         NotificationDetails(android: androidDetails));
   }
 
-  void checkTimeBasedMedals(NicheId nicheId, GamificationService service) {
+  Future<void> checkTimeBasedMedals(NicheId nicheId, GamificationService service) async {
     final startDate = service.getModuleStartDate(nicheId);
     if (startDate == null) return;
 
     // Para módulo Foco, usar períodos de foco respeitados em vez de dias
     if (nicheId == NicheId.focus) {
       final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
-      _verificaMedalhaDias(nicheId, periodosRespeitados, service);
+      await _verificaMedalhaDias(nicheId, periodosRespeitados, service);
       return;
     }
 
@@ -136,13 +152,13 @@ class GamificationAwardEngine {
     final daysActive = DateTime.now().difference(startDate).inDays;
 
     if (daysActive != service.diasConsecutivosByModule[nicheId]) {
-      service.updateConsecutiveDays(nicheId, daysActive);
-      _verificaMedalhaDias(nicheId, daysActive, service);
+      service.updateConsecutiveDaysSync(nicheId, daysActive);
+      await _verificaMedalhaDias(nicheId, daysActive, service);
     }
   }
 
-  void _verificaMedalhaDias(
-      NicheId nicheId, int dias, GamificationService service) {
+  Future<void> _verificaMedalhaDias(
+      NicheId nicheId, int dias, GamificationService service) async {
     GamificationMedal? newMedal;
     if (dias >= 10) {
       newMedal = GamificationMedal.diamante;
@@ -158,22 +174,57 @@ class GamificationAwardEngine {
     if (newMedal != null &&
         (current == null || newMedal.index > current.index)) {
       service.setMaxMedal(nicheId, newMedal);
-      awardMedal(nicheId, newMedal, service);
+      await awardMedal(nicheId, newMedal, service);
     }
     // REMOVIDO: Insígnias de foco agora são verificadas separadamente
   }
 
-  void _verificaInsigniasFoco(int dias, GamificationService service) {
-    for (final insignia in FocusInsignia.values) {
-      if (dias >= insignia.requiredDays) awardInsignia(insignia, service);
-    }
+  // Método para concessão silenciosa (sem notificação) - usado em reconciliação
+  Future<void> _grantInsigniaSilently(
+      FocusInsignia insignia, GamificationService service) async {
+    if (service.earnedFocusInsignias.contains(insignia)) return;
+
+    service.addEarnedFocusInsignia(insignia);
+    await service.saveFocusInsignias();
+
+    await CloudSyncService.saveModuleStatus(
+      nicheId: NicheId.focus,
+      isActive: true,
+      earnedInsignias: service.earnedFocusInsignias
+          .map((e) => e.toString().split('.').last)
+          .toList(),
+    ).catchError((e) => debugPrint('Erro Sync _grantInsigniaSilently: $e'));
   }
 
-  // NOVO: Método público para verificar insígnias baseado em períodos de foco respeitados
-  void checkFocusInsigniasByPeriods(NicheId nicheId, GamificationService service) {
+  // MÉTODO CORRIGIDO: Concede apenas insígnia exata do marco atual
+  Future<void> checkFocusInsigniasByPeriods(
+      NicheId nicheId, GamificationService service) async {
     if (nicheId != NicheId.focus) return;
-    
+   
     final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
-    _verificaInsigniasFoco(periodosRespeitados, service);
+    final target = _focusMilestones[periodosRespeitados];
+    if (target == null) return;
+    if (service.earnedFocusInsignias.contains(target)) return;
+
+    await awardInsignia(target, service);
+  }
+
+  // MÉTODO NOVO: Reconcilia insígnias faltantes sem notificação
+  Future<void> reconcileFocusInsignias(
+      NicheId nicheId, GamificationService service) async {
+    if (nicheId != NicheId.focus) return;
+    if (_isReconcilingFocusInsignias) return;
+
+    _isReconcilingFocusInsignias = true;
+    try {
+      final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
+
+      for (final entry in _focusMilestones.entries) {
+        if (entry.key > periodosRespeitados) continue;
+        await _grantInsigniaSilently(entry.value, service);
+      }
+    } finally {
+      _isReconcilingFocusInsignias = false;
+    }
   }
 }

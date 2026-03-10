@@ -27,23 +27,28 @@ class EnhancedSnackBarHelper {
 
   static void _showOverlay(BuildContext context, String message,
       Color backgroundColor, IconData icon) {
-    final overlay = Overlay.of(context, rootOverlay: true);
+    try {
+      final overlay = Overlay.of(context, rootOverlay: true);
+      
+      late OverlayEntry entry;
+      entry = OverlayEntry(
+        builder: (context) => _OverlayNotification(
+          message: message,
+          backgroundColor: backgroundColor,
+          icon: icon,
+          onDismiss: () {
+            if (entry.mounted) {
+              entry.remove();
+            }
+          },
+        ),
+      );
 
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => _OverlayNotification(
-        message: message,
-        backgroundColor: backgroundColor,
-        icon: icon,
-        onDismiss: () {
-          if (entry.mounted) {
-            entry.remove();
-          }
-        },
-      ),
-    );
-
-    overlay.insert(entry);
+      overlay.insert(entry);
+    } catch (e) {
+      // Se não encontrar Overlay, usa debugPrint para não quebrar o app
+      debugPrint('Snackbar não pôde ser exibido: $message\nErro: $e');
+    }
   }
 }
 

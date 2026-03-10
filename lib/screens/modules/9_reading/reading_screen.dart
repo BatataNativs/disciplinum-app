@@ -11,6 +11,7 @@ import 'package:disciplinum/screens/modules/9_reading/reading_stats_screen.dart'
 import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
 import 'package:disciplinum/screens/modules/9_reading/widgets/add_book_dialog.dart';
 import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -528,26 +529,11 @@ class _ReadingScreenState extends State<ReadingScreen>
         Provider.of<GamificationService>(context, listen: false);
 
     if (isActive) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Desativar módulo?'),
-          content: const Text(
-              'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Sim, desativar'),
-            ),
-          ],
-        ),
+      final confirmed = await DeactivateModuleDialog.show(
+        context,
+        title: 'Desativar módulo?',
+        content: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
+        confirmText: 'Sim, desativar',
       );
 
       if (confirmed == true) {
@@ -567,7 +553,7 @@ class _ReadingScreenState extends State<ReadingScreen>
         if (mounted) {
           EnhancedSnackBarHelper.showError(
             context,
-            'Módulo desativado — Você não receberá mais notificações',
+            'Módulo desativado',
           );
         }
       }

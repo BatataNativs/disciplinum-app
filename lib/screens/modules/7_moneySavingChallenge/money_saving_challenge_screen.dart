@@ -331,7 +331,7 @@ class _MoneySavingChallengeScreenState
         // Cancela notificações específicas
         await NotificationService.cancelNotification(7001);
 
-        _showSnackBar('Módulo desativado e dados limpos.');
+        _showSnackBar('Módulo desativado');
       }
     }
   }

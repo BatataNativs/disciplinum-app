@@ -1140,7 +1140,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
         _tabController.animateTo(0);
 
         if (mounted) {
-          SnackBarHelper.showWarning(context, 'Módulo desativado - Você não receberá mais notificações de alerta');
+          SnackBarHelper.showWarning(context, 'Módulo desativado');
         }
       }
     } else {

@@ -12,6 +12,7 @@ import 'package:disciplinum/screens/modules/3_diet/diet_notifications_screen.dar
 import 'package:disciplinum/screens/modules/3_diet/meal_streak_screen.dart';
 import 'package:disciplinum/screens/schedule_screen.dart';
 import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   final String? heroTag;
@@ -174,28 +175,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
   }
 
   void _desativarNichoMonitoramento() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Desativar módulo?"),
-        content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Deseja continuar?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar e zerar"),
-          ),
-        ],
-      ),
+    final confirmed = await DeactivateModuleDialog.show(
+      context,
+      content: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
 
     if (confirmed == true) {
@@ -231,7 +213,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
         EnhancedSnackBarHelper.showError(
           context,
-          "Módulo desativado e progresso zerado.",
+          "Módulo desativado",
         );
       }
     }

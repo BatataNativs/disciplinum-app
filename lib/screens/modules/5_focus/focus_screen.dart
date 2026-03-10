@@ -12,6 +12,7 @@ import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
 import 'package:disciplinum/screens/modules/5_focus/focus_notifications_screen.dart';
 import 'package:disciplinum/utils/app_info_helper.dart';
 import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? heroTag;
@@ -216,28 +217,9 @@ class _FocusScreenState extends State<FocusScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Desativar módulo?"),
-        content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\n"
-          "Deseja continuar?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar e zerar"),
-          ),
-        ],
-      ),
+    final confirmed = await DeactivateModuleDialog.show(
+      context,
+      content: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
 
     if (confirmed == true) {
@@ -270,7 +252,7 @@ class _FocusScreenState extends State<FocusScreen> {
       );
 
       if (mounted) {
-        EnhancedSnackBarHelper.showWarning(context, 'Módulo desativado — Você não receberá mais alertas');
+        EnhancedSnackBarHelper.showWarning(context, 'Módulo desativado');
       }
     }
   }

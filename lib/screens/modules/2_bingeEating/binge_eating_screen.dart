@@ -17,6 +17,7 @@ import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart'
 import 'package:disciplinum/utils/app_info_helper.dart';
 import 'package:disciplinum/misc/system_stuff/preferences_service.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
 import 'dart:async';
 
 class BingeEatingScreen extends StatefulWidget {
@@ -324,27 +325,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Desativar módulo?"),
-        content: const Text(
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Sim, desativar e zerar"),
-          ),
-        ],
-      ),
+    final confirmed = await DeactivateModuleDialog.show(
+      context,
+      content: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {
@@ -370,6 +353,10 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
         _pageController.animateToPage(0,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic);
+      }
+
+      if (mounted) {
+        EnhancedSnackBarHelper.showWarning(context, 'Módulo desativado');
       }
     }
   }
