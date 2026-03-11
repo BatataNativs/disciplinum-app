@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/services/auth/auth_service.dart';
-import 'package:disciplinum/models/niche_id.dart';
-import 'package:disciplinum/models/gamification/insignia.dart';
-import 'package:disciplinum/models/gamification/medal.dart';
+import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
+import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 
 class MyProgressFocus extends StatelessWidget {
   const MyProgressFocus({super.key});

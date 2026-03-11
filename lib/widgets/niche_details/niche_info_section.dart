@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
+import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 
 class NicheInfoSection extends StatelessWidget {
   final String hintText;

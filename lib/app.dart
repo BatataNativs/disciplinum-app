@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:disciplinum/app_router.dart';
-import 'package:disciplinum/misc/system_stuff/app_themes.dart';
-import 'package:disciplinum/misc/system_stuff/theme_controller.dart';
+import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/core/theme/app_themes.dart';
+import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/main.dart';
 
 class DisciplinumApp extends StatelessWidget {

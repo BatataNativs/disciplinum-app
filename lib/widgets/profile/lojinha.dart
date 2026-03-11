@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:disciplinum/services/iap/iap_service.dart';
-import 'package:disciplinum/widgets/home/scroll_indicator_arrow.dart';
-import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/infrastructure/iap/iap_service.dart';
+import 'package:disciplinum/shared/widgets/common/scroll_indicator_arrow.dart';
+import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 class Lojinha extends StatefulWidget {
   const Lojinha({super.key});

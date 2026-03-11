@@ -1,21 +1,27 @@
 class SmokingSettingsModel {
-  final double packPrice;
-  final int packsPerDay;
-  final DateTime quitDate;
+  final int dailyCigarettes;
+  final double pricePerPack;
+  final int cigarettesPerPack;
+  final DateTime startDate;
+  final DateTime? quitDate;
+  final bool isActive;
+  
+  // Legacy fields for compatibility
   final String currency;
-
-  // Campos de histórico (Última tentativa)
   final double? lastPackPrice;
-  final int? lastPacksPerDay;
+  final double? lastPacksPerDay;
   final DateTime? lastQuitDate;
   final String? lastCurrency;
   final double? lastSavedTotal;
   final DateTime? lastEndDate;
 
   SmokingSettingsModel({
-    required this.packPrice,
-    required this.packsPerDay,
-    required this.quitDate,
+    required this.dailyCigarettes,
+    required this.pricePerPack,
+    required this.cigarettesPerPack,
+    required this.startDate,
+    this.quitDate,
+    this.isActive = true,
     this.currency = 'R\$',
     this.lastPackPrice,
     this.lastPacksPerDay,
@@ -25,63 +31,49 @@ class SmokingSettingsModel {
     this.lastEndDate,
   });
 
-  factory SmokingSettingsModel.fromJson(Map<String, dynamic> json) {
-    return SmokingSettingsModel(
-      packPrice:
-          (json['smoking_pack_price'] ?? json['pack_price'] as num).toDouble(),
-      packsPerDay:
-          (json['smoking_packs_per_day'] ?? json['packs_per_day'] as num)
-              .toInt(),
-      quitDate: DateTime.parse(json['smoking_quit_date'] ?? json['quit_date']),
-      currency: json['smoking_currency'] ?? json['currency'] ?? 'R\$',
-      // Histórico
-      lastPackPrice: json['last_pack_price'] != null
-          ? (json['last_pack_price'] as num).toDouble()
-          : null,
-      lastPacksPerDay: json['last_packs_per_day'] != null
-          ? (json['last_packs_per_day'] as num).toInt()
-          : null,
-      lastQuitDate: json['last_quit_date'] != null
-          ? DateTime.parse(json['last_quit_date'])
-          : null,
-      lastCurrency: json['last_currency'],
-      lastSavedTotal: json['last_saved_total'] != null
-          ? (json['last_saved_total'] as num).toDouble()
-          : null,
-      lastEndDate: json['last_end_date'] != null
-          ? DateTime.parse(json['last_end_date'])
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'smoking_pack_price': packPrice,
-      'smoking_packs_per_day': packsPerDay,
-      'smoking_quit_date': quitDate.toIso8601String(),
-      'smoking_currency': currency,
-      'last_pack_price': lastPackPrice,
-      'last_packs_per_day': lastPacksPerDay,
-      'last_quit_date': lastQuitDate?.toIso8601String(),
-      'last_currency': lastCurrency,
-      'last_saved_total': lastSavedTotal,
-      'last_end_date': lastEndDate?.toIso8601String(),
-    };
-  }
-
-  // --- CÁLCULOS AUTOMÁTICOS ---
-  Duration get timeSmokeFree =>
-      DateTime.now().toUtc().difference(quitDate.toUtc());
-
+  // Getters for compatibility
+  double get packPrice => pricePerPack;
+  double get packsPerDay => dailyCigarettes / cigarettesPerPack;
+  Duration get timeSmokeFree => quitDate != null 
+      ? DateTime.now().difference(quitDate!)
+      : Duration.zero;
   double get moneySavedTotal {
-    final days = timeSmokeFree.inMinutes / 60 / 24;
-    return days * packsPerDay * packPrice;
+    if (quitDate == null) return lastSavedTotal ?? 0.0;
+    final daysWithoutSmoking = timeSmokeFree.inDays;
+    final dailyCost = (packPrice * packsPerDay);
+    return daysWithoutSmoking * dailyCost;
   }
+  double get monthlySavings => moneySavedTotal * 30 / timeSmokeFree.inDays.clamp(1, 30);
 
-  double get monthlySavings => packPrice * packsPerDay * 30;
+  Map<String, dynamic> toJson() => {
+    'dailyCigarettes': dailyCigarettes,
+    'pricePerPack': pricePerPack,
+    'cigarettesPerPack': cigarettesPerPack,
+    'startDate': startDate.toIso8601String(),
+    'quitDate': quitDate?.toIso8601String(),
+    'isActive': isActive,
+    'currency': currency,
+    'lastPackPrice': lastPackPrice,
+    'lastPacksPerDay': lastPacksPerDay,
+    'lastQuitDate': lastQuitDate?.toIso8601String(),
+    'lastCurrency': lastCurrency,
+    'lastSavedTotal': lastSavedTotal,
+    'lastEndDate': lastEndDate?.toIso8601String(),
+  };
 
-  int get cigarettesNotSmoked {
-    final days = timeSmokeFree.inDays;
-    return days * packsPerDay * 20;
-  }
+  factory SmokingSettingsModel.fromJson(Map<String, dynamic> json) => SmokingSettingsModel(
+    dailyCigarettes: json['dailyCigarettes'],
+    pricePerPack: json['pricePerPack'],
+    cigarettesPerPack: json['cigarettesPerPack'],
+    startDate: DateTime.parse(json['startDate']),
+    quitDate: json['quitDate'] != null ? DateTime.parse(json['quitDate']) : null,
+    isActive: json['isActive'] ?? true,
+    currency: json['currency'] ?? 'R\$',
+    lastPackPrice: json['lastPackPrice'],
+    lastPacksPerDay: json['lastPacksPerDay'],
+    lastQuitDate: json['lastQuitDate'] != null ? DateTime.parse(json['lastQuitDate']) : null,
+    lastCurrency: json['lastCurrency'],
+    lastSavedTotal: json['lastSavedTotal']?.toDouble(),
+    lastEndDate: json['lastEndDate'] != null ? DateTime.parse(json['lastEndDate']) : null,
+  );
 }

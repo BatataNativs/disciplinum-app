@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
-import 'package:disciplinum/widgets/home/glowing_button.dart';
+import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
+import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 
 class NicheContentSchedule extends StatelessWidget {
   final List<TimeOfDay> times;

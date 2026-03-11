@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/niche.dart';
+import 'package:disciplinum/shared/models/common/niche.dart';
 
 class NicheHeader extends StatelessWidget {
   final Niche niche;

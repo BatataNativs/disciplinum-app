@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Disciplinum</string>
+    <string name="accessibility_description">Monitoramento para controle de tempo e foco.</string>
+    <string name="accessibility_service_label">Disciplinum Acessibilidade</string>
+</resources>

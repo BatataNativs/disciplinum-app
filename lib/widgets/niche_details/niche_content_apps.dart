@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../utils/app_info_helper.dart';
-import 'package:disciplinum/widgets/home/neon_card.dart';
+import 'package:disciplinum/core/utils/app_info_helper.dart';
+import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 
 class NicheContentApps extends StatelessWidget {
   final List<String> selectedApps;

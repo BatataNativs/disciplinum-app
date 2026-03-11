@@ -37,6 +37,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
+    <!-- Permissão para exibir o Timer Overlay sobre outros apps (Fase 7) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <application
         android:label="Disciplinum"
         android:name="${applicationName}"
@@ -92,6 +95,16 @@
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
         <!-- Serviço Foreground (Special Use para monitoramento) -->
         <service
             android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
@@ -99,6 +112,22 @@
             android:stopWithTask="false"
             android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="app_usage_monitor"/>
+        </service>
+
+        <!-- Serviço de Acessibilidade Nativo (Fase 6) -->
+        <service
+            android:name=".AccessibilityMonitorService"
+            android:label="Disciplinum Monitor"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true">
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
         </service>
 
         <meta-data
