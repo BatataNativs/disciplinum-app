@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class SpendingService extends ChangeNotifier {
   static const String _moduleId = 'spending';
@@ -31,7 +32,7 @@ class SpendingService extends ChangeNotifier {
             decoded.map((e) => FixedExpenseModel.fromJson(e)).toList();
         notifyListeners();
       } catch (e) {
-        debugPrint('Erro ao carregar gastos fixos locais: $e');
+        LoggerService.instance.e('Erro ao carregar gastos fixos locais', error: e);
       }
     }
 
@@ -61,7 +62,7 @@ class SpendingService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Erro ao sincronizar gastos fixos com nuvem (load): $e');
+      LoggerService.instance.e('Erro ao sincronizar gastos fixos com nuvem (load)', error: e);
     }
   }
 
@@ -86,7 +87,7 @@ class SpendingService extends ChangeNotifier {
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id, module_id');
     } catch (e) {
-      debugPrint('Erro ao sincronizar gastos fixos com nuvem (save): $e');
+      LoggerService.instance.e('Erro ao sincronizar gastos fixos com nuvem (save)', error: e);
     }
   }
 

@@ -15,6 +15,7 @@ import 'package:disciplinum/features/gamification/domain/services/gamification_a
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class GamificationService extends ChangeNotifier {
   static final GamificationService _instance = GamificationService._internal();
@@ -287,7 +288,7 @@ class GamificationService extends ChangeNotifier {
             focusPeriodsRespected: nicheId == NicheId.focus
                 ? _moduleStates[nicheId]?.focusPeriodsRespected
                 : null) // NOVO: Incluir períodos de foco
-        .catchError((e) => debugPrint('Erro Sync startModuleCycle: $e'));
+        .catchError((e) => LoggerService.instance.e('Erro Sync startModuleCycle', error: e));
     await NotificationScheduler.instance
         .scheduleNativeNotifications(nicheId, this);
 
@@ -356,7 +357,7 @@ class GamificationService extends ChangeNotifier {
                 ? 0
                 : null, // Resetar períodos no cloud também
             forceClearMedal: true)
-        .catchError((e) => debugPrint('Erro Sync Cloud: $e'));
+        .catchError((e) => LoggerService.instance.e('Erro Sync Cloud', error: e));
 
     if (sendNotification) {
       await sendModuleNotification(notificationBody ?? 'Progresso resetado.',
@@ -399,7 +400,7 @@ class GamificationService extends ChangeNotifier {
     await _applyLocalUnlockNotification(nicheId);
     await CloudSyncService.addEntitlement(
             entitlementType: 'notification', nicheId: nicheId.id, source: 'ad')
-        .catchError((e) => debugPrint('Sync Ad Error: $e'));
+        .catchError((e) => LoggerService.instance.e('Sync Ad Error', error: e));
     notifyListeners();
   }
 
@@ -407,7 +408,7 @@ class GamificationService extends ChangeNotifier {
     await _applyLocalUnlockMotivation(nicheId);
     await CloudSyncService.addEntitlement(
             entitlementType: 'motivation', nicheId: nicheId.id, source: 'ad')
-        .catchError((e) => debugPrint('Sync Ad Motivation Error: $e'));
+        .catchError((e) => LoggerService.instance.e('Sync Ad Motivation Error', error: e));
     notifyListeners();
   }
 
@@ -462,7 +463,7 @@ class GamificationService extends ChangeNotifier {
     _saveLocalStatus(nicheId);
     CloudSyncService.saveModuleStatus(
             nicheId: nicheId, isActive: true, consecutiveDays: days)
-        .catchError((e) => debugPrint('Erro Sync updateConsecutiveDays: $e'));
+        .catchError((e) => LoggerService.instance.e('Erro Sync updateConsecutiveDays', error: e));
     notifyListeners();
   }
 
@@ -526,7 +527,7 @@ class GamificationService extends ChangeNotifier {
     _saveLocalStatus(nicheId);
     CloudSyncService.saveModuleStatus(
             nicheId: nicheId, isActive: true, maxMedal: medal.name)
-        .catchError((e) => debugPrint('Erro Sync setMaxMedal: $e'));
+        .catchError((e) => LoggerService.instance.e('Erro Sync setMaxMedal', error: e));
   }
 
   GamificationMedal? maxMedalForModule(NicheId nicheId) {
@@ -564,8 +565,13 @@ class GamificationService extends ChangeNotifier {
   void addEarnedFocusInsignia(FocusInsignia insignia) =>
       _earnedFocusInsignias.add(insignia);
   void resetFocusInsignias() {
+    // Preserva a insígnia de Madeira — ela é permanente (concedida na primeira ativação)
+    final hadMadeira = _earnedFocusInsignias.contains(FocusInsignia.madeira);
     _earnedFocusInsignias.clear();
-    resetFocusPeriods(NicheId.focus); // NOVO: Resetar períodos de foco também
+    if (hadMadeira) {
+      _earnedFocusInsignias.add(FocusInsignia.madeira);
+    }
+    resetFocusPeriods(NicheId.focus);
     _saveFocusInsignias();
     notifyListeners();
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
@@ -105,7 +106,7 @@ class _FocusScreenState extends State<FocusScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Erro ao carregar dados: $e');
+      LoggerService.instance.e('Erro ao carregar dados', error: e);
       if (mounted) {
         setState(() {
           _loadingData = false;

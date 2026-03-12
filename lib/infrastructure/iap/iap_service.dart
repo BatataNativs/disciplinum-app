@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class IapService extends ChangeNotifier {
   static final IapService _instance = IapService._internal();
@@ -86,7 +87,7 @@ class IapService extends ChangeNotifier {
     _subscription = _iap.purchaseStream.listen(
       _listenToPurchaseUpdated,
       onDone: () => _subscription?.cancel(),
-      onError: (error) => debugPrint('Erro no Stream de compras: $error'),
+      onError: (error) => LoggerService.instance.e('Erro no Stream de compras', error: error),
     );
 
     await _checkStoreAvailability();
@@ -110,7 +111,7 @@ class IapService extends ChangeNotifier {
     if (response.error == null) {
       _products = response.productDetails;
     } else {
-      debugPrint('Erro queryProductDetails: ${response.error}');
+      LoggerService.instance.e('Erro queryProductDetails', error: response.error);
     }
   }
 
@@ -130,7 +131,7 @@ class IapService extends ChangeNotifier {
 
   void buyByProductId(String productId) {
     if (_products.isEmpty) {
-      debugPrint("Nenhum produto carregado.");
+      LoggerService.instance.w("Nenhum produto carregado.");
       onPurchaseResult?.call(false);
       return;
     }
@@ -144,7 +145,7 @@ class IapService extends ChangeNotifier {
         );
 
     if (product == null) {
-      debugPrint("Produto '$productId' não encontrado.");
+      LoggerService.instance.w("Produto '$productId' não encontrado.");
       onPurchaseResult?.call(false);
       return;
     }
@@ -204,7 +205,7 @@ class IapService extends ChangeNotifier {
           metadata: {'product_id': productId},
         );
       } catch (e) {
-        debugPrint('❌ Erro ao sincronizar entitlement $entitlementType: $e');
+        LoggerService.instance.e('Erro ao sincronizar entitlement $entitlementType', error: e);
       }
     }
 

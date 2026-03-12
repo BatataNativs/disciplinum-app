@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/notifications/domain/services/motivation_engine.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Engine dedicado a programar lembretes (Check-ins e Hábitos) usando
 /// de forma transparente os canais nativos.
@@ -25,7 +26,7 @@ class ReminderEngine {
 
       // Disparador seria substituído pelo NotificationScheduler da lib do FlutterLocals
       // Este é um mock arquitetural de como o ReminderEngine lidará com isso separando responsabilidades
-      debugPrint(
+      LoggerService.instance.d(
           "Scheduling reminder at ${time.hour}:${time.minute} for $nicheId -> $phrase");
     }
   }

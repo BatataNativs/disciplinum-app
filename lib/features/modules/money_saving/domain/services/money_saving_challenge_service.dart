@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -81,7 +82,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
       notifyListeners();
       return _challenges;
     } catch (e) {
-      debugPrint('❌ Erro ao carregar desafios: $e');
+      LoggerService.instance.e('Erro ao carregar desafios', error: e);
       _challenges = await _getLocalChallenges();
       _initialized = true;
       notifyListeners();
@@ -137,7 +138,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
             onConflict: 'user_id, module_id',
           );
     } catch (e) {
-      debugPrint('❌ Erro ao salvar desafios no cloud: $e');
+      LoggerService.instance.e('Erro ao salvar desafios no cloud', error: e);
     }
   }
 
@@ -217,7 +218,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
             onConflict: 'user_id, module_id',
           );
     } catch (e) {
-      debugPrint('❌ Erro ao limpar desafios no cloud: $e');
+      LoggerService.instance.e('Erro ao limpar desafios no cloud', error: e);
     }
   }
 
@@ -339,7 +340,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
 
       return [];
     } catch (e) {
-      debugPrint('❌ Erro ao carregar desafios locais: $e');
+      LoggerService.instance.e('Erro ao carregar desafios locais', error: e);
       return [];
     }
   }
@@ -351,7 +352,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
       final data = {'challenges': challenges.map((e) => e.toJson()).toList()};
       await prefs.setString(_localKey, jsonEncode(data));
     } catch (e) {
-      debugPrint('❌ Erro ao salvar desafios locais: $e');
+      LoggerService.instance.e('Erro ao salvar desafios locais', error: e);
     }
   }
 
@@ -361,7 +362,7 @@ class MoneySavingChallengeService extends ChangeNotifier {
       await prefs.remove(_localKey);
       await prefs.remove(_oldLocalKey);
     } catch (e) {
-      debugPrint('❌ Erro ao remover desafios locais: $e');
+      LoggerService.instance.e('Erro ao remover desafios locais', error: e);
     }
   }
 }

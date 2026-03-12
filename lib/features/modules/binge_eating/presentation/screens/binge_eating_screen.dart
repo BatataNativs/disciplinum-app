@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/binge_eating_notifications_screen.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/days_without_food_delivery.dart';
@@ -190,7 +191,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
         }
       }
     } catch (e) {
-      debugPrint("Erro ao carregar dados: $e");
+      LoggerService.instance.e('Erro ao carregar dados', error: e);
       if (mounted) {
         setState(() {
           _loadingData = false;

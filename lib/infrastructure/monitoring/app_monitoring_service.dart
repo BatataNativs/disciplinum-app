@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +17,7 @@ import 'package:disciplinum/features/gamification/domain/services/gamification_m
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class AppMonitoringService {
   static final AppMonitoringService _instance =
@@ -252,7 +252,7 @@ class AppMonitoringService {
         // _logSystemState removed
       }
     } catch (e) {
-      debugPrint('Erro no loop de monitoramento: $e');
+      LoggerService.instance.e('Erro no loop de monitoramento', error: e);
     }
   }
 
@@ -343,8 +343,12 @@ class AppMonitoringService {
     if (!hadViolations) {
       gamification.addRespectedFocusPeriod(activeNicheId);
 
-      debugPrint(
-        '✅ Período de foco respeitado! Total: ${gamification.getRespectedFocusPeriods(activeNicheId)}',
+      LoggerService.instance.gamification(
+        'Período de foco respeitado',
+        data: {
+          'nicheId': activeNicheId.id,
+          'total': gamification.getRespectedFocusPeriods(activeNicheId),
+        },
       );
     }
 
@@ -479,8 +483,8 @@ class AppMonitoringService {
     }
 
     if (packageName != _lastAccessibilityApp) {
-      debugPrint(
-          '⚡ Real-time transition (Accessibility): $_lastAccessibilityApp → $packageName');
+      LoggerService.instance.system(
+          'Real-time transition (Accessibility): $_lastAccessibilityApp → $packageName');
       await _handleAppTransition(_lastAccessibilityApp, packageName);
       _lastAccessibilityApp = packageName;
     }
@@ -536,7 +540,7 @@ class AppMonitoringService {
   Future<void> _handleAppTransition(String? fromApp, String? toApp) async {
     if (fromApp == toApp) return;
 
-    debugPrint('🔄 App transition: $fromApp → $toApp');
+    LoggerService.instance.system('App transition: $fromApp → $toApp');
 
     // Se saiu de um app monitorado, verificamos se devemos cancelar a violação.
     if (fromApp != null && monitoredApps.contains(fromApp)) {
@@ -561,8 +565,8 @@ class AppMonitoringService {
             DateTime.now().difference(_lastInteractiveSystemTime!);
         if (timeSinceSystem.inSeconds < 2) {
           isSuspectedSamsungOscillation = true;
-          debugPrint(
-              '🛡️ Samsung Launcher oscillation detected after security check. Ignoring transition.');
+          LoggerService.instance.w(
+              'Samsung Launcher oscillation detected after security check. Ignoring transition.');
         }
       }
 
@@ -575,8 +579,8 @@ class AppMonitoringService {
           !isSuspectedSamsungOscillation) {
         await _cancelViolationForApp(fromApp);
       } else {
-        debugPrint(
-            '⏳ Suspected transition to overlay/notif/launcher (to $toApp). Keeping violation active for $fromApp.');
+        LoggerService.instance.system(
+            'Suspected transition to overlay/notif/launcher (to $toApp). Keeping violation active for $fromApp.');
       }
     }
 
@@ -618,7 +622,7 @@ class AppMonitoringService {
       _lastSeenMonitoredApp.remove(packageName);
       _currentOverlayMessage = null; // Limpa mensagem ativa
 
-      debugPrint('✅ Violation cancelled for $packageName');
+      LoggerService.instance.system('Violation cancelled for $packageName');
       await _hideOverlay();
     }
   }
@@ -667,15 +671,20 @@ class AppMonitoringService {
   Future<void> _triggerViolationReset(String packageName) async {
     final niche = NicheRepository.getById(currentNicheId!);
 
-    debugPrint('🚨 TRIGGERING VIOLATION RESET for $packageName');
+    LoggerService.instance.w('TRIGGERING VIOLATION RESET for $packageName');
 
+    // Mensagem específica de reset — não usa a mensagem de aviso do overlay
+    final resetBody =
+        'Você ficou mais de 30s em um app bloqueado. Seu progresso no módulo ${niche.name} foi reiniciado.';
+
+    // IMPORTANTE: deactivate: false para NÃO desativar o módulo/monitoramento.
+    // Apenas reseta gamificação (medalhas, streak) e mantém o monitoramento ativo.
     await GamificationService.instance.resetMedals(
       currentNicheId!,
-      notificationTitle: 'Disciplinum: ${niche.name}',
-      notificationBody:
-          _currentOverlayMessage ?? 'Saia do app para manter seu progresso!',
+      notificationTitle: '${niche.name}: Progresso Reiniciado',
+      notificationBody: resetBody,
       iconPath: niche.iconPath,
-      deactivate: true,
+      deactivate: false,
     );
 
     _violationStartByApp.remove(packageName);
@@ -683,6 +692,8 @@ class AppMonitoringService {
     _warnedApps.remove(packageName);
 
     _lastSeenMonitoredApp.remove(packageName);
+
+    _currentOverlayMessage = null;
 
     await _hideOverlay();
   }
@@ -759,7 +770,7 @@ class AppMonitoringService {
         'message': message,
       });
     } catch (e) {
-      debugPrint('Erro ao mostrar overlay: $e');
+      LoggerService.instance.e('Erro ao mostrar overlay', error: e);
     }
   }
 
@@ -779,7 +790,7 @@ class AppMonitoringService {
     try {
       await _methodChannel.invokeMethod('hideTimerOverlay');
     } catch (e) {
-      debugPrint('Erro ao esconder overlay: $e');
+      LoggerService.instance.e('Erro ao esconder overlay', error: e);
     }
   }
 }

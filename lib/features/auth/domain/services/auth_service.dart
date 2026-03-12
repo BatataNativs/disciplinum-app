@@ -12,6 +12,7 @@ import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/events/event_bootstrap.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
@@ -146,13 +147,13 @@ class AuthService extends ChangeNotifier {
           final settings = SmokingSettingsModel.fromJson(smokingData);
           await SmokingService().saveSettings(settings);
         } catch (e) {
-          debugPrint('Erro ao migrar dados de cigarro: $e');
+          LoggerService.instance.e('Erro ao migrar dados de cigarro', error: e);
         }
       }
 
       await PreferencesService.clearAll();
     } catch (e) {
-      debugPrint('Erro ao migrar dados do guest: $e');
+      LoggerService.instance.e('Erro ao migrar dados do guest', error: e);
     }
   }
 
@@ -180,7 +181,7 @@ class AuthService extends ChangeNotifier {
         'avatar_url': (user.userMetadata?['avatar_url'])?.toString() ?? '',
       });
     } catch (e) {
-      debugPrint('Erro ao criar perfil inicial: $e');
+      LoggerService.instance.e('Erro ao criar perfil inicial', error: e);
     }
   }
 
@@ -199,7 +200,7 @@ class AuthService extends ChangeNotifier {
           .maybeSingle();
       if (response != null) _userProfile = response;
     } catch (e) {
-      debugPrint('Erro ao carregar perfil: $e');
+      LoggerService.instance.e('Erro ao carregar perfil', error: e);
     }
   }
 

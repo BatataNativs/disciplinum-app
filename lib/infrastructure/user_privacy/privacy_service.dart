@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -28,13 +29,13 @@ class PrivacyService {
   static Future<void> _enableTracking() async {
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    debugPrint('PrivacyService: Tracking ENABLED (Implicit Consent)');
+    LoggerService.instance.system('Tracking ENABLED (Implicit Consent)');
   }
 
   // Método utilitário caso queira implementar Opt-out futuro
   static Future<void> disableTracking() async {
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-    debugPrint('PrivacyService: Tracking DISABLED');
+    LoggerService.instance.system('Tracking DISABLED');
   }
 }

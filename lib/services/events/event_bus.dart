@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// EventBus centralizado para desacoplamento de componentes
 /// Permite comunicação indireta entre serviços sem acoplamento direto
@@ -36,9 +36,7 @@ class EventBus {
     final eventType = event.runtimeType;
     
     // Log em debug para rastreamento
-    if (kDebugMode) {
-      debugPrint('EventBus: Emitting ${eventType.toString()} - ${event.toString()}');
-    }
+    LoggerService.instance.d('EventBus: Emitting ${eventType.toString()} - ${event.toString()}');
 
     // Notificar listeners diretos
     final listeners = _listeners[eventType];
@@ -47,7 +45,7 @@ class EventBus {
         try {
           listener(event);
         } catch (e) {
-          debugPrint('EventBus: Error in listener for $eventType: $e');
+          LoggerService.instance.e('EventBus: Error in listener for $eventType', error: e);
         }
       }
     }

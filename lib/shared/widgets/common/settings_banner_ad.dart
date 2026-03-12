@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/config/app_config.dart'; // Importe para pegar o ID do anúncio
@@ -35,7 +36,7 @@ class _SettingsBannerAdState extends State<SettingsBannerAd> {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          debugPrint('Settings Banner loaded locally.');
+          LoggerService.instance.d('Settings Banner loaded locally.');
           if (mounted) {
             setState(() {
               _isLoaded = true;
@@ -43,7 +44,7 @@ class _SettingsBannerAdState extends State<SettingsBannerAd> {
           }
         },
         onAdFailedToLoad: (ad, error) {
-          debugPrint('Settings Banner failed to load: $error');
+          LoggerService.instance.e('Settings Banner failed to load', error: error);
           ad.dispose();
         },
       ),

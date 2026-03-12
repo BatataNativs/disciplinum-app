@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Status de uma refeição
 enum MealStatus { done, missed, pending }
@@ -55,10 +56,10 @@ class MealTrackingService {
         },
         onConflict: 'user_id, date, time',
       );
-      debugPrint(
+      LoggerService.instance.d(
           '🍽️ Refeição registrada: $time -> ${done ? "done" : "missed"}');
     } catch (e) {
-      debugPrint('❌ Erro ao registrar refeição: $e');
+      LoggerService.instance.e('Erro ao registrar refeição', error: e);
     }
   }
 
@@ -70,9 +71,9 @@ class MealTrackingService {
           .from('user_meal_records')
           .delete()
           .eq('user_id', _userId!);
-      debugPrint('🗑️ Todo o histórico de refeições foi apagado.');
+      LoggerService.instance.i('🗑️ Todo o histórico de refeições foi apagado.');
     } catch (e) {
-      debugPrint('❌ Erro ao apagar histórico de refeições: $e');
+      LoggerService.instance.e('Erro ao apagar histórico de refeições', error: e);
     }
   }
 
@@ -112,7 +113,7 @@ class MealTrackingService {
       }).toList()
         ..sort((a, b) => a.time.compareTo(b.time));
     } catch (e) {
-      debugPrint('❌ Erro ao buscar refeições de hoje: $e');
+      LoggerService.instance.e('Erro ao buscar refeições de hoje', error: e);
       return [];
     }
   }
@@ -168,7 +169,7 @@ class MealTrackingService {
 
       return summaries;
     } catch (e) {
-      debugPrint('❌ Erro ao buscar histórico: $e');
+      LoggerService.instance.e('Erro ao buscar histórico', error: e);
       return [];
     }
   }

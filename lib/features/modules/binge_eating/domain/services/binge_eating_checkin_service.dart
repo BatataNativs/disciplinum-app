@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Serviço responsável por registrar e carregar os check-ins diários
 /// do módulo Compulsão Alimentar (resposta "Resisti às tentações" na notificação diária).
@@ -40,9 +40,9 @@ class BingeEatingCheckinService {
         onConflict: 'user_id, check_date',
         ignoreDuplicates: true,
       );
-      debugPrint('✅ Check-in de compulsão alimentar registrado para $dateStr');
+      LoggerService.instance.i('✅ Check-in de compulsão alimentar registrado para $dateStr');
     } catch (e) {
-      debugPrint('⚠️ Erro ao salvar check-in de compulsão alimentar no Supabase: $e');
+      LoggerService.instance.w('Erro ao salvar check-in de compulsão alimentar no Supabase', error: e);
       // Não lança — o local já foi salvo como fallback
     }
   }
@@ -68,7 +68,7 @@ class BingeEatingCheckinService {
         return dates;
       }
     } catch (e) {
-      debugPrint('⚠️ Erro ao carregar check-ins de compulsão alimentar do Supabase: $e');
+      LoggerService.instance.w('Erro ao carregar check-ins de compulsão alimentar do Supabase', error: e);
     }
 
     // Fallback: dados locais
@@ -89,9 +89,9 @@ class BingeEatingCheckinService {
           .from('binge_daily_checkins')
           .delete()
           .eq('user_id', userId);
-      debugPrint('🗑️ Todos os check-ins de compulsão alimentar apagados.');
+      LoggerService.instance.i('🗑️ Todos os check-ins de compulsão alimentar apagados.');
     } catch (e) {
-      debugPrint('⚠️ Erro ao apagar check-ins de compulsão alimentar no Supabase: $e');
+      LoggerService.instance.w('Erro ao apagar check-ins de compulsão alimentar no Supabase', error: e);
     }
   }
 

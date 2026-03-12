@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/events/events/gamification_events.dart';
@@ -29,18 +29,14 @@ class AnalyticsService {
   /// Define o usuário atual para rastreamento
   void setCurrentUser(String? userId) {
     _currentUserId = userId;
-    if (kDebugMode) {
-      debugPrint('AnalyticsService: User set to $userId');
-    }
+    LoggerService.instance.analytics('User set', {'userId': userId});
   }
 
   /// Gera um novo ID de sessão
   String generateNewSessionId() {
     _currentSessionId =
         '${DateTime.now().millisecondsSinceEpoch}_${_currentUserId ?? 'anonymous'}';
-    if (kDebugMode) {
-      debugPrint('AnalyticsService: New session $_currentSessionId');
-    }
+    LoggerService.instance.analytics('New session', {'sessionId': _currentSessionId});
     return _currentSessionId!;
   }
 
@@ -271,12 +267,10 @@ class AnalyticsService {
         'session_id': _currentSessionId,
       });
 
-      if (kDebugMode) {
-        debugPrint(
-            'AnalyticsService: Recorded behavior event $eventType for module $moduleNicheId');
-      }
+      LoggerService.instance.analytics(
+          'Recorded behavior event $eventType', {'moduleNicheId': moduleNicheId});
     } catch (e) {
-      debugPrint('AnalyticsService: Error recording behavior event: $e');
+      LoggerService.instance.e('AnalyticsService: Error recording behavior event', error: e);
     }
   }
 
@@ -297,12 +291,10 @@ class AnalyticsService {
         'achievement_data': achievementData,
       });
 
-      if (kDebugMode) {
-        debugPrint(
-            'AnalyticsService: Recorded achievement $achievementType for module $moduleNicheId');
-      }
+      LoggerService.instance.analytics(
+          'Recorded achievement $achievementType', {'moduleNicheId': moduleNicheId});
     } catch (e) {
-      debugPrint('AnalyticsService: Error recording achievement: $e');
+      LoggerService.instance.e('AnalyticsService: Error recording achievement', error: e);
     }
   }
 
@@ -392,12 +384,10 @@ class AnalyticsService {
         });
       }
 
-      if (kDebugMode) {
-        debugPrint(
-            'AnalyticsService: Updated daily retention metrics: $metrics');
-      }
+      LoggerService.instance.analytics(
+          'Updated daily retention metrics', metrics);
     } catch (e) {
-      debugPrint('AnalyticsService: Error updating retention metrics: $e');
+      LoggerService.instance.e('AnalyticsService: Error updating retention metrics', error: e);
     }
   }
 

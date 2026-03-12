@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'dart:async';
 
 class EnhancedSnackBarHelper {
@@ -47,7 +48,7 @@ class EnhancedSnackBarHelper {
       overlay.insert(entry);
     } catch (e) {
       // Se não encontrar Overlay, usa debugPrint para não quebrar o app
-      debugPrint('Snackbar não pôde ser exibido: $message\nErro: $e');
+      LoggerService.instance.e('Snackbar não pôde ser exibido: $message', error: e);
     }
   }
 }

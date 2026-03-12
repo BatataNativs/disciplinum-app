@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
@@ -281,7 +282,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                               })
                               .toList(),
                           onChanged: (v) {
-                            debugPrint('Dropdown onChanged - Moeda selecionada: $v');
+                            LoggerService.instance.d('Dropdown onChanged - Moeda selecionada: $v');
                             setState(() {
                               selectedCurrency = v!;
                             });
@@ -331,7 +332,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                             ),
                           ),
                           onPressed: () {
-                            debugPrint('Botão Salvar pressionado');
+                            LoggerService.instance.d('Botão Salvar pressionado');
                             final name = nameController.text.trim();
                             final day = int.tryParse(dayController.text) ?? 1;
 
@@ -339,10 +340,10 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                             debugPrint('Validação: name.isNotEmpty=${name.isNotEmpty}, amount>0=${currentAmount > 0}');
 
                             if (name.isNotEmpty && currentAmount > 0) {
-                              debugPrint('Validação passou, tentando adicionar/editar gasto');
+                              LoggerService.instance.d('Validação passou, tentando adicionar/editar gasto');
                               try {
                                 if (expense == null) {
-                                  debugPrint('Adicionando novo gasto');
+                                  LoggerService.instance.d('Adicionando novo gasto');
                                   service.addFixedExpense(FixedExpenseModel(
                                     id: const Uuid().v4(),
                                     name: name,
@@ -351,7 +352,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                                     dueDay: day.clamp(1, 31),
                                   ));
                                 } else {
-                                  debugPrint('Editando gasto existente: ${expense.id}');
+                                  LoggerService.instance.d('Editando gasto existente: ${expense.id}');
                                   service.updateFixedExpense(expense.copyWith(
                                     name: name,
                                     amount: currentAmount,
@@ -359,13 +360,13 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                                     dueDay: day.clamp(1, 31),
                                   ));
                                 }
-                                debugPrint('Gasto salvo com sucesso, fechando modal');
+                                LoggerService.instance.d('Gasto salvo com sucesso, fechando modal');
                                 Navigator.pop(ctx);
                               } catch (e) {
-                                debugPrint('Erro ao salvar gasto: $e');
+                                LoggerService.instance.e('Erro ao salvar gasto', error: e);
                               }
                             } else {
-                              debugPrint('Validação falhou');
+                              LoggerService.instance.d('Validação falhou');
                             }
                           },
                           child: const Text('Salvar'),
@@ -478,7 +479,7 @@ class _CurrencyTextFieldState extends State<_CurrencyTextField> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('_CurrencyTextField build - Moeda atual: ${widget.currency}');
+    LoggerService.instance.d('_CurrencyTextField build - Moeda atual: ${widget.currency}');
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
@@ -525,7 +526,7 @@ class _DynamicCurrencyInputFormatter extends TextInputFormatter {
     double value = double.parse(cleanText) / 100.0;
     
     String currency = getCurrency();
-    debugPrint('CurrencyInputFormatter - Moeda: $currency, Valor: $value');
+    LoggerService.instance.d('CurrencyInputFormatter - Moeda: $currency, Valor: $value');
     
     String formattedText;
     switch (currency) {
@@ -563,7 +564,7 @@ class _DynamicCurrencyInputFormatter extends TextInputFormatter {
         formattedText = value.toStringAsFixed(2);
     }
     
-    debugPrint('CurrencyInputFormatter - Formatado: $formattedText');
+    LoggerService.instance.d('CurrencyInputFormatter - Formatado: $formattedText');
 
     return TextEditingValue(
       text: formattedText,

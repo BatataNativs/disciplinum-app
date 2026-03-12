@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
@@ -57,7 +57,7 @@ class PreferencesService {
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao salvar app local: $e');
+      LoggerService.instance.e('Erro ao salvar app local', error: e);
     }
   }
 
@@ -77,7 +77,7 @@ class PreferencesService {
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao remover app local: $e');
+      LoggerService.instance.e('Erro ao remover app local', error: e);
     }
   }
 
@@ -97,7 +97,7 @@ class PreferencesService {
           .where((a) => a.nicheId == nicheId.id)
           .toList();
     } catch (e) {
-      debugPrint('❌ Erro ao carregar apps locais: $e');
+      LoggerService.instance.e('Erro ao carregar apps locais', error: e);
       return [];
     }
   }
@@ -123,7 +123,7 @@ class PreferencesService {
         jsonEncode(filtered.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao limpar apps locais: $e');
+      LoggerService.instance.e('Erro ao limpar apps locais', error: e);
     }
   }
 
@@ -158,7 +158,7 @@ class PreferencesService {
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao salvar horário local: $e');
+      LoggerService.instance.e('Erro ao salvar horário local', error: e);
     }
   }
 
@@ -181,7 +181,7 @@ class PreferencesService {
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao remover horário local: $e');
+      LoggerService.instance.e('Erro ao remover horário local', error: e);
     }
   }
 
@@ -201,7 +201,7 @@ class PreferencesService {
           .where((t) => t.nicheId == nicheId)
           .toList();
     } catch (e) {
-      debugPrint('❌ Erro ao carregar horários locais: $e');
+      LoggerService.instance.e('Erro ao carregar horários locais', error: e);
       return [];
     }
   }
@@ -227,7 +227,7 @@ class PreferencesService {
         jsonEncode(filtered.map((e) => e.toJson()).toList()),
       );
     } catch (e) {
-      debugPrint('❌ Erro ao limpar horários locais: $e');
+      LoggerService.instance.e('Erro ao limpar horários locais', error: e);
     }
   }
 
@@ -240,7 +240,7 @@ class PreferencesService {
     try {
       await prefs.setString(_smokingKey, jsonEncode(settings.toJson()));
     } catch (e) {
-      debugPrint('❌ Erro ao salvar configurações de cigarro locais: $e');
+      LoggerService.instance.e('Erro ao salvar configurações de cigarro locais', error: e);
     }
   }
 
@@ -251,7 +251,7 @@ class PreferencesService {
       if (jsonString == null) return null;
       return SmokingSettingsModel.fromJson(jsonDecode(jsonString));
     } catch (e) {
-      debugPrint('❌ Erro ao carregar configurações de cigarro locais: $e');
+      LoggerService.instance.e('Erro ao carregar configurações de cigarro locais', error: e);
       return null;
     }
   }
@@ -279,7 +279,7 @@ class PreferencesService {
         'smoking': smoking != null ? jsonDecode(smoking) : null,
       };
     } catch (e) {
-      debugPrint('❌ Erro ao exportar dados locais: $e');
+      LoggerService.instance.e('Erro ao exportar dados locais', error: e);
       return {'apps': [], 'times': [], 'smoking': null};
     }
   }

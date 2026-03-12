@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -38,7 +38,7 @@ class AvatarService {
 
       return true;
     } catch (e) {
-      debugPrint('Erro upload avatar: $e');
+      LoggerService.instance.e('Erro upload avatar', error: e);
       return false;
     }
   }
@@ -59,7 +59,7 @@ class AvatarService {
 
       return File(picked.path);
     } catch (e) {
-      debugPrint('Erro ao selecionar imagem: $e');
+      LoggerService.instance.e('Erro ao selecionar imagem', error: e);
       return null;
     }
   }

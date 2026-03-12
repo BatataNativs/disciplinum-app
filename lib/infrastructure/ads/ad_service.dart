@@ -1,5 +1,6 @@
 // import 'dart:io'; // Comentado para uso futuro
 import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/material.dart';
 // Se você usa shared_preferences para consentimento em outros lugares, mantenha o import.
 // Caso contrário, pode remover se não for usar aqui.
@@ -47,7 +48,7 @@ class AdService with ChangeNotifier {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('RewardedAd carregado com sucesso.');
+          LoggerService.instance.d('RewardedAd carregado com sucesso.');
           _rewardedAd = ad;
           _isRewardedAdLoading = false;
 
@@ -58,7 +59,7 @@ class AdService with ChangeNotifier {
               loadRewardedAd(); // Já pré-carrega o próximo
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
-              debugPrint('Falha ao exibir RewardedAd: $error');
+              LoggerService.instance.e('Falha ao exibir RewardedAd', error: error);
               ad.dispose();
               _rewardedAd = null;
               loadRewardedAd();
@@ -66,7 +67,7 @@ class AdService with ChangeNotifier {
           );
         },
         onAdFailedToLoad: (error) {
-          debugPrint('Falha ao carregar RewardedAd: $error');
+          LoggerService.instance.e('Falha ao carregar RewardedAd', error: error);
           _rewardedAd = null;
           _isRewardedAdLoading = false;
         },
@@ -80,7 +81,7 @@ class AdService with ChangeNotifier {
     required VoidCallback onAdDismissed,
   }) {
     if (_rewardedAd == null) {
-      debugPrint('Tentou exibir, mas o anúncio ainda não carregou.');
+      LoggerService.instance.w('Tentou exibir, mas o anúncio ainda não carregou.');
       // Opcional: tentar carregar aqui e mostrar um loading na UI
       onAdDismissed();
       return;
@@ -88,7 +89,7 @@ class AdService with ChangeNotifier {
 
     _rewardedAd!.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        debugPrint(
+        LoggerService.instance.d(
             'Usuário ganhou recompensa: ${reward.amount} ${reward.type}');
         onUserEarnedReward();
       },
@@ -103,7 +104,7 @@ class AdService with ChangeNotifier {
         loadRewardedAd(); // Pré-carrega o próximo
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
-        debugPrint('Falha ao exibir RewardedAd: $error');
+        LoggerService.instance.e('Falha ao exibir RewardedAd', error: error);
         ad.dispose();
         _rewardedAd = null;
         onAdDismissed();

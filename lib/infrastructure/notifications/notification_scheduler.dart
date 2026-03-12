@@ -7,6 +7,7 @@ import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class NotificationScheduler {
   static final NotificationScheduler _instance =
@@ -17,7 +18,7 @@ class NotificationScheduler {
 
   Future<void> scheduleNativeNotifications(
       NicheId nicheId, GamificationService service) async {
-    debugPrint('📅 Configurando alarmes nativos para: ${nicheId.name}');
+    LoggerService.instance.d('📅 Configurando alarmes nativos para: ${nicheId.name}');
 
     // 1. Agendar Check-ins
     final checkIns = service.scheduleByModule[nicheId];
@@ -204,12 +205,12 @@ class NotificationScheduler {
           break;
       }
     } catch (e) {
-      debugPrint('Erro ao agendar notificação do desafio: $e');
+      LoggerService.instance.e('Erro ao agendar notificação do desafio', error: e);
     }
   }
 
   Future<void> cancelModuleNotifications(NicheId nicheId) async {
-    debugPrint('🔕 Cancelando notificações para o módulo: ${nicheId.name}');
+    LoggerService.instance.d('🔕 Cancelando notificações para o módulo: ${nicheId.name}');
     for (int i = 0; i < 10; i++) {
       await NotificationService.cancelNotification(
           (nicheId.id * 1000) + 100 + i);

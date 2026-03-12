@@ -6,6 +6,7 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class AuthScreen extends StatefulWidget {
   final int initialAuthMode;
@@ -157,7 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 );
                 await intent.launch();
               } catch (e) {
-                debugPrint('Erro intent email: $e');
+                LoggerService.instance.e('Erro intent email', error: e);
               }
             },
           ),

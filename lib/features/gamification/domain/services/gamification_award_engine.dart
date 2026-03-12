@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:typed_data';
@@ -6,6 +5,7 @@ import 'dart:async';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
@@ -59,7 +59,7 @@ class GamificationAwardEngine {
       earnedInsignias: service.earnedFocusInsignias
           .map((e) => e.toString().split('.').last)
           .toList(),
-    ).catchError((e) => debugPrint('Erro Sync awardFocusInsignia: $e'));
+    ).catchError((e) => LoggerService.instance.e('Erro Sync awardFocusInsignia', error: e));
   }
 
   Future<void> _sendInsigniaNotification(
@@ -193,7 +193,7 @@ class GamificationAwardEngine {
       earnedInsignias: service.earnedFocusInsignias
           .map((e) => e.toString().split('.').last)
           .toList(),
-    ).catchError((e) => debugPrint('Erro Sync _grantInsigniaSilently: $e'));
+    ).catchError((e) => LoggerService.instance.e('Erro Sync _grantInsigniaSilently', error: e));
   }
 
   // MÉTODO CORRIGIDO: Concede apenas insígnia exata do marco atual

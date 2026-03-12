@@ -9,6 +9,7 @@ import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class ReadingService extends ChangeNotifier {
   static const String _moduleId = 'reading';
@@ -45,7 +46,7 @@ class ReadingService extends ChangeNotifier {
         final List<dynamic> decoded = jsonDecode(data);
         _books = decoded.map((e) => ReadingBook.fromJson(e)).toList();
       } catch (e) {
-        debugPrint('Erro ao carregar livros: $e');
+        LoggerService.instance.e('Erro ao carregar livros', error: e);
       }
     }
 
@@ -66,7 +67,7 @@ class ReadingService extends ChangeNotifier {
         // Verifica se quebrou o streak ao carregar
         _validateStreakOnLoad();
       } catch (e) {
-        debugPrint('Erro ao carregar streak de leitura: $e');
+        LoggerService.instance.e('Erro ao carregar streak de leitura', error: e);
       }
     }
 
@@ -143,7 +144,7 @@ class ReadingService extends ChangeNotifier {
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id, module_id');
     } catch (e) {
-      debugPrint('Erro ao salvar leitura na nuvem: $e');
+      LoggerService.instance.e('Erro ao salvar leitura na nuvem', error: e);
     }
   }
 
@@ -189,7 +190,7 @@ class ReadingService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Erro ao sincronizar leitura (load): $e');
+      LoggerService.instance.e('Erro ao sincronizar leitura (load)', error: e);
     }
   }
 

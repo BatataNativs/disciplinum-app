@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -47,7 +48,7 @@ class ProcrastinationService extends ChangeNotifier {
         final List<dynamic> decoded = jsonDecode(listsData);
         _lists = decoded.map((e) => TaskList.fromJson(e)).toList();
       } catch (e) {
-        debugPrint('Erro ao carregar listas: $e');
+        LoggerService.instance.e('Erro ao carregar listas', error: e);
       }
     }
 
@@ -76,7 +77,7 @@ class ProcrastinationService extends ChangeNotifier {
         _migrateTasksToLists();
         notifyListeners();
       } catch (e) {
-        debugPrint('Erro ao carregar dados locais de procrastinação: $e');
+        LoggerService.instance.e('Erro ao carregar dados locais de procrastinação', error: e);
       }
     }
 
@@ -131,7 +132,7 @@ class ProcrastinationService extends ChangeNotifier {
 
       await _checkMidnightReset();
     } catch (e) {
-      debugPrint('Erro ao sincronizar com nuvem (load): $e');
+      LoggerService.instance.e('Erro ao sincronizar com nuvem (load)', error: e);
       await _checkMidnightReset();
     }
   }
@@ -245,7 +246,7 @@ class ProcrastinationService extends ChangeNotifier {
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id, module_id');
     } catch (e) {
-      debugPrint('Erro ao sincronizar com nuvem (save): $e');
+      LoggerService.instance.e('Erro ao sincronizar com nuvem (save)', error: e);
     }
   }
 
@@ -903,16 +904,16 @@ class ProcrastinationService extends ChangeNotifier {
     }
 
     if (taskListId == null) {
-      debugPrint('⚠️ Tarefa $taskId não encontrada para processar ação.');
+      LoggerService.instance.w('Tarefa $taskId não encontrada para processar ação.');
       return;
     }
 
     if (actionId == 'done') {
       await toggleTaskInList(taskListId, taskId);
-      debugPrint('✅ Tarefa $taskId marcada como concluída via notificação.');
+      LoggerService.instance.i('Tarefa $taskId marcada como concluída via notificação.');
     } else if (actionId == 'delete') {
       await removeTaskFromList(taskListId, taskId);
-      debugPrint('🗑️ Tarefa $taskId removida via notificação.');
+      LoggerService.instance.i('Tarefa $taskId removida via notificação.');
     }
   }
 

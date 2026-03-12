@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:io';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class InstalledAppService extends ChangeNotifier {
   static final InstalledAppService _instance = InstalledAppService._internal();
@@ -41,7 +42,7 @@ class InstalledAppService extends ChangeNotifier {
         _cachedApps = apps;
       }
     } catch (e) {
-      debugPrint('InstalledAppService Error: $e');
+      LoggerService.instance.e('InstalledAppService Error', error: e);
     }
 
     _isLoading = false;
@@ -70,7 +71,7 @@ class InstalledAppService extends ChangeNotifier {
       _pendingRequests[packageName] = future;
       return future;
     } catch (e) {
-      debugPrint('Error queuing icon fetch for $packageName: $e');
+      LoggerService.instance.e('Error queuing icon fetch for $packageName', error: e);
       return null;
     }
   }
@@ -84,7 +85,7 @@ class InstalledAppService extends ChangeNotifier {
       _pendingRequests.remove(packageName);
       return appInfo?.icon;
     } catch (e) {
-      debugPrint('Error fetching icon for $packageName: $e');
+      LoggerService.instance.e('Error fetching icon for $packageName', error: e);
       _iconCache[packageName] = null;
       _touchIconKey(packageName);
       _evictIconCacheIfNeeded();

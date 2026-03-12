@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class LegalFooter extends StatelessWidget {
   final Color? color;
@@ -9,7 +10,7 @@ class LegalFooter extends StatelessWidget {
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      debugPrint('Não foi possível abrir: $url');
+      LoggerService.instance.w('Não foi possível abrir: $url');
     }
   }
 

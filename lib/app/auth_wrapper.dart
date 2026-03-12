@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/features/home/presentation/screens/home_screen.dart';
 import 'package:disciplinum/features/auth/presentation/screens/reset_password_screen.dart';
@@ -14,7 +15,7 @@ class AuthWrapperWithoutHomeValues extends StatelessWidget {
 
     // Prioridade 1: Recuperação de Senha
     if (authService.isPasswordRecovery) {
-      debugPrint('AuthWrapper: Exibindo ResetPasswordScreen.');
+      LoggerService.instance.d('AuthWrapper: Exibindo ResetPasswordScreen.');
       return const ResetPasswordScreen();
     }
 

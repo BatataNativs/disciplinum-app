@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/features/modules/adult_content/presentation/screens/avoid_adult_content_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
@@ -87,7 +88,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         }
       }
     } catch (e) {
-      debugPrint("Erro ao carregar dados: $e");
+      LoggerService.instance.e('Erro ao carregar dados', error: e);
       if (mounted) {
         setState(() {
           _loadingData = false;

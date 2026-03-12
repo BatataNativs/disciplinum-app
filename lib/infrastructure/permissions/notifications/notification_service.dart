@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 // Mantive o alias 'fln' para segurança
@@ -36,7 +37,7 @@ Future<void> initNotifications() async {
     final String timeZoneName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));
   } catch (e) {
-    debugPrint('Erro ao configurar timezone: $e');
+    LoggerService.instance.e('Erro ao configurar timezone', error: e);
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
   }
 
@@ -175,7 +176,7 @@ Future<void> sendModuleNotification(String body,
       final ByteData data = await rootBundle.load(iconPath);
       largeIcon = fln.ByteArrayAndroidBitmap(data.buffer.asUint8List());
     } catch (e) {
-      debugPrint('Erro ao carregar ícone da notificação: $e');
+      LoggerService.instance.e('Erro ao carregar ícone da notificação', error: e);
     }
   }
 
@@ -269,9 +270,9 @@ class NotificationService {
         matchDateTimeComponents: fln.DateTimeComponents.time,
         payload: payload,
       );
-      debugPrint('Agendado: $title para $scheduledDate (ID: $id)');
+      LoggerService.instance.d('Agendado: $title para $scheduledDate (ID: $id)');
     } catch (e) {
-      debugPrint('ERRO ao agendar notificação: $e');
+      LoggerService.instance.e('ERRO ao agendar notificação', error: e);
     }
   }
 
@@ -319,7 +320,7 @@ class NotificationService {
       matchDateTimeComponents: fln.DateTimeComponents.dayOfWeekAndTime,
       payload: payload,
     );
-    debugPrint('Agendado Semanal: $title para $scheduledDate (ID: $id)');
+    LoggerService.instance.d('Agendado Semanal: $title para $scheduledDate (ID: $id)');
   }
 
   static Future<void> scheduleNotification({
@@ -357,7 +358,7 @@ class NotificationService {
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
       payload: payload,
     );
-    debugPrint('Agendado Único: $title para $tzScheduledDate (ID: $id)');
+    LoggerService.instance.d('Agendado Único: $title para $tzScheduledDate (ID: $id)');
   }
 
   static Future<void> scheduleMonthlyNotification({
@@ -412,7 +413,7 @@ class NotificationService {
       matchDateTimeComponents: fln.DateTimeComponents.dayOfMonthAndTime,
       payload: payload,
     );
-    debugPrint('Agendado Mensal: $title para $scheduledDate (ID: $id)');
+    LoggerService.instance.d('Agendado Mensal: $title para $scheduledDate (ID: $id)');
   }
 
   static Future<void> cancelNotification(int id) async {

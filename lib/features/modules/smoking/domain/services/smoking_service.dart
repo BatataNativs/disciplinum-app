@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class SmokingService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -25,7 +25,7 @@ class SmokingService {
 
       return SmokingSettingsModel.fromJson(response);
     } catch (e) {
-      debugPrint('Erro ao carregar settings: $e');
+      LoggerService.instance.e('Erro ao carregar settings', error: e);
       return null;
     }
   }
@@ -118,7 +118,7 @@ class SmokingService {
           .eq('user_id', userId)
           .eq('module_id', 'smoking');
     } catch (e) {
-      debugPrint('Erro ao deletar settings: $e');
+      LoggerService.instance.e('Erro ao deletar settings', error: e);
       throw Exception('Falha ao resetar dados');
     }
   }

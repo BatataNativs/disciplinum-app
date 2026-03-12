@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Serviço responsável por registrar e carregar os check-ins diários
 /// do módulo Parar de Fumar (resposta "Sim" na notificação diária).
@@ -40,9 +40,9 @@ class SmokingCheckinService {
         onConflict: 'user_id, check_date',
         ignoreDuplicates: true,
       );
-      debugPrint('✅ Check-in registrado para $dateStr');
+      LoggerService.instance.i('✅ Check-in registrado para $dateStr');
     } catch (e) {
-      debugPrint('⚠️ Erro ao salvar check-in no Supabase: $e');
+      LoggerService.instance.w('Erro ao salvar check-in no Supabase', error: e);
       // Não lança — o local já foi salvo como fallback
     }
   }
@@ -68,7 +68,7 @@ class SmokingCheckinService {
         return dates;
       }
     } catch (e) {
-      debugPrint('⚠️ Erro ao carregar check-ins do Supabase: $e');
+      LoggerService.instance.w('Erro ao carregar check-ins do Supabase', error: e);
     }
 
     // Fallback: dados locais
@@ -89,9 +89,9 @@ class SmokingCheckinService {
           .from('smoking_daily_checkins')
           .delete()
           .eq('user_id', userId);
-      debugPrint('🗑️ Todos os check-ins apagados.');
+      LoggerService.instance.i('🗑️ Todos os check-ins apagados.');
     } catch (e) {
-      debugPrint('⚠️ Erro ao apagar check-ins no Supabase: $e');
+      LoggerService.instance.w('Erro ao apagar check-ins no Supabase', error: e);
     }
   }
 

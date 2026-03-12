@@ -8,6 +8,7 @@ import 'package:disciplinum/features/modules/money_saving/domain/services/money_
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:provider/provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
 import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
 import 'package:confetti/confetti.dart';
@@ -170,7 +171,7 @@ class _MoneySavingChallengeScreenState
         }
       }
     } catch (e) {
-      debugPrint('Erro ao carregar desafios: $e');
+      LoggerService.instance.e('Erro ao carregar desafios', error: e);
       if (mounted) {
         setState(() => _isLoading = false);
       }

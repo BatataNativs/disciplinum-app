@@ -102,17 +102,18 @@ class TimerOverlayManager(private val context: Context) {
             textView?.text = message
         }
 
-        val elapsed = 30 - secondsRemaining
+        val filled = secondsRemaining // segmentos preenchidos = tempo restante
 
         for (i in 0 until 30) {
             val segment = barContainer.getChildAt(i) ?: continue
-            val segmentPosition = i + 1
-            
-            if (segmentPosition > elapsed) {
+            val segmentPosition = i + 1 // 1..30, da esquerda para a direita
+
+            if (segmentPosition <= filled) {
+                // Cor baseada em quanto tempo RESTA (segmentos da esquerda = safe)
                 val color = when {
-                    segmentPosition <= 10 -> "#4CAF50"
-                    segmentPosition <= 20 -> "#FFEB3B"
-                    else -> "#F44336"
+                    segmentPosition <= 10 -> "#F44336" // vermelho: pouco tempo restante
+                    segmentPosition <= 20 -> "#FFEB3B" // amarelo: médio
+                    else -> "#4CAF50"                  // verde: muito tempo restante
                 }
                 segment.setBackgroundColor(Color.parseColor(color))
                 segment.alpha = 1.0f

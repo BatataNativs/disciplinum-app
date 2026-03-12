@@ -9,6 +9,7 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class SelectAppsScreenArgs {
   final List<String> initiallySelected;
@@ -138,7 +139,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
 
       _applyFiltersAndSort();
     } catch (e) {
-      debugPrint('Error loading apps: $e');
+      LoggerService.instance.e('Error loading apps', error: e);
     } finally {
       if (mounted) {
         setState(() => _isLoadingApps = false);
@@ -207,7 +208,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
       // O usuário recusou ou fechou o diálogo, mas permitimos salvar
       // (o overlay apenas não aparecerá até ele ativar).
       // Mas o ideal é avisar.
-      debugPrint('Usuário não concedeu permissão de sobreposição ainda.');
+      LoggerService.instance.w('Usuário não concedeu permissão de sobreposição ainda.');
     }
 
     if (_isGuest) {

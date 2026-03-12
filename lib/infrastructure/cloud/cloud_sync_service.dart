@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
@@ -6,6 +5,7 @@ import 'package:disciplinum/models/user_niche_app.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class CloudSyncService {
   static final supabase = Supabase.instance.client;
@@ -30,10 +30,10 @@ class CloudSyncService {
         return await operation();
       } catch (e) {
         if (i == maxRetries - 1) {
-          debugPrint('❌ Operação falhou após $maxRetries tentativas: $e');
+          LoggerService.instance.e('Operação falhou após $maxRetries tentativas', error: e);
           return null;
         }
-        debugPrint('⚠️ Tentativa ${i + 1} falhou, tentando novamente...');
+        LoggerService.instance.w('Tentativa ${i + 1} falhou, tentando novamente...');
         await Future.delayed(Duration(seconds: i + 1));
       }
     }
@@ -239,7 +239,7 @@ class CloudSyncService {
       await GamificationService.instance.refreshAllDataFromCloud();
       return true;
     } catch (e) {
-      debugPrint('❌ Erro durante sincronização global: $e');
+      LoggerService.instance.e('Erro durante sincronização global', error: e);
       return false;
     }
   }
@@ -319,7 +319,7 @@ class CloudSyncService {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
-      debugPrint('🔄 Sincronizando entitlements do usuário...');
+      LoggerService.instance.i('Sincronizando entitlements do usuário...');
       
       // Carrega todos os entitlements da nuvem
       final cloudEntitlements = await loadEntitlements();
@@ -353,9 +353,9 @@ class CloudSyncService {
         }
       }
       
-      debugPrint('✅ Sincronização de entitlements concluída.');
+      LoggerService.instance.i('Sincronização de entitlements concluída.');
     } catch (e) {
-      debugPrint('❌ Erro na sincronização de entitlements: $e');
+      LoggerService.instance.e('Erro na sincronização de entitlements', error: e);
     }
   }
 }

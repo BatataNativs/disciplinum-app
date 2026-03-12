@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -54,7 +55,7 @@ class AppBootstrap {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error during app bootstrap: $e');
+        LoggerService.instance.e('Error during app bootstrap', error: e);
       }
       rethrow;
     }
@@ -66,7 +67,7 @@ class AppBootstrap {
       await LocalStorageService.init();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing storage: $e');
+        LoggerService.instance.e('Error initializing storage', error: e);
       }
       // Storage é crítico, relançar erro
       rethrow;
@@ -82,7 +83,7 @@ class AppBootstrap {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing Supabase: $e');
+        LoggerService.instance.e('Error initializing Supabase', error: e);
       }
       // Supabase é crítico para cloud sync, mas app pode funcionar offline
       // Não relançar erro, apenas logar
@@ -95,7 +96,7 @@ class AppBootstrap {
       await ns.initNotifications();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing notifications: $e');
+        LoggerService.instance.e('Error initializing notifications', error: e);
       }
       // Notificações não são críticas para funcionamento básico
     }
@@ -119,7 +120,7 @@ class AppBootstrap {
       MobileAds.instance.initialize();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing ads: $e');
+        LoggerService.instance.e('Error initializing ads', error: e);
       }
       // Anúncios não são críticos para funcionamento
     }
@@ -135,7 +136,7 @@ class AppBootstrap {
       // Ele será criado via Provider no runApp
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing services: $e');
+        LoggerService.instance.e('Error initializing services', error: e);
       }
       rethrow;
     }
@@ -148,7 +149,7 @@ class AppBootstrap {
       // O tema será carregado quando necessário
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error initializing theme: $e');
+        LoggerService.instance.e('Error initializing theme', error: e);
       }
       // Theme não é crítico, usa tema padrão em caso de erro
     }

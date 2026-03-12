@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/main.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class PermissionService {
   static bool _isChecking = false;
@@ -267,7 +268,7 @@ class PermissionService {
           .invokeMethod<bool>('isAccessibilityServiceEnabled');
       return enabled ?? false;
     } catch (e) {
-      debugPrint('Erro ao verificar acessibilidade: $e');
+      LoggerService.instance.e('Erro ao verificar acessibilidade', error: e);
       return false;
     }
   }
@@ -277,7 +278,7 @@ class PermissionService {
     try {
       await _methodChannel.invokeMethod('openAccessibilitySettings');
     } catch (e) {
-      debugPrint('Erro ao abrir configurações de acessibilidade: $e');
+      LoggerService.instance.e('Erro ao abrir configurações de acessibilidade', error: e);
     }
   }
 
@@ -299,7 +300,7 @@ class PermissionService {
     try {
       await _methodChannel.invokeMethod('requestOverlayPermission');
     } catch (e) {
-      debugPrint('Erro ao solicitar permissão de sobreposição: $e');
+      LoggerService.instance.e('Erro ao solicitar permissão de sobreposição', error: e);
     }
   }
 

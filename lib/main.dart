@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 
@@ -71,7 +72,7 @@ Future<void> main() async {
     );
   } catch (e) {
     if (kDebugMode) {
-      debugPrint('Erro durante inicialização do app: $e');
+      LoggerService.instance.e('Erro durante inicialização do app', error: e);
     }
 
     // Fallback para inicialização mínima em caso de erro
