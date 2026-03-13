@@ -10,7 +10,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
-import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_stats.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';

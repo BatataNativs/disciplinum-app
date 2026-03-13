@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/app/router/app_router.dart';
-import 'package:disciplinum/widgets/user_privacy_and_terms/legal_footer.dart'; //
+import 'package:disciplinum/shared/widgets/legal/legal_footer.dart'; //
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

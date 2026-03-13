@@ -27,14 +27,16 @@ dependencies:
   
   # Armazenamento Local e Preferências
   shared_preferences: ^2.3.5
-  path_provider_foundation: ^2.4.0
+  path_provider: ^2.1.4
   
   # Gerenciamento de Estado
   provider: ^6.1.2
   
+  # Utilitários
+  equatable: ^2.0.5
+  
   # Backend e Auth (Supabase + Google)
   supabase_flutter: ^2.8.3
-  supabase: ^2.5.0
   google_sign_in: ^7.2.0
   
   # Firebase (Core + Crashlytics)

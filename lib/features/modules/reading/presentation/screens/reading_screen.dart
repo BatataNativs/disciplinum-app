@@ -8,10 +8,10 @@ import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/my_shelf_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_settings_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart';
-import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -530,10 +530,9 @@ class _ReadingScreenState extends State<ReadingScreen>
 
     if (isActive) {
       final confirmed = await DeactivateModuleDialog.show(
-        context,
-        title: 'Desativar módulo?',
-        content: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
-        confirmText: 'Sim, desativar',
+        context: context,
+        nicheId: NicheId.reading,
+        customMessage: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
       );
 
       if (confirmed == true) {

@@ -4,7 +4,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/widgets/profile/lojinha.dart';
+import 'package:disciplinum/shared/widgets/lojinha.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 

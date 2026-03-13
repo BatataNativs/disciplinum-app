@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
 import '../../domain/services/smoking_service.dart';
 import 'health_detail_screen.dart';
-import '../widgets/my_progress_smoking.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
@@ -19,7 +19,7 @@ import 'package:disciplinum/features/schedule/presentation/screens/schedule_scre
 import 'daily_checkins_stats.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   final String? heroTag;
@@ -361,9 +361,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content:
-          "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
+      context: context,
+      nicheId: NicheId.smoking,
+      customMessage: "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {

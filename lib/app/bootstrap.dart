@@ -160,7 +160,7 @@ class AppBootstrap {
     return [
       // Serviços principais que são ChangeNotifier
       ChangeNotifierProvider<GamificationService>(
-        create: (_) => GamificationService.instance,
+        create: (_) => GamificationService(),
       ),
       ChangeNotifierProvider<GamificationController>(
         create: (_) => GamificationController(

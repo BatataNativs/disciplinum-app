@@ -11,14 +11,14 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/features/modules/spending/presentation/widgets/my_progress_spending.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_expenses_screen.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_bills_stats_screen.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class SpendingScreen extends StatefulWidget {
   final String? heroTag;
@@ -77,7 +77,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
         if (_gamificationRunning) {
           final gamification =
               Provider.of<GamificationService>(context, listen: false);
-          gamification.monitoredApps = List.from(_selectedApps);
+          gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -120,7 +120,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
 
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
-    gamification.monitoredApps = List.from(_selectedApps);
+    gamification.monitoredApps = Set<String>.from(_selectedApps);
 
     gamification.startMonitoringApps(
       nicheId: _niche.id,
@@ -182,9 +182,9 @@ class _SpendingScreenState extends State<SpendingScreen> {
 
   Future<void> _desativarNichoMonitoramento() async {
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content:
-          'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
+      context: context,
+      nicheId: NicheId.spending,
+      customMessage: 'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
     );
 
     if (confirmed != true) return;
@@ -306,7 +306,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
       if (!mounted) return;
       final gamification =
           Provider.of<GamificationService>(context, listen: false);
-      gamification.monitoredApps = List.from(_selectedApps);
+      gamification.monitoredApps = Set<String>.from(_selectedApps);
     }
   }
 

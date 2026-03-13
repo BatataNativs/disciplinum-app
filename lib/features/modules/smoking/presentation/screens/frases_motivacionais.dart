@@ -8,7 +8,7 @@ import 'package:disciplinum/features/gamification/domain/services/gamification_m
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
-import '../../../../../widgets/profile/lojinha.dart';
+import 'package:disciplinum/shared/widgets/lojinha.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 

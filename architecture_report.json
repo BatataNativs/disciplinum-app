@@ -1,0 +1,674 @@
+{
+  "statistics": {
+    "total_proposed_components": 37,
+    "total_current_components": 135,
+    "implementation_percentage": 364.86486486486484
+  },
+  "comparison": {
+    "implemented": [],
+    "missing": [
+      "❌ app//bootstrap.dart",
+      "❌ app//router.dart",
+      "❌ core//config//feature_flags.dart",
+      "❌ core//constants//app_constants.dart",
+      "❌ core//navigation//navigation_service.dart",
+      "❌ core//events//event_bus.dart",
+      "❌ core//logging//logger_service.dart",
+      "❌ core//analytics//analytics_service.dart",
+      "❌ core//storage//local_storage_service.dart",
+      "❌ infrastructure//repositories//module_repository.dart",
+      "❌ infrastructure//datasources//local_module_datasource.dart",
+      "❌ infrastructure//datasources//cloud_module_datasource.dart",
+      "❌ features//gamification//domain/ (diretório)",
+      "❌ features//gamification//domain/ (diretório)",
+      "❌ features//gamification//presentation/ (diretório)",
+      "❌ features//gamification//presentation/ (diretório)",
+      "❌ features//auth//domain/ (diretório)",
+      "❌ features//auth//domain/ (diretório)",
+      "❌ features//auth//data/ (diretório)",
+      "❌ features//auth//presentation/ (diretório)",
+      "❌ features//modules//smoking/ (diretório)",
+      "❌ features//modules//smoking/ (diretório)",
+      "❌ features//modules//focus/ (diretório)",
+      "❌ features//modules//focus/ (diretório)",
+      "❌ features//modules//reading/ (diretório)",
+      "❌ features//modules//reading/ (diretório)",
+      "❌ features//modules//spending/ (diretório)",
+      "❌ features//modules//spending/ (diretório)",
+      "❌ features//blocking/ (diretório)",
+      "❌ features//blocking/ (diretório)",
+      "❌ features//blocking/ (diretório)",
+      "❌ features//notifications/ (diretório)",
+      "❌ features//notifications/ (diretório)",
+      "❌ features//iap/ (diretório)",
+      "❌ features//iap/ (diretório)",
+      "❌ shared//widgets/ (diretório)",
+      "❌ shared//widgets/ (diretório)"
+    ],
+    "extra": [
+      "➕ .",
+      "➕ utils",
+      "➕ app",
+      "➕ app\\providers",
+      "➕ app\\router",
+      "➕ config",
+      "➕ core\\analytics",
+      "➕ core\\config",
+      "➕ core\\constants",
+      "➕ core\\events",
+      "➕ core\\events\\events",
+      "➕ core\\logging",
+      "➕ core\\navigation",
+      "➕ core\\storage",
+      "➕ core\\theme",
+      "➕ core\\utils",
+      "➕ features\\auth\\data\\datasources",
+      "➕ features\\auth\\domain\\entities",
+      "➕ features\\auth\\domain\\services",
+      "➕ features\\auth\\presentation\\screens",
+      "➕ features\\blocking\\data\\repositories",
+      "➕ features\\blocking\\domain\\entities",
+      "➕ features\\blocking\\domain\\services",
+      "➕ features\\blocking\\presentation\\screens",
+      "➕ features\\gamification\\domain\\entities",
+      "➕ features\\gamification\\domain\\services",
+      "➕ features\\gamification\\presentation\\controllers",
+      "➕ features\\home\\presentation\\screens",
+      "➕ features\\iap\\domain\\entities",
+      "➕ features\\iap\\presentation\\screens",
+      "➕ features\\modules\\adult_content\\domain\\entities",
+      "➕ features\\modules\\adult_content\\domain\\services",
+      "➕ features\\modules\\adult_content\\presentation\\screens",
+      "➕ features\\modules\\adult_content\\presentation\\widgets",
+      "➕ features\\modules\\binge_eating\\domain\\entities",
+      "➕ features\\modules\\binge_eating\\domain\\services",
+      "➕ features\\modules\\binge_eating\\presentation\\screens",
+      "➕ features\\modules\\binge_eating\\presentation\\widgets",
+      "➕ features\\modules\\diet\\domain\\services",
+      "➕ features\\modules\\diet\\presentation\\screens",
+      "➕ features\\modules\\diet\\presentation\\widgets",
+      "➕ features\\modules\\domain\\entities",
+      "➕ features\\modules\\focus\\domain\\entities",
+      "➕ features\\modules\\focus\\presentation\\screens",
+      "➕ features\\modules\\money_saving\\domain\\entities",
+      "➕ features\\modules\\money_saving\\domain\\services",
+      "➕ features\\modules\\money_saving\\presentation\\screens",
+      "➕ features\\modules\\money_saving\\presentation\\widgets",
+      "➕ features\\modules\\money_saving_challenge\\domain\\entities",
+      "➕ features\\modules\\procrastination\\domain\\entities",
+      "➕ features\\modules\\procrastination\\domain\\services",
+      "➕ features\\modules\\procrastination\\presentation\\screens",
+      "➕ features\\modules\\procrastination\\presentation\\widgets",
+      "➕ features\\modules\\reading\\domain\\entities",
+      "➕ features\\modules\\reading\\domain\\services",
+      "➕ features\\modules\\reading\\presentation\\screens",
+      "➕ features\\modules\\reading\\presentation\\screens\\widgets",
+      "➕ features\\modules\\reading\\presentation\\widgets",
+      "➕ features\\modules\\smoking\\domain\\services",
+      "➕ features\\modules\\smoking\\presentation\\screens",
+      "➕ features\\modules\\smoking\\presentation\\widgets",
+      "➕ features\\modules\\spending\\domain\\entities",
+      "➕ features\\modules\\spending\\domain\\services",
+      "➕ features\\modules\\spending\\presentation\\screens",
+      "➕ features\\modules\\spending\\presentation\\widgets",
+      "➕ features\\monitoring\\presentation\\screens",
+      "➕ features\\notifications\\domain\\services",
+      "➕ features\\notifications\\presentation\\widgets",
+      "➕ features\\onboarding\\presentation\\screens",
+      "➕ features\\profile\\presentation\\screens",
+      "➕ features\\schedule\\presentation\\screens",
+      "➕ features\\settings\\presentation\\screens",
+      "➕ features\\streaks\\domain\\services",
+      "➕ infrastructure\\ads",
+      "➕ infrastructure\\cloud",
+      "➕ infrastructure\\datasources",
+      "➕ infrastructure\\iap",
+      "➕ infrastructure\\monitoring",
+      "➕ infrastructure\\notifications",
+      "➕ infrastructure\\permissions\\notifications",
+      "➕ infrastructure\\permissions\\usage_stats",
+      "➕ infrastructure\\repositories",
+      "➕ infrastructure\\review",
+      "➕ infrastructure\\user_privacy",
+      "➕ misc\\system_stuff",
+      "➕ models",
+      "➕ models\\2_bingeEating",
+      "➕ models\\3_diet",
+      "➕ models\\4_spending",
+      "➕ models\\5_focus",
+      "➕ models\\6_adultContent",
+      "➕ models\\7_moneySavingChallenge",
+      "➕ models\\8_procrastination",
+      "➕ models\\9_reading",
+      "➕ models\\gamification",
+      "➕ models\\1_smoking",
+      "➕ screens\\auth_signup_login",
+      "➕ screens\\home",
+      "➕ screens\\misc",
+      "➕ screens\\opening",
+      "➕ screens\\profile",
+      "➕ screens\\settings",
+      "➕ screens\\modules\\9_reading",
+      "➕ services\\access_installed_apps",
+      "➕ services\\ads",
+      "➕ services\\auth",
+      "➕ services\\cloud",
+      "➕ services\\iap",
+      "➕ services\\review",
+      "➕ services\\user_privacy",
+      "➕ services\\5_focus",
+      "➕ services\\events",
+      "➕ services\\gamification",
+      "➕ services\\permissions\\notifications",
+      "➕ services\\permissions\\usage_stats",
+      "➕ shared\\components\\navigation",
+      "➕ shared\\models\\common",
+      "➕ shared\\models\\enums",
+      "➕ shared\\widgets\\cards",
+      "➕ shared\\widgets\\common",
+      "➕ widgets\\home",
+      "➕ widgets\\notifications",
+      "➕ widgets\\1_smoking",
+      "➕ widgets\\2_bingeEating",
+      "➕ widgets\\3_diet",
+      "➕ widgets\\4_spending",
+      "➕ widgets\\5_focus",
+      "➕ widgets\\6_adultContent",
+      "➕ widgets\\7_moneySavingChallenge",
+      "➕ widgets\\8_procrastination",
+      "➕ widgets\\9_reading",
+      "➕ widgets\\niche_details",
+      "➕ widgets\\profile",
+      "➕ widgets\\shared",
+      "➕ widgets\\user_privacy_and_terms"
+    ],
+    "incomplete": []
+  },
+  "current_structure": {
+    ".": [
+      "app.dart",
+      "main.dart"
+    ],
+    "utils": [
+      "[empty]"
+    ],
+    "app": [
+      "auth_wrapper.dart",
+      "bootstrap.dart",
+      "providers.dart",
+      "startup_data.dart"
+    ],
+    "app\\providers": [
+      "[empty]"
+    ],
+    "app\\router": [
+      "app_router.dart",
+      "auth_routes.dart",
+      "module_routes.dart",
+      "settings_routes.dart"
+    ],
+    "config": [
+      "app_config.dart"
+    ],
+    "core\\analytics": [
+      "analytics_service.dart"
+    ],
+    "core\\config": [
+      "feature_flags.dart"
+    ],
+    "core\\constants": [
+      "app_constants.dart"
+    ],
+    "core\\events": [
+      "event_bootstrap.dart",
+      "event_bus.dart"
+    ],
+    "core\\events\\events": [
+      "behavior_events.dart",
+      "gamification_events.dart",
+      "gamification_event_emitter.dart"
+    ],
+    "core\\logging": [
+      "logger_service.dart"
+    ],
+    "core\\navigation": [
+      "navigation_service.dart"
+    ],
+    "core\\storage": [
+      "local_storage_service.dart",
+      "preferences_service.dart"
+    ],
+    "core\\theme": [
+      "app_themes.dart",
+      "theme_controller.dart"
+    ],
+    "core\\utils": [
+      "app_info_helper.dart",
+      "enhanced_snackbar_helper.dart",
+      "fast_page_transitions.dart",
+      "snackbar_helper.dart"
+    ],
+    "features\\auth\\data\\datasources": [
+      "avatar_service.dart"
+    ],
+    "features\\auth\\domain\\entities": [
+      "user_profile.dart"
+    ],
+    "features\\auth\\domain\\services": [
+      "auth_service.dart"
+    ],
+    "features\\auth\\presentation\\screens": [
+      "auth_screen.dart",
+      "reset_password_screen.dart"
+    ],
+    "features\\blocking\\data\\repositories": [
+      "blocking_repository.dart"
+    ],
+    "features\\blocking\\domain\\entities": [
+      "blocked_app.dart"
+    ],
+    "features\\blocking\\domain\\services": [
+      "app_blocker_service.dart"
+    ],
+    "features\\blocking\\presentation\\screens": [
+      "app_blocker_screen.dart"
+    ],
+    "features\\gamification\\domain\\entities": [
+      "insignia.dart",
+      "medal.dart",
+      "module_state.dart",
+      "user_module_status.dart"
+    ],
+    "features\\gamification\\domain\\services": [
+      "gamification_award_engine.dart",
+      "gamification_messages.dart",
+      "streak_service.dart"
+    ],
+    "features\\gamification\\presentation\\controllers": [
+      "gamification_controller.dart"
+    ],
+    "features\\home\\presentation\\screens": [
+      "home_screen.dart",
+      "home_screen_guest.dart"
+    ],
+    "features\\iap\\domain\\entities": [
+      "user_entitlement.dart"
+    ],
+    "features\\iap\\presentation\\screens": [
+      "lojinha_screen.dart"
+    ],
+    "features\\modules\\adult_content\\domain\\entities": [
+      "[empty]"
+    ],
+    "features\\modules\\adult_content\\domain\\services": [
+      "[empty]"
+    ],
+    "features\\modules\\adult_content\\presentation\\screens": [
+      "avoid_adult_content_notifications_screen.dart",
+      "avoid_adult_content_screen.dart"
+    ],
+    "features\\modules\\adult_content\\presentation\\widgets": [
+      "my_progress_adult_content.dart"
+    ],
+    "features\\modules\\binge_eating\\domain\\entities": [
+      "binge_habit.dart"
+    ],
+    "features\\modules\\binge_eating\\domain\\services": [
+      "binge_eating_checkin_service.dart"
+    ],
+    "features\\modules\\binge_eating\\presentation\\screens": [
+      "binge_checkin_schedule_screen.dart",
+      "binge_eating_notifications_screen.dart",
+      "binge_eating_screen.dart",
+      "days_without_food_delivery.dart"
+    ],
+    "features\\modules\\binge_eating\\presentation\\widgets": [
+      "my_progress_binge_eating.dart"
+    ],
+    "features\\modules\\diet\\domain\\services": [
+      "meal_tracking_service.dart"
+    ],
+    "features\\modules\\diet\\presentation\\screens": [
+      "diet_notifications_screen.dart",
+      "diet_settings_screen.dart",
+      "meal_streak_screen.dart"
+    ],
+    "features\\modules\\diet\\presentation\\widgets": [
+      "my_progress_diet.dart"
+    ],
+    "features\\modules\\domain\\entities": [
+      "module_state.dart"
+    ],
+    "features\\modules\\focus\\domain\\entities": [
+      "[empty]"
+    ],
+    "features\\modules\\focus\\presentation\\screens": [
+      "focus_notifications_screen.dart",
+      "focus_screen.dart",
+      "focus_streak_screen.dart"
+    ],
+    "features\\modules\\money_saving\\domain\\entities": [
+      "saving_habit.dart"
+    ],
+    "features\\modules\\money_saving\\domain\\services": [
+      "money_saving_challenge_service.dart"
+    ],
+    "features\\modules\\money_saving\\presentation\\screens": [
+      "money_saving_challenge_about_contributions.dart",
+      "money_saving_challenge_notifications_screen.dart",
+      "money_saving_challenge_screen.dart",
+      "money_saving_challenge_stats.dart",
+      "money_saving_challenge_total_contributions.dart"
+    ],
+    "features\\modules\\money_saving\\presentation\\widgets": [
+      "my_progress_money_saving_challenge.dart"
+    ],
+    "features\\modules\\money_saving_challenge\\domain\\entities": [
+      "money_saving_challenge_model.dart"
+    ],
+    "features\\modules\\procrastination\\domain\\entities": [
+      "procrastination_model.dart",
+      "productivity_habit.dart"
+    ],
+    "features\\modules\\procrastination\\domain\\services": [
+      "procrastination_service.dart"
+    ],
+    "features\\modules\\procrastination\\presentation\\screens": [
+      "completed_lists_screen.dart",
+      "procrastination_notifications_screen.dart",
+      "procrastination_screen.dart",
+      "procrastination_stats_screen.dart"
+    ],
+    "features\\modules\\procrastination\\presentation\\widgets": [
+      "my_progress_procrastination.dart",
+      "task_creation_dialog.dart"
+    ],
+    "features\\modules\\reading\\domain\\entities": [
+      "reading_model.dart"
+    ],
+    "features\\modules\\reading\\domain\\services": [
+      "reading_service.dart"
+    ],
+    "features\\modules\\reading\\presentation\\screens": [
+      "finished_books_screen.dart",
+      "my_shelf_screen.dart",
+      "reading_notifications_screen.dart",
+      "reading_screen.dart",
+      "reading_settings_screen.dart",
+      "reading_stats_screen.dart"
+    ],
+    "features\\modules\\reading\\presentation\\screens\\widgets": [
+      "[empty]"
+    ],
+    "features\\modules\\reading\\presentation\\widgets": [
+      "add_book_dialog.dart",
+      "book_details_dialog.dart",
+      "book_tile.dart",
+      "my_progress_reading.dart",
+      "update_progress_dialog.dart"
+    ],
+    "features\\modules\\smoking\\domain\\services": [
+      "smoking_checkin_service.dart",
+      "smoking_service.dart"
+    ],
+    "features\\modules\\smoking\\presentation\\screens": [
+      "daily_checkins_stats.dart",
+      "frases_motivacionais.dart",
+      "health_detail_screen.dart",
+      "savings_detail_screen.dart",
+      "stop_smoking_screen.dart"
+    ],
+    "features\\modules\\smoking\\presentation\\widgets": [
+      "health_compact_card.dart",
+      "health_timeline_card.dart",
+      "my_progress_smoking.dart",
+      "savings_dashboard.dart"
+    ],
+    "features\\modules\\spending\\domain\\entities": [
+      "fixed_expense_model.dart"
+    ],
+    "features\\modules\\spending\\domain\\services": [
+      "spending_service.dart"
+    ],
+    "features\\modules\\spending\\presentation\\screens": [
+      "fixed_bills_stats_screen.dart",
+      "fixed_expenses_screen.dart",
+      "spending_notifications_screen.dart",
+      "spending_screen.dart"
+    ],
+    "features\\modules\\spending\\presentation\\widgets": [
+      "my_progress_spending.dart"
+    ],
+    "features\\monitoring\\presentation\\screens": [
+      "select_apps_screen.dart"
+    ],
+    "features\\notifications\\domain\\services": [
+      "motivation_engine.dart",
+      "reminder_engine.dart"
+    ],
+    "features\\notifications\\presentation\\widgets": [
+      "notification_message_editor.dart"
+    ],
+    "features\\onboarding\\presentation\\screens": [
+      "onboarding_screen.dart",
+      "welcome_screen.dart"
+    ],
+    "features\\profile\\presentation\\screens": [
+      "my_progress_screen.dart",
+      "profile_screen.dart"
+    ],
+    "features\\schedule\\presentation\\screens": [
+      "schedule_screen.dart"
+    ],
+    "features\\settings\\presentation\\screens": [
+      "how_it_works_screen.dart",
+      "secret_menu_screen.dart",
+      "settings_screen.dart"
+    ],
+    "features\\streaks\\domain\\services": [
+      "streak_calculator.dart"
+    ],
+    "infrastructure\\ads": [
+      "ad_service.dart"
+    ],
+    "infrastructure\\cloud": [
+      "cloud_sync_service.dart"
+    ],
+    "infrastructure\\datasources": [
+      "cloud_module_datasource.dart",
+      "local_module_datasource.dart"
+    ],
+    "infrastructure\\iap": [
+      "iap_service.dart"
+    ],
+    "infrastructure\\monitoring": [
+      "app_monitoring_service.dart",
+      "installed_app_service.dart"
+    ],
+    "infrastructure\\notifications": [
+      "notification_scheduler.dart"
+    ],
+    "infrastructure\\permissions\\notifications": [
+      "notification_service.dart"
+    ],
+    "infrastructure\\permissions\\usage_stats": [
+      "permission_service.dart"
+    ],
+    "infrastructure\\repositories": [
+      "module_repository.dart"
+    ],
+    "infrastructure\\review": [
+      "review_service.dart"
+    ],
+    "infrastructure\\user_privacy": [
+      "privacy_service.dart"
+    ],
+    "misc\\system_stuff": [
+      "[empty]"
+    ],
+    "models": [
+      "user_niche_app.dart",
+      "user_niche_time.dart"
+    ],
+    "models\\2_bingeEating": [
+      "[empty]"
+    ],
+    "models\\3_diet": [
+      "[empty]"
+    ],
+    "models\\4_spending": [
+      "[empty]"
+    ],
+    "models\\5_focus": [
+      "[empty]"
+    ],
+    "models\\6_adultContent": [
+      "[empty]"
+    ],
+    "models\\7_moneySavingChallenge": [
+      "[empty]"
+    ],
+    "models\\8_procrastination": [
+      "[empty]"
+    ],
+    "models\\9_reading": [
+      "[empty]"
+    ],
+    "models\\gamification": [
+      "[empty]"
+    ],
+    "models\\1_smoking": [
+      "smoking_settings_model.dart"
+    ],
+    "screens\\auth_signup_login": [
+      "[empty]"
+    ],
+    "screens\\home": [
+      "[empty]"
+    ],
+    "screens\\misc": [
+      "[empty]"
+    ],
+    "screens\\opening": [
+      "[empty]"
+    ],
+    "screens\\profile": [
+      "[empty]"
+    ],
+    "screens\\settings": [
+      "[empty]"
+    ],
+    "screens\\modules\\9_reading": [
+      "[empty]"
+    ],
+    "services\\access_installed_apps": [
+      "[empty]"
+    ],
+    "services\\ads": [
+      "[empty]"
+    ],
+    "services\\auth": [
+      "[empty]"
+    ],
+    "services\\cloud": [
+      "[empty]"
+    ],
+    "services\\iap": [
+      "[empty]"
+    ],
+    "services\\review": [
+      "[empty]"
+    ],
+    "services\\user_privacy": [
+      "[empty]"
+    ],
+    "services\\5_focus": [
+      "focus_tracking_service.dart"
+    ],
+    "services\\events": [
+      "analytics_service.dart",
+      "event_bus.dart"
+    ],
+    "services\\gamification": [
+      "gamification_service.dart"
+    ],
+    "services\\permissions\\notifications": [
+      "[empty]"
+    ],
+    "services\\permissions\\usage_stats": [
+      "[empty]"
+    ],
+    "shared\\components\\navigation": [
+      "bottom_nav_bar.dart"
+    ],
+    "shared\\models\\common": [
+      "niche.dart"
+    ],
+    "shared\\models\\enums": [
+      "niche_id.dart"
+    ],
+    "shared\\widgets\\cards": [
+      "neon_card.dart"
+    ],
+    "shared\\widgets\\common": [
+      "custom_button.dart",
+      "glowing_button.dart",
+      "scroll_indicator_arrow.dart",
+      "settings_banner_ad.dart"
+    ],
+    "widgets\\home": [
+      "[empty]"
+    ],
+    "widgets\\notifications": [
+      "[empty]"
+    ],
+    "widgets\\1_smoking": [
+      "health_compact_card.dart",
+      "health_timeline_card.dart",
+      "my_progress_smoking.dart",
+      "savings_dashboard.dart"
+    ],
+    "widgets\\2_bingeEating": [
+      "my_progress_binge_eating.dart"
+    ],
+    "widgets\\3_diet": [
+      "my_progress_diet.dart"
+    ],
+    "widgets\\4_spending": [
+      "my_progress_spending.dart"
+    ],
+    "widgets\\5_focus": [
+      "my_progress_focus.dart"
+    ],
+    "widgets\\6_adultContent": [
+      "my_progress_adult_content.dart"
+    ],
+    "widgets\\7_moneySavingChallenge": [
+      "my_progress_money_saving_challenge.dart"
+    ],
+    "widgets\\8_procrastination": [
+      "my_progress_procrastination.dart",
+      "task_creation_dialog.dart"
+    ],
+    "widgets\\9_reading": [
+      "my_progress_reading.dart"
+    ],
+    "widgets\\niche_details": [
+      "niche_content_apps.dart",
+      "niche_content_focus.dart",
+      "niche_content_schedule.dart",
+      "niche_header.dart",
+      "niche_info_section.dart"
+    ],
+    "widgets\\profile": [
+      "edit_profile_dialog.dart",
+      "lojinha.dart"
+    ],
+    "widgets\\shared": [
+      "deactivate_module_dialog.dart"
+    ],
+    "widgets\\user_privacy_and_terms": [
+      "legal_footer.dart"
+    ]
+  }
+}

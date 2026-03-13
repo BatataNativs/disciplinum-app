@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
 import 'package:disciplinum/models/user_niche_app.dart';
@@ -234,9 +236,10 @@ class CloudSyncService {
     });
   }
 
-  static Future<bool> syncNow() async {
+  static Future<bool> syncNow({required BuildContext context}) async {
     try {
-      await GamificationService.instance.refreshAllDataFromCloud();
+      final gamificationService = Provider.of<GamificationService>(context, listen: false);
+      await gamificationService.refreshAllDataFromCloud();
       return true;
     } catch (e) {
       LoggerService.instance.e('Erro durante sincronização global', error: e);
@@ -314,7 +317,7 @@ class CloudSyncService {
         [];
   }
 
-  static Future<void> syncAllEntitlements() async {
+  static Future<void> syncAllEntitlements({required BuildContext context}) async {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return;
@@ -324,8 +327,10 @@ class CloudSyncService {
       // Carrega todos os entitlements da nuvem
       final cloudEntitlements = await loadEntitlements();
       
-      // Sincroniza com GamificationService usando métodos específicos da nuvem
-      final gamification = GamificationService.instance;
+      // Verifica se o context ainda está válido antes de usar Provider
+      if (context.mounted) {
+        // Sincroniza com GamificationService usando Provider
+        final gamification = Provider.of<GamificationService>(context, listen: false);
       
       // Sincroniza desbloqueios por Ads (sem regravar na nuvem)
       final notificationEntitlements = cloudEntitlements
@@ -354,6 +359,7 @@ class CloudSyncService {
       }
       
       LoggerService.instance.i('Sincronização de entitlements concluída.');
+      } // Fecha o if (context.mounted)
     } catch (e) {
       LoggerService.instance.e('Erro na sincronização de entitlements', error: e);
     }

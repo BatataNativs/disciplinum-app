@@ -17,7 +17,12 @@ class ReadingService extends ChangeNotifier {
   static const String _streakKey = 'reading_streak_data';
 
   final SharedPreferences _prefs;
+  final GamificationService _gamificationService;
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  ReadingService(this._prefs, this._gamificationService) {
+    _loadData();
+  }
 
   // Lista de livros
   List<ReadingBook> _books = [];
@@ -33,10 +38,6 @@ class ReadingService extends ChangeNotifier {
   bool hasSilver = false;
   bool hasGold = false;
   bool hasDiamond = false;
-
-  ReadingService(this._prefs) {
-    _loadData();
-  }
 
   Future<void> _loadData() async {
     // 1. Carregar Livros
@@ -323,22 +324,22 @@ class ReadingService extends ChangeNotifier {
     // 3, 5, 7, 10
     if (_currentStreak >= 3 && !hasBronze) {
       hasBronze = true;
-      GamificationService.instance
+      _gamificationService
           .awardMedal(NicheId.reading, GamificationMedal.bronze);
     }
     if (_currentStreak >= 5 && !hasSilver) {
       hasSilver = true;
-      GamificationService.instance
+      _gamificationService
           .awardMedal(NicheId.reading, GamificationMedal.prata);
     }
     if (_currentStreak >= 7 && !hasGold) {
       hasGold = true;
-      GamificationService.instance
+      _gamificationService
           .awardMedal(NicheId.reading, GamificationMedal.ouro);
     }
     if (_currentStreak >= 10 && !hasDiamond) {
       hasDiamond = true;
-      GamificationService.instance
+      _gamificationService
           .awardMedal(NicheId.reading, GamificationMedal.diamante);
     }
   }

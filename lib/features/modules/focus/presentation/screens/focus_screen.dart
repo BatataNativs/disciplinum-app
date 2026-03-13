@@ -9,11 +9,11 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? heroTag;
@@ -86,7 +86,7 @@ class _FocusScreenState extends State<FocusScreen> {
         if (_gamificationRunning) {
           final gamification =
               Provider.of<GamificationService>(context, listen: false);
-          gamification.monitoredApps = List.from(_selectedApps);
+          gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -157,7 +157,7 @@ class _FocusScreenState extends State<FocusScreen> {
 
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
-    gamification.monitoredApps = List.from(_selectedApps);
+    gamification.monitoredApps = Set<String>.from(_selectedApps);
 
     TimeOfDayRange? range;
     if (_focusStart != null && _focusEnd != null) {
@@ -221,9 +221,9 @@ class _FocusScreenState extends State<FocusScreen> {
 
   Future<void> _desativarNichoMonitoramento() async {
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content:
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
+      context: context,
+      nicheId: NicheId.focus,
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
 
     if (confirmed == true) {

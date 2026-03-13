@@ -20,7 +20,6 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 class GamificationService extends ChangeNotifier {
   static final GamificationService _instance = GamificationService._internal();
   static GamificationService get instance => _instance;
-  factory GamificationService() => _instance;
 
   GamificationService._internal() {
     _loadPreferences();
@@ -31,6 +30,9 @@ class GamificationService extends ChangeNotifier {
     NotificationService.onBingeCheckInSim =
         _handleBingeCheckInSimFromNotification;
   }
+
+  // Factory constructor for backward compatibility
+  factory GamificationService() => instance;
 
   // Cache local
   final Map<NicheId, UserModuleStatus> _moduleStates = {};
@@ -68,9 +70,10 @@ class GamificationService extends ChangeNotifier {
 
   // Getters/Setters Delegados para AppMonitoringService
   bool get isGeneralMonitoringActive => AppMonitoringService.instance.isActive;
-  List<String> get monitoredApps => AppMonitoringService.instance.monitoredApps;
-  set monitoredApps(List<String> value) {
-    AppMonitoringService.instance.monitoredApps = value;
+  Set<String> get monitoredApps =>
+      Set<String>.from(AppMonitoringService.instance.monitoredAppsList);
+  set monitoredApps(Set<String> value) {
+    AppMonitoringService.instance.monitoredApps = value.toList();
     notifyListeners();
   }
 
@@ -611,6 +614,24 @@ class GamificationService extends ChangeNotifier {
     final json = (await SharedPreferences.getInstance())
         .getString('$_prefsModuleStatusPrefix${nicheId.id}');
     return json != null ? UserModuleStatus.fromJson(jsonDecode(json)) : null;
+  }
+
+  /// Retorna o status atual do módulo (método público)
+  Future<UserModuleStatus?> getModuleStatus(NicheId nicheId) async {
+    // Primeiro tenta do cache
+    if (_moduleStates.containsKey(nicheId)) {
+      return _moduleStates[nicheId];
+    }
+    
+    // Se não estiver no cache, tenta carregar do localStorage
+    final localStatus = await _getLocalStatus(nicheId);
+    if (localStatus != null) {
+      _moduleStates[nicheId] = localStatus;
+      return localStatus;
+    }
+    
+    // Se não encontrar, retorna null
+    return null;
   }
 
   Future<void> sendModuleNotification(String body,

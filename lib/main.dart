@@ -55,7 +55,10 @@ Future<void> main() async {
             ),
           ),
           ChangeNotifierProvider<ReadingService>(
-            create: (context) => ReadingService(startupData.prefs),
+            create: (context) => ReadingService(
+              startupData.prefs,
+              context.read<GamificationService>(),
+            ),
           ),
           ChangeNotifierProvider<MoneySavingChallengeService>(
             create: (_) => MoneySavingChallengeService(),

@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    final ok = await CloudSyncService.syncNow();
+    final ok = await CloudSyncService.syncNow(context: context);
 
     if (!mounted) return;
     setState(() => _isSyncing = false);

@@ -13,11 +13,11 @@ import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_se
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/models/user_niche_time.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'dart:async';
 
 class BingeEatingScreen extends StatefulWidget {
@@ -177,7 +177,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
         if (_gamificationRunning) {
           final gamification =
               Provider.of<GamificationService>(context, listen: false);
-          gamification.monitoredApps = List.from(_selectedApps);
+          gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -247,7 +247,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
-    gamification.monitoredApps = List.from(_selectedApps);
+    gamification.monitoredApps = Set<String>.from(_selectedApps);
     gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
 
     final granted = await NotificationService.requestPermission();
@@ -301,9 +301,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
   Future<void> _desativarNichoMonitoramento() async {
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content:
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
+      context: context,
+      nicheId: NicheId.bingeEating,
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {

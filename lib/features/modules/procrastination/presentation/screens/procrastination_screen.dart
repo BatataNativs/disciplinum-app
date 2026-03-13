@@ -6,8 +6,8 @@ import 'package:disciplinum/features/modules/procrastination/domain/entities/pro
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastination.dart';
-import 'package:disciplinum/widgets/8_procrastination/task_creation_dialog.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
+import 'package:disciplinum/shared/widgets/dialogs/task_creation_dialog.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_notifications_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_stats_screen.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
@@ -695,11 +695,20 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         onTap: () {
-          TaskCreationDialog.show(
-            context,
-            service: service,
-            listId: listId,
-            taskToEdit: task,
+          showDialog(
+            context: context,
+            builder: (context) => TaskCreationDialog(
+              task: task,
+              onSave: (newTask) {
+                if (task.id.isEmpty) {
+                  // Nova tarefa
+                  service.addTaskToList(listId, newTask);
+                } else {
+                  // Atualizar tarefa existente
+                  service.updateTaskInList(listId, newTask);
+                }
+              },
+            ),
           );
         },
         leading: GestureDetector(
@@ -747,34 +756,38 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
           ),
           onSelected: (action) {
             if (action == 'edit') {
-              TaskCreationDialog.show(
-                context,
-                service: service,
-                listId: listId,
-                taskToEdit: task,
+              showDialog(
+                context: context,
+                builder: (context) => TaskCreationDialog(
+                  task: task,
+                  onSave: (newTask) {
+                    // Atualizar tarefa existente
+                    service.updateTaskInList(listId, newTask);
+                  },
+                ),
               );
             } else if (action == 'delete') {
               _showDeleteTaskDialog(service, listId, task.id);
             }
           },
           itemBuilder: (ctx) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: 18),
-                  SizedBox(width: 8),
-                  Text('Editar'),
+                  Icon(Icons.edit, size: 16),
+                  const SizedBox(width: 8),
+                  const Text('Editar'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, size: 18, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Excluir', style: TextStyle(color: Colors.red)),
+                  Icon(Icons.delete, size: 16, color: Colors.red),
+                  const SizedBox(width: 8),
+                  const Text('Excluir', style: TextStyle(color: Colors.red)),
                 ],
               ),
             ),
@@ -841,10 +854,14 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: () {
-                    TaskCreationDialog.show(
-                      context,
-                      service: service,
-                      listId: _selectedListId,
+                    showDialog(
+                      context: context,
+                      builder: (context) => TaskCreationDialog(
+                        onSave: (newTask) {
+                          // Nova tarefa - adiciona à lista atual
+                          service.addTaskToList(_selectedListId, newTask);
+                        },
+                      ),
                     );
                   },
                 ),

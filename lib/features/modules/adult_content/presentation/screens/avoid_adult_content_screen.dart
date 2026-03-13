@@ -14,7 +14,7 @@ import 'package:disciplinum/features/modules/adult_content/presentation/widgets/
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class AvoidAdultContentScreen extends StatefulWidget {
   final String? heroTag;
@@ -74,7 +74,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
         if (_gamificationRunning) {
           final gamification =
               Provider.of<GamificationService>(context, listen: false);
-          gamification.monitoredApps = List.from(_selectedApps);
+          gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -138,7 +138,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
-    gamification.monitoredApps = List.from(_selectedApps);
+    gamification.monitoredApps = Set<String>.from(_selectedApps);
     gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
 
     final granted = await NotificationService.requestPermission();
@@ -192,9 +192,9 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
   Future<void> _desativarNichoMonitoramento() async {
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content:
-          "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
+      context: context,
+      nicheId: NicheId.adultContent,
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {

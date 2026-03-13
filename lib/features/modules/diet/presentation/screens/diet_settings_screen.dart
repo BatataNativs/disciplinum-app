@@ -8,12 +8,12 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/diet_notifications_screen.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/meal_streak_screen.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   final String? heroTag;
@@ -177,8 +177,9 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
   void _desativarNichoMonitoramento() async {
     final confirmed = await DeactivateModuleDialog.show(
-      context,
-      content: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
+      context: context,
+      nicheId: NicheId.diet,
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
 
     if (confirmed == true) {

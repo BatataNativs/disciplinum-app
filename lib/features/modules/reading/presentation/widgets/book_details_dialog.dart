@@ -1,8 +1,10 @@
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/features/modules/reading/presentation/widgets/update_progress_dialog.dart';
+import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
+import 'package:disciplinum/shared/widgets/reading/update_progress_dialog.dart';
 import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class BookDetailsDialog extends StatelessWidget {
   final ReadingBook book;
@@ -104,7 +106,25 @@ class BookDetailsDialog extends StatelessWidget {
                 Navigator.pop(context); // Fecha o detalhes
                 showDialog(
                   context: context,
-                  builder: (_) => UpdateProgressDialog(book: book),
+                  builder: (_) => UpdateProgressDialog(
+                    book: book,
+                    onUpdate: (updatedBook) {
+                      // Implementar atualização
+                      final service = Provider.of<ReadingService>(context, listen: false);
+                      service.updateBook(
+                        bookId: updatedBook.id,
+                        title: updatedBook.title,
+                        author: updatedBook.author,
+                        totalPages: updatedBook.totalPages,
+                        theme: updatedBook.theme,
+                      );
+                      
+                      // Se precisar atualizar o progresso da página atual
+                      if (updatedBook.currentPage != book.currentPage) {
+                        service.updateProgress(updatedBook.id, updatedBook.currentPage);
+                      }
+                    },
+                  ),
                 );
               },
             ),

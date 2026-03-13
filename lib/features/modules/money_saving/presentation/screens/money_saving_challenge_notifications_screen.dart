@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
@@ -43,7 +44,9 @@ class _MoneySavingChallengeNotificationsScreenState
     await _service.saveChallenge(newChallenge);
 
     // Agenda as notificações nativas
-    await GamificationService.instance.scheduleChallengeNotification();
+    if (mounted) {
+      await context.read<GamificationService>().scheduleChallengeNotification();
+    }
   }
 
   @override

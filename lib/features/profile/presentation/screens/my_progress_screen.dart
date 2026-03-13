@@ -6,15 +6,7 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 // Import das telas de progresso de cada módulo
-import 'package:disciplinum/widgets/1_smoking/my_progress_smoking.dart';
-import 'package:disciplinum/widgets/2_bingeEating/my_progress_binge_eating.dart';
-import 'package:disciplinum/widgets/3_diet/my_progress_diet.dart';
-import 'package:disciplinum/widgets/4_spending/my_progress_spending.dart';
-import 'package:disciplinum/widgets/5_focus/my_progress_focus.dart';
-import 'package:disciplinum/widgets/6_adultContent/my_progress_adult_content.dart';
-import 'package:disciplinum/widgets/7_moneySavingChallenge/my_progress_money_saving_challenge.dart';
-import 'package:disciplinum/widgets/8_procrastination/my_progress_procrastination.dart';
-import 'package:disciplinum/widgets/9_reading/my_progress_reading.dart';
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 
 class MyProgressScreen extends StatelessWidget {
   const MyProgressScreen({super.key});
