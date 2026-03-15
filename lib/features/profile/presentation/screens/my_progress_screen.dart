@@ -4,6 +4,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 // Import das telas de progresso de cada módulo
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
@@ -75,8 +76,8 @@ class MyProgressScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final niche = niches[index];
                       final dias =
-                          gamification.diasConsecutivosByModule[niche.id] ?? 0;
-                      final isActive = gamification.isModuleActive(niche.id);
+                          gamification.diasConsecutivosByModule[niche.nicheId] ?? 0;
+                      final isActive = gamification.isModuleActive(niche.nicheId);
 
                       return _buildProgressCard(
                         context: context,
@@ -166,7 +167,7 @@ class MyProgressScreen extends StatelessWidget {
   void _navigateToProgressDetail(BuildContext context, Niche niche) {
     late final Widget detailScreen;
 
-    switch (niche.id) {
+    switch (niche.nicheId) {
       case NicheId.smoking:
         detailScreen = const MyProgressSmoking();
         break;

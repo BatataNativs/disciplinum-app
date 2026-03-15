@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
@@ -26,7 +27,7 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
   Future<void> _loadCounts() async {
     // Niche ID + 100 para check-in diário
     final checkinTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id + 200);
 
     if (mounted) {
       setState(() {
@@ -233,7 +234,7 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
     final navigatorContext = context;
 
     // Carrega horários existentes
-    final existingTimes = await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id + 200);
+    final existingTimes = await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id + 200);
 
     if (!mounted) return;
 
@@ -245,16 +246,16 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
       MaterialPageRoute(
         builder: (_) => ScheduleScreen(
           args: ScheduleScreenArgs(
-            nicheId: _niche.id.id + 200, // ID específico para check-in
+            nicheId: _niche.id + 200, // ID específico para check-in
             maxSlots: 3,
             title: 'Check-in Diário',
             initialTimes: existingTimes.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList(),
             onChanged: (times) {
               // Salva os novos horários
-              CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id + 200);
+              CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id + 200);
               for (final time in times) {
                 CloudSyncService.addUserNicheTime(
-                  nicheId: _niche.id.id + 200,
+                  nicheId: _niche.id + 200,
                   hour: time.hour,
                   minute: time.minute,
                   phrase: 'Você resistiu às tentações de delivery hoje?',

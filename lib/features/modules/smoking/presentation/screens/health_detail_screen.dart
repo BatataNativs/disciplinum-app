@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import '../widgets/health_timeline_card.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';

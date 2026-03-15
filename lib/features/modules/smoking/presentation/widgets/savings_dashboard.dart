@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 
 class SavingsDashboard extends StatelessWidget {
   final SmokingSettingsModel settings;

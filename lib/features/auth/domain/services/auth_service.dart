@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:disciplinum/main.dart'; // Para navigatorKey
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/models/user_niche_app.dart';
-import 'package:disciplinum/models/user_niche_time.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/shared/models/user_niche_app.dart';
+import 'package:disciplinum/shared/models/user_niche_time.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/events/event_bootstrap.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/navigation/navigation_service.dart';
 
 class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
@@ -71,7 +71,7 @@ class AuthService extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          NavigationService.navigator?.pushNamedAndRemoveUntil(
             AppRouter.resetPassword,
             (route) => false,
           );
@@ -94,7 +94,7 @@ class AuthService extends ChangeNotifier {
         if (_isSocialLoginInProgress) {
           _isSocialLoginInProgress = false;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil(
+            NavigationService.navigator?.pushNamedAndRemoveUntil(
               AppRouter.profile,
               (route) => false,
             );

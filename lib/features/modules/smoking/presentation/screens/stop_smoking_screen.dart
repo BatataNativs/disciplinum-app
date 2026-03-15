@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import '../../domain/services/smoking_service.dart';
 import 'health_detail_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
@@ -8,8 +8,9 @@ import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/models/common/niche.dart';
 import 'savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +19,7 @@ import 'frases_motivacionais.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'daily_checkins_stats.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
-import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 
 class StopSmokingScreen extends StatefulWidget {
@@ -1386,7 +1387,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                     isDark: isDark,
                     onTap: () async {
                       Navigator.pop(ctx);
-                      final nicheId = _niche.id.id;
+                      final nicheId = _niche.id;
                       final initialItems =
                           await CloudSyncService.loadUserNicheTimes(
                               nicheId: nicheId);

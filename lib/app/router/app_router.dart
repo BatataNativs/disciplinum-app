@@ -94,7 +94,7 @@ class AppRouter {
           return _errorRoute('Argumento inválido para Detalhes do Nicho');
         }
 
-        switch (niche.id) {
+        switch (niche.nicheId) {
           case NicheId.smoking:
             return FastMaterialPageRoute(
                 builder: (_) => const FrasesMotivacionaisScreen());

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
@@ -56,7 +57,7 @@ class _FocusScreenState extends State<FocusScreen> {
     _isLoadingData = true;
 
     try {
-      final nicheId = _niche.id;
+      final nicheId = _niche.nicheId;
       final userApps =
           await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final userTimes =
@@ -124,7 +125,7 @@ class _FocusScreenState extends State<FocusScreen> {
     });
 
     await CloudSyncService.removeUserNicheApp(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       package: packageName,
     );
 
@@ -165,7 +166,7 @@ class _FocusScreenState extends State<FocusScreen> {
     }
 
     gamification.startMonitoringApps(
-        nicheId: _niche.id, horarios: [], intervaloFoco: range);
+        nicheId: _niche.nicheId, horarios: [], intervaloFoco: range);
 
     if (!mounted) return;
 
@@ -183,11 +184,11 @@ class _FocusScreenState extends State<FocusScreen> {
       _gamificationRunning = true;
     });
     CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       isActive: true,
     );
     Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+        .startModuleCycle(nicheId: _niche.nicheId);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -251,7 +252,7 @@ class _FocusScreenState extends State<FocusScreen> {
             curve: Curves.easeOutCubic);
       }
       await CloudSyncService.saveModuleStatus(
-        nicheId: _niche.id,
+        nicheId: _niche.nicheId,
         isActive: false,
       );
 
@@ -270,7 +271,7 @@ class _FocusScreenState extends State<FocusScreen> {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
-      _niche.id,
+      _niche.nicheId,
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
@@ -297,16 +298,16 @@ class _FocusScreenState extends State<FocusScreen> {
               });
 
               await CloudSyncService.removeAllAppsForNiche(
-                nicheId: _niche.id,
+                nicheId: _niche.nicheId,
               );
               for (var pkg in apps) {
                 await CloudSyncService.addUserNicheApp(
-                  nicheId: _niche.id,
+                  nicheId: _niche.nicheId,
                   package: pkg,
                 );
               }
             },
-            nicheId: _niche.id,
+            nicheId: _niche.nicheId,
           ),
         ),
       ),
@@ -373,14 +374,14 @@ class _FocusScreenState extends State<FocusScreen> {
     });
 
     // Save to DB (Quick hack: save as UserNicheTimes, index 0=start, 1=end)
-    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
+    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id);
     await CloudSyncService.addUserNicheTime(
-      nicheId: _niche.id.id,
+      nicheId: _niche.id,
       hour: start.hour,
       minute: start.minute,
     );
     await CloudSyncService.addUserNicheTime(
-      nicheId: _niche.id.id,
+      nicheId: _niche.id,
       hour: end.hour,
       minute: end.minute,
     );
@@ -397,7 +398,7 @@ class _FocusScreenState extends State<FocusScreen> {
       _focusEnd = null;
     });
 
-    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
+    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id);
 
     if (mounted) {
       EnhancedSnackBarHelper.showInfo(context, 'Intervalo de foco removido');

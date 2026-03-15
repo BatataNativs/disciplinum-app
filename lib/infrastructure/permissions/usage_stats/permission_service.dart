@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/main.dart';
+import 'package:disciplinum/core/navigation/navigation_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
@@ -73,7 +73,7 @@ class PermissionService {
 
     bool granted = await hasAccessibilityPermission();
 
-    final effectiveContext = navigatorKey.currentContext ?? context;
+    final effectiveContext = NavigationService.navigator?.context ?? context;
     if (!effectiveContext.mounted) return;
 
     if (granted) {
@@ -94,7 +94,7 @@ class PermissionService {
   /// Exibe o diálogo de permissão de acessibilidade (Fase 6).
   static Future<bool> _showAccessibilityPermissionDialog(
       BuildContext context) async {
-    final dialogContext = navigatorKey.currentContext ?? context;
+    final dialogContext = NavigationService.navigator?.context ?? context;
 
     final bool? wentToSettings = await showDialog<bool>(
       context: dialogContext,
@@ -313,7 +313,7 @@ class PermissionService {
   }
 
   static Future<bool> _showOverlayPermissionDialog(BuildContext context) async {
-    final dialogContext = navigatorKey.currentContext ?? context;
+    final dialogContext = NavigationService.navigator?.context ?? context;
 
     final bool? wentToSettings = await showDialog<bool>(
       context: dialogContext,

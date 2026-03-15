@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/models/user_niche_app.dart';
-import 'package:disciplinum/models/user_niche_time.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/shared/models/user_niche_app.dart';
+import 'package:disciplinum/shared/models/user_niche_time.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 
 class PreferencesService {
   static const String _appsKey = 'guest_user_niche_apps';

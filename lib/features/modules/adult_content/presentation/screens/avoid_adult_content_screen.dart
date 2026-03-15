@@ -6,6 +6,7 @@ import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_se
 import 'package:disciplinum/features/modules/adult_content/presentation/screens/avoid_adult_content_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -57,7 +58,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     _isLoadingData = true;
 
     try {
-      final nicheId = _niche.id;
+      final nicheId = _niche.nicheId;
       final userApps =
           await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
@@ -106,7 +107,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     });
 
     await CloudSyncService.removeUserNicheApp(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       package: packageName,
     );
 
@@ -139,7 +140,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
-    gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
+    gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
 
     final granted = await NotificationService.requestPermission();
     if (!mounted) return;
@@ -156,9 +157,12 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(nicheId: _niche.id, isActive: true);
+    CloudSyncService.saveModuleStatus(
+      nicheId: _niche.nicheId,
+      isActive: true,
+    );
     Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+        .startModuleCycle(nicheId: _niche.nicheId);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -237,7 +241,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
-      _niche.id,
+      _niche.nicheId,
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
@@ -262,13 +266,15 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.id);
+              await CloudSyncService.removeAllAppsForNiche(
+                nicheId: _niche.nicheId,
+              );
               for (var pkg in apps) {
                 await CloudSyncService.addUserNicheApp(
-                    nicheId: _niche.id, package: pkg);
+                    nicheId: _niche.nicheId, package: pkg);
               }
             },
-            nicheId: _niche.id,
+            nicheId: _niche.nicheId,
           ),
         ),
       ),

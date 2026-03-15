@@ -7,6 +7,7 @@ import 'package:disciplinum/features/modules/binge_eating/presentation/screens/b
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/days_without_food_delivery.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
@@ -16,7 +17,7 @@ import 'package:disciplinum/features/monitoring/presentation/screens/select_apps
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
-import 'package:disciplinum/models/user_niche_time.dart';
+import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'dart:async';
 
@@ -83,10 +84,10 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
       if (isGuest) {
         checkinTimes = await PreferencesService.loadUserNicheTimes(
-            nicheId: _niche.id.id + 200);
+            nicheId: _niche.id + 200);
       } else {
         checkinTimes = await CloudSyncService.loadUserNicheTimes(
-            nicheId: _niche.id.id + 200);
+            nicheId: _niche.id + 200);
       }
 
       TimeOfDay? newCheckinTime;
@@ -115,17 +116,17 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
     if (isGuest) {
       times = await PreferencesService.loadUserNicheTimes(
-          nicheId: _niche.id.id + 200);
+          nicheId: _niche.id + 200);
     } else {
       times = await CloudSyncService.loadUserNicheTimes(
-          nicheId: _niche.id.id + 200);
+          nicheId: _niche.id + 200);
     }
     if (!mounted) return;
 
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
 
-    gamification.scheduleByModule[_niche.id] =
+    gamification.scheduleByModule[_niche.nicheId] =
         times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
 
     if (onlySyncSchedules) {
@@ -141,12 +142,12 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
     if (times.isNotEmpty && _gamificationRunning) {
       await PermissionService.ensurePermissions(context);
-      gamification.startModuleCycle(nicheId: _niche.id);
+      gamification.startModuleCycle(nicheId: _niche.nicheId);
 
       if (!gamification.isGeneralMonitoringActive) {
         gamification.startMonitoringApps(
-            nicheId: _niche.id,
-            horarios: gamification.scheduleByModule[_niche.id]!);
+            nicheId: _niche.nicheId,
+            horarios: gamification.scheduleByModule[_niche.nicheId]!);
       }
     }
   }
@@ -160,7 +161,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     _isLoadingData = true;
 
     try {
-      final nicheId = _niche.id;
+      final nicheId = _niche.nicheId;
       final userApps =
           await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
@@ -215,7 +216,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     });
 
     await CloudSyncService.removeUserNicheApp(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       package: packageName,
     );
 
@@ -248,7 +249,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
-    gamification.startMonitoringApps(nicheId: _niche.id, horarios: []);
+    gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
 
     final granted = await NotificationService.requestPermission();
     if (!mounted) return;
@@ -265,9 +266,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(nicheId: _niche.id, isActive: true);
+    CloudSyncService.saveModuleStatus(nicheId: _niche.nicheId, isActive: true);
     Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+        .startModuleCycle(nicheId: _niche.nicheId);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -346,7 +347,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
-      _niche.id,
+      _niche.nicheId,
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
@@ -371,13 +372,13 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.id);
+              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.nicheId);
               for (var pkg in apps) {
                 await CloudSyncService.addUserNicheApp(
-                    nicheId: _niche.id, package: pkg);
+                    nicheId: _niche.nicheId, package: pkg);
               }
             },
-            nicheId: _niche.id,
+            nicheId: _niche.nicheId,
           ),
         ),
       ),
@@ -900,13 +901,13 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
               // Remove o horário específico
               if (isGuest) {
                 await PreferencesService.removeUserNicheTime(
-                  nicheId: _niche.id.id + 200,
+                  nicheId: _niche.id + 200,
                   hour: _checkinTime!.hour,
                   minute: _checkinTime!.minute,
                 );
               } else {
                 await CloudSyncService.removeUserNicheTime(
-                  nicheId: _niche.id.id + 200,
+                  nicheId: _niche.id + 200,
                   hour: _checkinTime!.hour,
                   minute: _checkinTime!.minute,
                 );

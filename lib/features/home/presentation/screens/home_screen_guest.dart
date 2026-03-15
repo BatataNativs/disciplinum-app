@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/models/common/niche_category.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
+import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
@@ -237,7 +238,7 @@ class _MoneySavingChallengeScreenState
         if (editId == null) {
           final gamification =
               Provider.of<GamificationService>(context, listen: false);
-          gamification.startModuleCycle(nicheId: _niche.id);
+          gamification.startModuleCycle(nicheId: _niche.nicheId);
         }
 
         // Vai para a aba do grid (agora via botão, mas podemos mudar para tab 1 se preferir)
@@ -269,7 +270,7 @@ class _MoneySavingChallengeScreenState
       // Inicia ciclo de gamificação
       final gamification =
           Provider.of<GamificationService>(context, listen: false);
-      gamification.startModuleCycle(nicheId: _niche.id);
+      gamification.startModuleCycle(nicheId: _niche.nicheId);
 
       _showSnackBar('Desafio ativado! Boa sorte! 🚀');
     }
@@ -322,7 +323,7 @@ class _MoneySavingChallengeScreenState
             Provider.of<GamificationService>(context, listen: false);
 
         gamification.resetMedals(
-          _niche.id,
+          _niche.nicheId,
           deactivate: true,
           notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
@@ -572,7 +573,7 @@ class _MoneySavingChallengeScreenState
         final gamification =
             Provider.of<GamificationService>(context, listen: false);
         gamification.resetMedals(
-          _niche.id,
+          _niche.nicheId,
           deactivate: true,
           notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:

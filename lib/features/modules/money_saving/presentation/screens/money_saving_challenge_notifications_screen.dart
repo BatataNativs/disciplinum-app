@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
@@ -104,7 +105,7 @@ class _MoneySavingChallengeNotificationsScreenState
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.id),
+                    NotificationMessageEditor(nicheId: _niche.nicheId),
                     const SizedBox(height: 8),
 
                     // Seção: Lembretes do Desafio

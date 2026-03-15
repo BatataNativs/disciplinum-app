@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
@@ -29,7 +30,7 @@ class _ReadingNotificationsScreenState
 
   Future<void> _loadCount() async {
     final reminderTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id);
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id);
 
     if (mounted) {
       setState(() {
@@ -94,7 +95,7 @@ class _ReadingNotificationsScreenState
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.id),
+                    NotificationMessageEditor(nicheId: _niche.nicheId),
                     const SizedBox(height: 8),
 
                     // Como funciona - Notificações
@@ -228,17 +229,17 @@ class _ReadingNotificationsScreenState
           MaterialPageRoute(
             builder: (_) => ScheduleScreen(
               args: ScheduleScreenArgs(
-                nicheId: _niche.id.id, // ID 9
+                nicheId: _niche.nicheId.id, // ID 9
                 maxSlots: 1,
                 title: 'Lembrete Diário',
                 initialTimes: [], // ScheduleScreen carrega automaticamente
                 onChanged: (times) {
                   // Salva os novos horários
                   CloudSyncService.removeAllTimesForNiche(
-                      nicheId: _niche.id.id);
+                      nicheId: _niche.id);
                   for (final time in times) {
                     CloudSyncService.addUserNicheTime(
-                      nicheId: _niche.id.id,
+                      nicheId: _niche.id,
                       hour: time.hour,
                       minute: time.minute,
                       phrase: '📚 Hora da leitura diária! Mantenha sua mente ativa.',

@@ -29,8 +29,15 @@ dependencies:
   shared_preferences: ^2.3.5
   path_provider: ^2.1.4
   
+  # Banco de Dados Isar
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path: ^1.8.3
+  
   # Gerenciamento de Estado
   provider: ^6.1.2
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
   
   # Utilitários
   equatable: ^2.0.5
@@ -81,6 +88,13 @@ dev_dependencies:
   # Geração de Assets
   flutter_launcher_icons: ^0.14.2
   flutter_native_splash: ^2.4.3
+  
+  # Riverpod Code Generation
+  riverpod_generator: ^2.3.8
+  build_runner: ^2.4.7
+  
+  # Isar Code Generation
+  isar_generator: ^3.1.0+1
 
 flutter:
   uses-material-design: true

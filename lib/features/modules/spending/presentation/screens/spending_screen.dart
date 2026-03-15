@@ -7,6 +7,7 @@ import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_se
 import 'package:disciplinum/features/modules/spending/presentation/screens/spending_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -59,7 +60,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
     _isLoadingData = true;
 
     try {
-      final nicheId = _niche.id;
+      final nicheId = _niche.nicheId;
       final userApps =
           await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
       final status = await CloudSyncService.loadModuleStatus(nicheId);
@@ -86,7 +87,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
 
           if (accessibilityGranted) {
             gamification.startMonitoringApps(
-              nicheId: nicheId,
+              nicheId: NicheId.spending,
               horarios: [],
             );
           } else {
@@ -123,7 +124,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
     gamification.monitoredApps = Set<String>.from(_selectedApps);
 
     gamification.startMonitoringApps(
-      nicheId: _niche.id,
+      nicheId: NicheId.spending,
       horarios: [],
     );
 
@@ -144,11 +145,11 @@ class _SpendingScreenState extends State<SpendingScreen> {
       _gamificationRunning = true;
     });
     CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
+      nicheId: NicheId.spending,
       isActive: true,
     );
     Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+        .startModuleCycle(nicheId: NicheId.spending);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -214,7 +215,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
           curve: Curves.easeOutCubic);
     }
     CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
+      nicheId: NicheId.spending,
       isActive: false,
     );
 
@@ -234,7 +235,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
     final gamification =
         Provider.of<GamificationService>(context, listen: false);
     gamification.resetMedals(
-      _niche.id,
+      NicheId.spending,
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,
@@ -261,16 +262,16 @@ class _SpendingScreenState extends State<SpendingScreen> {
               });
 
               await CloudSyncService.removeAllAppsForNiche(
-                nicheId: _niche.id,
+                nicheId: NicheId.spending,
               );
               for (var pkg in apps) {
                 await CloudSyncService.addUserNicheApp(
-                  nicheId: _niche.id,
+                  nicheId: NicheId.spending,
                   package: pkg,
                 );
               }
             },
-            nicheId: _niche.id,
+            nicheId: NicheId.spending,
           ),
         ),
       ),
@@ -298,7 +299,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
       _selectedApps.remove(package);
     });
     await CloudSyncService.removeUserNicheApp(
-      nicheId: _niche.id,
+      nicheId: NicheId.spending,
       package: package,
     );
     // Se o módulo estiver rodando, atualizar o serviço de monitoramento

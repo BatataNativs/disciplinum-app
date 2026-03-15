@@ -1,4 +1,4 @@
-import 'package:disciplinum/models/user_niche_app.dart';
+import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:typed_data';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 
 class DietNotificationsScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
                 isDark: isDark,
               ),
               const SizedBox(height: 16),
-              NotificationMessageEditor(nicheId: _niche.id),
+              NotificationMessageEditor(nicheId: _niche.nicheId),
               const SizedBox(height: 8),
 
               // Como funciona - Notificações

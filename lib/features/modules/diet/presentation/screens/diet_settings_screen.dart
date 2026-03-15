@@ -5,6 +5,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -54,7 +55,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     _isLoadingData = true;
 
     try {
-      final nId = _niche.id;
+      final nId = _niche.nicheId;
       final userTimes =
           await CloudSyncService.loadUserNicheTimes(nicheId: nId.id);
       final status = await CloudSyncService.loadModuleStatus(nId);
@@ -118,7 +119,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         Provider.of<GamificationService>(context, listen: false);
 
     gamification.startMonitoringApps(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       horarios: _times,
     );
 
@@ -139,11 +140,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       _gamificationRunning = true;
     });
     CloudSyncService.saveModuleStatus(
-      nicheId: _niche.id,
+      nicheId: _niche.nicheId,
       isActive: true,
     );
     Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.id);
+        .startModuleCycle(nicheId: _niche.nicheId);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -190,16 +191,16 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
       // Reset medals and deactivate
       gamification.resetMedals(
-        _niche.id,
+        _niche.nicheId,
         notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
             'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         deactivate: true,
       );
 
-      await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id.id);
+      await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id + 100);
       await CloudSyncService.saveModuleStatus(
-          nicheId: _niche.id, isActive: false);
+          nicheId: _niche.nicheId, isActive: false);
 
       if (mounted) {
         setState(() {
@@ -240,11 +241,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               });
 
               await CloudSyncService.removeAllTimesForNiche(
-                nicheId: _niche.id.id,
+                nicheId: _niche.id + 100,
               );
               for (var t in times) {
                 await CloudSyncService.addUserNicheTime(
-                  nicheId: _niche.id.id,
+                  nicheId: _niche.id + 100,
                   hour: t.hour,
                   minute: t.minute,
                 );
@@ -254,16 +255,16 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               if (mounted) {
                 final gamification =
                     Provider.of<GamificationService>(context, listen: false);
-                if (gamification.isModuleActive(_niche.id)) {
-                  gamification.scheduleByModule[_niche.id] = List.from(_times);
+                if (gamification.isModuleActive(_niche.nicheId)) {
+                  gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
                   gamification.startMonitoringApps(
-                    nicheId: _niche.id,
+                    nicheId: _niche.nicheId,
                     horarios: _times,
                   );
                 }
               }
             },
-            nicheId: _niche.id.id,
+            nicheId: _niche.id + 100,
           ),
         ),
       ),
@@ -277,7 +278,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     });
 
     await CloudSyncService.removeUserNicheTime(
-      nicheId: _niche.id.id,
+      nicheId: _niche.id + 100,
       hour: time.hour,
       minute: time.minute,
     );
@@ -285,10 +286,10 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     if (mounted) {
       final gamification =
           Provider.of<GamificationService>(context, listen: false);
-      if (gamification.isModuleActive(_niche.id)) {
-        gamification.scheduleByModule[_niche.id] = List.from(_times);
+      if (gamification.isModuleActive(_niche.nicheId)) {
+        gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
         gamification.startMonitoringApps(
-          nicheId: _niche.id,
+          nicheId: _niche.nicheId,
           horarios: _times,
         );
       }

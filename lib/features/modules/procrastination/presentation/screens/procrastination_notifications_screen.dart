@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
@@ -29,7 +30,7 @@ class _ProcrastinationNotificationsScreenState
 
   Future<void> _loadCount() async {
     final checkInTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id.id);
+        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id);
 
     if (mounted) {
       setState(() {
@@ -94,7 +95,7 @@ class _ProcrastinationNotificationsScreenState
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.id),
+                    NotificationMessageEditor(nicheId: _niche.nicheId),
                     const SizedBox(height: 8),
 
                     // Como funciona - Notificações
@@ -362,7 +363,7 @@ class _ProcrastinationNotificationsScreenState
   }
 
   Future<void> _openSchedule() async {
-    final nicheId = _niche.id.id; // ID 8
+    final nicheId = _niche.id; // ID 8
 
     final initialItems =
         await CloudSyncService.loadUserNicheTimes(nicheId: nicheId);

@@ -6,19 +6,19 @@ import 'package:flutter/material.dart';
 // Mantive o alias 'fln' para segurança
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     as fln;
+import 'package:android_intent_plus/flag.dart' as android_flag;
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:disciplinum/main.dart';
 import 'package:disciplinum/app/router/app_router.dart';
-import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/features/modules/diet/domain/services/meal_tracking_service.dart';
+import 'package:disciplinum/core/navigation/navigation_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     fln.FlutterLocalNotificationsPlugin();
@@ -70,7 +70,7 @@ Future<void> initNotifications() async {
       // NOVO: Handlers para notificações de insígnias
       if (response.actionId == 'view_insignia') {
         // Abrir home e exibir insígnia conquistada
-        navigatorKey.currentState?.pushNamed(AppRouter.home);
+        NavigationService.pushNamed(AppRouter.home);
         // Cancelar notificação também ao clicar "Ver no app"
         // ID da notificação de insígnia é 5000 + index, mas não temos acesso ao index aqui
         // Então vamos cancelar todas as notificações de insígnias (5000-5010)
@@ -91,7 +91,7 @@ Future<void> initNotifications() async {
       if (response.payload == 'procrastination_checkin' ||
           response.actionId == 'ver_itens') {
         final niche = NicheRepository.getById(NicheId.procrastination);
-        navigatorKey.currentState?.pushNamed(
+        NavigationService.pushNamed(
           AppRouter.nicheDetail,
           arguments: {
             'niche': niche,
@@ -103,7 +103,7 @@ Future<void> initNotifications() async {
       // Lógica para abrir módulo de Leitura
       if (response.payload == 'reading' || response.actionId == 'reading_log') {
         final niche = NicheRepository.getById(NicheId.reading);
-        navigatorKey.currentState?.pushNamed(
+        NavigationService.pushNamed(
           AppRouter.nicheDetail,
           arguments: {
             'niche': niche,
@@ -432,14 +432,14 @@ class NotificationService {
         arguments: <String, dynamic>{
           'android.provider.extra.APP_PACKAGE': packageName,
         },
-        flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+        flags: <int>[android_flag.Flag.FLAG_ACTIVITY_NEW_TASK],
       );
       await intent.launch();
     } catch (_) {
       final fallback = AndroidIntent(
         action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
         data: 'package:$packageName',
-        flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+        flags: <int>[android_flag.Flag.FLAG_ACTIVITY_NEW_TASK],
       );
       await fallback.launch();
     }

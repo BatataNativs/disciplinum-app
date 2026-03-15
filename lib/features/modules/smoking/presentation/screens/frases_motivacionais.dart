@@ -1,8 +1,9 @@
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart' show NicheId;
 import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -37,10 +38,10 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     final iap = Provider.of<IapService>(context, listen: false);
 
     // Niche ID + 100 para motivação
-    final nicheIdMotivation = _niche.id.id + 100;
+    final nicheIdMotivation = _niche.id + 100;
     final serverTimes =
         await CloudSyncService.loadUserNicheTimes(nicheId: nicheIdMotivation);
-    final customPhrases = gamification.customPhrases[_niche.id] ?? [];
+    final customPhrases = gamification.customPhrases[_niche.nicheId] ?? [];
 
     setState(() {
       _slots = [];
@@ -59,17 +60,17 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
             phraseText = (i < customPhrases.length)
                 ? customPhrases[i]
                 : GamificationMessages.getModuleMessage(
-                    _niche.id,
+                    _niche.nicheId,
                     isUnlocked: iap.isCustomNotifUnlocked ||
-                        gamification.isNotificationUnlocked(_niche.id),
+                        gamification.isNotificationUnlocked(_niche.nicheId),
                     customMessages: gamification.customMessages,
                   );
           } else {
             // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
             phraseText = GamificationMessages.getModuleMessage(
-              _niche.id,
+              _niche.nicheId,
               isUnlocked: iap.isCustomNotifUnlocked ||
-                  gamification.isNotificationUnlocked(_niche.id),
+                  gamification.isNotificationUnlocked(_niche.nicheId),
               customMessages: gamification.customMessages,
             );
           }
@@ -90,7 +91,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     final iap = Provider.of<IapService>(context, listen: false);
 
     setState(() => _isLoading = true);
-    final nicheIdMotivation = _niche.id.id + 100;
+    final nicheIdMotivation = _niche.id + 100;
 
     // 1. Limpa horários antigos no Supabase
     await CloudSyncService.removeAllTimesForNiche(nicheId: nicheIdMotivation);
@@ -109,12 +110,12 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     // 3. Salva cache de frases no GamificationService
     final phrases = _slots.map((s) => s.text).toList();
     if (iap.isMotivationPhrasesUnlocked) {
-      await gamification.setCustomPhrases(_niche.id, phrases);
+      await gamification.setCustomPhrases(_niche.nicheId, phrases);
     }
 
     // Compatibilidade: Salva a primeira frase como mensagem principal customizada
     if (phrases.isNotEmpty) {
-      await gamification.setCustomMessage(_niche.id, phrases.first);
+      await gamification.setCustomMessage(_niche.nicheId, phrases.first);
     }
 
     // 4. Recarrega sessões de monitoramento (Reagendar notificações)
@@ -135,9 +136,9 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     setState(() {
       _slots.add(PhraseSlot(
         text: GamificationMessages.getModuleMessage(
-          _niche.id,
+          _niche.nicheId,
           isUnlocked: iap.isCustomNotifUnlocked ||
-              gamification.isNotificationUnlocked(_niche.id),
+              gamification.isNotificationUnlocked(_niche.nicheId),
           customMessages: gamification.customMessages,
         ),
         time: const TimeOfDay(hour: 12, minute: 0),
@@ -186,7 +187,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
     // Define se o usuário pode EDITAR O TEXTO (IAP Global ou Desbloqueio Local via Ad)
     final bool canEditText = iap.isMotivationPhrasesUnlocked ||
-        gamification.isMotivationUnlocked(_niche.id);
+        gamification.isMotivationUnlocked(_niche.nicheId);
 
     return Container(
       decoration: BoxDecoration(
@@ -387,7 +388,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   Widget _buildPurchaseCard(bool isDark) {
-    return NotificationMessageEditor(nicheId: _niche.id);
+    return NotificationMessageEditor(nicheId: _niche.nicheId);
   }
 
   void _showUnlockDialog() {
@@ -451,7 +452,7 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
     adService.showRewardedAd(
       onUserEarnedReward: () {
-        gamification.unlockMotivation(_niche.id);
+        gamification.unlockMotivation(_niche.nicheId);
         if (mounted) {
           SnackBarHelper.showSuccess(
               context, 'Personalização desbloqueada! 🎉');
