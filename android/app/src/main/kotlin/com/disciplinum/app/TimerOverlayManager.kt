@@ -133,4 +133,99 @@ class TimerOverlayManager(private val context: Context) {
             overlayView = null
         }
     }
+
+    fun showHint(title: String, message: String, duration: Int, position: String) {
+        hide() // Esconder qualquer overlay existente
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            when (position) {
+                "top" -> {
+                    gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                    y = 200
+                }
+                "center" -> {
+                    gravity = Gravity.CENTER
+                }
+                else -> {
+                    gravity = Gravity.CENTER
+                }
+            }
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 16, 24, 16)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#FF6366F1")) // Azul vibrante
+                cornerRadius = 24f
+                setStroke(4, Color.parseColor("#FFFFFFFF")) // Borda branca
+            }
+        }
+
+        // Título
+        val titleView = TextView(context).apply {
+            text = title
+            setTextColor(Color.WHITE)
+            textSize = 18f
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 8)
+        }
+
+        // Mensagem
+        val messageView = TextView(context).apply {
+            text = message
+            setTextColor(Color.WHITE)
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 8)
+        }
+
+        // Indicador de piscar
+        val blinkIndicator = TextView(context).apply {
+            text = "👆"
+            textSize = 24f
+            gravity = Gravity.CENTER
+        }
+
+        container.addView(titleView)
+        container.addView(messageView)
+        container.addView(blinkIndicator)
+        overlayView = container
+
+        try {
+            windowManager.addView(overlayView, params)
+            
+            // Efeito de piscar
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            var isVisible = true
+            val blinkRunnable = object : Runnable {
+                override fun run() {
+                    overlayView?.alpha = if (isVisible) 0.3f else 1.0f
+                    isVisible = !isVisible
+                    handler.postDelayed(this, 500) // Piscar a cada 500ms
+                }
+            }
+            handler.post(blinkRunnable)
+            
+            // Parar piscar após a duração
+            handler.postDelayed({
+                handler.removeCallbacks(blinkRunnable)
+                hide()
+            }, duration.toLong())
+            
+        } catch (e: Exception) {
+            overlayView = null
+        }
+    }
 }

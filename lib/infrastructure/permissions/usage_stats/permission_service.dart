@@ -273,12 +273,43 @@ class PermissionService {
     }
   }
 
-  /// Abre a tela de configurações de acessibilidade (Fase 6).
+  /// Abre a tela de configurações de acessibilidade (Fase 6) com hints visuais.
   static Future<void> openAccessibilitySettings() async {
     try {
       await _methodChannel.invokeMethod('openAccessibilitySettings');
+      
+      // CORREÇÃO: Adicionar hints visuais após abrir as configurações
+      await _showAccessibilityHints();
     } catch (e) {
       LoggerService.instance.e('Erro ao abrir configurações de acessibilidade', error: e);
+    }
+  }
+
+  /// Exibe hints visuais para guiar o usuário na ativação da acessibilidade
+  static Future<void> _showAccessibilityHints() async {
+    try {
+      // Esperar um pouco para a tela carregar
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Hint 1: Piscar "Aplicativos instalados"
+      await _methodChannel.invokeMethod('showAccessibilityHint', {
+        'target': 'installed_apps',
+        'message': 'Toque aqui em "Aplicativos instalados"',
+        'duration': 3000, // 3 segundos piscando
+      });
+      
+      // Esperar um pouco antes do próximo hint
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Hint 2: Piscar "Disciplinum" na lista
+      await _methodChannel.invokeMethod('showAccessibilityHint', {
+        'target': 'disciplinum_item',
+        'message': 'Agora toque em "Disciplinum"',
+        'duration': 3000, // 3 segundos piscando
+      });
+      
+    } catch (e) {
+      LoggerService.instance.e('Erro ao mostrar hints de acessibilidade', error: e);
     }
   }
 

@@ -69,6 +69,13 @@ class MainActivity : FlutterActivity() {
                     timerOverlayManager.update(seconds, message)
                     result.success(true)
                 }
+                "showAccessibilityHint" -> {
+                    val target = call.argument<String>("target") ?: "installed_apps"
+                    val message = call.argument<String>("message") ?: "Toque aqui"
+                    val duration = call.argument<Int>("duration") ?: 3000
+                    showAccessibilityHint(target, message, duration)
+                    result.success(true)
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -106,5 +113,28 @@ class MainActivity : FlutterActivity() {
         
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
+    }
+
+    private fun showAccessibilityHint(target: String, message: String, duration: Int) {
+        when (target) {
+            "installed_apps" -> {
+                // Usar o TimerOverlayManager para mostrar hint sobre "Aplicativos instalados"
+                timerOverlayManager.showHint(
+                    title = "Aplicativos instalados",
+                    message = message,
+                    duration = duration,
+                    position = "top"
+                )
+            }
+            "disciplinum_item" -> {
+                // Usar o TimerOverlayManager para mostrar hint sobre "Disciplinum"
+                timerOverlayManager.showHint(
+                    title = "Disciplinum",
+                    message = message,
+                    duration = duration,
+                    position = "center"
+                )
+            }
+        }
     }
 }

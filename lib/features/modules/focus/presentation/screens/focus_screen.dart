@@ -42,12 +42,35 @@ class _FocusScreenState extends State<FocusScreen> {
     super.initState();
     _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+    
+    // NOVO: Escutar mudanças na gamificação para remover intervalo quando período for cumprido
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final gamification = Provider.of<GamificationService>(context, listen: false);
+        gamification.addListener(_onGamificationChanged);
+      }
+    });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    final gamification = Provider.of<GamificationService>(context, listen: false);
+    gamification.removeListener(_onGamificationChanged);
     super.dispose();
+  }
+
+  // NOVO: Método chamado quando gamificação muda (período de foco cumprido)
+  void _onGamificationChanged() {
+    if (!mounted) return;
+    
+    final gamification = Provider.of<GamificationService>(context, listen: false);
+    final currentPeriods = gamification.getRespectedFocusPeriods(NicheId.focus);
+    
+    // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
+    if (currentPeriods > 0 && (_focusStart != null && _focusEnd != null)) {
+      _removeFocusInterval(showNotification: false);
+    }
   }
 
   // --- HARDCODED TEXTS FOR FOCUS ---
@@ -391,7 +414,7 @@ class _FocusScreenState extends State<FocusScreen> {
     await _openSelectApps();
   }
 
-  void _removeFocusInterval() async {
+  void _removeFocusInterval({bool showNotification = true}) async {
     HapticFeedback.mediumImpact();
     setState(() {
       _focusStart = null;
@@ -400,7 +423,7 @@ class _FocusScreenState extends State<FocusScreen> {
 
     await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id);
 
-    if (mounted) {
+    if (mounted && showNotification) {
       EnhancedSnackBarHelper.showInfo(context, 'Intervalo de foco removido');
     }
   }
@@ -865,7 +888,7 @@ class _FocusScreenState extends State<FocusScreen> {
                                 color: isDark ? Colors.white : Colors.black87),
                           ),
                         const Text(
-                          'Configure este horário no botão "Configurar"',
+                          'Para editar, apague este horário, e defina novamente em "Configurar"',
                           style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],

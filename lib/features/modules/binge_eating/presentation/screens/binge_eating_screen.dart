@@ -846,7 +846,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Configure este horário no botão "Notificações"',
+                  'Defina novo horário em "Configurar"',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],

@@ -210,11 +210,8 @@ class GamificationService extends ChangeNotifier {
         await NotificationScheduler.instance
             .scheduleNativeNotifications(nicheId, this);
 
-        // CORREÇÃO: Chamar reconcileFocusInsignias apenas em restauração para preencher faltantes
-        if (nicheId == NicheId.focus) {
-          await GamificationAwardEngine.instance
-              .reconcileFocusInsignias(nicheId, this);
-        }
+        // REMOVIDO: reconcileFocusInsignias estava concedendo múltiplas insígnias
+        // Agora as insígnias são concedidas apenas quando os critérios são atingidos
       }
     }
   }
@@ -276,9 +273,8 @@ class GamificationService extends ChangeNotifier {
       // NOVO: Inicializar períodos de foco para módulo Foco
       if (nicheId == NicheId.focus) {
         _ensureStateExistsAnd(nicheId, focusPeriodsRespected: 0);
-        // Conceder insígnia de madeira imediatamente
-        GamificationAwardEngine.instance
-            .checkFocusInsigniasByPeriods(nicheId, this);
+        // Conceder insígnia de madeira imediatamente ao ativar o módulo
+        await GamificationAwardEngine.instance.awardMadeiraOnActivation(this);
       }
     }
     final prefs = await SharedPreferences.getInstance();
@@ -490,6 +486,12 @@ class GamificationService extends ChangeNotifier {
   Future<void> addRespectedFocusPeriod(NicheId nicheId) async {
     final current = _moduleStates[nicheId]?.focusPeriodsRespected ?? 0;
     final updated = current + 1;
+    
+    // CORREÇÃO: Verificar se já foi incrementado para evitar duplicação
+    if (_moduleStates[nicheId]?.focusPeriodsRespected == updated) {
+      return; // Já foi incrementado, evitar duplicação
+    }
+    
     _ensureStateExistsAnd(nicheId, focusPeriodsRespected: updated);
     await _saveLocalStatus(nicheId);
 
@@ -501,10 +503,9 @@ class GamificationService extends ChangeNotifier {
       focusPeriodsRespected: updated,
       maxMedal: _moduleStates[nicheId]?.maxMedal,
     );
-
+    
     notifyListeners();
-    await GamificationAwardEngine.instance
-        .checkFocusInsigniasByPeriods(nicheId, this);
+    await GamificationAwardEngine.instance.checkFocusInsigniasByPeriods(nicheId, this);
   }
 
   Future<void> resetFocusPeriods(NicheId nicheId) async {
@@ -518,6 +519,9 @@ class GamificationService extends ChangeNotifier {
       focusPeriodsRespected: 0,
       maxMedal: _moduleStates[nicheId]?.maxMedal,
     );
+
+    // NOVO: Verificar insígnias ao resetar períodos
+    await GamificationAwardEngine.instance.checkFocusInsigniasByPeriods(nicheId, this);
 
     notifyListeners();
   }

@@ -14,7 +14,7 @@ import 'package:disciplinum/app/auth_wrapper.dart';
 import 'package:disciplinum/features/profile/presentation/screens/my_progress_screen.dart';
 import 'package:disciplinum/core/utils/fast_page_transitions.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/screens/frases_motivacionais.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/stop_smoking_screen.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/binge_eating_screen.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/diet_settings_screen.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/spending_screen.dart';
@@ -75,7 +75,7 @@ class AppRouter {
 
       case AppRouter.stopSmoking:
         return FastMaterialPageRoute(
-          builder: (_) => const FrasesMotivacionaisScreen(),
+          builder: (_) => const StopSmokingScreen(),
         );
 
       case AppRouter.nicheDetail:
@@ -97,7 +97,7 @@ class AppRouter {
         switch (niche.nicheId) {
           case NicheId.smoking:
             return FastMaterialPageRoute(
-                builder: (_) => const FrasesMotivacionaisScreen());
+                builder: (_) => StopSmokingScreen(heroTag: heroTag));
           case NicheId.bingeEating:
             return FastMaterialPageRoute(
                 builder: (_) => BingeEatingScreen(heroTag: heroTag));

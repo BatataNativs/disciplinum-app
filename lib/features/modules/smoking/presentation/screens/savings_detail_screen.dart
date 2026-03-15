@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
+import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 
 class SavingsDetailScreen extends StatefulWidget {
   final SmokingSettingsModel settings;
@@ -16,23 +19,103 @@ class SavingsDetailScreen extends StatefulWidget {
   State<SavingsDetailScreen> createState() => _SavingsDetailScreenState();
 }
 
-class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
+class _SavingsDetailScreenState extends State<SavingsDetailScreen> 
+    with WidgetsBindingObserver {
   int _activeTab = 0; // 0 = Atual, 1 = Última Tentativa
+  late SmokingSettingsModel _currentSettings;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSettings = widget.settings;
+    WidgetsBinding.instance.addObserver(this);
+    LoggerService.instance.d('💰 SavingsDetailScreen: initState - currency=${_currentSettings.currency}');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    LoggerService.instance.d('💰 SavingsDetailScreen: didChangeAppLifecycleState - state=$state');
+    if (state == AppLifecycleState.resumed) {
+      // CORREÇÃO: Recarregar settings quando volta para primeiro plano
+      LoggerService.instance.d('💰 SavingsDetailScreen: App resumed - calling _refreshSettings');
+      _refreshSettings();
+    }
+  }
+
+  Future<void> _refreshSettings() async {
+    try {
+      final service = SmokingService();
+      final updatedSettings = await service.getSettings();
+      LoggerService.instance.d('💰 SavingsDetailScreen: got updatedSettings - currency=${updatedSettings?.currency}');
+      
+      if (mounted && updatedSettings != null) {
+        if (updatedSettings.currency != _currentSettings.currency) {
+          LoggerService.instance.d('💰 SavingsDetailScreen: Currency changed! ${_currentSettings.currency} -> ${updatedSettings.currency}');
+          setState(() {
+            _currentSettings = updatedSettings;
+          });
+          LoggerService.instance.d('💰 SavingsDetailScreen: setState called with new currency');
+        }
+      } else {
+        LoggerService.instance.w('💰 SavingsDetailScreen: no updatedSettings or not mounted');
+      }
+    } catch (e) {
+      LoggerService.instance.e('💰 SavingsDetailScreen: error in _refreshSettings', error: e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cur = _activeTab == 0
-        ? widget.settings.currency
-        : (widget.settings.lastCurrency ?? widget.settings.currency);
+        ? _currentSettings.currency
+        : (_currentSettings.lastCurrency ?? _currentSettings.currency);
+    
+    LoggerService.instance.d('💰 SavingsDetailScreen: build called - activeTab=$_activeTab, currency=$cur');
+
+    // CORREÇÃO: Formatar moeda corretamente
+    String formatCurrency(double amount, String currency) {
+      LoggerService.instance.d('💰 formatCurrency called: amount=$amount, currency="$currency"');
+      // CORREÇÃO: Suporte para múltiplas moedas
+      String locale;
+      String symbol;
+      
+      if (currency == 'R\$' || currency == 'BRL') {
+        locale = 'pt_BR';
+        symbol = 'R\$';
+      } else if (currency == 'ARS' || currency == '\$') {
+        locale = 'es_AR';
+        symbol = '\$';
+      } else {
+        // Fallback para outras moedas (USD, EUR, etc)
+        locale = 'en_US';
+        symbol = currency == 'US\$' || currency == 'USD' ? '\$' : currency;
+      }
+      
+      LoggerService.instance.d('💰 formatCurrency: locale=$locale, symbol=$symbol');
+      final formatter = NumberFormat.currency(
+        locale: locale,
+        symbol: symbol,
+        decimalDigits: 2,
+      );
+      final result = formatter.format(amount);
+      LoggerService.instance.d('💰 formatCurrency result: "$result"');
+      return result;
+    }
 
     final saved = _activeTab == 0
-        ? (widget.isActive ? widget.settings.moneySavedTotal : 0.0)
-        : (widget.settings.lastSavedTotal ?? 0);
+        ? (widget.isActive ? _currentSettings.moneySavedTotal : 0.0)
+        : (_currentSettings.lastSavedTotal ?? 0);
 
     final monthly = _activeTab == 0
-        ? widget.settings.monthlySavings
-        : ((widget.settings.lastPackPrice ?? 0) *
-            (widget.settings.lastPacksPerDay ?? 0) *
+        ? _currentSettings.monthlySavings
+        : ((_currentSettings.lastPackPrice ?? 0) *
+            (_currentSettings.lastPacksPerDay ?? 0) *
             30);
 
     final yearly = monthly * 12;
@@ -124,7 +207,7 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
                     color: isDark ? Colors.white70 : Colors.grey[700]),
               ),
               Text(
-                "$cur${saved.toStringAsFixed(2)}",
+                formatCurrency(saved, cur),
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.w900,
@@ -159,12 +242,9 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        _buildBar(context, saved, scale, "Acumulado",
-                            Colors.green, cur),
-                        _buildBar(context, monthly, scale, "Mensal",
-                            Colors.blue, cur),
-                        _buildBar(context, yearly, scale, "Anual",
-                            Colors.purple, cur),
+                        _buildBar(context, saved, scale, "Acumulado", Colors.green, cur),
+                        _buildBar(context, monthly, scale, "Mensal", Colors.blue, cur),
+                        _buildBar(context, yearly, scale, "Anual", Colors.purple, cur),
                       ],
                     )
                   ],
@@ -174,45 +254,45 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
 
               // Detailed List
               if (_activeTab == 0 ||
-                  (widget.settings.lastPackPrice != null)) ...[
+                  (_currentSettings.lastPackPrice != null)) ...[
                 _buildDetailRow(
                   context,
                   "Custo do Maço",
-                  "$cur${(_activeTab == 0 ? widget.settings.packPrice : widget.settings.lastPackPrice!).toStringAsFixed(2)}",
+                  formatCurrency(_activeTab == 0 ? _currentSettings.packPrice : _currentSettings.lastPackPrice!, cur),
                 ),
                 _buildDetailRow(
                   context,
                   "Maços/Dia (antes)",
-                  "${_activeTab == 0 ? widget.settings.packsPerDay : widget.settings.lastPacksPerDay}",
+                  "${_activeTab == 0 ? _currentSettings.packsPerDay : _currentSettings.lastPacksPerDay}",
                 ),
                 _buildDetailRow(
                   context,
                   "Economia Diária",
-                  "$cur${((_activeTab == 0 ? widget.settings.packPrice : widget.settings.lastPackPrice!) * (_activeTab == 0 ? widget.settings.packsPerDay : widget.settings.lastPacksPerDay!)).toStringAsFixed(2)}",
+                  formatCurrency((_activeTab == 0 ? _currentSettings.packPrice : _currentSettings.lastPackPrice!) * (_activeTab == 0 ? _currentSettings.packsPerDay : _currentSettings.lastPacksPerDay!), cur),
                 ),
                 _buildDetailRow(context, "Economia Mensal",
-                    "$cur${monthly.toStringAsFixed(2)}"),
+                    formatCurrency(monthly, cur)),
                 _buildDetailRow(context, "Economia Anual",
-                    "$cur${yearly.toStringAsFixed(2)}"),
+                    formatCurrency(yearly, cur)),
                 _buildDetailRow(
                   context,
                   "Data que parou",
                   DateFormat('dd/MM/yyyy').format(_activeTab == 0
-                      ? widget.settings.quitDate ?? DateTime.now()
-                      : widget.settings.lastQuitDate ?? DateTime.now()),
+                      ? _currentSettings.quitDate ?? DateTime.now()
+                      : _currentSettings.lastQuitDate ?? DateTime.now()),
                 ),
-                if (_activeTab == 1 && widget.settings.lastEndDate != null)
+                if (_activeTab == 1 && _currentSettings.lastEndDate != null)
                   _buildDetailRow(
                     context,
                     "Data que encerrou",
                     DateFormat('dd/MM/yyyy')
-                        .format(widget.settings.lastEndDate!),
+                        .format(_currentSettings.lastEndDate!),
                   ),
               ] else
                 const Padding(
                   padding: EdgeInsets.all(40.0),
                   child: Text(
-                    "Nenhum histórico disponível ainda.",
+                    "Configure as informações de consumo para ver os detalhes.",
                     style: TextStyle(
                         fontStyle: FontStyle.italic, color: Colors.grey),
                   ),
@@ -249,15 +329,37 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
   }
 
   Widget _buildBar(BuildContext context, double value, double scale,
-      String label, Color color, String cur) {
+      String label, Color color, String currency) {
     double height = value * scale;
     if (height < 10) height = 10;
     if (height > 200) height = 200;
 
+    // CORREÇÃO: Formatar moeda corretamente no gráfico
+    String formatCurrencyShort(double amount, String currency) {
+      final locale = currency == 'BRL' ? 'pt_BR' : 'en_US';
+      final symbol = currency == 'BRL' ? 'R\$' : '\$';
+      
+      if (amount > 1000) {
+        final formatter = NumberFormat.currency(
+          locale: locale,
+          symbol: symbol,
+          decimalDigits: 1,
+        );
+        return formatter.format(amount / 1000) + 'k';
+      } else {
+        final formatter = NumberFormat.currency(
+          locale: locale,
+          symbol: symbol,
+          decimalDigits: 0,
+        );
+        return formatter.format(amount);
+      }
+    }
+
     return Column(
       children: [
         Text(
-          "$cur${value > 1000 ? "${(value / 1000).toStringAsFixed(1)}k" : value.toStringAsFixed(0)}",
+          formatCurrencyShort(value, currency),
           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 5),

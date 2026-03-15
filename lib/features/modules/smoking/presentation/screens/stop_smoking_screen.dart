@@ -1049,7 +1049,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Configure este horário no botão "Check-in diário"',
+                  'Para editar, apague este horário, e defina um novo horário no botão "Check-in diário"',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
@@ -1471,17 +1471,22 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
               color: Colors.green,
               onTap: () {
                 Navigator.pop(ctx);
-                if (settings != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SavingsDetailScreen(
-                        settings: settings!,
-                        isActive: _gamificationRunning,
+                // CORREÇÃO: Permitir acesso mesmo sem settings configurados
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SavingsDetailScreen(
+                      settings: settings ?? SmokingSettingsModel(
+                        dailyCigarettes: 20,
+                        pricePerPack: 10.0,
+                        cigarettesPerPack: 20,
+                        currency: 'BRL',
+                        startDate: DateTime.now(),
                       ),
+                      isActive: _gamificationRunning,
                     ),
-                  );
-                }
+                  ),
+                );
               },
             ),
             _buildMenuTile(
@@ -1490,14 +1495,21 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
-                if (settings != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => HealthDetailScreen(settings: settings!),
+                // CORREÇÃO: Permitir acesso mesmo sem settings configurados
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HealthDetailScreen(
+                      settings: settings ?? SmokingSettingsModel(
+                        dailyCigarettes: 20,
+                        pricePerPack: 10.0,
+                        cigarettesPerPack: 20,
+                        currency: 'BRL',
+                        startDate: DateTime.now(),
+                      ),
                     ),
-                  );
-                }
+                  ),
+                );
               },
             ),
             _buildMenuTile(

@@ -19,15 +19,15 @@ class GamificationAwardEngine {
   GamificationAwardEngine._internal();
 
   static const Map<int, FocusInsignia> _focusMilestones = {
-    0: FocusInsignia.madeira,
-    1: FocusInsignia.ferro,
-    2: FocusInsignia.aluminio,
-    3: FocusInsignia.latao,
-    4: FocusInsignia.bronze,
-    5: FocusInsignia.prata,
-    6: FocusInsignia.ouro,
-    9: FocusInsignia.diamante,
-    10: FocusInsignia.disciplinum,
+    0: FocusInsignia.madeira,      // 🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+    1: FocusInsignia.ferro,       // 🥈 Ferro - 1 período de foco respeitado
+    2: FocusInsignia.aluminio,    // 🥈 Alumínio - 2 períodos de foco respeitado
+    3: FocusInsignia.latao,        // 🥇 Latão - 3 períodos de foco respeitado
+    4: FocusInsignia.bronze,       // 🥉 Bronze - 4 períodos de foco respeitado
+    5: FocusInsignia.prata,       // 🥈 Prata - 5 períodos de foco respeitado
+    6: FocusInsignia.ouro,        // 🥇 Ouro - 6 períodos de foco respeitado
+    9: FocusInsignia.diamante,    // 💎 Diamante - 9 períodos de foco respeitado
+    10: FocusInsignia.disciplinum, // 🏆 Disciplinum - 10 períodos de foco respeitado
   };
 
   bool _isReconcilingFocusInsignias = false;
@@ -196,20 +196,47 @@ class GamificationAwardEngine {
     ).catchError((e) => LoggerService.instance.e('Erro Sync _grantInsigniaSilently', error: e));
   }
 
-  // MÉTODO CORRIGIDO: Concede apenas insígnia exata do marco atual
+  // MÉTODO NOVO: Concede insígnia Madeira na ativação do módulo
+  Future<void> awardMadeiraOnActivation(GamificationService service) async {
+    LoggerService.instance.d('🎮 awardMadeiraOnActivation chamado');
+    if (service.earnedFocusInsignias.contains(FocusInsignia.madeira)) {
+      LoggerService.instance.d('🎮 Madeira já foi concedida, ignorando');
+      return;
+    }
+    LoggerService.instance.d('🎮 Concedendo insígnia Madeira');
+    await awardInsignia(FocusInsignia.madeira, service);
+  }
+
+  // MÉTODO CORRIGIDO: Concede apenas insígnia exata do marco atual (exceto Madeira que é concedida na ativação)
   Future<void> checkFocusInsigniasByPeriods(
       NicheId nicheId, GamificationService service) async {
     if (nicheId != NicheId.focus) return;
    
     final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
     final target = _focusMilestones[periodosRespeitados];
-    if (target == null) return;
-    if (service.earnedFocusInsignias.contains(target)) return;
+    
+    LoggerService.instance.d('🎮 checkFocusInsigniasByPeriods: períodos=$periodosRespeitados, target=$target');
+    
+    if (target == null) {
+      LoggerService.instance.d('🎮 Nenhuma insígnia para este período');
+      return;
+    }
+    if (service.earnedFocusInsignias.contains(target)) {
+      LoggerService.instance.d('🎮 Insígnia $target já foi concedida');
+      return;
+    }
+    
+    // CORREÇÃO: Não conceder Madeira (índice 0) aqui - ela é concedida na ativação do módulo
+    if (periodosRespeitados == 0) {
+      LoggerService.instance.d('🎮 Período 0, não conceder Madeira aqui');
+      return;
+    }
 
+    LoggerService.instance.d('🎮 Concedendo insígnia $target para período $periodosRespeitados');
     await awardInsignia(target, service);
   }
 
-  // MÉTODO NOVO: Reconcilia insígnias faltantes sem notificação
+  // MÉTODO CORRIGIDO: Reconcilia apenas insígnias faltantes sem notificação
   Future<void> reconcileFocusInsignias(
       NicheId nicheId, GamificationService service) async {
     if (nicheId != NicheId.focus) return;
@@ -220,7 +247,10 @@ class GamificationAwardEngine {
       final periodosRespeitados = service.getRespectedFocusPeriods(nicheId);
 
       for (final entry in _focusMilestones.entries) {
+        // CORREÇÃO: Pular se já tem a insígnia ou se não atingiu o marco ainda
         if (entry.key > periodosRespeitados) continue;
+        if (service.earnedFocusInsignias.contains(entry.value)) continue;
+        
         await _grantInsigniaSilently(entry.value, service);
       }
     } finally {

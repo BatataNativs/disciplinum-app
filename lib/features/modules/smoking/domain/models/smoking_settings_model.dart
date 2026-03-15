@@ -62,15 +62,15 @@ class SmokingSettingsModel {
   };
 
   factory SmokingSettingsModel.fromJson(Map<String, dynamic> json) => SmokingSettingsModel(
-    dailyCigarettes: json['dailyCigarettes'],
-    pricePerPack: json['pricePerPack'],
-    cigarettesPerPack: json['cigarettesPerPack'],
-    startDate: DateTime.parse(json['startDate']),
+    dailyCigarettes: json['dailyCigarettes']?.toInt() ?? 20,
+    pricePerPack: json['pricePerPack']?.toDouble() ?? 10.0,
+    cigarettesPerPack: json['cigarettesPerPack']?.toInt() ?? 20,
+    startDate: DateTime.parse(json['startDate'] ?? DateTime.now().toIso8601String()),
     quitDate: json['quitDate'] != null ? DateTime.parse(json['quitDate']) : null,
     isActive: json['isActive'] ?? true,
     currency: json['currency'] ?? 'R\$',
-    lastPackPrice: json['lastPackPrice'],
-    lastPacksPerDay: json['lastPacksPerDay'],
+    lastPackPrice: json['lastPackPrice']?.toDouble(),
+    lastPacksPerDay: json['lastPacksPerDay']?.toDouble(),
     lastQuitDate: json['lastQuitDate'] != null ? DateTime.parse(json['lastQuitDate']) : null,
     lastCurrency: json['lastCurrency'],
     lastSavedTotal: json['lastSavedTotal']?.toDouble(),
