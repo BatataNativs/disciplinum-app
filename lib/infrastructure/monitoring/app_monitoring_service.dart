@@ -7,8 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-
-import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
@@ -78,7 +77,6 @@ class AppMonitoringService {
   StreamSubscription? _accessibilitySubscription;
   String? _lastAccessibilityApp;
   String? _currentOverlayMessage;
-  DateTime? _lastInteractiveSystemTime;
 
   void setNotificationsPaused(bool value) async {
     notificationsPaused = value;
@@ -476,6 +474,7 @@ class AppMonitoringService {
         }
       }
     }
+    return null;
   }
 
   // NOVO: Verificar se houve violações em um período

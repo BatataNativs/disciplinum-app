@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/models/1_smoking/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:intl/intl.dart';
@@ -345,7 +345,7 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen>
           symbol: symbol,
           decimalDigits: 1,
         );
-        return formatter.format(amount / 1000) + 'k';
+        return '${formatter.format(amount / 1000)}k';
       } else {
         final formatter = NumberFormat.currency(
           locale: locale,

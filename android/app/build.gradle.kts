@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "com.disciplinum.app"
 
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 // Atualizado para compatibilidade moderna
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

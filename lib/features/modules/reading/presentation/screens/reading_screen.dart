@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/my_shelf_screen.dart';
@@ -11,7 +12,7 @@ import 'package:disciplinum/features/modules/reading/presentation/screens/readin
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/widgets/shared/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -83,7 +84,7 @@ class _ReadingScreenState extends State<ReadingScreen>
   Future<void> _loadReminderData() async {
     try {
       final reminderTimes = await CloudSyncService.loadUserNicheTimes(
-          nicheId: _niche.id.id + 200);
+          nicheId: _niche.nicheId.id + 200);
 
       TimeOfDay? newReminderTime;
       if (reminderTimes.isNotEmpty) {
@@ -529,11 +530,12 @@ class _ReadingScreenState extends State<ReadingScreen>
         Provider.of<GamificationService>(context, listen: false);
 
     if (isActive) {
-      final confirmed = await DeactivateModuleDialog.show(
-        context,
-        title: 'Desativar módulo?',
-        content: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
-        confirmText: 'Sim, desativar',
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => DeactivateModuleDialog(
+          nicheId: NicheId.reading,
+          customMessage: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
+        ),
       );
 
       if (confirmed == true) {
@@ -741,7 +743,7 @@ class _ReadingScreenState extends State<ReadingScreen>
             onPressed: () async {
               // Remove o horário específico
               await CloudSyncService.removeUserNicheTime(
-                nicheId: _niche.id.id + 200,
+                nicheId: _niche.nicheId.id + 200,
                 hour: _reminderTime!.hour,
                 minute: _reminderTime!.minute,
               );

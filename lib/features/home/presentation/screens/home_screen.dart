@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
@@ -8,6 +7,7 @@ import 'package:disciplinum/app/router/app_router.dart';
 
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final categories = NicheCategoryRepository.getCategories();
+    final categories = NicheRepository.getAllNiches();
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -488,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: Builder(
                     builder: (context) {
                       final allCategories =
-                          List<NicheCategory>.from(categories);
+                          List<Niche>.from(categories);
 
                       return ListView.separated(
                         padding: const EdgeInsets.only(
@@ -499,24 +499,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         itemBuilder: (context, index) {
                           if (index == 0) {
                             return Selector<GamificationService, List<NicheId>>(
-                              selector: (_, gamificationService) {
-                                return NicheId.values
-                                    .where((id) =>
-                                        gamificationService.isModuleActive(id))
-                                    .toList(growable: false);
-                              },
-                              shouldRebuild: (prev, next) =>
-                                  !listEquals(prev, next),
-                              builder: (context, activeNiches, _) {
+                              selector: (context, service) => service.diasConsecutivosByModule.keys.toList(),
+                              builder: (context, activeModules, child) {
                                 return _buildActiveModulesSection(
-                                    activeNiches, isDark, textTheme);
+                                  activeModules, isDark, textTheme);
                               },
                             );
                           }
 
                           final category = allCategories[index - 1];
-                          return _buildCategorySection(
-                              category, isDark, textTheme);
+                          return _buildCategorySection(category, isDark, textTheme);
                         },
                       );
                     },
@@ -532,12 +524,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildCategorySection(
-      NicheCategory category, bool isDark, TextTheme textTheme) {
+      Niche category, bool isDark, TextTheme textTheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          category.title,
+          category.name,
           style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -546,22 +538,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 210,
-          child: ListView.separated(
-            clipBehavior: Clip.none,
+          height: 180,
+          child: ListView(
             scrollDirection: Axis.horizontal,
-            itemCount: category.nicheIds.length,
-            separatorBuilder: (context, i) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final nicheId = category.nicheIds[i];
-              final niche = NicheRepository.getById(nicheId);
-              final heroTag = '${category.idPrefix}_${niche.id}';
-
-              return SizedBox(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              SizedBox(
                 width: 150,
-                child: _buildNicheCard(niche, isDark, textTheme, heroTag),
-              );
-            },
+                child: _buildNicheCard(
+                  NicheRepository.getById(category.nicheId), 
+                  isDark, 
+                  textTheme, 
+                  '${category.nicheId}_${category.id}'
+                ),
+              ),
+            ],
           ),
         ),
       ],

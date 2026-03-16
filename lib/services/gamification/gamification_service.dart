@@ -71,7 +71,7 @@ class GamificationService extends ChangeNotifier {
   // Getters/Setters Delegados para AppMonitoringService
   bool get isGeneralMonitoringActive => AppMonitoringService.instance.isActive;
   Set<String> get monitoredApps =>
-      Set<String>.from(AppMonitoringService.instance.monitoredAppsList);
+      Set<String>.from(AppMonitoringService.instance.monitoredApps);
   set monitoredApps(Set<String> value) {
     AppMonitoringService.instance.monitoredApps = value.toList();
     notifyListeners();
@@ -676,7 +676,7 @@ class GamificationService extends ChangeNotifier {
       if (horarios != null) scheduleByModule[nicheId] = horarios;
       if (intervaloFoco != null) focusIntervalByModule[nicheId] = intervaloFoco;
       await AppMonitoringService.instance
-          .startMonitoring(nicheId: nicheId, apps: monitoredApps);
+          .startMonitoring(nicheId: nicheId, apps: monitoredApps.toList());
       await NotificationScheduler.instance
           .scheduleNativeNotifications(nicheId, this);
     }
