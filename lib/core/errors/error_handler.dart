@@ -224,7 +224,7 @@ class ErrorHandler {
     } catch (e) {
       if (e is ValidationException) {
         handleException(e, context: context);
-        throw e;
+        rethrow;
       } else {
         final exception = ValidationException(
           message: errorMessage ?? 'Validation failed for $fieldName',
@@ -264,15 +264,6 @@ class ErrorHandler {
   }
 }
 
-/// Exceção genérica para erros não categorizados
-class GenericException extends AppException {
-  const GenericException({
-    required super.message,
-    super.code,
-    super.data,
-    super.stackTrace,
-  });
-}
 
 /// Extension para facilitar tratamento de exceções
 extension ExceptionHandling on Future {

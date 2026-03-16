@@ -15,6 +15,9 @@ import 'package:disciplinum/features/modules/focus/presentation/screens/focus_no
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? heroTag;
@@ -528,26 +531,26 @@ class _FocusScreenState extends State<FocusScreen> {
                   ],
                 ),
               ),
-              _selectedIndex == 0
-                  ? Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _buildActionButton(
-                        icon: Icons.rocket_launch_rounded,
-                        label: 'Começar',
-                        color: const Color(0xFF6366F1),
-                        isDark: isDark,
-                        onTap: () {
-                          if (_pageController.hasClients) {
-                            _pageController.animateToPage(1,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic);
-                          } else {
-                            setState(() => _selectedIndex = 1);
-                          }
-                        },
-                      ),
-                    )
-                  : _buildBottomButtons(isDark),
+                  _selectedIndex == 0
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: NicheActionButton(
+                            icon: Icons.rocket_launch_rounded,
+                            label: 'Começar',
+                            color: const Color(0xFF6366F1),
+                            isDark: isDark,
+                            onTap: () {
+                              if (_pageController.hasClients) {
+                                _pageController.animateToPage(1,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutCubic);
+                              } else {
+                                setState(() => _selectedIndex = 1);
+                              }
+                            },
+                          ),
+                        )
+                      : _buildBottomButtons(isDark),
             ],
           ),
         ),
@@ -569,7 +572,7 @@ class _FocusScreenState extends State<FocusScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.settings_suggest_rounded,
                   label: 'Configurar',
                   color: const Color(0xFF6366F1),
@@ -579,7 +582,7 @@ class _FocusScreenState extends State<FocusScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -600,7 +603,7 @@ class _FocusScreenState extends State<FocusScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -610,7 +613,7 @@ class _FocusScreenState extends State<FocusScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -632,46 +635,6 @@ class _FocusScreenState extends State<FocusScreen> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showStatisticsMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -697,10 +660,11 @@ class _FocusScreenState extends State<FocusScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -715,21 +679,6 @@ class _FocusScreenState extends State<FocusScreen> {
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListActionTile(
-      icon: icon,
-      label: label,
-      color: color,
-      isDark: isDark,
-      onTap: onTap,
-    );
-  }
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -804,24 +753,24 @@ class _FocusScreenState extends State<FocusScreen> {
       case 0:
         return Column(
           children: [
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.settings_outlined,
               title: 'Em "Configurar", defina seus intervalos de foco',
               content:
                   'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Notificações',
               content:
                   'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title: 'Em "Estatísticas", monitore seu foco',
               content:
@@ -979,117 +928,5 @@ class _FocusScreenState extends State<FocusScreen> {
     }
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class ListActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDark;
-
-  const ListActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-}

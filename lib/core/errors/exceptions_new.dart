@@ -266,78 +266,51 @@ class GenericException extends AppException {
 class ExceptionUtils {
   /// Verifica se uma exceção é recuperável
   static bool isRecoverable(AppException exception) {
-    switch (exception.runtimeType) {
-      case NetworkException:
-        final network = exception as NetworkException;
-        // Erros de rede geralmente são recuperáveis
-        return network.statusCode == null || 
-               network.statusCode! >= 500 || 
-               network.statusCode! < 500;
+    return switch (exception) {
+      NetworkException(:final statusCode) =>
+        statusCode == null || statusCode >= 500,
       
-      case CacheException:
-        // Erros de cache geralmente são recuperáveis
-        return true;
+      CacheException _ => true,
       
-      case PersistenceException:
-        // Erros de persistência podem ser recuperáveis
-        final persistence = exception as PersistenceException;
-        return persistence.operation == 'read';
+      PersistenceException(:final operation) => operation == 'read',
       
-      case ValidationException:
-        // Erros de validação não são recuperáveis
-        return false;
+      ValidationException _ ||
+      AuthenticationException _ ||
+      AuthorizationException _ ||
+      ConfigurationException _ ||
+      MonitoringException _ ||
+      StateException _ => false,
       
-      case AuthenticationException:
-      case AuthorizationException:
-      case ConfigurationException:
-      case MonitoringException:
-      case StateException:
-        // Outros erros geralmente não são recuperáveis
-        return false;
-      
-      default:
-        return false;
-    }
+      _ => false,
+    };
   }
 
   /// Converte exceção para mensagem amigável
   static String getUserFriendlyMessage(AppException exception) {
-    switch (exception.runtimeType) {
-      case ValidationException:
-        final validation = exception as ValidationException;
-        return 'Campo inválido: ${validation.field ?? 'desconhecido'}';
+    return switch (exception) {
+      ValidationException validation =>
+        'Campo inválido: ${validation.field ?? 'desconhecido'}',
       
-      case NetworkException:
-        final network = exception as NetworkException;
-        if (network.statusCode != null) {
-          return 'Erro de conexão (${network.statusCode})';
-        }
-        return 'Erro de conexão';
+      NetworkException network => network.statusCode != null
+        ? 'Erro de conexão (${network.statusCode})'
+        : 'Erro de conexão',
       
-      case AuthenticationException:
-        return 'Erro de autenticação. Verifique suas credenciais.';
+      AuthenticationException _ => 'Erro de autenticação. Verifique suas credenciais.',
       
-      case AuthorizationException:
-        return 'Você não tem permissão para realizar esta ação.';
+      AuthorizationException _ => 'Você não tem permissão para realizar esta ação.',
       
-      case CacheException:
-        return 'Erro ao acessar dados locais. Tente novamente.';
+      CacheException _ => 'Erro ao acessar dados locais. Tente novamente.',
       
-      case PersistenceException:
-        return 'Erro ao salvar dados. Verifique sua conexão.';
+      PersistenceException _ => 'Erro ao salvar dados. Verifique sua conexão.',
       
-      case ConfigurationException:
-        return 'Erro de configuração. Contate o suporte.';
+      ConfigurationException _ => 'Erro de configuração. Contate o suporte.',
       
-      case MonitoringException:
-        return 'Erro de monitoramento. Tente novamente.';
+      MonitoringException _ => 'Erro de monitoramento. Tente novamente.',
       
-      case StateException:
-        return 'Operação não permitida no estado atual.';
+      StateException _ => 'Operação não permitida no estado atual.',
       
-      default:
-        return exception.message;
-    }
+      _ => exception.message,
+    };
   }
 
   /// Log da exceção

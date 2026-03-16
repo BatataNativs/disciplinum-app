@@ -239,6 +239,12 @@ class CacheException extends AppException {
     required super.message,
     this.key,
     this.operation,
+    super.code,
+    super.data,
+    super.stackTrace,
+  });
+}
+
 /// Factory para criar exceções com contexto automático
 class ExceptionFactory {
   /// Cria uma exceção com stack trace automático
@@ -259,20 +265,16 @@ class ExceptionFactory {
 
   /// Recria uma exceção com stack trace
   static AppException _recreateWithStackTrace(AppException original, StackTrace stackTrace) {
-    switch (original.runtimeType) {
-      case ValidationException:
-        final validation = original as ValidationException;
-        return ValidationException(
+    return switch (original) {
+      ValidationException validation => ValidationException(
           message: validation.message,
           field: validation.field,
           value: validation.value,
           code: validation.code,
           data: validation.data,
           stackTrace: stackTrace,
-        );
-      case NetworkException:
-        final network = original as NetworkException;
-        return NetworkException(
+        ),
+      NetworkException network => NetworkException(
           message: network.message,
           statusCode: network.statusCode,
           url: network.url,
@@ -280,10 +282,8 @@ class ExceptionFactory {
           code: network.code,
           data: network.data,
           stackTrace: stackTrace,
-        );
-      case PersistenceException:
-        final persistence = original as PersistenceException;
-        return PersistenceException(
+        ),
+      PersistenceException persistence => PersistenceException(
           message: persistence.message,
           operation: persistence.operation,
           collection: persistence.collection,
@@ -291,10 +291,8 @@ class ExceptionFactory {
           code: persistence.code,
           data: persistence.data,
           stackTrace: stackTrace,
-        );
-      case MonitoringException:
-        final monitoring = original as MonitoringException;
-        return MonitoringException(
+        ),
+      MonitoringException monitoring => MonitoringException(
           message: monitoring.message,
           service: monitoring.service,
           event: monitoring.event,
@@ -302,20 +300,16 @@ class ExceptionFactory {
           code: monitoring.code,
           data: monitoring.data,
           stackTrace: stackTrace,
-        );
-      case AuthenticationException:
-        final auth = original as AuthenticationException;
-        return AuthenticationException(
+        ),
+      AuthenticationException auth => AuthenticationException(
           message: auth.message,
           provider: auth.provider,
           userId: auth.userId,
           code: auth.code,
           data: auth.data,
           stackTrace: stackTrace,
-        );
-      case AuthorizationException:
-        final authz = original as AuthorizationException;
-        return AuthorizationException(
+        ),
+      AuthorizationException authz => AuthorizationException(
           message: authz.message,
           resource: authz.resource,
           action: authz.action,
@@ -323,20 +317,16 @@ class ExceptionFactory {
           code: authz.code,
           data: authz.data,
           stackTrace: stackTrace,
-        );
-      case ConfigurationException:
-        final config = original as ConfigurationException;
-        return ConfigurationException(
+        ),
+      ConfigurationException config => ConfigurationException(
           message: config.message,
           configKey: config.configKey,
           configValue: config.configValue,
           code: config.code,
           data: config.data,
           stackTrace: stackTrace,
-        );
-      case StateException:
-        final state = original as StateException;
-        return StateException(
+        ),
+      StateException state => StateException(
           message: state.message,
           currentState: state.currentState,
           expectedState: state.expectedState,
@@ -344,25 +334,22 @@ class ExceptionFactory {
           code: state.code,
           data: state.data,
           stackTrace: stackTrace,
-        );
-      case CacheException:
-        final cache = original as CacheException;
-        return CacheException(
+        ),
+      CacheException cache => CacheException(
           message: cache.message,
           key: cache.key,
           operation: cache.operation,
           code: cache.code,
           data: cache.data,
           stackTrace: stackTrace,
-        );
-      default:
-        return GenericException(
+        ),
+      _ => GenericException(
           message: original.message,
           code: original.code,
           data: original.data,
           stackTrace: stackTrace,
-        );
-    }
+        ),
+    };
   }
 }
 
@@ -380,52 +367,33 @@ class GenericException extends AppException {
 class ExceptionUtils {
   /// Verifica se uma exceção é recuperável
   static bool isRecoverable(AppException exception) {
-    switch (exception.runtimeType) {
-      case NetworkException:
-        final network = exception as NetworkException;
-        // Erros de rede geralmente são recuperáveis
-        return network.statusCode == null || 
-               network.statusCode! >= 500 || 
-               network.statusCode == 408;
-      case CacheException:
-        // Erros de cache são recuperáveis
-        return true;
-      case ValidationException:
-        // Erros de validação não são recuperáveis automaticamente
-        return false;
-      case AuthenticationException:
-      case AuthorizationException:
-        // Erros de auth podem ser recuperáveis com re-login
-        return true;
-      default:
-        return false;
-    }
+    return switch (exception) {
+      NetworkException network =>
+        network.statusCode == null || 
+        network.statusCode! >= 500 || 
+        network.statusCode == 408,
+      CacheException _ => true,
+      ValidationException _ => false,
+      AuthenticationException _ ||
+      AuthorizationException _ => true,
+      _ => false,
+    };
   }
 
   /// Obtém mensagem amigável para o usuário
   static String getUserFriendlyMessage(AppException exception) {
-    switch (exception.runtimeType) {
-      case NetworkException:
-        return 'Erro de conexão. Verifique sua internet e tente novamente.';
-      case ValidationException:
-        return 'Dados inválidos. Verifique as informações e tente novamente.';
-      case AuthenticationException:
-        return 'Erro de autenticação. Faça login novamente.';
-      case AuthorizationException:
-        return 'Você não tem permissão para realizar esta ação.';
-      case PersistenceException:
-        return 'Erro ao salvar dados. Tente novamente.';
-      case ConfigurationException:
-        return 'Erro de configuração. Contate o suporte.';
-      case StateException:
-        return 'Operação não permitida no momento. Tente novamente.';
-      case CacheException:
-        return 'Erro de cache. Tente novamente.';
-      case MonitoringException:
-        return 'Erro no sistema. Tente novamente.';
-      default:
-        return 'Ocorreu um erro inesperado. Tente novamente.';
-    }
+    return switch (exception) {
+      NetworkException _ => 'Erro de conexão. Verifique sua internet e tente novamente.',
+      ValidationException _ => 'Dados inválidos. Verifique as informações e tente novamente.',
+      AuthenticationException _ => 'Erro de autenticação. Faça login novamente.',
+      AuthorizationException _ => 'Você não tem permissão para realizar esta ação.',
+      PersistenceException _ => 'Erro ao salvar dados. Tente novamente.',
+      ConfigurationException _ => 'Erro de configuração. Contate o suporte.',
+      StateException _ => 'Operação não permitida no momento. Tente novamente.',
+      CacheException _ => 'Erro de cache. Tente novamente.',
+      MonitoringException _ => 'Erro no sistema. Tente novamente.',
+      _ => 'Ocorreu um erro inesperado. Tente novamente.',
+    };
   }
 
   /// Loga exceção com informações detalhadas

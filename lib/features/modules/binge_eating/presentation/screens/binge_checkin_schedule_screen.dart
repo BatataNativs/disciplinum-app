@@ -5,6 +5,7 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 
 class BingeCheckinScheduleScreen extends StatefulWidget {
   const BingeCheckinScheduleScreen({super.key});
@@ -108,7 +109,14 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
                       color: Colors.green,
                     ),
                     const SizedBox(height: 24),
-                    _buildInfoCard(isDark),
+                    NicheInfoCard(
+                      isDark: isDark,
+                      icon: Icons.info_outline,
+                      color: Colors.green,
+                      title: 'Como funciona?',
+                      content:
+                          'Você receberá uma notificação diária nos horários configurados com duas opções de resposta rápida:\n\n• "Resisti às tentações" - Registra um dia de sucesso\n• "Não resisti" - Reseta suas estatísticas',
+                    ),
                   ],
                 ),
               ),
@@ -116,59 +124,6 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
     );
   }
 
-  Widget _buildInfoCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.info_outline, color: Colors.green, size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Como funciona?',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Você receberá uma notificação diária nos horários configurados com duas opções de resposta rápida:\n\n• "Resisti às tentações" - Registra um dia de sucesso\n• "Não resisti" - Reseta suas estatísticas',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSettingsCard({
     required String title,

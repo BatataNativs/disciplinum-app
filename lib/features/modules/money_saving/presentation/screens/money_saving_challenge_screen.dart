@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math' as math;
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -12,9 +11,14 @@ import 'package:provider/provider.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
-import 'package:confetti/confetti.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_stats.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/components/currency_input_formatter.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/widgets/challenge_card.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/screens/full_screen_grid_page.dart';
 
 class MoneySavingChallengeScreen extends StatefulWidget {
   final String? heroTag;
@@ -351,7 +355,7 @@ class _MoneySavingChallengeScreenState
         context,
         MaterialPageRoute(
           builder: (_) =>
-              _FullScreenGridPage(challenge: _service.activeChallenge!),
+              FullScreenGridPage(challenge: _service.activeChallenge!),
         ),
       );
       _loadChallenge();
@@ -1144,7 +1148,7 @@ class _MoneySavingChallengeScreenState
               _selectedIndex == 0
                   ? Padding(
                       padding: const EdgeInsets.all(16),
-                      child: _buildActionButton(
+                      child: NicheActionButton(
                         icon: Icons.rocket_launch_rounded,
                         label: 'Começar',
                         color: const Color(0xFF6366F1),
@@ -1252,7 +1256,7 @@ class _MoneySavingChallengeScreenState
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.grid_view_rounded,
                   label: 'Meus Desafios',
                   color: const Color(0xFF6366F1),
@@ -1262,7 +1266,7 @@ class _MoneySavingChallengeScreenState
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -1284,7 +1288,7 @@ class _MoneySavingChallengeScreenState
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
@@ -1294,7 +1298,7 @@ class _MoneySavingChallengeScreenState
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
@@ -1319,46 +1323,6 @@ class _MoneySavingChallengeScreenState
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showStatisticsMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1386,10 +1350,11 @@ class _MoneySavingChallengeScreenState
             const SizedBox(height: 20),
             const SizedBox(height: 12),
             const SizedBox(height: 12),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.analytics_rounded,
               label: 'Estatísticas dos Desafios',
               color: const Color(0xFF10B981), // Emerald
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -1399,10 +1364,11 @@ class _MoneySavingChallengeScreenState
                 );
               },
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -1418,21 +1384,6 @@ class _MoneySavingChallengeScreenState
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListActionTile(
-      icon: icon,
-      label: label,
-      color: color,
-      isDark: isDark,
-      onTap: onTap,
-    );
-  }
 
   // ============ ABA 0: COMO FUNCIONA ============
 
@@ -1440,8 +1391,8 @@ class _MoneySavingChallengeScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        _buildInfoCard(
-          isDark,
+        NicheInfoCard(
+          isDark: isDark,
           icon: Icons.savings_outlined,
           title: 'Em "Meus Desafios", crie seu desafio de poupar dinheiro!',
           content:
@@ -1452,16 +1403,16 @@ Lembrando que o app Disciplinum não gerencia seu dinheiro, nem tem vínculo com
 O app é apenas uma ferramenta de controle e organização, que reflete o que você registrar sobre seus aportes reais realizados em instituições financeiras de sua escolha.''',
         ),
         const SizedBox(height: 16),
-        _buildInfoCard(
-          isDark,
+        NicheInfoCard(
+          isDark: isDark,
           icon: Icons.notifications_outlined,
           title: 'Em "Notificações", defina seus lembretes',
           content:
               'Configure horários para ser lembrado de guardar dinheiro e manter o foco no seu objetivo financeiro.',
         ),
         const SizedBox(height: 16),
-        _buildInfoCard(
-          isDark,
+        NicheInfoCard(
+          isDark: isDark,
           icon: Icons.bar_chart_rounded,
           title: 'Em "Estatísticas", acompanhe sua poupança',
           content:
@@ -1471,64 +1422,6 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
     );
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ============ ABA 1: CONFIGURAR ============
 
@@ -1582,7 +1475,28 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
             ),
           ),
         ),
-        ..._challenges.map((c) => _buildChallengeCard(c, isDark)),
+        ..._challenges.map((c) => ChallengeCard(
+              challenge: c,
+              isDark: isDark,
+              isActive: c.id == _challenge?.id,
+              formatValue: _formatValue,
+              onTap: () async {
+                if (c.id != _challenge?.id) {
+                  await _service.setActiveChallenge(c.id);
+                  await _loadChallenge();
+                }
+                if (mounted) {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          FullScreenGridPage(challenge: _service.activeChallenge!),
+                    ),
+                  );
+                  _loadChallenge();
+                }
+              },
+            )),
         const SizedBox(height: 12),
         Center(
           child: Padding(
@@ -1603,652 +1517,9 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
     );
   }
 
-  Widget _buildChallengeCard(MoneySavingChallengeModel c, bool isDark) {
-    final bool isActive = c.id == _challenge?.id;
-    final double completion = c.progressPercent;
-    final int percent = (completion * 100).toInt();
-
-    return GestureDetector(
-      onTap: () async {
-        if (!isActive) {
-          await _service.setActiveChallenge(c.id);
-          await _loadChallenge();
-        }
-        if (mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  _FullScreenGridPage(challenge: _service.activeChallenge!),
-            ),
-          );
-          _loadChallenge();
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive
-                ? const Color(0xFF6366F1).withValues(alpha: 0.3)
-                : (isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.05)),
-            width: isActive ? 2 : 1,
-          ),
-          boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Gráfico de completude pequeno
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    value: completion,
-                    strokeWidth: 6,
-                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isActive
-                          ? const Color(0xFF6366F1)
-                          : const Color(0xFF6366F1).withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-                Text(
-                  '$percent%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (isActive)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 6),
-                          child: Text('💰', style: TextStyle(fontSize: 14)),
-                        ),
-                      Expanded(
-                        child: Text(
-                          c.title,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${c.gridSize}x${c.gridSize} • ${_formatValue(c.targetAmount, c.currency)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right,
-                color: isDark ? Colors.white24 : Colors.black26),
-          ],
-        ),
-      ),
-    );
-  }
 
   // Removidos dropdowns antigos que agora estão dentro do modal
 
   // ============ ABA 2: MEU DESAFIO (GRID) ============
 }
 
-class _FullScreenGridPage extends StatefulWidget {
-  final MoneySavingChallengeModel challenge;
-
-  const _FullScreenGridPage({required this.challenge});
-
-  @override
-  State<_FullScreenGridPage> createState() => _FullScreenGridPageState();
-}
-
-class _FullScreenGridPageState extends State<_FullScreenGridPage> {
-  late MoneySavingChallengeModel _currentChallenge;
-  bool _isProcessing = false;
-  late ConfettiController _confettiController;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentChallenge = widget.challenge;
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 3));
-  }
-
-  @override
-  void dispose() {
-    _confettiController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _toggleCell(int index) async {
-    if (_isProcessing) return;
-    if (!_currentChallenge.isActive) {
-      SnackBarHelper.showWarning(context, 'Ative o desafio para marcar células!');
-      return;
-    }
-
-    setState(() => _isProcessing = true);
-    HapticFeedback.lightImpact();
-
-    try {
-      final service =
-          Provider.of<MoneySavingChallengeService>(context, listen: false);
-      final updated = await service.toggleCell(index);
-
-      if (mounted && updated != null) {
-        setState(() {
-          _currentChallenge = updated;
-          _isProcessing = false;
-        });
-
-        // Notifica a tela principal para atualizar
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            // Apenas carregamos o desafio novamente para refletir as mudanças
-            // O notifyListeners() é protegido e não deve ser chamado externamente
-          }
-        });
-
-        if (updated.isComplete) {
-          HapticFeedback.heavyImpact();
-          _confettiController.play();
-          SnackBarHelper.showSuccess(context, '🎉 Parabéns! Você completou o desafio!');
-        }
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  Widget _buildRepositionedSummary(
-      MoneySavingChallengeModel challenge, bool isDark) {
-    // Calcula progresso
-    final progress = challenge.progressPercent;
-    final totalSaved = challenge.totalSaved;
-    final remaining = challenge.targetAmount - totalSaved;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Esquerda: Porquinho e Porcentagem
-          Column(
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 4,
-                      backgroundColor: Colors.transparent,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF6366F1)),
-                    ),
-                  ),
-                  Text(
-                    '${(progress * 100).toInt()}%',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: isDark ? Colors.white : const Color(0xFF6366F1),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text('💰', style: TextStyle(fontSize: 18)),
-            ],
-          ),
-
-          const SizedBox(width: 16),
-
-          // Direita: Valores
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildValueRow(
-                    'Guardado',
-                    '${challenge.currency} ${totalSaved.toStringAsFixed(2)}',
-                    const Color(0xFF6366F1),
-                    isDark),
-                const SizedBox(height: 8),
-                _buildValueRow(
-                    'Falta',
-                    '${challenge.currency} ${remaining.toStringAsFixed(2)}',
-                    isDark ? Colors.white60 : Colors.grey[600]!,
-                    isDark),
-                const SizedBox(height: 8),
-                _buildValueRow(
-                    'Meta',
-                    '${challenge.currency} ${challenge.targetAmount.toStringAsFixed(2)}',
-                    isDark ? Colors.white30 : Colors.grey[400]!,
-                    isDark,
-                    isSmall: true),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildValueRow(String label, String value, Color color, bool isDark,
-      {bool isSmall = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black54,
-            fontSize: isSmall ? 10 : 12,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: isSmall ? 12 : 16,
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : Colors.black87),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Meu Desafio da Poupança',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
-            child: Column(
-              children: [
-                Text(
-                  'Meta: ${_currentChallenge.currency} ${_currentChallenge.targetAmount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildRepositionedSummary(_currentChallenge, isDark),
-                const SizedBox(height: 24),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemCount: _currentChallenge.totalCells,
-                  itemBuilder: (context, index) {
-                    final isMarked =
-                        _currentChallenge.markedCells.contains(index);
-                    final value = index < _currentChallenge.cellValues.length
-                        ? _currentChallenge.cellValues[index]
-                        : 0.0;
-
-                    return ChallengeCell(
-                      index: index,
-                      value: value,
-                      isMarked: isMarked,
-                      isDark: isDark,
-                      gridSize: 5,
-                      onTap: _toggleCell,
-                    );
-                  },
-                ),
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              Colors.green,
-              Colors.blue,
-              Colors.pink,
-              Colors.orange,
-              Colors.purple
-            ],
-            createParticlePath: _drawStar, // Usamos estrelas para o visual cool
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Desenha uma estrela para o confetti
-  Path _drawStar(Size size) {
-    // Escala baseada no tamanho sugerido pelo ConfettiWidget
-    double degToRad(double deg) => deg * (3.1415926535897932 / 180.0);
-
-    const numberOfPoints = 5;
-    final halfWidth = size.width / 2;
-    final externalRadius = halfWidth;
-    final internalRadius = halfWidth / 2.5;
-    final degreesPerStep = degToRad(360 / numberOfPoints);
-    final halfDegreesPerStep = degreesPerStep / 2;
-    final path = Path();
-    final fullAngle = degToRad(360);
-    path.moveTo(size.width, halfWidth);
-
-    for (double step = 0; step < fullAngle; step += degreesPerStep) {
-      path.lineTo(halfWidth + externalRadius * math.cos(step),
-          halfWidth + externalRadius * math.sin(step));
-      path.lineTo(
-          halfWidth + internalRadius * math.cos(step + halfDegreesPerStep),
-          halfWidth + internalRadius * math.sin(step + halfDegreesPerStep));
-    }
-    path.close();
-    return path;
-  }
-}
-
-class ListActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDark;
-
-  const ListActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class ChallengeCell extends StatelessWidget {
-  final int index;
-  final double value;
-  final bool isMarked;
-  final bool isDark;
-  final int gridSize;
-  final ValueChanged<int> onTap;
-
-  const ChallengeCell({
-    super.key,
-    required this.index,
-    required this.value,
-    required this.isMarked,
-    required this.isDark,
-    required this.gridSize,
-    required this.onTap,
-  });
-
-  static const LinearGradient _markedGradient = LinearGradient(
-    colors: [
-      Color(0xFF10B981), // Emerald 500
-      Color(0xFF059669), // Emerald 600
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    // Gradiente escuro premium para células não marcadas
-    final unMarkedGradient = LinearGradient(
-      colors: [
-        const Color(0xFF2C2C2E), // Cinza escuro
-        const Color(0xFF1C1C1E), // Quase preto
-      ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
-
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          gradient: isMarked ? _markedGradient : unMarkedGradient,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            if (isMarked)
-              // Brilho externo sutil para marcada
-              BoxShadow(
-                color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                blurRadius: 8,
-                spreadRadius: 1,
-              )
-            else
-              // Efeito de relevo sutil para não marcada
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                offset: const Offset(2, 2),
-                blurRadius: 4,
-              ),
-            if (!isMarked)
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.05),
-                offset: const Offset(-1, -1),
-                blurRadius: 2,
-              ),
-          ],
-          border: Border.all(
-            color: isMarked
-                ? Colors.white.withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.05),
-            width: isMarked ? 1.0 : 0.5,
-          ),
-        ),
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                value.toStringAsFixed(0),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: isMarked ? FontWeight.w900 : FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      offset: const Offset(1, 1),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class CurrencyInputFormatter extends TextInputFormatter {
-  final String currency;
-
-  CurrencyInputFormatter({required this.currency});
-
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.selection.baseOffset == 0) {
-      return newValue;
-    }
-
-    // Apenas números
-    String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleaned.isEmpty) return newValue.copyWith(text: '');
-
-    double value = double.parse(cleaned) / 100;
-
-    // Formatação baseada na moeda
-    bool isLatin = currency == 'R\$' || currency == '€' || currency == '\$';
-
-    String formatted;
-    if (isLatin) {
-      formatted = _formatWithSeparators(value,
-          decimalSeparator: ',', thousandSeparator: '.');
-    } else {
-      formatted = _formatWithSeparators(value,
-          decimalSeparator: '.', thousandSeparator: ',');
-    }
-
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
-
-  String _formatWithSeparators(double value,
-      {required String decimalSeparator, required String thousandSeparator}) {
-    String fixed = value.toStringAsFixed(2);
-    List<String> parts = fixed.split('.');
-    String whole = parts[0];
-    String decimal = parts[1];
-
-    String result = '';
-    int count = 0;
-    for (int i = whole.length - 1; i >= 0; i--) {
-      result = whole[i] + result;
-      count++;
-      if (count == 3 && i > 0) {
-        result = thousandSeparator + result;
-        count = 0;
-      }
-    }
-
-    return result + decimalSeparator + decimal;
-  }
-}

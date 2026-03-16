@@ -13,6 +13,9 @@ import 'package:disciplinum/features/modules/reading/presentation/widgets/my_pro
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 import 'dart:async';
 
 class ReadingScreen extends StatefulWidget {
@@ -262,8 +265,8 @@ class _ReadingScreenState extends State<ReadingScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoCard(
-                  isDark,
+                NicheInfoCard(
+                  isDark: isDark,
                   icon: Icons.auto_stories_rounded,
                   title: 'Em " + Livro", adicione os livros',
                   content:
@@ -271,8 +274,8 @@ class _ReadingScreenState extends State<ReadingScreen>
                       'É preenchido nome do livro, autor (opcional), número de páginas e tema.',
                 ),
                 const SizedBox(height: 16),
-                _buildInfoCard(
-                  isDark,
+                NicheInfoCard(
+                  isDark: isDark,
                   icon: Icons.notifications_outlined,
                   title: 'Em "Notificações", configure o lembrete diário',
                   content:
@@ -280,8 +283,8 @@ class _ReadingScreenState extends State<ReadingScreen>
                       'E o app registra as páginas lidas para atualizar seu progresso, conforme você informa o quanto leu.',
                 ),
                 const SizedBox(height: 16),
-                _buildInfoCard(
-                  isDark,
+                NicheInfoCard(
+                  isDark: isDark,
                   icon: Icons.bar_chart_rounded,
                   title: 'Em "Estatísticas", veja sua evolução',
                   content:
@@ -297,7 +300,7 @@ class _ReadingScreenState extends State<ReadingScreen>
           child: SizedBox(
             width: double.infinity,
             height: 55,
-            child: _buildActionButton(
+            child: NicheActionButton(
               icon: Icons.rocket_launch_rounded,
               label: 'Começar',
               color: const Color(0xFF6366F1),
@@ -327,7 +330,7 @@ class _ReadingScreenState extends State<ReadingScreen>
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.add,
                   label: 'Livro',
                   color: const Color(0xFF6366F1),
@@ -339,7 +342,7 @@ class _ReadingScreenState extends State<ReadingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -361,7 +364,7 @@ class _ReadingScreenState extends State<ReadingScreen>
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -371,7 +374,7 @@ class _ReadingScreenState extends State<ReadingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
@@ -385,50 +388,7 @@ class _ReadingScreenState extends State<ReadingScreen>
         ],
       ),
     );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showStatsMenu() {
+  }  void _showStatsMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -452,10 +412,11 @@ class _ReadingScreenState extends State<ReadingScreen>
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Estatísticas de leitura',
               color: Colors.teal,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -464,10 +425,11 @@ class _ReadingScreenState extends State<ReadingScreen>
                 );
               },
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -482,48 +444,6 @@ class _ReadingScreenState extends State<ReadingScreen>
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
 
   Future<void> _toggleModule(bool isActive) async {
     final gamification =
@@ -564,65 +484,6 @@ class _ReadingScreenState extends State<ReadingScreen>
     }
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      // ... same as before
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildReminderSection(bool isDark) {
     return Container(

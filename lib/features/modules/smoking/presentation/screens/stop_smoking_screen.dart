@@ -21,6 +21,11 @@ import 'daily_checkins_stats.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/sections/niche_checkin_section.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_consumption_settings.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
 class StopSmokingScreen extends StatefulWidget {
   final String? heroTag;
@@ -658,16 +663,16 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
       case 0:
         return Column(
           children: [
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.settings_outlined,
               title: 'No topo da tela, preencha como é o seu consumo',
               content:
                   'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.check_box_outlined,
               title:
                   'Em "Check-in diário", selecione horario para o Check-in diário',
@@ -675,16 +680,16 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                   'No horário configurado, você receberá uma notificação para que você faça o "check-in diário" da sua disciplina, informando se você fumou ou não no dia.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure notificações motivacionais',
               content:
                   'Insira até 8 horários para receber notificações motivacionais durante o dia. Pra te lembrar de manter a disciplina.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title:
                   'Em "Estatisticas", veja estatisticas financeiras e de saude',
@@ -695,220 +700,43 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
         );
       case 1:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Últimas informações de consumo:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const Text(
-              'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark ? Colors.white10 : Colors.grey[300]!,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Preço do maço:"),
-                      SizedBox(
-                        width: 160,
-                        height: 40,
-                        child: TextField(
-                          controller: _priceController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.black),
-                          decoration: InputDecoration(
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(left: 4, right: 4),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _selectedCurrency,
-                                  isDense: true,
-                                  icon: const Icon(Icons.arrow_drop_down,
-                                      size: 16),
-                                  alignment: Alignment.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                  ),
-                                  selectedItemBuilder: (BuildContext context) {
-                                    return ['R\$', 'US\$', 'EUR', 'ARS\$']
-                                        .map<Widget>((String item) {
-                                      return Container(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          item,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: isDark
-                                                ? Colors.white
-                                                : Colors.black87,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList();
-                                  },
-                                  onChanged: (String? newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _selectedCurrency = newValue;
-                                        _formatCurrencyInput(
-                                            _priceController.text);
-                                      });
-                                    }
-                                  },
-                                  items: ['R\$', 'US\$', 'EUR', 'ARS\$']
-                                      .map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                    String currencyName = '';
-                                    switch (value) {
-                                      case 'R\$':
-                                        currencyName = 'Real';
-                                        break;
-                                      case 'US\$':
-                                        currencyName = 'Dólar Americano';
-                                        break;
-                                      case 'EUR':
-                                        currencyName = 'Euro';
-                                        break;
-                                      case 'ARS\$':
-                                        currencyName = 'Peso Argentino';
-                                        break;
-                                    }
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text('$value - $currencyName'),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                            prefixIconConstraints: const BoxConstraints(
-                                minWidth: 50, maxWidth: 80),
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade400),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade400),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                  color: Colors.indigo, width: 2),
-                            ),
-                          ),
-                          onChanged: _formatCurrencyInput,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Maços por dia:"),
-                      SizedBox(
-                        width: 80,
-                        height: 40,
-                        child: TextField(
-                          controller: _packsController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.black),
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade400),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade400),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                  color: Colors.indigo, width: 2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Data de parada:"),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now(),
-                            locale: const Locale('pt', 'BR'),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              _selectedDate = picked;
-                            });
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            SmokingConsumptionSettings(
+              isDark: isDark,
+              priceController: _priceController,
+              packsController: _packsController,
+              selectedCurrency: _selectedCurrency,
+              selectedDate: _selectedDate,
+              onCurrencyChanged: (newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedCurrency = newValue;
+                    _formatCurrencyInput(_priceController.text);
+                  });
+                }
+              },
+              onPriceChanged: _formatCurrencyInput,
+              onDateTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                  locale: const Locale('pt', 'BR'),
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedDate = picked;
+                  });
+                }
+              },
             ),
             const SizedBox(height: 24),
-            _buildCheckinSection(isDark),
+            NicheCheckinSection(
+              checkinTime: _checkinTime,
+              isDark: isDark,
+              onDeleteTime: _showDeleteTimeDialog,
+            ),
             const SizedBox(height: 24),
           ],
         );
@@ -917,166 +745,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     }
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildCheckinSection(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey[300]!,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Check-in Diário',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_checkinTime != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Horário configurado:',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _showDeleteTimeDialog(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.close_rounded,
-                              size: 14,
-                              color: Colors.red.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Para editar, apague este horário, e defina um novo horário no botão "Check-in diário"',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Horário não configurado',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Acesse "Check-in diário" abaixo para configurar seu check-in diário',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
 
   void _showDeleteTimeDialog() {
     showDialog(
@@ -1126,7 +795,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: _buildActionButton(
+          child: NicheActionButton(
             icon: Icons.rocket_launch_rounded,
             label: 'Começar',
             color: const Color(0xFF6366F1),
@@ -1144,7 +813,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: _buildActionButton(
+          child: NicheActionButton(
             icon: Icons.save_rounded,
             label: isSaving ? 'Salvando...' : 'Salvar',
             color: const Color(0xFF6366F1),
@@ -1193,7 +862,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.check_circle_outline,
                   label: 'Check-in diário',
                   color: const Color(0xFF6366F1),
@@ -1203,7 +872,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -1224,7 +893,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatisticas',
                   color: Colors.teal,
@@ -1234,7 +903,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -1256,46 +925,6 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _openCheckInManager() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1380,7 +1009,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
             Row(
               children: [
                 Expanded(
-                  child: _buildActionButton(
+                  child: NicheActionButton(
                     icon: Icons.access_time_rounded,
                     label: 'Configurar Horário',
                     color: const Color(0xFF6366F1),
@@ -1451,7 +1080,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.calendar_month_rounded,
               label: 'Estatísticas dos Check-ins',
               color: const Color(0xFF6366F1),
@@ -1464,14 +1093,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                   ),
                 );
               },
+              isDark: isDark,
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.savings_outlined,
               label: 'Economia',
               color: Colors.green,
               onTap: () {
                 Navigator.pop(ctx);
-                // CORREÇÃO: Permitir acesso mesmo sem settings configurados
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1488,14 +1117,14 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                   ),
                 );
               },
+              isDark: isDark,
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.health_and_safety_outlined,
               label: 'Saúde',
               color: Colors.blue,
               onTap: () {
                 Navigator.pop(ctx);
-                // CORREÇÃO: Permitir acesso mesmo sem settings configurados
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1511,8 +1140,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                   ),
                 );
               },
+              isDark: isDark,
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
@@ -1523,6 +1153,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                   MaterialPageRoute(builder: (_) => const MyProgressSmoking()),
                 );
               },
+              isDark: isDark,
             ),
             const SizedBox(height: 12),
           ],
@@ -1531,46 +1162,4 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
 }

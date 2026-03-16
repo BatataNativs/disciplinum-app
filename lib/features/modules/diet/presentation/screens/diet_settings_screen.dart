@@ -15,6 +15,9 @@ import 'package:disciplinum/features/modules/diet/presentation/screens/meal_stre
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
 class DietSettingsScreen extends StatefulWidget {
   final String? heroTag;
@@ -511,24 +514,24 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       case 0:
         return Column(
           children: [
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.schedule,
               title: 'Preencha seus horários de refeições',
               content:
                   'Defina os horários para que possamos te lembrar de manter o foco na sua dieta e registrar suas refeições.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure lembretes',
               content:
                   'Defina horários para ser lembrado de manter o foco na sua dieta e registrar suas refeições, respondendo às notificações se fez/fará ou não a refeição.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title: 'Em "Estatísticas", veja seu progresso',
               content:
@@ -625,64 +628,6 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     }
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTabActions(int index) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -691,7 +636,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: _buildActionButton(
+          child: NicheActionButton(
             icon: Icons.rocket_launch_rounded,
             label: 'Começar',
             color: const Color(0xFF6366F1),
@@ -709,7 +654,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: _buildActionButton(
+          child: NicheActionButton(
             icon: Icons.schedule_rounded,
             label: 'Gerenciar horários',
             color: const Color(0xFF6366F1),
@@ -742,7 +687,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.restaurant_menu_rounded,
                   label: 'Horários',
                   color: const Color(0xFF6366F1),
@@ -754,7 +699,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -775,7 +720,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -785,7 +730,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -807,46 +752,6 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showStatisticsMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -872,10 +777,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.restaurant_rounded,
               label: 'Registro de refeições',
               color: Colors.green,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -886,10 +792,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                 );
               },
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -904,46 +811,4 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
 }

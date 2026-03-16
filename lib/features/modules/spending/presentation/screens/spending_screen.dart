@@ -20,6 +20,9 @@ import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expe
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_bills_stats_screen.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
 class SpendingScreen extends StatefulWidget {
   final String? heroTag;
@@ -411,7 +414,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
               _selectedIndex == 0
                   ? Padding(
                       padding: const EdgeInsets.all(16),
-                      child: _buildActionButton(
+                      child: NicheActionButton(
                         icon: Icons.rocket_launch_rounded,
                         label: 'Começar',
                         color: const Color(0xFF6366F1),
@@ -449,7 +452,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.account_balance_wallet_rounded,
                   label: 'Controle de gastos',
                   color: const Color(0xFF6366F1),
@@ -459,7 +462,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -481,7 +484,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
@@ -491,7 +494,7 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
+                child: NicheActionButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -513,46 +516,6 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showControlGastosMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -578,19 +541,21 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.touch_app_outlined,
               label: 'Selecionar apps',
               color: const Color(0xFF6366F1),
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 _openSelectApps();
               },
             ),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.receipt_long_rounded,
               label: 'Gastos fixos',
               color: Colors.teal,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -630,10 +595,11 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.receipt_long_outlined,
               label: 'Estatísticas de contas pagas',
               color: Colors.purple,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -644,10 +610,11 @@ class _SpendingScreenState extends State<SpendingScreen> {
               },
             ),
             const SizedBox(height: 12),
-            _buildMenuTile(
+            ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
+              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -662,21 +629,6 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
   }
 
-  Widget _buildMenuTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListActionTile(
-      icon: icon,
-      label: label,
-      color: color,
-      isDark: isDark,
-      onTap: onTap,
-    );
-  }
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -751,8 +703,8 @@ class _SpendingScreenState extends State<SpendingScreen> {
       case 0:
         return Column(
           children: [
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.account_balance_wallet_outlined,
               title:
                   'Em "Controle de gastos", selecione seus apps a monitorar abertura e gerencie gastos fixos',
@@ -760,16 +712,16 @@ class _SpendingScreenState extends State<SpendingScreen> {
                   'Em "Selecionar apps", escolha apps de compras online para monitorar abertura, e recebe alerta ao abri-los.\nEm "Gastos fixos", cadastre seus gastos fixos, e seja lembrado de pagá-lo.\nHá um sistema de nível de urgência, em cores verde, amarelo e vermelho, de acordo com a proximidade com a data de vencimento de cada conta. Salve e ative o módulo para iniciar.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure seus alertas',
               content:
                   'Ao abrir um app que você selecionou para monitorar, você receberá notificação de alerta para evitar gastos desnecessários e compras por impulso.\nE também, receba lembretes para pagar suas contas fixas cadastradas no app antes do vencimento delas.',
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              isDark,
+            NicheInfoCard(
+              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title:
                   'Em "Estatísticas", acompanhe seu progresso e como anda sua disciplina',
@@ -997,117 +949,5 @@ class _SpendingScreenState extends State<SpendingScreen> {
     }
   }
 
-  Widget _buildInfoCard(
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class ListActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDark;
-
-  const ListActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: isDark ? Colors.white30 : Colors.black26,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-}
