@@ -18,10 +18,10 @@ import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 class GamificationService extends ChangeNotifier {
-  static final GamificationService _instance = GamificationService._internal();
-  static GamificationService get instance => _instance;
-
-  GamificationService._internal() {
+  AppMonitoringService? _appMonitoringService;
+  
+  GamificationService([AppMonitoringService? appMonitoringService]) {
+    _appMonitoringService = appMonitoringService;
     _loadPreferences();
     NotificationService.onRelapseDetected = _handleRelapseFromNotification;
     NotificationService.onCheckInSim = _handleCheckInSimFromNotification;
@@ -30,9 +30,6 @@ class GamificationService extends ChangeNotifier {
     NotificationService.onBingeCheckInSim =
         _handleBingeCheckInSimFromNotification;
   }
-
-  // Factory constructor for backward compatibility
-  factory GamificationService() => instance;
 
   // Cache local
   final Map<NicheId, UserModuleStatus> _moduleStates = {};
@@ -69,23 +66,23 @@ class GamificationService extends ChangeNotifier {
       _unlockedMotivations.contains(niche);
 
   // Getters/Setters Delegados para AppMonitoringService
-  bool get isGeneralMonitoringActive => AppMonitoringService.instance.isActive;
+  bool get isGeneralMonitoringActive => _appMonitoringService?.isActive ?? false;
   Set<String> get monitoredApps =>
-      Set<String>.from(AppMonitoringService.instance.monitoredApps);
+      Set<String>.from(_appMonitoringService?.monitoredApps ?? []);
   set monitoredApps(Set<String> value) {
-    AppMonitoringService.instance.monitoredApps = value.toList();
+    _appMonitoringService?.monitoredApps = value.toList();
     notifyListeners();
   }
 
   bool get notificationsPaused =>
-      AppMonitoringService.instance.notificationsPaused;
+      _appMonitoringService?.notificationsPaused ?? false;
   void setNotificationsPaused(bool value) {
-    AppMonitoringService.instance.setNotificationsPaused(value);
+    _appMonitoringService?.setNotificationsPaused(value);
     notifyListeners();
   }
 
   void stopMonitoringApps() {
-    AppMonitoringService.instance.stopMonitoring();
+    _appMonitoringService?.stopMonitoring();
     notifyListeners();
   }
 
@@ -136,7 +133,7 @@ class GamificationService extends ChangeNotifier {
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    AppMonitoringService.instance.notificationsPaused =
+    _appMonitoringService?.notificationsPaused =
         prefs.getBool('settings_notifications_paused') ?? false;
 
     for (final niche in NicheId.values) {
@@ -219,7 +216,7 @@ class GamificationService extends ChangeNotifier {
   Future<void> restoreMonitoringSession() async {
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('seen_onboarding') ?? false)) return;
-    await AppMonitoringService.instance.restoreSession();
+    await _appMonitoringService?.restoreSession();
     final savedId = prefs.getInt(_prefsActiveNicheKey);
     if (savedId != null) {
       final nicheId = NicheId.tryFromInt(savedId);
@@ -675,8 +672,7 @@ class GamificationService extends ChangeNotifier {
       currentNicheId = nicheId;
       if (horarios != null) scheduleByModule[nicheId] = horarios;
       if (intervaloFoco != null) focusIntervalByModule[nicheId] = intervaloFoco;
-      await AppMonitoringService.instance
-          .startMonitoring(nicheId: nicheId, apps: monitoredApps.toList());
+      await _appMonitoringService?.startMonitoring(nicheId: nicheId, apps: monitoredApps.toList());
       await NotificationScheduler.instance
           .scheduleNativeNotifications(nicheId, this);
     }

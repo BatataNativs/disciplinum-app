@@ -17,14 +17,32 @@ import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/storage/session_persistence_service.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 
 class AppMonitoringService {
-  static final AppMonitoringService _instance =
-      AppMonitoringService._internal();
-
-  static AppMonitoringService get instance => _instance;
-
-  AppMonitoringService._internal();
+  GamificationService? _gamificationService;
+  
+  AppMonitoringService([GamificationService? gamificationService]) {
+    _gamificationService = gamificationService;
+    
+    // ✅ Auto-inicializar SessionPersistenceService se necessário
+    _initializeSessionPersistence();
+  }
+  
+  /// Inicializa SessionPersistenceService se ainda não foi feito
+  void _initializeSessionPersistence() {
+    try {
+      // Verificar se IsarService está disponível
+      if (IsarService.instance.isInitialized) {
+        // Inicializar SessionPersistenceService se ainda não foi feito
+        SessionPersistenceService.instance.initialize(IsarService.instance);
+        LoggerService.instance.i('SessionPersistenceService initialized in AppMonitoringService');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Failed to initialize SessionPersistenceService', error: e);
+    }
+  }
 
   // ID para a notificação persistente (Serviço de Primeiro Plano)
 
@@ -110,6 +128,13 @@ class AppMonitoringService {
 
     await prefs.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
+    // ✅ Persistir estado de monitoramento com Isar
+    await SessionPersistenceService.instance.saveMonitoringState(
+      activeNicheId: nicheId,
+      isMonitoringActive: true,
+      monitoredApps: apps,
+    );
+
     _violationStartByApp.clear();
     _warnedApps.clear();
     _lastSeenMonitoredApp.clear();
@@ -141,6 +166,7 @@ class AppMonitoringService {
     _monitorTimer?.cancel();
     _monitorTimer = null;
 
+    // ✅ Cancelar subscription de acessibilidade (MEMORY LEAK FIX)
     _accessibilitySubscription?.cancel();
     _accessibilitySubscription = null;
     _lastAccessibilityApp = null;
@@ -166,6 +192,9 @@ class AppMonitoringService {
 
     await prefs.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
+    // ✅ Limpar estado de monitoramento com Isar
+    await SessionPersistenceService.instance.clearMonitoringState();
+
     await _stopForegroundService();
 
     // Garantir que o overlay suma
@@ -180,7 +209,18 @@ class AppMonitoringService {
       }
 
       await _saveHeartbeat();
-      GamificationService.instance.runProgressCheck();
+      
+      // ✅ Atualizar heartbeat no Isar a cada 60 segundos
+      if (timer.tick % 60 == 0) {
+        await SessionPersistenceService.instance.updateHeartbeat();
+      }
+      
+      // ✅ Cleanup periódico a cada 5 minutos
+      if (timer.tick % 300 == 0) {
+        await SessionPersistenceService.instance.cleanupOldSessions();
+      }
+      
+      _gamificationService?.runProgressCheck();
 
       if (notificationsPaused) {
         _violationStartByApp.clear();
@@ -201,8 +241,8 @@ class AppMonitoringService {
 
       // Focus validation
       if (activeNicheId == NicheId.focus) {
-        if (!GamificationService.instance
-            .historyFocusInterval(activeNicheId, DateTime.now())) {
+        if (!(_gamificationService
+            ?.historyFocusInterval(activeNicheId, DateTime.now()) ?? false)) {
           _violationStartByApp.clear();
           _warnedApps.clear();
           _lastSeenMonitoredApp.clear();
@@ -211,25 +251,20 @@ class AppMonitoringService {
         }
       }
 
-      // Coleta o app em foreground
-      String? foregroundApp = _lastAccessibilityApp;
+      // Detectar app em foreground
+      final foregroundApp = _lastAccessibilityApp;
 
-      // ✅ Mudança Crítica: Não limpamos TUDO se o foreground for nulo ou sistema.
-      // Apenas tratamos como uma transição.
-      if (foregroundApp != _currentForegroundApp) {
-        await _handleAppTransition(_currentForegroundApp, foregroundApp);
-        _currentForegroundApp = foregroundApp;
-      }
+      if (foregroundApp == null) return;
 
       // Se estamos em um app monitorado, continuamos verificando o timeout
-      if (foregroundApp != null && monitoredApps.contains(foregroundApp)) {
+      if (monitoredApps.contains(foregroundApp)) {
         await _checkViolationTimeout(foregroundApp);
       } else if (_violationStartByApp.isNotEmpty) {
         // CORREÇÃO: Se não estamos mais em um app monitorado, verificar se devemos cancelar
         // Se está em sistema interativo OU no Disciplinum, manter overlay ativo
         final isDisciplinum = foregroundApp == 'com.disciplinum.app';
-        final isInteractiveSystem = foregroundApp != null && _isInteractiveSystemPackage(foregroundApp);
-        
+        final isInteractiveSystem = _isSystemPackage(foregroundApp);
+
         if (!isDisciplinum && !isInteractiveSystem) {
           LoggerService.instance.system('Saiu de app monitorado, cancelando todas as violações ativas');
           
@@ -246,12 +281,14 @@ class AppMonitoringService {
         }
       }
 
-      // Logging periódico
-      if (DateTime.now().millisecondsSinceEpoch % 30000 < 2000) {
-        // _logSystemState removed
+      // Detectar transições de apps
+      if (_currentForegroundApp != null && _currentForegroundApp != foregroundApp) {
+        await _handleAppTransition(_currentForegroundApp!, foregroundApp);
       }
+
+      _currentForegroundApp = foregroundApp;
     } catch (e) {
-      LoggerService.instance.e('Erro no loop de monitoramento', error: e);
+      LoggerService.instance.e('Error in monitor loop', error: e);
     }
   }
 
@@ -304,9 +341,9 @@ class AppMonitoringService {
 
     if (activeNicheId == null || activeNicheId != NicheId.focus) return;
 
-    final gamification = GamificationService.instance;
+    final gamification = _gamificationService;
 
-    final focusInterval = gamification.focusIntervalByModule[activeNicheId];
+    final focusInterval = gamification?.focusIntervalByModule[activeNicheId];
 
     if (focusInterval == null) return;
 
@@ -340,13 +377,13 @@ class AppMonitoringService {
     final hadViolations = await _hadViolationsInFocusPeriod(startTime, endTime);
 
     if (!hadViolations) {
-      gamification.addRespectedFocusPeriod(activeNicheId);
+      gamification?.addRespectedFocusPeriod(activeNicheId);
 
       LoggerService.instance.gamification(
         'Período de foco respeitado',
         data: {
           'nicheId': activeNicheId.id,
-          'total': gamification.getRespectedFocusPeriods(activeNicheId),
+          'total': gamification?.getRespectedFocusPeriods(activeNicheId) ?? 0,
         },
       );
     }
@@ -507,10 +544,39 @@ class AppMonitoringService {
   }
 
   Future<void> restoreSession() async {
+    // ✅ Primeiro tentar recuperar do Isar
+    final monitoringState = await SessionPersistenceService.instance.getMonitoringState();
+    
+    if (monitoringState != null && monitoringState.isMonitoringActive) {
+      LoggerService.instance.i('Recuperando estado de monitoramento do Isar');
+      
+      currentNicheId = monitoringState.activeNicheId;
+      monitoredApps = List<String>.from(monitoringState.monitoredApps);
+      notificationsPaused = false;
+      _isModuleActive = true;
+      
+      // Recuperar sessões ativas
+      final activeSessions = await SessionPersistenceService.instance.getActiveSessions();
+      if (activeSessions.isNotEmpty) {
+        LoggerService.instance.i('Recuperadas ${activeSessions.length} sessões ativas');
+        
+        // Restaurar violações em andamento
+        for (final session in activeSessions) {
+          _violationStartByApp[session.packageName] = session.startTime;
+          _warnedApps[session.packageName] = session.startTime;
+        }
+      }
+      
+      await _startForegroundService();
+      await _checkRetroactiveViolations(monitoringState.activeNicheId);
+      _restartMonitorTimer();
+      return;
+    }
+    
+    // Fallback para SharedPreferences (legado)
     final prefs = await SharedPreferences.getInstance();
 
     // Restore niche
-
     final savedId = prefs.getInt(_prefsActiveNicheKey);
 
     if (savedId == null) return;
@@ -520,7 +586,6 @@ class AppMonitoringService {
     if (nicheId == null) return;
 
     // Restore monitored apps - CRITICAL FIX
-
     final savedApps = prefs.getStringList(_prefsMonitoredAppsKey) ?? [];
 
     if (savedApps.isEmpty) return;
@@ -532,7 +597,6 @@ class AppMonitoringService {
     _isModuleActive = true;
 
     // Start monitoring
-
     await _startForegroundService();
 
     await _checkRetroactiveViolations(nicheId);
@@ -602,6 +666,9 @@ class AppMonitoringService {
       // SAIU do app monitorado E não há carência ativa no buffer
       // ou se ele voltou para o Disciplinum.
 
+      // ✅ Marcar sessão como inativa com Isar
+      await SessionPersistenceService.instance.markSessionInactive(packageName);
+
       _violationStartByApp.remove(packageName);
       _warnedApps.remove(packageName);
       _lastSeenMonitoredApp.remove(packageName);
@@ -623,8 +690,8 @@ class AppMonitoringService {
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
       isUnlocked: IapService().isCustomNotifUnlocked ||
-          GamificationService.instance.isNotificationUnlocked(currentNicheId!),
-      customMessages: GamificationService.instance.customMessages,
+          (_gamificationService?.isNotificationUnlocked(currentNicheId!) ?? false),
+      customMessages: _gamificationService?.customMessages ?? {},
     );
     _currentOverlayMessage =
         '$baseMessage\nSaia em 30s para manter seu progresso no Disciplinum!';
@@ -669,10 +736,18 @@ class AppMonitoringService {
       LoggerService.instance.w('DESATIVANDO módulo ${niche.name} por violação de overlay');
     }
 
+    // ✅ Persistir sessão de violação com Isar
+    await SessionPersistenceService.instance.saveDetectionSession(
+      packageName: packageName,
+      nicheId: currentNicheId!,
+      duration: 30, // 30 segundos de violação
+      remainingSeconds: 0, // Violação completou
+    );
+
     // IMPORTANTE: deactivate: false para NÃO desativar o módulo/monitoramento.
     // Apenas reseta gamificação (medalhas, streak) e mantém o monitoramento ativo.
     // EXCEÇÃO: Para Compulsão Alimentar, desativar o módulo completamente.
-    await GamificationService.instance.resetMedals(
+    await _gamificationService?.resetMedals(
       currentNicheId!,
       notificationTitle: shouldDeactivate 
           ? '${niche.name} Desativado 🔴'  // Emoji vermelho para compulsão alimentar
@@ -702,31 +777,22 @@ class AppMonitoringService {
 
   /// Identifica pacotes de sistema que são considereados "saída segura" (Launcher, Settings, etc)
   bool _isSystemPackage(String packageName) {
-    const systemPackages = {
+    final systemPackages = [
+      'com.android.launcher',
       'com.android.systemui',
-      'android',
-      // Samsung
-      'com.sec.android.app.launcher',
-      'com.samsung.android.sm',
-      // Google/Android Original
+      'com.android.settings',
       'com.google.android.apps.nexuslauncher',
-      'com.android.launcher3',
-      'com.google.android.inputmethod.latin', // Teclado (não deve contar como saída)
-      // Custom Launchers Populares
-      'teslacoilsw.launcher', // Nova Launcher
-      'ch.deletescape.lawnchair.plah', // Lawnchair
       'com.teslacoilsw.launcher.prime',
       'com.microsoft.launcher',
       'com.niagara.launcher',
       'com.smartlauncher.set.v2',
-      // Outros
       'com.miui.home',
       'com.huawei.android.launcher',
       'com.oneplus.launcher',
       'com.oppo.launcher',
       'com.vivo.launcher',
       'com.xiaomi.miui.home',
-    };
+    ];
 
     return systemPackages.contains(packageName) ||
         packageName.contains('.launcher') ||
@@ -750,10 +816,6 @@ class AppMonitoringService {
             !packageName.contains('launcher')) ||
         (packageName.startsWith('com.samsung.android.') &&
             !packageName.contains('launcher'));
-  }
-
-  Future<bool> validateSystemHealth() async {
-    return true; // Accessibility service handled natively
   }
 
   // --- MÉTODOS AUXILIARES DE OVERLAY ---

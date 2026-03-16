@@ -4,16 +4,11 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/infrastructure/ads/ad_service.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
-import 'package:disciplinum/core/theme/theme_controller.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/database/repositories/simple_user_module_repository.dart';
+import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
 
 // ============= CORE SERVICES =============
 
@@ -49,37 +44,13 @@ final readingServiceAdapterProvider = Provider<ReadingServiceAdapter>((ref) {
 
 /// Provider para GamificationService
 final gamificationServiceProvider = Provider<GamificationService>((ref) {
-  return GamificationService.instance;
+  final appMonitoring = ref.watch(appMonitoringServiceProvider);
+  return GamificationService(appMonitoring);
 });
 
-/// Provider para AuthService
-final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
-});
-
-/// Provider para ThemeController
-final themeControllerProvider = Provider<ThemeController>((ref) {
-  return ThemeController();
-});
-
-/// Provider para AdService
-final adServiceProvider = Provider<AdService>((ref) {
-  return AdService();
-});
-
-/// Provider para IapService
-final iapServiceProvider = Provider<IapService>((ref) {
-  return IapService();
-});
-
-/// Provider para IsarService
-final isarServiceProvider = Provider<IsarService>((ref) {
-  return IsarService.instance;
-});
-
-/// Provider para SimpleUserModuleRepository
-final simpleUserModuleRepositoryProvider = Provider<SimpleUserModuleRepository>((ref) {
-  return SimpleUserModuleRepository.instance;
+/// Provider para AppMonitoringService
+final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
+  return AppMonitoringService(); // Sem dependência circular
 });
 
 // ============= AUTH SERVICES =============

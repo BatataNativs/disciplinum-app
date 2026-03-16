@@ -47,7 +47,7 @@ class EnhancedSnackBarHelper {
 
       overlay.insert(entry);
     } catch (e) {
-      // Se não encontrar Overlay, usa debugPrint para não quebrar o app
+      // Se não encontrar Overlay, usa LoggerService para não quebrar o app
       LoggerService.instance.e('Snackbar não pôde ser exibido: $message', error: e);
     }
   }

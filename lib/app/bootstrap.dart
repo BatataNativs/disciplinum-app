@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:disciplinum/core/storage/local_storage_service.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/gamification/presentation/controllers/gamification_controller.dart';
 import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
@@ -129,6 +131,12 @@ class AppBootstrap {
   /// Inicializa os serviços principais
   static Future<void> _initServices() async {
     try {
+      // ✅ Inicializar Isar primeiro (dependência para SessionPersistenceService)
+      await IsarService.instance.initialize();
+      
+      // ✅ Inicializar SessionPersistenceService com Isar
+      SessionPersistenceService.instance.initialize(IsarService.instance);
+      
       // Inicializar serviços em ordem de dependência
       await PrivacyService.initAtStartup();
 

@@ -4,6 +4,8 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/entities/user_module_state.dart';
 import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
 import 'package:disciplinum/core/database/entities/gamification_progress.dart';
+import 'package:disciplinum/core/storage/entities/detection_session_entity.dart';
+import 'package:disciplinum/core/storage/entities/monitoring_state_entity.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -27,6 +29,8 @@ class IsarService {
           UserModuleStateSchema,
           ReadingBookEntitySchema,
           GamificationProgressSchema,
+          DetectionSessionSchema,     
+          MonitoringStateSchema,      
         ],
         directory: dbPath,
       );
@@ -49,6 +53,12 @@ class IsarService {
     }
     return _isar!;
   }
+
+  /// Getter para DetectionSessions
+  IsarCollection<DetectionSession> get detectionSessions => database.detectionSessions; // ✅ DESCOMENTAR
+
+  /// Getter para MonitoringStates  
+  IsarCollection<MonitoringState> get monitoringStates => database.monitoringStates; // ✅ DESCOMENTAR
 
   /// Limpa todo o banco (apenas para desenvolvimento)
   Future<void> clearAll() async {
