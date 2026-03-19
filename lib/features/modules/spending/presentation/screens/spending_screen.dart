@@ -1267,7 +1267,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4.0),
                           child: Text(
-                            'Para excluir um gasto fixo, vá em "Controle de gastos" e "Gastos fixos"',
+                            'Para excluir um gasto fixo, clique em "Controle de gastos" e depois em "Gastos fixos"',
                             style: TextStyle(fontSize: 10, color: Colors.grey),
                           ),
                         ),
