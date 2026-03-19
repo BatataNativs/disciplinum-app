@@ -49,5 +49,6 @@ android/build/
 
 .env
 secrets/
-.env
+*.apk
+*.aab
 
