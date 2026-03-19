@@ -142,8 +142,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
             content: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: Colors.grey.shade400,
@@ -163,8 +163,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                         }
                       },
                       items: [r'R$', r'US$', r'EUR', r'ARS$']
-                          .map((c) => DropdownMenuItem(
-                              value: c, child: Text(c)))
+                          .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)))
                           .toList(),
                     ),
                   ),
@@ -184,18 +184,16 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                           horizontal: 12, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: Colors.grey.shade400),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: Colors.grey.shade400),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                            color: colorScheme.primary, width: 2),
+                        borderSide:
+                            BorderSide(color: colorScheme.primary, width: 2),
                       ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.clear_rounded, size: 18),
@@ -207,8 +205,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                           _formatCurrencyValue(val, currentCurrency);
                       controller.value = TextEditingValue(
                         text: formatted,
-                        selection: TextSelection.collapsed(
-                            offset: formatted.length),
+                        selection:
+                            TextSelection.collapsed(offset: formatted.length),
                       );
                     },
                   ),
@@ -226,9 +224,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                   if (currentCurrency == r'US$') {
                     cleanText = cleanText.replaceAll(',', '');
                   } else {
-                    cleanText = cleanText
-                        .replaceAll('.', '')
-                        .replaceAll(',', '.');
+                    cleanText =
+                        cleanText.replaceAll('.', '').replaceAll(',', '.');
                   }
                   final newAmount = double.tryParse(cleanText);
                   if (newAmount != null) {
@@ -239,8 +236,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                         );
                     Navigator.pop(dialogCtx);
                     HapticFeedback.mediumImpact();
-                    SnackBarHelper.showSuccess(
-                        context, 'Valor atualizado!');
+                    SnackBarHelper.showSuccess(context, 'Valor atualizado!');
                   }
                 },
                 child: const Text('Salvar'),
@@ -312,10 +308,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
             decoration: InputDecoration(
               hintText: 'Ex: 10',
               labelText: 'Dia do mês (1–31)',
-              prefixIcon: Icon(Icons.event_rounded,
-                  color: colorScheme.primary),
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 14),
+              prefixIcon: Icon(Icons.event_rounded, color: colorScheme.primary),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: Colors.grey.shade400),
@@ -326,8 +321,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    BorderSide(color: colorScheme.primary, width: 2),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
               ),
             ),
           ),
@@ -345,8 +339,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                       .updateExpense(expense.id, newDueDay: newDay);
                   Navigator.pop(dialogCtx);
                   HapticFeedback.mediumImpact();
-                  SnackBarHelper.showSuccess(
-                      context, 'Vencimento alterado!');
+                  SnackBarHelper.showSuccess(context, 'Vencimento alterado!');
                 }
               },
               child: const Text('Salvar'),
@@ -503,7 +496,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       context: context,
       nicheId: NicheId.spending,
       customMessage:
-          'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
+          'Ao desativar o módulo, seu progresso e estatísticas serão reiniciados.\n\nDeseja continuar?',
     );
 
     if (confirmed != true) return;
@@ -1052,8 +1045,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
             NicheInfoCard(
               isDark: isDark,
               icon: Icons.bar_chart_rounded,
-              title:
-                  'Em "Estatísticas", acompanhe seu progresso',
+              title: 'Em "Estatísticas", acompanhe seu progresso',
               content:
                   'Veja o resumo das contas pagas no mês, o total gasto e acompanhe sua disciplina financeira ao longo do tempo.',
             ),
@@ -1199,7 +1191,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         expense.name,
