@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:disciplinum/services/auth/auth_service.dart';
-import 'package:disciplinum/app_router.dart';
-import 'package:disciplinum/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final AuthService authService;

@@ -1,3 +1,23 @@
+import java.util.Base64
+
+val dartEnvironmentVariables = mutableMapOf<String, String>()
+if (project.hasProperty("dart-defines")) {
+    val dartDefines = project.property("dart-defines") as String
+    if (dartDefines.isNotEmpty()) {
+        dartDefines.split(",").forEach { entry ->
+            try {
+                val decoded = String(Base64.getDecoder().decode(entry), Charsets.UTF_8)
+                val pair = decoded.split("=")
+                if (pair.size == 2) {
+                    dartEnvironmentVariables[pair[0]] = pair[1]
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,7 +29,7 @@ plugins {
 android {
     namespace = "com.disciplinum.app"
 
-    compileSdk = 34 // Atualizado para compatibilidade moderna
+    compileSdk = 36 // android sdk version
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -41,6 +61,9 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+        
+        val admobAppId = dartEnvironmentVariables["ADMOB_APP_ID"] ?: "ca-app-pub-3940256099942544~3347358543"
+        manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
     }
 
     buildTypes {

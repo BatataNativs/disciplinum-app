@@ -6,9 +6,11 @@ import 'package:disciplinum/app/bootstrap.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/core/theme/app_themes.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('pt_BR', null);
   
   try {
     final startupData = await AppBootstrap.initialize();
@@ -16,7 +18,7 @@ void main() async {
     runApp(
       ProviderScope(
         child: provider.MultiProvider(
-          providers: AppBootstrap.setupProviders(),
+          providers: AppBootstrap.setupProviders(startupData.prefs),
           child: DisciplinumApp(
             initialRoute: startupData.seenOnboarding 
               ? AppRouter.authWrapper 

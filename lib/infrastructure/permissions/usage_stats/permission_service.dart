@@ -36,7 +36,12 @@ class PermissionService {
 
       if (!context.mounted) return;
 
-      // 2. Acessibilidade (Fase 6) - Substituindo Usage Stats como requisito principal
+      // 2. Sobreposição (Fase 7) - Necessária para as dicas visuais e bloqueio
+      await ensureOverlayPermission(context);
+
+      if (!context.mounted) return;
+
+      // 3. Acessibilidade (Fase 6) - Substituindo Usage Stats como requisito principal
       final prefs = await SharedPreferences.getInstance();
       bool alreadyAsked =
           prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
@@ -84,7 +89,7 @@ class PermissionService {
         if (Overlay.maybeOf(effectiveContext) != null) {
           EnhancedSnackBarHelper.showSuccess(
             effectiveContext,
-            'Serviço de Acessibilidade ativado! Monitoramento preciso habilitado.',
+            'Serviço de Acessibilidade ativado! Monitoramento preciso dos seus apps selecionados habilitado.',
           );
         }
       }
@@ -156,7 +161,7 @@ class PermissionService {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Para o app Disciplinum funcionar corretamente, monitorando se você está usando apps que você deseja evitar, escolhidos por VOCÊ, é necessário ativar o Serviço de Acessibilidade:",
+                  "Para a detecção de uso de apps selecionados por VOCÊ funcionar corretamente, o app Disciplinum precisa ativar o Serviço de Acessibilidade:",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -207,7 +212,7 @@ class PermissionService {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "Procure por 'Aplicativos Instalados' e toque no Disciplinum. O item ficará destacado para você ativar! 💡",
+                  "Em 'Aplicativos Instalados' selecione o Disciplinum",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -277,39 +282,9 @@ class PermissionService {
   static Future<void> openAccessibilitySettings() async {
     try {
       await _methodChannel.invokeMethod('openAccessibilitySettings');
-      
-      // CORREÇÃO: Adicionar hints visuais após abrir as configurações
-      await _showAccessibilityHints();
     } catch (e) {
-      LoggerService.instance.e('Erro ao abrir configurações de acessibilidade', error: e);
-    }
-  }
-
-  /// Exibe hints visuais para guiar o usuário na ativação da acessibilidade
-  static Future<void> _showAccessibilityHints() async {
-    try {
-      // Esperar um pouco para a tela carregar
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Hint 1: Piscar "Aplicativos instalados"
-      await _methodChannel.invokeMethod('showAccessibilityHint', {
-        'target': 'installed_apps',
-        'message': 'Toque aqui em "Aplicativos instalados"',
-        'duration': 3000, // 3 segundos piscando
-      });
-      
-      // Esperar um pouco antes do próximo hint
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Hint 2: Piscar "Disciplinum" na lista
-      await _methodChannel.invokeMethod('showAccessibilityHint', {
-        'target': 'disciplinum_item',
-        'message': 'Agora toque em "Disciplinum"',
-        'duration': 3000, // 3 segundos piscando
-      });
-      
-    } catch (e) {
-      LoggerService.instance.e('Erro ao mostrar hints de acessibilidade', error: e);
+      LoggerService.instance
+          .e('Erro ao abrir configurações de acessibilidade', error: e);
     }
   }
 
@@ -331,7 +306,8 @@ class PermissionService {
     try {
       await _methodChannel.invokeMethod('requestOverlayPermission');
     } catch (e) {
-      LoggerService.instance.e('Erro ao solicitar permissão de sobreposição', error: e);
+      LoggerService.instance
+          .e('Erro ao solicitar permissão de sobreposição', error: e);
     }
   }
 
@@ -390,7 +366,7 @@ class PermissionService {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  "Para você ser alertado a sair de apps que VOCÊ selecionou para bloqueio ou que você queira evitar, ative a permissão de 'Sobrepor a outros apps':",
+                  "Para você ser alertado a sair de apps que VOCÊ selecionou para bloqueio ou que você queira evitar (neste caso, você terá 30 segundos para sair do app), ative a permissão de 'Sobrepor a outros apps':",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,

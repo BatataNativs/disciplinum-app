@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -24,15 +25,15 @@ import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class SpendingScreen extends StatefulWidget {
+class SpendingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const SpendingScreen({super.key, this.heroTag});
 
   @override
-  State<SpendingScreen> createState() => _SpendingScreenState();
+  ConsumerState<SpendingScreen> createState() => _SpendingScreenState();
 }
 
-class _SpendingScreenState extends State<SpendingScreen> {
+class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.spending);
   final List<String> _selectedApps = [];
   bool _gamificationRunning = false;
@@ -42,6 +43,319 @@ class _SpendingScreenState extends State<SpendingScreen> {
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
   int _selectedIndex = 0; // 0=Como Funciona, 1=Controlar gastos
+
+  bool _isPaidInCurrentMonth(FixedExpenseModel expense) {
+    if (expense.lastPaid == null || !expense.isPaid) return false;
+    final now = DateTime.now();
+    final paymentDate = expense.lastPaid!;
+    return paymentDate.year == now.year && paymentDate.month == now.month;
+  }
+
+  String _formatCurrencyValue(String value, String currency) {
+    if (value.isEmpty) return '0,00';
+    String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (numbers.isEmpty) return '0,00';
+
+    double val = double.parse(numbers) / 100;
+    String formatted;
+
+    // Formatação brasileira/europeia (1.234,56)
+    if (currency == r'R$' || currency == r'ARS$' || currency == r'EUR') {
+      formatted = val.toStringAsFixed(2).replaceAll('.', ',');
+      if (currency != r'EUR') {
+        // R$ e ARS$ usam ponto como milhar
+        formatted = formatted.replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (match) => '${match.group(1)}.',
+        );
+      }
+    } else if (currency == r'US$') {
+      // Formatação americana (1,234.56)
+      String baseText = val.toStringAsFixed(2);
+      List<String> parts = baseText.split('.');
+      String integerPart = parts[0].replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(1)},',
+      );
+      String decimalPart = parts.length > 1 ? parts[1] : '00';
+      formatted = '$integerPart.$decimalPart';
+    } else {
+      formatted = val.toStringAsFixed(2);
+    }
+    return formatted;
+  }
+
+  void _showEditAmountDialog(FixedExpenseModel expense) {
+    String currentCurrency = expense.currency;
+    final TextEditingController controller = TextEditingController(
+      text: _formatCurrencyValue(
+          (expense.amount * 100).toInt().toString(), currentCurrency),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        final theme = Theme.of(dialogCtx);
+        final colorScheme = theme.colorScheme;
+
+        return StatefulBuilder(
+          builder: (dialogCtx, setStateDialog) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.attach_money_rounded,
+                    color: colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Editar valor',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        expense.name,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.grey.shade400,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: currentCurrency,
+                      isDense: true,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setStateDialog(() => currentCurrency = val);
+                        }
+                      },
+                      items: [r'R$', r'US$', r'EUR', r'ARS$']
+                          .map((c) => DropdownMenuItem(
+                              value: c, child: Text(c)))
+                          .toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0,00',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: Colors.grey.shade400),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: colorScheme.primary, width: 2),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 18),
+                        onPressed: () => controller.clear(),
+                      ),
+                    ),
+                    onChanged: (val) {
+                      final formatted =
+                          _formatCurrencyValue(val, currentCurrency);
+                      controller.value = TextEditingValue(
+                        text: formatted,
+                        selection: TextSelection.collapsed(
+                            offset: formatted.length),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  String cleanText = controller.text;
+                  if (currentCurrency == r'US$') {
+                    cleanText = cleanText.replaceAll(',', '');
+                  } else {
+                    cleanText = cleanText
+                        .replaceAll('.', '')
+                        .replaceAll(',', '.');
+                  }
+                  final newAmount = double.tryParse(cleanText);
+                  if (newAmount != null) {
+                    ref.read(spendingProvider.notifier).updateExpense(
+                          expense.id,
+                          newAmount: newAmount,
+                          newCurrency: currentCurrency,
+                        );
+                    Navigator.pop(dialogCtx);
+                    HapticFeedback.mediumImpact();
+                    SnackBarHelper.showSuccess(
+                        context, 'Valor atualizado!');
+                  }
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditDueDayDialog(FixedExpenseModel expense) {
+    final TextEditingController controller =
+        TextEditingController(text: expense.dueDay.toString());
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        final theme = Theme.of(dialogCtx);
+        final colorScheme = theme.colorScheme;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.calendar_today_rounded,
+                  color: colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Alterar vencimento',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      expense.name,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Ex: 10',
+              labelText: 'Dia do mês (1–31)',
+              prefixIcon: Icon(Icons.event_rounded,
+                  color: colorScheme.primary),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide:
+                    BorderSide(color: colorScheme.primary, width: 2),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final newDay = int.tryParse(controller.text);
+                if (newDay != null && newDay >= 1 && newDay <= 31) {
+                  ref
+                      .read(spendingProvider.notifier)
+                      .updateExpense(expense.id, newDueDay: newDay);
+                  Navigator.pop(dialogCtx);
+                  HapticFeedback.mediumImpact();
+                  SnackBarHelper.showSuccess(
+                      context, 'Vencimento alterado!');
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -188,7 +502,8 @@ class _SpendingScreenState extends State<SpendingScreen> {
     final confirmed = await DeactivateModuleDialog.show(
       context: context,
       nicheId: NicheId.spending,
-      customMessage: 'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
+      customMessage:
+          'Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?',
     );
 
     if (confirmed != true) return;
@@ -516,7 +831,6 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
   }
 
-
   void _showControlGastosMenu() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
@@ -629,7 +943,6 @@ class _SpendingScreenState extends State<SpendingScreen> {
     );
   }
 
-
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final List<String> options = ['Como Funciona', 'Controlar Gastos'];
@@ -707,9 +1020,17 @@ class _SpendingScreenState extends State<SpendingScreen> {
               isDark: isDark,
               icon: Icons.account_balance_wallet_outlined,
               title:
-                  'Em "Controle de gastos", selecione seus apps a monitorar abertura e gerencie gastos fixos',
+                  'Em "Controle de gastos", gerencie apps monitorados e gastos fixos',
               content:
-                  'Em "Selecionar apps", escolha apps de compras online para monitorar abertura, e recebe alerta ao abri-los.\nEm "Gastos fixos", cadastre seus gastos fixos, e seja lembrado de pagá-lo.\nHá um sistema de nível de urgência, em cores verde, amarelo e vermelho, de acordo com a proximidade com a data de vencimento de cada conta. Salve e ative o módulo para iniciar.',
+                  'Em "Selecionar apps", escolha apps de compras online para monitorar. Ao abri-los, você receberá um alerta para evitar compras por impulso.\nEm "Gastos fixos", cadastre suas contas fixas (aluguel, luz, internet...) e seja lembrado de pagá-las antes do vencimento.',
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.edit_note_rounded,
+              title: 'Edite valor e vencimento a qualquer momento',
+              content:
+                  'Na tela principal, toque nos três pontinhos (⋮) em cada conta para editar o valor daquele mês ou alterar o dia de vencimento. Ao marcar uma conta como paga, ela sai da lista e aparece nas estatísticas.',
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
@@ -717,16 +1038,24 @@ class _SpendingScreenState extends State<SpendingScreen> {
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure seus alertas',
               content:
-                  'Ao abrir um app que você selecionou para monitorar, você receberá notificação de alerta para evitar gastos desnecessários e compras por impulso.\nE também, receba lembretes para pagar suas contas fixas cadastradas no app antes do vencimento delas.',
+                  'Receba alertas ao abrir apps monitorados e lembretes para pagar suas contas fixas antes do vencimento.',
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.circle,
+              title: 'Sistema de urgência por cores',
+              content:
+                  '🟢 Verde: a conta ainda está longe do vencimento.\n🟡 Amarelo: faltam poucos dias para vencer.\n🔴 Vermelho: a conta está vencendo hoje ou já venceu.',
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
               isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title:
-                  'Em "Estatísticas", acompanhe seu progresso e como anda sua disciplina',
+                  'Em "Estatísticas", acompanhe seu progresso',
               content:
-                  'Acompanhe seu progresso no controle financeiro e mantenha-se disciplinado.',
+                  'Veja o resumo das contas pagas no mês, o total gasto e acompanhe sua disciplina financeira ao longo do tempo.',
             ),
           ],
         );
@@ -814,131 +1143,144 @@ class _SpendingScreenState extends State<SpendingScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Consumer<SpendingService>(
-              builder: (context, service, child) {
-                final expenses = service.fixedExpenses;
-                if (expenses.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Nenhum gasto fixo cadastrado.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ),
-                  );
-                }
+            Builder(
+              builder: (context) {
+                final asyncExpenses = ref.watch(spendingProvider);
 
-                return Column(
-                  children: expenses.map((expense) {
-                    String formatAmountForDisplay(
-                        double amount, String currency) {
-                      switch (currency) {
-                        case 'R\$':
-                          return amount
-                              .toStringAsFixed(2)
-                              .replaceAll('.', ',')
-                              .replaceAllMapped(
-                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                                (match) => '${match.group(1)}.',
-                              );
-                        case 'US\$':
-                          String baseText = amount.toStringAsFixed(2);
-                          List<String> parts = baseText.split('.');
-                          String integerPart = parts[0];
-                          String decimalPart = parts.length > 1 ? parts[1] : '';
+                return asyncExpenses.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('Erro: $err')),
+                  data: (allExpenses) {
+                    final expenses = allExpenses
+                        .where((e) => !_isPaidInCurrentMonth(e))
+                        .toList();
 
-                          integerPart = integerPart.replaceAllMapped(
-                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                            (match) => '${match.group(1)},',
-                          );
-
-                          return decimalPart.isNotEmpty
-                              ? '$integerPart.$decimalPart'
-                              : integerPart;
-                        case '€':
-                          return amount.toStringAsFixed(2).replaceAll('.', ',');
-                        case 'ARS\$':
-                          return amount
-                              .toStringAsFixed(2)
-                              .replaceAll('.', ',')
-                              .replaceAllMapped(
-                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                                (match) => '${match.group(1)}.',
-                              );
-                        default:
-                          return amount.toStringAsFixed(2);
-                      }
+                    if (expenses.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Nenhum gasto fixo cadastrado.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                      );
                     }
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: expense
-                              .getUrgencyLevel()
-                              .color
-                              .withValues(alpha: 0.6),
-                          width: 2.0,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...expenses.map((expense) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: expense
+                                    .getUrgencyLevel()
+                                    .color
+                                    .withValues(alpha: 0.6),
+                                width: 2.0,
+                              ),
+                            ),
+                            child: Row(
                               children: [
-                                Text(
-                                  expense.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                    fontSize: 14,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        expense.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Vence dia ${expense.dueDay.toString().padLeft(2, '0')} • ${expense.currency} ${_formatCurrencyValue((expense.amount * 100).toInt().toString(), expense.currency)}',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white60
+                                              : Colors.black54,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Vence dia ${expense.dueDay.toString().padLeft(2, '0')} • ${expense.currency} ${formatAmountForDisplay(expense.amount, expense.currency)}',
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white60
-                                        : Colors.black54,
-                                    fontSize: 12,
+                                PopupMenuButton<String>(
+                                  icon: Icon(Icons.more_vert,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54),
+                                  padding: EdgeInsets.zero,
+                                  onSelected: (value) {
+                                    if (value == 'edit_valor') {
+                                      _showEditAmountDialog(expense);
+                                    } else if (value == 'edit_vencimento') {
+                                      _showEditDueDayDialog(expense);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit_valor',
+                                      child: Text('Editar Valor'),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'edit_vencimento',
+                                      child: Text('Alterar Vencimento'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    ref
+                                        .read(spendingProvider.notifier)
+                                        .togglePaid(expense.id);
+                                    HapticFeedback.mediumImpact();
+                                  },
+                                  child: Icon(
+                                    _isPaidInCurrentMonth(expense)
+                                        ? Icons.check_circle
+                                        : Icons.circle_outlined,
+                                    color: _isPaidInCurrentMonth(expense)
+                                        ? Colors.green
+                                        : Colors.grey,
+                                    size: 24,
                                   ),
                                 ),
                               ],
                             ),
+                          );
+                        }),
+                        const SizedBox(height: 8),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Text(
+                            'Para excluir um gasto fixo, vá em "Controle de gastos" e "Gastos fixos"',
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              service.togglePaid(expense.id);
-                            },
-                            child: Icon(
-                              expense.isPaid
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined,
-                              color:
-                                  expense.isPaid ? Colors.green : Colors.grey,
-                              size: 24, // Aumentado de 20 para 24
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
@@ -948,6 +1290,4 @@ class _SpendingScreenState extends State<SpendingScreen> {
         return const SizedBox.shrink();
     }
   }
-
 }
-

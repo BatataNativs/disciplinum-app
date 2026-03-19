@@ -164,7 +164,7 @@ class AppBootstrap {
   }
 
   /// Configura os providers do Provider
-  static List<SingleChildWidget> setupProviders() {
+  static List<SingleChildWidget> setupProviders(SharedPreferences prefs) {
     return [
       // Serviços principais que são ChangeNotifier
       ChangeNotifierProvider<GamificationService>(

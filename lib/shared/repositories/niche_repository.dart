@@ -21,8 +21,8 @@ class NicheRepository {
         return Niche(
           id: nicheId.id,
           nicheId: nicheId,
-          name: 'Controle da Alimentação',
-          description: 'Controle seus hábitos alimentares',
+          name: 'Compulsão Alimentar',
+          description: 'Controle sua compulsão alimentar',
           icon: '🍔',
           color: '#FF9800',
         );

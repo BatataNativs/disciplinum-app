@@ -13,12 +13,12 @@ class LegalFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = textStyle ?? 
+    final defaultStyle = textStyle ??
         TextStyle(
           fontSize: 12,
-          color: Theme.of(context).brightness == Brightness.dark 
-              ? Colors.white60 
-              : Colors.black54,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white60
+              : const Color.fromARGB(95, 255, 255, 255),
         );
 
     return Padding(
@@ -28,7 +28,7 @@ class LegalFooter extends StatelessWidget {
         children: [
           Text(
             'Ao usar este aplicativo, você concorda com nossos',
-            style: defaultStyle,
+            style: defaultStyle.copyWith(fontSize: 9),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -39,25 +39,27 @@ class LegalFooter extends StatelessWidget {
                 context,
                 'Termos de Uso',
                 defaultStyle,
-                () => _launchUrl('https://disciplinum.app/terms'),
+                () => _launchUrl(
+                    'https://batatanativs.github.io/disciplinum-legal/termos'),
               ),
               Text(' e ', style: defaultStyle),
               _buildTextLink(
                 context,
                 'Política de Privacidade',
                 defaultStyle,
-                () => _launchUrl('https://disciplinum.app/privacy'),
+                () => _launchUrl(
+                    'https://batatanativs.github.io/disciplinum-legal/privacidade'),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            '© 2024 Disciplinum - Todos os direitos reservados',
+            '2026 Disciplinum - desenvolvendo disciplina, foco e bons hábitos',
             style: defaultStyle.copyWith(
-              fontSize: 10,
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.white38 
-                  : Colors.black38,
+              fontSize: 9,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white38
+                  : const Color.fromARGB(95, 255, 255, 255),
             ),
             textAlign: TextAlign.center,
           ),

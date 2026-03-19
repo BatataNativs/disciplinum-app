@@ -340,11 +340,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     scale: niche.scale,
                     child: Hero(
                       tag: heroTag,
-                      child: Image.asset(
-                        niche.iconPath,
-                        height: 60, // Aumentado tamanho base
-                        fit: BoxFit.contain,
-                      ),
+                      child: niche.isEmojiIcon
+                          ? Text(
+                              niche.iconPath,
+                              style: const TextStyle(fontSize: 48),
+                            )
+                          : Image.asset(
+                              niche.iconPath,
+                              height: 60, // Aumentado tamanho base
+                              fit: BoxFit.contain,
+                            ),
                     ),
                   ),
                 ),

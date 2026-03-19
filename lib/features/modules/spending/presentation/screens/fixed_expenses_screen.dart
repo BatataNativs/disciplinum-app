@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:flutter/services.dart';
 
-class FixedExpensesScreen extends StatefulWidget {
+class FixedExpensesScreen extends ConsumerStatefulWidget {
   const FixedExpensesScreen({super.key});
 
   @override
-  State<FixedExpensesScreen> createState() => _FixedExpensesScreenState();
+  ConsumerState<FixedExpensesScreen> createState() => _FixedExpensesScreenState();
 }
 
-class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
+class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -44,56 +44,61 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
           ),
         ),
         child: SafeArea(
-          child: Consumer<SpendingService>(
-            builder: (context, service, child) {
-              final expenses = service.fixedExpenses;
+          child: Builder(
+            builder: (context) {
+              final asyncExpenses = ref.watch(spendingProvider);
 
-              return Column(
-                children: [
-                  Expanded(
-                    child: expenses.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.receipt_long_outlined,
-                                    size: 64,
-                                    color: Colors.grey.withValues(alpha: 0.5)),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Nenhum gasto fixo cadastrado',
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 16),
+              return asyncExpenses.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Erro: $err')),
+                data: (expenses) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: expenses.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.receipt_long_outlined,
+                                        size: 64,
+                                        color: Colors.grey.withValues(alpha: 0.5)),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'Nenhum gasto fixo cadastrado',
+                                      style: TextStyle(
+                                          color: Colors.grey, fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Adicione suas contas mensais aqui',
+                                      style: TextStyle(
+                                          color: Colors.grey, fontSize: 14),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Adicione suas contas mensais aqui',
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: expenses.length,
-                            itemBuilder: (context, index) {
-                              final expense = expenses[index];
-                              return _buildExpenseTile(
-                                  expense, isDark, service);
-                            },
-                          ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    child: GlowingButton(
-                      text: 'Novo Gasto Fixo',
-                      color: const Color(0xFF6366F1),
-                      onPressed: () => _showAddExpenseDialog(context),
-                      borderRadius: 18,
-                    ),
-                  ),
-                ],
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.all(16),
+                                itemCount: expenses.length,
+                                itemBuilder: (context, index) {
+                                  final expense = expenses[index];
+                                  return _buildExpenseTile(expense, isDark);
+                                },
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        child: GlowingButton(
+                          text: 'Novo Gasto Fixo',
+                          color: const Color(0xFF6366F1),
+                          onPressed: () => _showAddExpenseDialog(context),
+                          borderRadius: 18,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -102,8 +107,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
     );
   }
 
-  Widget _buildExpenseTile(
-      FixedExpenseModel expense, bool isDark, SpendingService service) {
+  Widget _buildExpenseTile(FixedExpenseModel expense, bool isDark) {
     String formatAmountForDisplay(double amount, String currency) {
       switch (currency) {
         case 'R\$':
@@ -167,7 +171,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                 color: expense.isPaid ? Colors.green : Colors.grey,
                 size: 24,
               ),
-              onPressed: () => service.togglePaid(expense.id),
+              onPressed: () => ref.read(spendingProvider.notifier).togglePaid(expense.id),
             ),
             PopupMenuButton<String>(
               icon: Icon(Icons.more_vert,
@@ -176,7 +180,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                 if (value == 'edit') {
                   _showAddExpenseDialog(context, expense: expense);
                 } else if (value == 'delete') {
-                  service.deleteFixedExpense(expense.id);
+                  ref.read(spendingProvider.notifier).deleteFixedExpense(expense.id);
                 }
               },
               itemBuilder: (context) => [
@@ -202,8 +206,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
     String selectedCurrency = expense?.currency ?? 'R\$';
     double currentAmount = expense?.amount ?? 0.0;
     
-    // Obter o serviço antes de abrir o modal
-    final service = Provider.of<SpendingService>(context, listen: false);
+    final notifier = ref.read(spendingProvider.notifier);
 
     showModalBottomSheet(
       context: context,
@@ -336,15 +339,15 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                             final name = nameController.text.trim();
                             final day = int.tryParse(dayController.text) ?? 1;
 
-                            debugPrint('Dados: name="$name", amount=$currentAmount, day=$day');
-                            debugPrint('Validação: name.isNotEmpty=${name.isNotEmpty}, amount>0=${currentAmount > 0}');
+                            debugPrint('Dados: name="\$name", amount=\$currentAmount, day=\$day');
+                            debugPrint('Validação: name.isNotEmpty=\${name.isNotEmpty}, amount>0=\${currentAmount > 0}');
 
                             if (name.isNotEmpty && currentAmount > 0) {
                               LoggerService.instance.d('Validação passou, tentando adicionar/editar gasto');
                               try {
                                 if (expense == null) {
                                   LoggerService.instance.d('Adicionando novo gasto');
-                                  service.addFixedExpense(FixedExpenseModel(
+                                  notifier.addFixedExpense(FixedExpenseModel(
                                     id: const Uuid().v4(),
                                     name: name,
                                     amount: currentAmount,
@@ -352,8 +355,8 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                                     dueDay: day.clamp(1, 31),
                                   ));
                                 } else {
-                                  LoggerService.instance.d('Editando gasto existente: ${expense.id}');
-                                  service.updateFixedExpense(expense.copyWith(
+                                  LoggerService.instance.d('Editando gasto existente: \${expense.id}');
+                                  notifier.updateFixedExpense(expense.copyWith(
                                     name: name,
                                     amount: currentAmount,
                                     currency: selectedCurrency,
@@ -420,9 +423,7 @@ class _CurrencyTextFieldState extends State<_CurrencyTextField> {
   @override
   void didUpdateWidget(_CurrencyTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Atualiza quando a moeda mudar
     if (oldWidget.currency != widget.currency) {
-      // Reformatar o valor atual com a nova moeda
       if (_controller.text.isNotEmpty) {
         String cleanText = _controller.text.replaceAll(RegExp(r'[^\d]'), '');
         if (cleanText.isNotEmpty) {
@@ -467,7 +468,6 @@ class _CurrencyTextFieldState extends State<_CurrencyTextField> {
       return;
     }
 
-    // Remove formatação para obter o valor numérico
     String cleanText = text;
     cleanText = cleanText.replaceAll(RegExp(r'[R\$US\$ARS\$€]'), '');
     cleanText = cleanText.replaceAll('.', '');
@@ -515,14 +515,12 @@ class _DynamicCurrencyInputFormatter extends TextInputFormatter {
       return newValue;
     }
 
-    // Remove caracteres não numéricos
     String cleanText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
     
     if (cleanText.isEmpty) {
       return const TextEditingValue(text: '');
     }
 
-    // Converte para valor numérico (divide por 100 para considerar centavos)
     double value = double.parse(cleanText) / 100.0;
     
     String currency = getCurrency();
@@ -538,12 +536,10 @@ class _DynamicCurrencyInputFormatter extends TextInputFormatter {
         break;
       case 'US\$':
         String baseText = value.toStringAsFixed(2);
-        // Primeiro adiciona separadores de milhar, depois mantém o ponto decimal
         List<String> parts = baseText.split('.');
         String integerPart = parts[0];
         String decimalPart = parts.length > 1 ? parts[1] : '';
         
-        // Adiciona vírgulas como separadores de milhar
         integerPart = integerPart.replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (match) => '${match.group(1)},',

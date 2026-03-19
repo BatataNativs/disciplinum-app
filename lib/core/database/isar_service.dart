@@ -6,6 +6,7 @@ import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
 import 'package:disciplinum/core/database/entities/gamification_progress.dart';
 import 'package:disciplinum/core/storage/entities/detection_session_entity.dart';
 import 'package:disciplinum/core/storage/entities/monitoring_state_entity.dart';
+import 'package:disciplinum/features/modules/spending/domain/entities/expense_entity.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -31,6 +32,7 @@ class IsarService {
           GamificationProgressSchema,
           DetectionSessionSchema,     
           MonitoringStateSchema,      
+          ExpenseEntitySchema,
         ],
         directory: dbPath,
       );
@@ -59,6 +61,9 @@ class IsarService {
 
   /// Getter para MonitoringStates  
   IsarCollection<MonitoringState> get monitoringStates => database.monitoringStates; // ✅ DESCOMENTAR
+
+  /// Getter para Expenses
+  IsarCollection<ExpenseEntity> get expenses => database.expenseEntitys;
 
   /// Limpa todo o banco (apenas para desenvolvimento)
   Future<void> clearAll() async {

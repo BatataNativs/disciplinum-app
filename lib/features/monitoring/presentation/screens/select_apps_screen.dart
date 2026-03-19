@@ -96,7 +96,6 @@ class SelectAppsScreen extends StatefulWidget {
 class _SelectAppsScreenState extends State<SelectAppsScreen> {
   final Set<String> _selected = <String>{};
   String _searchQuery = '';
-  bool _includeSystemApps = false;
 
   List<AppInfo> _allApps = [];
   List<AppInfo> _filteredApps = [];
@@ -123,7 +122,7 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
             ? PreferencesService.loadUserNicheApps(nicheId: _nicheId)
             : CloudSyncService.loadUserNicheApps(nicheId: _nicheId),
         InstalledAppService().getApps(
-          excludeSystemApps: !_includeSystemApps,
+          excludeSystemApps: false,
         ),
       ]);
 
@@ -170,14 +169,6 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     _filteredApps = sorted;
   }
 
-  String get _systemAppsSubtitle {
-    if (_nicheId == NicheId.spending) {
-      return 'Ex: Mercado Livre, Amazon, Shopee...';
-    } else if (_nicheId == NicheId.bingeEating) {
-      return 'Ex: iFood, Rappi, Zé Delivery...';
-    }
-    return 'Ex: Configurações, Relógio, Câmera...';
-  }
 
   void _toggle(String packageName) {
     setState(() {
@@ -261,248 +252,330 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-          ],
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [Colors.black, Colors.black]
+                : [
+                    colorScheme.primary.withValues(alpha: 0.06),
+                    colorScheme.surface,
+                  ],
+          ),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text('Selecionar aplicativos'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: _isLoadingApps
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // --- Header ---
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
                   children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Buscar app...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        _searchQuery = value;
-                        setState(() {
-                          _applyFiltersAndSort();
-                        });
-                      },
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: colorScheme.onSurface),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    SwitchListTile(
-                      title: const Text(
-                        'Exibir aplicativos nativos do dispositivo',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        _systemAppsSubtitle,
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      activeThumbColor: Colors.green,
-                      dense: true,
-                      value: _includeSystemApps,
-                      onChanged: (val) async {
-                        setState(() => _isLoadingApps = true);
-                        _includeSystemApps = val;
-                        _allApps = await InstalledAppService().getApps(
-                          excludeSystemApps: !_includeSystemApps,
-                          forceRefresh: true,
-                        );
-                        _applyFiltersAndSort();
-                        if (mounted) setState(() => _isLoadingApps = false);
-                      },
-                    ),
-                    const SizedBox(height: 8),
                     Expanded(
-                      child: _filteredApps.isEmpty
-                          ? Center(
-                              child: Text(
-                                _allApps.isEmpty
-                                    ? 'Nenhum app encontrado.'
-                                    : 'Nenhum app encontrado com "$_searchQuery"',
-                                style: textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: _filteredApps.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 6),
-                              itemBuilder: (context, index) {
-                                final app = _filteredApps[index];
-                                final selected =
-                                    _selected.contains(app.packageName);
-
-                                return GestureDetector(
-                                  key: ValueKey(app.packageName),
-                                  onLongPress: selected
-                                      ? () => _removeApp(app.packageName)
-                                      : null,
-                                  onTap: () => _toggle(app.packageName),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 2),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: selected
-                                          ? (isDark
-                                              ? Colors.green
-                                                  .withValues(alpha: 0.15)
-                                              : Colors.green
-                                                  .withValues(alpha: 0.1))
-                                          : (isDark
-                                              ? Colors.white
-                                                  .withValues(alpha: 0.05)
-                                              : Colors.white),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: selected
-                                            ? Colors.green
-                                                .withValues(alpha: 0.5)
-                                            : (isDark
-                                                ? Colors.white10
-                                                : Colors.black
-                                                    .withValues(alpha: 0.05)),
-                                        width: selected ? 1.5 : 1.0,
-                                      ),
-                                      boxShadow: [
-                                        if (!isDark && !selected)
-                                          BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.03),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.1),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: AsyncAppIcon(
-                                            packageName: app.packageName,
-                                            isDark: isDark,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                app.name,
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                                style: textTheme.titleMedium
-                                                    ?.copyWith(
-                                                  fontWeight: selected
-                                                      ? FontWeight.bold
-                                                      : FontWeight.w600,
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : Colors.black87,
-                                                  fontSize: 15,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                app.packageName,
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: isDark
-                                                      ? Colors.white54
-                                                      : Colors.black54,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          width: 28,
-                                          height: 28,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: selected
-                                                ? Colors.green
-                                                : (isDark
-                                                    ? Colors.white12
-                                                    : Colors.black.withValues(
-                                                        alpha: 0.05)),
-                                          ),
-                                          child: selected
-                                              ? const Icon(Icons.check,
-                                                  size: 16, color: Colors.white)
-                                              : const Icon(Icons.add,
-                                                  size: 16, color: Colors.grey),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white12 : Colors.black12,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       child: Text(
-                        '${_selected.length} app(s) selecionado(s)',
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        'Selecionar aplicativos',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _save,
-                        child: const Text('Salvar apps selecionados'),
-                      ),
-                    ),
+                    const SizedBox(width: 48),
                   ],
                 ),
+              ),
+              // --- Body ---
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _isLoadingApps
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
+                          children: [
+                            // Search bar
+                            TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Buscar app...',
+                                hintStyle: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
+                                ),
+                                prefixIcon: Icon(Icons.search_rounded,
+                                    color: colorScheme.primary),
+                                filled: true,
+                                fillColor: isDark
+                                    ? Colors.white.withValues(alpha: 0.08)
+                                    : colorScheme.surfaceContainerHighest,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(
+                                      color: colorScheme.primary, width: 2),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                _searchQuery = value;
+                                setState(() {
+                                  _applyFiltersAndSort();
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            // App list
+                            Expanded(
+                              child: _filteredApps.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        _allApps.isEmpty
+                                            ? 'Nenhum app encontrado.'
+                                            : 'Nenhum app encontrado com "$_searchQuery"',
+                                        style: textTheme.bodyMedium,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                  : ListView.separated(
+                                      itemCount: _filteredApps.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 6),
+                                      itemBuilder: (context, index) {
+                                        final app = _filteredApps[index];
+                                        final selected = _selected
+                                            .contains(app.packageName);
+
+                                        return GestureDetector(
+                                          key: ValueKey(app.packageName),
+                                          onLongPress: selected
+                                              ? () =>
+                                                  _removeApp(app.packageName)
+                                              : null,
+                                          onTap: () =>
+                                              _toggle(app.packageName),
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 200),
+                                            margin: const EdgeInsets.symmetric(
+                                                horizontal: 4, vertical: 2),
+                                            padding:
+                                                const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: selected
+                                                  ? Colors.green
+                                                      .withValues(
+                                                          alpha: isDark
+                                                              ? 0.15
+                                                              : 0.08)
+                                                  : (isDark
+                                                      ? Colors.white
+                                                          .withValues(
+                                                              alpha: 0.05)
+                                                      : colorScheme.surface),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: selected
+                                                    ? Colors.green
+                                                        .withValues(
+                                                            alpha: 0.5)
+                                                    : colorScheme.outline
+                                                        .withValues(
+                                                            alpha: 0.15),
+                                                width:
+                                                    selected ? 1.5 : 1.0,
+                                              ),
+                                              boxShadow: [
+                                                if (!isDark)
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withValues(
+                                                            alpha: 0.04),
+                                                    blurRadius: 8,
+                                                    offset:
+                                                        const Offset(0, 2),
+                                                  ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                        blurRadius: 4,
+                                                        offset:
+                                                            const Offset(
+                                                                0, 2),
+                                                      ),
+                                                    ],
+                                                    borderRadius:
+                                                        BorderRadius
+                                                            .circular(8),
+                                                  ),
+                                                  child: AsyncAppIcon(
+                                                    packageName:
+                                                        app.packageName,
+                                                    isDark: isDark,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        app.name,
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                        maxLines: 1,
+                                                        style: textTheme
+                                                            .titleSmall
+                                                            ?.copyWith(
+                                                          fontWeight: selected
+                                                              ? FontWeight
+                                                                  .bold
+                                                              : FontWeight
+                                                                  .w600,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 2),
+                                                      Text(
+                                                        app.packageName,
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                        maxLines: 1,
+                                                        style: textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                          color: colorScheme
+                                                              .onSurface
+                                                              .withValues(
+                                                                  alpha:
+                                                                      0.45),
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                AnimatedContainer(
+                                                  duration: const Duration(
+                                                      milliseconds: 200),
+                                                  width: 28,
+                                                  height: 28,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: selected
+                                                        ? Colors.green
+                                                        : colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                                alpha:
+                                                                    0.08),
+                                                  ),
+                                                  child: Icon(
+                                                    selected
+                                                        ? Icons.check
+                                                        : Icons.add,
+                                                    size: 16,
+                                                    color: selected
+                                                        ? Colors.white
+                                                        : colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                                alpha:
+                                                                    0.4),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                            // --- Bottom area ---
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary
+                                    .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_outline_rounded,
+                                      size: 18, color: colorScheme.primary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${_selected.length} app(s) selecionado(s)',
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: FilledButton.icon(
+                                onPressed: _save,
+                                icon: const Icon(Icons.save_rounded),
+                                label: const Text(
+                                  'Salvar apps selecionados',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

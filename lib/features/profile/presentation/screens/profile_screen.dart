@@ -8,7 +8,7 @@ import 'package:disciplinum/app/router/app_router.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
-import 'package:disciplinum/features/profile/presentation/widgets';
+import 'package:disciplinum/features/profile/presentation/widgets/edit_profile_dialog.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 import 'package:disciplinum/shared/widgets/lojinha.dart';

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 
-class FixedBillsStatsScreen extends StatefulWidget {
+class FixedBillsStatsScreen extends ConsumerStatefulWidget {
   const FixedBillsStatsScreen({super.key});
 
   @override
-  State<FixedBillsStatsScreen> createState() => _FixedBillsStatsScreenState();
+  ConsumerState<FixedBillsStatsScreen> createState() => _FixedBillsStatsScreenState();
 }
 
-class _FixedBillsStatsScreenState extends State<FixedBillsStatsScreen> {
+class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -43,28 +44,35 @@ class _FixedBillsStatsScreenState extends State<FixedBillsStatsScreen> {
           ),
         ),
         child: SafeArea(
-          child: Consumer<SpendingService>(
-            builder: (context, service, child) {
-              final expenses = service.fixedExpenses;
-              final monthlyStats = _calculateMonthlyStats(expenses);
+          child: Builder(
+            builder: (context) {
+              final asyncExpenses = ref.watch(spendingProvider);
               
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Seção de contas do mês atual
-                    _buildCurrentMonthSection(expenses, currentMonthCapitalized, isDark),
-                    const SizedBox(height: 32),
-                    
-                    // Gráfico de barras
-                    _buildMonthlyChart(monthlyStats, isDark),
-                    const SizedBox(height: 24),
-                    
-                    // Mensagem motivacional
-                    _buildMotivationalMessage(isDark),
-                  ],
-                ),
+              return asyncExpenses.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Erro: $err')),
+                data: (expenses) {
+                  final monthlyStats = _calculateMonthlyStats(expenses);
+                  
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Seção de contas do mês atual
+                        _buildCurrentMonthSection(expenses, currentMonthCapitalized, isDark),
+                        const SizedBox(height: 32),
+                        
+                        // Gráfico de barras
+                        _buildMonthlyChart(monthlyStats, isDark),
+                        const SizedBox(height: 24),
+                        
+                        // Mensagem motivacional
+                        _buildMotivationalMessage(isDark),
+                      ],
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -104,16 +112,18 @@ class _FixedBillsStatsScreenState extends State<FixedBillsStatsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          if (expenses.isEmpty)
+          if (expenses.where((e) => _isPaidInCurrentMonth(e)).isEmpty)
             Text(
-              'Nenhuma conta cadastrada ainda.',
+              'Nenhuma conta paga neste mês ainda.',
               style: TextStyle(
                 color: isDark ? Colors.white60 : Colors.black54,
                 fontSize: 14,
               ),
             )
           else
-            ...expenses.map((expense) => _buildExpenseItem(expense, isDark)),
+            ...expenses
+                .where((e) => _isPaidInCurrentMonth(e))
+                .map((expense) => _buildExpenseItem(expense, isDark)),
         ],
       ),
     );
@@ -136,20 +146,26 @@ class _FixedBillsStatsScreenState extends State<FixedBillsStatsScreen> {
               ),
             ),
           ),
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isPaidThisMonth ? Colors.green : Colors.grey,
-                width: 2,
+          GestureDetector(
+            onTap: () {
+              ref.read(spendingProvider.notifier).togglePaid(expense.id);
+              HapticFeedback.lightImpact();
+            },
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isPaidThisMonth ? Colors.green : Colors.grey,
+                  width: 2,
+                ),
+                color: isPaidThisMonth ? Colors.green : Colors.transparent,
               ),
-              color: isPaidThisMonth ? Colors.green : Colors.transparent,
+              child: isPaidThisMonth
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : null,
             ),
-            child: isPaidThisMonth
-                ? const Icon(Icons.check, color: Colors.white, size: 16)
-                : null,
           ),
         ],
       ),

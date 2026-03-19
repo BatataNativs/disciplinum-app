@@ -43,12 +43,17 @@ class ModuleProgressWidget extends StatelessWidget {
                     // Header
                     Row(
                       children: [
-                        Image.asset(
-                          niche.iconPath,
-                          width: 24,
-                          height: 24,
-                          color: const Color(0xFF6366F1),
-                        ),
+                        niche.isEmojiIcon
+                            ? Text(
+                                niche.iconPath,
+                                style: const TextStyle(fontSize: 20),
+                              )
+                            : Image.asset(
+                                niche.iconPath,
+                                width: 24,
+                                height: 24,
+                                color: const Color(0xFF6366F1),
+                              ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(

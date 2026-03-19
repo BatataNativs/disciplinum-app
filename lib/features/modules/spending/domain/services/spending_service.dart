@@ -1,42 +1,34 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:isar/isar.dart';
+
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
+import 'package:disciplinum/features/modules/spending/domain/entities/expense_entity.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-class SpendingService extends ChangeNotifier {
+class SpendingNotifier extends AsyncNotifier<List<FixedExpenseModel>> {
   static const String _moduleId = 'spending';
-  static const String _localKey = 'spending_fixed_expenses';
 
-  final SharedPreferences _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
+  Isar get _isar => IsarService.instance.database;
 
-  List<FixedExpenseModel> _fixedExpenses = [];
+  @override
+  Future<List<FixedExpenseModel>> build() async {
+    // 1. Carrega local (Isar)
+    final localData = await _isar.expenseEntitys.where().findAll();
+    final expenses = localData.map((e) => e.toDomain()).toList();
 
-  List<FixedExpenseModel> get fixedExpenses =>
-      List.unmodifiable(_fixedExpenses);
+    // 2. Tenta carregar da nuvem em background
+    _syncCloudInBackground();
 
-  SpendingService(this._prefs) {
-    _loadData();
+    return expenses;
   }
 
-  Future<void> _loadData() async {
-    // 1. Carrega local
-    final String? localData = _prefs.getString(_localKey);
-    if (localData != null) {
-      try {
-        final List<dynamic> decoded = jsonDecode(localData);
-        _fixedExpenses =
-            decoded.map((e) => FixedExpenseModel.fromJson(e)).toList();
-        notifyListeners();
-      } catch (e) {
-        LoggerService.instance.e('Erro ao carregar gastos fixos locais', error: e);
-      }
-    }
-
-    // 2. Tenta carregar da nuvem
+  Future<void> _syncCloudInBackground() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) return;
@@ -55,10 +47,11 @@ class SpendingService extends ChangeNotifier {
 
         if (decoded['fixed_expenses'] != null) {
           final List<dynamic> expensesJson = decoded['fixed_expenses'];
-          _fixedExpenses =
+          final cloudExpenses =
               expensesJson.map((e) => FixedExpenseModel.fromJson(e)).toList();
-          await _saveLocal();
-          notifyListeners();
+
+          await _saveAllLocal(cloudExpenses);
+          state = AsyncValue.data(cloudExpenses);
         }
       }
     } catch (e) {
@@ -66,18 +59,34 @@ class SpendingService extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveLocal() async {
-    final encoded = jsonEncode(_fixedExpenses.map((e) => e.toJson()).toList());
-    await _prefs.setString(_localKey, encoded);
+  Future<void> _saveAllLocal(List<FixedExpenseModel> models) async {
+    final entities = models.map((e) => ExpenseEntity.fromDomain(e)).toList();
+    await _isar.writeTxn(() async {
+      await _isar.expenseEntitys.clear();
+      await _isar.expenseEntitys.putAll(entities);
+    });
   }
 
-  Future<void> _saveCloud() async {
+  Future<void> _saveLocal(FixedExpenseModel model) async {
+    final entity = ExpenseEntity.fromDomain(model);
+    await _isar.writeTxn(() async {
+      await _isar.expenseEntitys.put(entity);
+    });
+  }
+
+  Future<void> _deleteLocal(String uuid) async {
+    await _isar.writeTxn(() async {
+      await _isar.expenseEntitys.deleteByUuid(uuid);
+    });
+  }
+
+  Future<void> _saveCloud(List<FixedExpenseModel> currentExpenses) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) return;
 
       final cloudData = {
-        'fixed_expenses': _fixedExpenses.map((e) => e.toJson()).toList(),
+        'fixed_expenses': currentExpenses.map((e) => e.toJson()).toList(),
       };
 
       await _supabase.from('user_module_settings').upsert({
@@ -92,44 +101,77 @@ class SpendingService extends ChangeNotifier {
   }
 
   Future<void> addFixedExpense(FixedExpenseModel expense) async {
-    _fixedExpenses.add(expense);
-    await _saveLocal();
-    await _saveCloud();
+    final currentExpenses = state.value ?? [];
+    final newList = [...currentExpenses, expense];
+    state = AsyncValue.data(newList);
+
+    await _saveLocal(expense);
+    await _saveCloud(newList);
     await _scheduleNotification(expense);
-    notifyListeners();
   }
 
   Future<void> updateFixedExpense(FixedExpenseModel updatedExpense) async {
-    final index = _fixedExpenses.indexWhere((e) => e.id == updatedExpense.id);
+    final currentExpenses = state.value ?? [];
+    final index = currentExpenses.indexWhere((e) => e.id == updatedExpense.id);
     if (index != -1) {
-      _fixedExpenses[index] = updatedExpense;
-      await _saveLocal();
-      await _saveCloud();
+      final newList = List<FixedExpenseModel>.from(currentExpenses);
+      newList[index] = updatedExpense;
+      state = AsyncValue.data(newList);
+
+      await _saveLocal(updatedExpense);
+      await _saveCloud(newList);
       await _scheduleNotification(updatedExpense);
-      notifyListeners();
     }
   }
 
   Future<void> deleteFixedExpense(String id) async {
-    _fixedExpenses.removeWhere((e) => e.id == id);
-    await _saveLocal();
-    await _saveCloud();
+    final currentExpenses = state.value ?? [];
+    final newList = currentExpenses.where((e) => e.id != id).toList();
+    state = AsyncValue.data(newList);
+
+    await _deleteLocal(id);
+    await _saveCloud(newList);
     await _cancelNotification(id);
-    notifyListeners();
   }
 
   Future<void> togglePaid(String id) async {
-    final index = _fixedExpenses.indexWhere((e) => e.id == id);
+    final currentExpenses = state.value ?? [];
+    final index = currentExpenses.indexWhere((e) => e.id == id);
     if (index != -1) {
-      final expense = _fixedExpenses[index];
+      final expense = currentExpenses[index];
       final newStatus = !expense.isPaid;
-      _fixedExpenses[index] = expense.copyWith(
+      final updated = expense.copyWith(
         isPaid: newStatus,
         lastPaid: newStatus ? DateTime.now() : null,
       );
-      await _saveLocal();
-      await _saveCloud();
-      notifyListeners();
+
+      final newList = List<FixedExpenseModel>.from(currentExpenses);
+      newList[index] = updated;
+      state = AsyncValue.data(newList);
+
+      await _saveLocal(updated);
+      await _saveCloud(newList);
+    }
+  }
+
+  Future<void> updateExpense(String id, {double? newAmount, String? newCurrency, int? newDueDay}) async {
+    final currentExpenses = state.value ?? [];
+    final index = currentExpenses.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      final expense = currentExpenses[index];
+      final updated = expense.copyWith(
+        amount: newAmount ?? expense.amount,
+        currency: newCurrency ?? expense.currency,
+        dueDay: newDueDay ?? expense.dueDay,
+      );
+
+      final newList = List<FixedExpenseModel>.from(currentExpenses);
+      newList[index] = updated;
+      state = AsyncValue.data(newList);
+
+      await _saveLocal(updated);
+      await _saveCloud(newList);
+      await _scheduleNotification(updated);
     }
   }
 
@@ -139,8 +181,6 @@ class SpendingService extends ChangeNotifier {
 
     if (!expense.notificationsEnabled) return;
 
-    // Simplificado: Notificar no dia do vencimento às 09:00 AM
-    // TZDateTime vai lidar com meses mais curtos automaticamente
     await NotificationService.scheduleMonthlyNotification(
       id: notifyId,
       dayOfMonth: expense.dueDay,
@@ -157,3 +197,8 @@ class SpendingService extends ChangeNotifier {
     await NotificationService.cancelNotification(notifyId);
   }
 }
+
+final spendingProvider =
+    AsyncNotifierProvider<SpendingNotifier, List<FixedExpenseModel>>(() {
+  return SpendingNotifier();
+});

@@ -4,6 +4,8 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 
+import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
+
 class DietNotificationsScreen extends StatefulWidget {
   const DietNotificationsScreen({super.key});
 
@@ -65,15 +67,17 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
               ),
               const SizedBox(height: 16),
               NotificationMessageEditor(nicheId: _niche.nicheId),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
               // Como funciona - Notificações
-              _buildMinimalInfoCard(
-                description:
-                    'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados para monitoramento.',
+              NicheInfoCard(
                 isDark: isDark,
+                icon: Icons.info_outline,
+                title: 'Como funciona',
+                content:
+                    'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados para monitoramento.',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
               // Seção: Aviso especial
               _buildSectionHeader(
@@ -83,7 +87,14 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
                 isDark: isDark,
               ),
               const SizedBox(height: 16),
-              _buildWarningCard(isDark),
+              NicheInfoCard(
+                isDark: isDark,
+                icon: Icons.warning_rounded,
+                title: 'Preparação',
+                color: Colors.orange,
+                content:
+                    'Este módulo vai te notificar 30 min antes do horário definido. Para dar tempo de preparar ou esquentar sua refeição.',
+              ),
             ],
           ),
         ),
@@ -150,89 +161,6 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMinimalInfoCard({
-    required String description,
-    required bool isDark,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Text(
-        description,
-        style: TextStyle(
-          fontSize: 12,
-          color: const Color(0xFF64748B),
-          height: 1.4,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWarningCard(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.orange.withValues(alpha: 0.05),
-            Colors.orange.withValues(alpha: 0.02),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.warning_rounded,
-            color: Colors.orange,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Este módulo vai te notificar 30 min antes do horário definido. Para dar tempo de preparar ou esquentar sua refeição.',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

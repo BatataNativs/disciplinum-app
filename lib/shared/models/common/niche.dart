@@ -14,6 +14,7 @@ class Niche {
   // Additional properties for UI compatibility
   double get scale => 1.0;
   String get iconPath => icon ?? 'assets/icons/default.png';
+  bool get isEmojiIcon => icon != null && !icon!.contains('/') && !icon!.contains('.');
   String get homePhrase => description;
 
   const Niche({

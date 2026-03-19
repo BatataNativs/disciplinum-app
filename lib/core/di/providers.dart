@@ -5,7 +5,6 @@ import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
-import 'package:disciplinum/features/modules/spending/domain/services/spending_service.dart';
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
@@ -61,16 +60,6 @@ final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
   final prefsAsync = ref.watch(sharedPreferencesProvider);
   return prefsAsync.when(
     data: (prefs) => ProcrastinationService(gamification, prefs),
-    loading: () => throw StateError('SharedPreferences not ready'),
-    error: (error, stack) => throw error,
-  );
-});
-
-/// Provider para SpendingService
-final spendingServiceProvider = Provider<SpendingService>((ref) {
-  final prefsAsync = ref.watch(sharedPreferencesProvider);
-  return prefsAsync.when(
-    data: (prefs) => SpendingService(prefs),
     loading: () => throw StateError('SharedPreferences not ready'),
     error: (error, stack) => throw error,
   );

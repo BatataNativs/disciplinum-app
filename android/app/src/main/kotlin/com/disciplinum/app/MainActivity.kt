@@ -8,6 +8,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.text.TextUtils
 import android.content.Context
+import android.util.Log
 import com.disciplinum.app.AccessibilityMonitorService
 import com.disciplinum.app.TimerOverlayManager
 
@@ -19,7 +20,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        timerOverlayManager = TimerOverlayManager(this)
+        timerOverlayManager = TimerOverlayManager(applicationContext)
 
         // Event Channel para o stream de eventos
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_EVENT_CHANNEL).setStreamHandler(
@@ -42,7 +43,7 @@ class MainActivity : FlutterActivity() {
                 }
                 "openAccessibilitySettings" -> {
                     openAccessibilitySettings()
-                    result.success(true)
+                    result.success(null)
                 }
                 "hasOverlayPermission" -> {
                     result.success(Settings.canDrawOverlays(this))
@@ -67,13 +68,6 @@ class MainActivity : FlutterActivity() {
                     val seconds = call.argument<Int>("seconds") ?: 30
                     val message = call.argument<String>("message")
                     timerOverlayManager.update(seconds, message)
-                    result.success(true)
-                }
-                "showAccessibilityHint" -> {
-                    val target = call.argument<String>("target") ?: "installed_apps"
-                    val message = call.argument<String>("message") ?: "Toque aqui"
-                    val duration = call.argument<Int>("duration") ?: 3000
-                    showAccessibilityHint(target, message, duration)
                     result.success(true)
                 }
                 else -> {
@@ -102,39 +96,45 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun openAccessibilitySettings() {
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        val serviceName = "${packageName}/${AccessibilityMonitorService::class.java.name}"
+        val component = android.content.ComponentName(packageName, AccessibilityMonitorService::class.java.name)
+        val componentFull = component.flattenToString()     // com.disciplinum.app/com.disciplinum.app.AccessibilityMonitorService
+        val componentShort = component.flattenToShortString() // com.disciplinum.app/.AccessibilityMonitorService
         
-        // Parâmetros para fazer o Android destacar (blink) o item na lista, se suportado
-        intent.putExtra(":settings:fragment_args_key", serviceName)
-        val bundle = android.os.Bundle()
-        bundle.putString(":settings:fragment_args_key", serviceName)
-        intent.putExtra(":settings:show_fragment_args", bundle)
-        
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
-    }
+        Log.d("DisciplinumA11y", "componentFull=$componentFull")
+        Log.d("DisciplinumA11y", "componentShort=$componentShort")
 
-    private fun showAccessibilityHint(target: String, message: String, duration: Int) {
-        when (target) {
-            "installed_apps" -> {
-                // Usar o TimerOverlayManager para mostrar hint sobre "Aplicativos instalados"
-                timerOverlayManager.showHint(
-                    title = "Aplicativos instalados",
-                    message = message,
-                    duration = duration,
-                    position = "top"
-                )
+        // 1. Android 12+ Direct Details
+        // Funciona em apps instalados pela Play Store.
+        // Em debug/sideloaded, o Android 14 bloqueia com OPEN_ACCESSIBILITY_DETAILS_SETTINGS.
+        if (android.os.Build.VERSION.SDK_INT >= 31) {
+            try {
+                val intent = Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra(Intent.EXTRA_COMPONENT_NAME, componentFull)
+                }
+                startActivity(intent)
+                Log.d("DisciplinumA11y", "Details screen opened successfully (Play Store install)")
+                return
+            } catch (e: Exception) {
+                Log.d("DisciplinumA11y", "Details denied (normal for debug builds): ${e.message}")
             }
-            "disciplinum_item" -> {
-                // Usar o TimerOverlayManager para mostrar hint sobre "Disciplinum"
-                timerOverlayManager.showHint(
-                    title = "Disciplinum",
-                    message = message,
-                    duration = duration,
-                    position = "center"
-                )
-            }
+        }
+
+        // 2. Fallback: Lista de Acessibilidade com highlight keys
+        // Enviamos o componentName nos dois formatos usados por diferentes fabricantes
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(":settings:fragment_args_key", componentFull)
+            putExtra(":settings:show_fragment_args", android.os.Bundle().apply {
+                putString(":settings:fragment_args_key", componentFull)
+            })
+        }
+
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("DisciplinumA11y", "Fallback fail: ${e.message}")
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
     }
 }
