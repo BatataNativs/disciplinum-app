@@ -135,7 +135,7 @@ class UserRepositoryImpl implements UserRepository {
 // data/datasources/local_user_datasource.dart
 class LocalUserDatasource {
   Future<User> getById(String id) {
-    // Implementação local (SharedPreferences, SQLite, etc.)
+    // Implementação local (SharedPreferences, Isar, etc.)
   }
   
   Future<List<User>> getAll() {
@@ -349,23 +349,133 @@ Future<void> initializeDependencies() async {
 - Dependa de camadas inferiores
 - Ignore testes
 - Use globals para compartilhar estado
+- Implemente sistema de XP/pontos (removido do Disciplinum!)
 
-## 🚀 **Feature Communication**
+## 🎮 **Exemplo Real: Gamification Feature (Disciplinum)**
+
+### **Estrutura da Feature de Gamificação**
+```
+features/gamification/
+├── domain/
+│   ├── entities/
+│   │   ├── medal.dart           # Medalhas (Bronze, Prata, Ouro, Diamante)
+│   │   ├── insignia.dart        # Insígnias (Madeira → Disciplinum)
+│   │   └── module_state.dart    # Estado consolidado do módulo
+│   ├── services/
+│   │   ├── gamification_award_engine.dart  # Motor de conquistas (sem XP)
+│   │   └── streak_service.dart  # Serviço de streaks
+│   └── repositories/
+│       └── gamification_repository.dart
+├── data/
+│   ├── repositories/
+│   │   └── gamification_repository_impl.dart
+│   └── datasources/
+│       ├── local_gamification_datasource.dart
+│       └── cloud_gamification_datasource.dart
+└── presentation/
+    ├── controllers/
+    │   └── gamification_controller.dart
+    └── widgets/
+        ├── medal_display.dart
+        └── insignia_card.dart
+```
+
+### **Entidade de Exemplo (sem XP)**
+```dart
+// domain/entities/medal.dart
+enum GamificationMedal {
+  bronze('Bronze', 'assets/medals/bronze.png'),
+  silver('Prata', 'assets/medals/silver.png'),
+  gold('Ouro', 'assets/medals/gold.png'),
+  diamond('Diamante', 'assets/medals/diamond.png');
+  
+  const GamificationMedal(this.nameBr, this.asset);
+  final String nameBr;
+  final String asset;
+}
+```
+
+### **Serviço sem XP**
+```dart
+// domain/services/gamification_award_engine.dart
+class GamificationAwardEngine {
+  // Concede medalhas baseadas em streaks (sem cálculos de XP)
+  Future<void> checkTimeBasedMedals(NicheId nicheId, GamificationService service);
+  
+  // Processa eventos sem conceder pontos
+  Future<void> processAdultContentEvent(String eventType, AdultContentService service);
+  
+  // Apenas atualiza estatísticas e concede conquistas reais
+  Future<void> _updateAdultContentStats(AdultContentService service, String action);
+}
+```
+
+## 🗄️ **Banco de Dados em Features (Atualizado)**
+
+### **Entidade Isar (sem XP)**
+```dart
+// core/database/entities/gamification_progress.dart
+@collection
+class GamificationProgress {
+  Id id = Isar.autoIncrement;
+  
+  final String userId;
+  final int nicheId;
+  final int currentStreak;
+  final int bestStreak;
+  final DateTime lastActivityDate;
+  final String? currentMedal;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  
+  // Sem campos de XP!
+  // ❌ totalPoints, dailyPoints, currentLevelXP, nextLevelXP
+  
+  GamificationProgress updateStreak() {
+    final now = DateTime.now();
+    final newStreak = isStreakBroken ? 1 : currentStreak + 1;
+    return copyWith(
+      currentStreak: newStreak,
+      bestStreak: newStreak > bestStreak ? newStreak : bestStreak,
+      lastActivityDate: now,
+      updatedAt: now,
+    );
+  }
+  
+  // Atualiza medalha em vez de nível
+  GamificationProgress updateMedal(String newMedal) {
+    return copyWith(
+      currentMedal: newMedal,
+      updatedAt: DateTime.now(),
+    );
+  }
+}
+```
+
+## 🚀 **Feature Communication (Atualizado)**
 
 ### **EventBus para Features Desacopladas**
 ```dart
-// domain/events/user_events.dart
-class UserCreatedEvent {
-  final User user;
-  UserCreatedEvent(this.user);
+// domain/events/gamification_events.dart
+class MedalAwardedEvent {
+  final NicheId nicheId;
+  final GamificationMedal medal;
+  MedalAwardedEvent(this.nicheId, this.medal);
+}
+
+class InsigniaEarnedEvent {
+  final NicheId nicheId;
+  final FocusInsignia insignia;
+  InsigniaEarnedEvent(this.nicheId, this.insignia);
 }
 
 // Em uma feature
-EventBus.instance.fire(UserCreatedEvent(user));
+EventBus.instance.fire(MedalAwardedEvent(nicheId, medal));
 
 // Em outra feature
-EventBus.instance.listen<UserCreatedEvent>((event) {
-  // Reagir à criação de usuário
+EventBus.instance.listen<MedalAwardedEvent>((event) {
+  LoggerService.instance.i('Medalha conquistada: ${event.medal.nameBr}');
+  AnalyticsService.trackMedalAwarded(event.nicheId, event.medal);
 });
 ```
 
@@ -373,13 +483,29 @@ EventBus.instance.listen<UserCreatedEvent>((event) {
 ```dart
 // shared/services/notification_service.dart
 class NotificationService {
-  void showNotification(String title, String message) {
-    // Implementação compartilhada
+  void showMedalNotification(GamificationMedal medal, String moduleName) {
+    // Notificação de conquista (sem menção a pontos)
+  }
+  
+  void showInsigniaNotification(FocusInsignia insignia, String moduleName) {
+    // Notificação de insígnia
+  }
+}
+
+// core/services/logger_service.dart
+class LoggerService {
+  static final LoggerService instance = LoggerService._();
+  LoggerService._();
+  
+  void i(String message, {Object? error, StackTrace? stackTrace}) {
+    // Logging estruturado
+  }
+  
+  void gamification(String message) {
+    i('[GAMIFICATION] $message');
   }
 }
 ```
-
----
 
 ## 🎯 **Conclusão**
 
@@ -389,5 +515,17 @@ Feature-First architecture proporciona:
 - **Manutenibilidade**: Código organizado por funcionalidade
 - **Testabilidade**: Isolamento claro entre camadas
 - **Colaboração**: Equipes podem trabalhar em features diferentes
+- **Gamificação Limpa**: Sistema de conquistas sem complexidade de XP
 
-Esta abordagem é ideal para projetos Flutter que precisam crescer de forma sustentável e manter alta qualidade de código.
+Esta abordagem é ideal para projetos Flutter que precisam crescer de forma sustentável e manter alta qualidade de código, especialmente com foco em gamificação significativa em vez de sistemas de pontos genéricos.
+
+### **Caso Disciplinum**
+
+O Disciplinum implementa com sucesso esta arquitetura com:
+- ✅ Gamificação baseada apenas em medalhas e insígnias
+- ✅ Sistema de streaks motivacional
+- ✅ EventBus para comunicação desacoplada
+- ✅ Logging estruturado e analytics
+- ✅ Repository pattern com cache local e sincronização
+
+**Resultado**: Arquitetura enterprise-level sem a complexidade desnecessária de sistemas de XP.

@@ -1,8 +1,0 @@
-﻿Analyzing disciplinum_app...                                    
-
-   info - Parameter 'key' could be a super parameter - lib\features\blocking\presentation\screens\app_blocker_screen.dart:4:9 - use_super_parameters
-  error - Expected to find ';' - lib\services\gamification\gamification_service.dart:238:37 - expected_token
-  error - Expected an identifier - lib\services\gamification\gamification_service.dart:239:7 - missing_identifier
-  error - Undefined name '_moduleStartDates' - lib\services\gamification\gamification_service.dart:241:9 - undefined_identifier
-  error - Undefined name '_periodosFocoRespeitados' - lib\services\gamification\gamification_service.dart:580:13 - undefined_identifier
-

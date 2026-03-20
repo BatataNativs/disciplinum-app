@@ -26,22 +26,33 @@ lib/
 │   ├── gamification/             # Sistema de gamificação
 │   │   ├── domain/               # Lógica de negócio
 │   │   │   ├── entities/         # Entidades
+│   │   │   │   ├── medal.dart    # Medalhas (Bronze, Prata, Ouro, Diamante)
+│   │   │   │   ├── insignia.dart # Insígnias (Madeira → Disciplinum)
+│   │   │   │   └── module_state.dart # Estado do módulo
 │   │   │   └── services/         # Serviços de domínio
+│   │   │       ├── gamification_award_engine.dart # Motor de conquistas
+│   │   │       └── streak_service.dart # Serviço de streaks
 │   │   └── presentation/         # UI e controllers
 │   │       ├── controllers/      # State management
-│   │       ├── widgets/          # Componentes de UI
-│   │       └── screens/          # Telas
+│   │       └── widgets/          # Componentes de UI
 │   ├── auth/                     # Autenticação
 │   ├── modules/                  # Módulos de hábitos
 │   │   ├── smoking/              # Tabagismo
 │   │   ├── focus/                # Foco e produtividade
+│   │   ├── diet/                 # Dieta e nutrição
+│   │   ├── adult_content/        # Conteúdo adulto
 │   │   └── ...                   # Outros módulos
 │   └── ...                      # Outras features
 ├── shared/                       # Componentes compartilhados
 │   ├── widgets/                  # UI reutilizável
+│   │   ├── custom_button.dart    # Botões com tema neon
+│   │   └── neon_button.dart      # Botões animados
 │   ├── models/                   # Models compartilhados
 │   └── utils/                    # Utilitários
-└── test/                         # Testes
+└── core/database/                # Banco de dados local
+    └── entities/                 # Entidades Isar
+        ├── gamification_progress.dart # Progresso (sem XP)
+        └── ...                   # Outras entidades
 ```
 
 ## 🎯 **Princípios Arquiteturais**
@@ -80,23 +91,38 @@ UI (Presentation) → Controller → Service → Repository → DataSource
 5. **DataSource** implementa persistência
 6. **State Update** notifica UI via ChangeNotifier/RxBloc
 
-## 📦 **Componentes Chave**
+## 🏆 **Sistema de Gamificação**
+
+### **Conquistas Disponíveis**
+- 🎖️ **Medalhas**: Bronze, Prata, Ouro, Diamante (baseadas em dias ativos)
+- 🏅 **Insígnias**: Madeira → Ferro → Alumínio → Latão → Bronze → Prata → Ouro → Diamante → Disciplinum
+- � **Streaks**: Dias consecutivos de atividade
+- 📊 **Estatísticas**: Progresso e conquistas
+
+### **O que NÃO tem mais**
+- ❌ Sistema de XP/pontos
+- ❌ Níveis e level up
+- ❌ Cálculos de experiência
+- ❌ "Pontos concedidos" nos logs
+
+## �📦 **Componentes Chave**
 
 ### Core Services
-- **LoggerService**: Logging estruturado com níveis
-- **AnalyticsService**: Event tracking e métricas
-- **NavigationService**: Navegação centralizada
-- **EventBus**: Comunicação desacoplada
+- **LoggerService**: Logging estruturado com níveis (debug, info, warning, error)
+- **AnalyticsService**: Event tracking e métricas via Supabase
+- **NavigationService**: Navegação centralizada com helpers
+- **EventBus**: Comunicação desacoplada entre features
 
 ### Infrastructure
 - **ModuleRepository**: Abstração de dados de módulos
-- **LocalModuleDatasource**: Cache local
+- **LocalModuleDatasource**: Cache local com SharedPreferences
 - **CloudModuleDatasource**: Sincronização Supabase
+- **IsarService**: Banco de dados local rápido
 
 ### Features
-- **Gamification**: Conquistas, medalhas, streaks
+- **Gamification**: Conquistas, medalhas, streaks (sem XP)
 - **Auth**: Autenticação e perfil
-- **Modules**: Hábitos específicos (smoking, focus, etc.)
+- **Modules**: Hábitos específicos (smoking, focus, diet, etc.)
 
 ## 🚀 **Adicionando Nova Feature**
 
@@ -128,9 +154,21 @@ features/nova_feature/
 - **Widget Tests**: UI components
 - **E2E Tests**: Fluxos críticos do usuário
 
+## 🗄️ **Banco de Dados**
+
+### **Local (Isar)**
+- **GamificationProgress**: Progresso do usuário (sem campos de XP)
+- **UserModuleState**: Estado dos módulos ativos
+- **DetectionSession**: Sessões de monitoramento
+
+### **Remoto (Supabase)**
+- **user_module_status**: Status dos módulos (sem colunas de XP)
+- **user_behavior_events**: Eventos para analytics
+- **Migrations**: Controle de versão do schema
+
 ## 📊 **Métricas e Monitoramento**
 
-- **Logging**: Estruturado com context
+- **Logging**: Estruturado com context e níveis
 - **Analytics**: Eventos de usuário e performance
 - **Error Tracking**: Centralizado com stack traces
 - **Performance**: Tempo de carregamento e memória
@@ -155,4 +193,4 @@ features/nova_feature/
 
 ---
 
-**Status**: ✅ **Arquitetura Enterprise-Level Implementada** - Base sólida para crescimento sustentável.
+**Status**: ✅ **Arquitetura Enterprise-Level Implementada** - Base sólida para crescimento sustentável sem sistema de XP.

@@ -1,7 +1,0 @@
-﻿Analyzing disciplinum_app...                                    
-
-warning - Unused import: 'package:flutter/material.dart' - lib\features\notifications\domain\services\motivation_engine.dart:1:8 - unused_import
-  error - There's no constant named 'moneySaving' in 'NicheId' - lib\features\notifications\domain\services\motivation_engine.dart:27:13 - undefined_enum_constant
-warning - Unused import: 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart' - lib\features\notifications\domain\services\reminder_engine.dart:4:8 - unused_import
-warning - Unused import: 'package:disciplinum/shared/models/enums/niche_id.dart' - lib\features\streaks\domain\services\streak_calculator.dart:1:8 - unused_import
-

@@ -33,99 +33,59 @@ const GamificationProgressSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'currentLevel': PropertySchema(
-      id: 3,
-      name: r'currentLevel',
-      type: IsarType.long,
-    ),
-    r'currentLevelXP': PropertySchema(
-      id: 4,
-      name: r'currentLevelXP',
-      type: IsarType.long,
-    ),
     r'currentMedal': PropertySchema(
-      id: 5,
+      id: 3,
       name: r'currentMedal',
       type: IsarType.string,
     ),
     r'currentStreak': PropertySchema(
-      id: 6,
+      id: 4,
       name: r'currentStreak',
       type: IsarType.long,
     ),
-    r'dailyPoints': PropertySchema(
-      id: 7,
-      name: r'dailyPoints',
-      type: IsarType.long,
-    ),
     r'hashCode': PropertySchema(
-      id: 8,
+      id: 5,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'isNewDay': PropertySchema(
-      id: 9,
+      id: 6,
       name: r'isNewDay',
       type: IsarType.bool,
     ),
     r'isStreakBroken': PropertySchema(
-      id: 10,
+      id: 7,
       name: r'isStreakBroken',
       type: IsarType.bool,
     ),
     r'lastActivityDate': PropertySchema(
-      id: 11,
+      id: 8,
       name: r'lastActivityDate',
       type: IsarType.dateTime,
     ),
-    r'lastDailyReset': PropertySchema(
-      id: 12,
-      name: r'lastDailyReset',
-      type: IsarType.dateTime,
-    ),
-    r'levelProgress': PropertySchema(
-      id: 13,
-      name: r'levelProgress',
-      type: IsarType.double,
-    ),
-    r'levelProgressPercentage': PropertySchema(
-      id: 14,
-      name: r'levelProgressPercentage',
-      type: IsarType.double,
-    ),
-    r'nextLevelXP': PropertySchema(
-      id: 15,
-      name: r'nextLevelXP',
-      type: IsarType.long,
-    ),
     r'niche': PropertySchema(
-      id: 16,
+      id: 9,
       name: r'niche',
       type: IsarType.byte,
       enumMap: _GamificationProgressnicheEnumValueMap,
     ),
     r'nicheId': PropertySchema(
-      id: 17,
+      id: 10,
       name: r'nicheId',
       type: IsarType.long,
     ),
-    r'totalPoints': PropertySchema(
-      id: 18,
-      name: r'totalPoints',
-      type: IsarType.long,
-    ),
     r'unlockedAchievements': PropertySchema(
-      id: 19,
+      id: 11,
       name: r'unlockedAchievements',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 20,
+      id: 12,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'userId': PropertySchema(
-      id: 21,
+      id: 13,
       name: r'userId',
       type: IsarType.string,
     )
@@ -181,25 +141,17 @@ void _gamificationProgressSerialize(
   writer.writeString(offsets[0], object.additionalData);
   writer.writeLong(offsets[1], object.bestStreak);
   writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeLong(offsets[3], object.currentLevel);
-  writer.writeLong(offsets[4], object.currentLevelXP);
-  writer.writeString(offsets[5], object.currentMedal);
-  writer.writeLong(offsets[6], object.currentStreak);
-  writer.writeLong(offsets[7], object.dailyPoints);
-  writer.writeLong(offsets[8], object.hashCode);
-  writer.writeBool(offsets[9], object.isNewDay);
-  writer.writeBool(offsets[10], object.isStreakBroken);
-  writer.writeDateTime(offsets[11], object.lastActivityDate);
-  writer.writeDateTime(offsets[12], object.lastDailyReset);
-  writer.writeDouble(offsets[13], object.levelProgress);
-  writer.writeDouble(offsets[14], object.levelProgressPercentage);
-  writer.writeLong(offsets[15], object.nextLevelXP);
-  writer.writeByte(offsets[16], object.niche.index);
-  writer.writeLong(offsets[17], object.nicheId);
-  writer.writeLong(offsets[18], object.totalPoints);
-  writer.writeString(offsets[19], object.unlockedAchievements);
-  writer.writeDateTime(offsets[20], object.updatedAt);
-  writer.writeString(offsets[21], object.userId);
+  writer.writeString(offsets[3], object.currentMedal);
+  writer.writeLong(offsets[4], object.currentStreak);
+  writer.writeLong(offsets[5], object.hashCode);
+  writer.writeBool(offsets[6], object.isNewDay);
+  writer.writeBool(offsets[7], object.isStreakBroken);
+  writer.writeDateTime(offsets[8], object.lastActivityDate);
+  writer.writeByte(offsets[9], object.niche.index);
+  writer.writeLong(offsets[10], object.nicheId);
+  writer.writeString(offsets[11], object.unlockedAchievements);
+  writer.writeDateTime(offsets[12], object.updatedAt);
+  writer.writeString(offsets[13], object.userId);
 }
 
 GamificationProgress _gamificationProgressDeserialize(
@@ -212,19 +164,13 @@ GamificationProgress _gamificationProgressDeserialize(
     additionalData: reader.readStringOrNull(offsets[0]),
     bestStreak: reader.readLong(offsets[1]),
     createdAt: reader.readDateTime(offsets[2]),
-    currentLevel: reader.readLong(offsets[3]),
-    currentLevelXP: reader.readLong(offsets[4]),
-    currentMedal: reader.readStringOrNull(offsets[5]),
-    currentStreak: reader.readLong(offsets[6]),
-    dailyPoints: reader.readLong(offsets[7]),
-    lastActivityDate: reader.readDateTime(offsets[11]),
-    lastDailyReset: reader.readDateTime(offsets[12]),
-    nextLevelXP: reader.readLong(offsets[15]),
-    nicheId: reader.readLong(offsets[17]),
-    totalPoints: reader.readLong(offsets[18]),
-    unlockedAchievements: reader.readStringOrNull(offsets[19]),
-    updatedAt: reader.readDateTime(offsets[20]),
-    userId: reader.readString(offsets[21]),
+    currentMedal: reader.readStringOrNull(offsets[3]),
+    currentStreak: reader.readLong(offsets[4]),
+    lastActivityDate: reader.readDateTime(offsets[8]),
+    nicheId: reader.readLong(offsets[10]),
+    unlockedAchievements: reader.readStringOrNull(offsets[11]),
+    updatedAt: reader.readDateTime(offsets[12]),
+    userId: reader.readString(offsets[13]),
   );
   object.id = id;
   return object;
@@ -244,44 +190,28 @@ P _gamificationProgressDeserializeProp<P>(
     case 2:
       return (reader.readDateTime(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readLong(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 9:
-      return (reader.readBool(offset)) as P;
-    case 10:
-      return (reader.readBool(offset)) as P;
-    case 11:
-      return (reader.readDateTime(offset)) as P;
-    case 12:
-      return (reader.readDateTime(offset)) as P;
-    case 13:
-      return (reader.readDouble(offset)) as P;
-    case 14:
-      return (reader.readDouble(offset)) as P;
-    case 15:
-      return (reader.readLong(offset)) as P;
-    case 16:
       return (_GamificationProgressnicheValueEnumMap[
               reader.readByteOrNull(offset)] ??
           NicheId.smoking) as P;
-    case 17:
+    case 10:
       return (reader.readLong(offset)) as P;
-    case 18:
-      return (reader.readLong(offset)) as P;
-    case 19:
+    case 11:
       return (reader.readStringOrNull(offset)) as P;
-    case 20:
+    case 12:
       return (reader.readDateTime(offset)) as P;
-    case 21:
+    case 13:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -677,118 +607,6 @@ extension GamificationProgressQueryFilter on QueryBuilder<GamificationProgress,
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'currentLevel',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'currentLevel',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'currentLevel',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'currentLevel',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelXPEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'currentLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelXPGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'currentLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelXPLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'currentLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> currentLevelXPBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'currentLevelXP',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
       QAfterFilterCondition> currentMedalIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1001,62 +819,6 @@ extension GamificationProgressQueryFilter on QueryBuilder<GamificationProgress,
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> dailyPointsEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'dailyPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> dailyPointsGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'dailyPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> dailyPointsLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'dailyPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> dailyPointsBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'dailyPoints',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
       QAfterFilterCondition> hashCodeEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1245,250 +1007,6 @@ extension GamificationProgressQueryFilter on QueryBuilder<GamificationProgress,
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> lastDailyResetEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastDailyReset',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> lastDailyResetGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastDailyReset',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> lastDailyResetLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastDailyReset',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> lastDailyResetBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastDailyReset',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'levelProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'levelProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'levelProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'levelProgress',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressPercentageEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'levelProgressPercentage',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressPercentageGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'levelProgressPercentage',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressPercentageLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'levelProgressPercentage',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> levelProgressPercentageBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'levelProgressPercentage',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> nextLevelXPEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nextLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> nextLevelXPGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'nextLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> nextLevelXPLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'nextLevelXP',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> nextLevelXPBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'nextLevelXP',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
       QAfterFilterCondition> nicheEqualTo(NicheId value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1592,62 +1110,6 @@ extension GamificationProgressQueryFilter on QueryBuilder<GamificationProgress,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'nicheId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> totalPointsEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'totalPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> totalPointsGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'totalPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> totalPointsLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'totalPoints',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress,
-      QAfterFilterCondition> totalPointsBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'totalPoints',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2058,34 +1520,6 @@ extension GamificationProgressQuerySortBy
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByCurrentLevel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevel', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByCurrentLevelDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevel', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByCurrentLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevelXP', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByCurrentLevelXPDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevelXP', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
       sortByCurrentMedal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentMedal', Sort.asc);
@@ -2110,20 +1544,6 @@ extension GamificationProgressQuerySortBy
       sortByCurrentStreakDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentStreak', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByDailyPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'dailyPoints', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByDailyPointsDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'dailyPoints', Sort.desc);
     });
   }
 
@@ -2184,62 +1604,6 @@ extension GamificationProgressQuerySortBy
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLastDailyReset() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastDailyReset', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLastDailyResetDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastDailyReset', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLevelProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgress', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLevelProgressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgress', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLevelProgressPercentage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgressPercentage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByLevelProgressPercentageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgressPercentage', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByNextLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextLevelXP', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByNextLevelXPDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextLevelXP', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
       sortByNiche() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'niche', Sort.asc);
@@ -2264,20 +1628,6 @@ extension GamificationProgressQuerySortBy
       sortByNicheIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nicheId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByTotalPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'totalPoints', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      sortByTotalPointsDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'totalPoints', Sort.desc);
     });
   }
 
@@ -2369,34 +1719,6 @@ extension GamificationProgressQuerySortThenBy
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByCurrentLevel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevel', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByCurrentLevelDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevel', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByCurrentLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevelXP', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByCurrentLevelXPDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'currentLevelXP', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
       thenByCurrentMedal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentMedal', Sort.asc);
@@ -2421,20 +1743,6 @@ extension GamificationProgressQuerySortThenBy
       thenByCurrentStreakDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentStreak', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByDailyPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'dailyPoints', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByDailyPointsDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'dailyPoints', Sort.desc);
     });
   }
 
@@ -2509,62 +1817,6 @@ extension GamificationProgressQuerySortThenBy
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLastDailyReset() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastDailyReset', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLastDailyResetDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastDailyReset', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLevelProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgress', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLevelProgressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgress', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLevelProgressPercentage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgressPercentage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByLevelProgressPercentageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'levelProgressPercentage', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByNextLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextLevelXP', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByNextLevelXPDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextLevelXP', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
       thenByNiche() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'niche', Sort.asc);
@@ -2589,20 +1841,6 @@ extension GamificationProgressQuerySortThenBy
       thenByNicheIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nicheId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByTotalPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'totalPoints', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QAfterSortBy>
-      thenByTotalPointsDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'totalPoints', Sort.desc);
     });
   }
 
@@ -2674,20 +1912,6 @@ extension GamificationProgressQueryWhereDistinct
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByCurrentLevel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'currentLevel');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByCurrentLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'currentLevelXP');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
       distinctByCurrentMedal({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'currentMedal', caseSensitive: caseSensitive);
@@ -2698,13 +1922,6 @@ extension GamificationProgressQueryWhereDistinct
       distinctByCurrentStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'currentStreak');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByDailyPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'dailyPoints');
     });
   }
 
@@ -2737,34 +1954,6 @@ extension GamificationProgressQueryWhereDistinct
   }
 
   QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByLastDailyReset() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'lastDailyReset');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByLevelProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'levelProgress');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByLevelProgressPercentage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'levelProgressPercentage');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByNextLevelXP() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'nextLevelXP');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
       distinctByNiche() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'niche');
@@ -2775,13 +1964,6 @@ extension GamificationProgressQueryWhereDistinct
       distinctByNicheId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nicheId');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, GamificationProgress, QDistinct>
-      distinctByTotalPoints() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'totalPoints');
     });
   }
 
@@ -2837,20 +2019,6 @@ extension GamificationProgressQueryProperty on QueryBuilder<
     });
   }
 
-  QueryBuilder<GamificationProgress, int, QQueryOperations>
-      currentLevelProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'currentLevel');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, int, QQueryOperations>
-      currentLevelXPProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'currentLevelXP');
-    });
-  }
-
   QueryBuilder<GamificationProgress, String?, QQueryOperations>
       currentMedalProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -2862,13 +2030,6 @@ extension GamificationProgressQueryProperty on QueryBuilder<
       currentStreakProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'currentStreak');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, int, QQueryOperations>
-      dailyPointsProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'dailyPoints');
     });
   }
 
@@ -2899,34 +2060,6 @@ extension GamificationProgressQueryProperty on QueryBuilder<
     });
   }
 
-  QueryBuilder<GamificationProgress, DateTime, QQueryOperations>
-      lastDailyResetProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'lastDailyReset');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, double, QQueryOperations>
-      levelProgressProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'levelProgress');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, double, QQueryOperations>
-      levelProgressPercentageProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'levelProgressPercentage');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, int, QQueryOperations>
-      nextLevelXPProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'nextLevelXP');
-    });
-  }
-
   QueryBuilder<GamificationProgress, NicheId, QQueryOperations>
       nicheProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -2937,13 +2070,6 @@ extension GamificationProgressQueryProperty on QueryBuilder<
   QueryBuilder<GamificationProgress, int, QQueryOperations> nicheIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nicheId');
-    });
-  }
-
-  QueryBuilder<GamificationProgress, int, QQueryOperations>
-      totalPointsProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'totalPoints');
     });
   }
 

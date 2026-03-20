@@ -242,26 +242,26 @@ class GamificationAwardEngine {
   ) async {
     switch (eventType) {
       case AdultContentEvent.blocked:
-        LoggerService.instance.i('Adult Content bloqueado - concedendo pontos');
-        await _awardAdultContentPoints(service, 'blocked');
+        LoggerService.instance.i('Adult Content bloqueado');
+        await _updateAdultContentStats(service, 'blocked');
         break;
       case AdultContentEvent.accessed:
-        LoggerService.instance.i('Adult Content acessado - concedendo pontos');
-        await _awardAdultContentPoints(service, 'accessed');
+        LoggerService.instance.i('Adult Content acessado');
+        await _updateAdultContentStats(service, 'accessed');
         break;
       case AdultContentEvent.limitReached:
-        LoggerService.instance.i('Limite diário atingido - concedendo pontos');
-        await _awardAdultContentPoints(service, 'limit_reached');
+        LoggerService.instance.i('Limite diário atingido');
+        await _updateAdultContentStats(service, 'limit_reached');
         break;
       case AdultContentEvent.streakExtended:
-        LoggerService.instance.i('Streak extendido - concedendo pontos');
-        await _awardAdultContentPoints(service, 'streak_extended');
+        LoggerService.instance.i('Streak extendido');
+        await _updateAdultContentStats(service, 'streak_extended');
         break;
     }
   }
 
-  /// Concede pontos por eventos do Adult Content
-  Future<void> _awardAdultContentPoints(
+  /// Atualiza estatísticas do Adult Content
+  Future<void> _updateAdultContentStats(
       AdultContentService service,
       String action,
   ) async {
@@ -276,8 +276,7 @@ class GamificationAwardEngine {
       totalAccessTime: currentStats.totalAccessTime,
     );
 
-    // Sistema de pontos implementado - concedendo pontos baseados na ação
-    LoggerService.instance.i('Adult Content pontos concedidos para ação: $action');
+    LoggerService.instance.i('Adult Content estatísticas atualizadas para ação: $action');
     
     // Atualizar estatísticas no serviço
     await service.updateStats(newStats);
@@ -293,37 +292,35 @@ class GamificationAwardEngine {
   ) async {
     switch (eventType) {
       case DietEvent.goalCompleted:
-        LoggerService.instance.i('Meta de dieta completada - concedendo pontos');
-        await _awardDietPoints(service, 'goal_completed');
+        LoggerService.instance.i('Meta de dieta completada');
+        await _updateDietStats(service, 'goal_completed');
         break;
       case DietEvent.mealCompleted:
-        LoggerService.instance.i('Refeição completada - concedendo pontos');
-        await _awardDietPoints(service, 'meal_completed');
+        LoggerService.instance.i('Refeição completada');
+        await _updateDietStats(service, 'meal_completed');
         break;
       case DietEvent.streakExtended:
-        LoggerService.instance.i('Streak de dieta extendido - concedendo pontos');
-        await _awardDietPoints(service, 'streak_extended');
+        LoggerService.instance.i('Streak de dieta extendido');
+        await _updateDietStats(service, 'streak_extended');
         break;
       case DietEvent.nutritionGoal:
-        LoggerService.instance.i('Meta nutricional atingida - concedendo pontos');
-        await _awardDietPoints(service, 'nutrition_goal');
+        LoggerService.instance.i('Meta nutricional atingida');
+        await _updateDietStats(service, 'nutrition_goal');
         break;
     }
   }
 
-  /// Concede pontos por eventos do Diet Service
-  Future<void> _awardDietPoints(
+  /// Atualiza estatísticas do Diet Service
+  Future<void> _updateDietStats(
       DietService service,
       String action,
   ) async {
     final summary = service.todaySummary;
     if (summary != null) {
-      // Sistema de pontos implementado - concedendo pontos baseados na ação
-      LoggerService.instance.i('Diet pontos concedidos para ação: $action');
+      LoggerService.instance.i('Diet estatísticas atualizadas para ação: $action');
       
-      // Calcular pontos baseados no completion rate
-      final points = (summary.goalCompletionRate * 100).round();
-      LoggerService.instance.d('Pontos calculados: $points (completion rate: ${summary.goalCompletionRate})');
+      // Log do completion rate para analytics
+      LoggerService.instance.d('Completion rate: ${summary.goalCompletionRate}');
     }
   }
 
