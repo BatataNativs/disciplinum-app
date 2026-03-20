@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
+class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -40,7 +40,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       return;
     }
 
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = ref.read(authServiceProvider);
     final success = await authService.updatePassword(newPass);
 
     if (!mounted) return;
@@ -73,7 +73,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = ref.watch(authServiceProvider);
 
     return PopScope(
       canPop: false,
@@ -81,7 +81,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         if (didPop) return;
 
         final navigator = Navigator.of(context);
-        final auth = Provider.of<AuthService>(context, listen: false);
+        final auth = ref.read(authServiceProvider);
 
         if (!auth.isPasswordRecovery) {
           navigator.pop();
@@ -137,7 +137,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  final auth = Provider.of<AuthService>(context, listen: false);
+                  final auth = ref.read(authServiceProvider);
                   if (auth.isPasswordRecovery) {
                     Navigator.maybePop(context);
                   } else {

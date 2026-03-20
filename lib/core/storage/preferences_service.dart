@@ -1,44 +1,41 @@
 import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 
 class PreferencesService {
+  final IsarPreferencesRepository _prefsRepo;
+
+  PreferencesService(this._prefsRepo);
+
   static const String _appsKey = 'guest_user_niche_apps';
   static const String _timesKey = 'guest_user_niche_times';
   static const String _smokingKey = 'guest_smoking_settings';
   static const String _guestFlagKey = 'guest_mode_enabled';
-
-  static Future<SharedPreferences> _prefs() async =>
-      await SharedPreferences.getInstance();
 
   // ============================================================
   // ===================== GUEST MODE ============================
   // ============================================================
 
   Future<void> setGuestMode(bool value) async {
-    final prefs = await _prefs();
-    await prefs.setBool(_guestFlagKey, value);
+    await _prefsRepo.setBool(_guestFlagKey, value);
   }
 
-  static Future<bool> isGuestMode() async {
-    final prefs = await _prefs();
-    return prefs.getBool(_guestFlagKey) ?? false;
+  Future<bool> isGuestMode() async {
+    return await _prefsRepo.getBool(_guestFlagKey) ?? false;
   }
 
   // ============================================================
   // ========================  APPS  =============================
   // ============================================================
 
-  static Future<void> addUserNicheApp({
+  Future<void> addUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
-    final prefs = await _prefs();
-
     try {
       final current = await loadUserNicheApps(nicheId: nicheId);
       if (current.any((a) => a.appPackage == package)) return;
@@ -52,7 +49,7 @@ class PreferencesService {
         ),
       ];
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _appsKey,
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
@@ -61,18 +58,16 @@ class PreferencesService {
     }
   }
 
-  static Future<void> removeUserNicheApp({
+  Future<void> removeUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
-    final prefs = await _prefs();
-
     try {
       final current = await loadUserNicheApps(nicheId: nicheId);
 
       final updated = current.where((a) => a.appPackage != package).toList();
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _appsKey,
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
@@ -81,13 +76,11 @@ class PreferencesService {
     }
   }
 
-  static Future<List<UserNicheApp>> loadUserNicheApps({
+  Future<List<UserNicheApp>> loadUserNicheApps({
     required NicheId nicheId,
   }) async {
-    final prefs = await _prefs();
-
     try {
-      final jsonString = prefs.getString(_appsKey);
+      final jsonString = await _prefsRepo.getString(_appsKey);
       if (jsonString == null) return [];
 
       final list = jsonDecode(jsonString) as List;
@@ -102,13 +95,11 @@ class PreferencesService {
     }
   }
 
-  static Future<void> removeAllAppsForNiche({
+  Future<void> removeAllAppsForNiche({
     required NicheId nicheId,
   }) async {
-    final prefs = await _prefs();
-
     try {
-      final allJson = prefs.getString(_appsKey);
+      final allJson = await _prefsRepo.getString(_appsKey);
       if (allJson == null) return;
 
       final list = jsonDecode(allJson) as List;
@@ -118,7 +109,7 @@ class PreferencesService {
           .where((a) => a.nicheId != nicheId.id)
           .toList();
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _appsKey,
         jsonEncode(filtered.map((e) => e.toJson()).toList()),
       );
@@ -131,13 +122,11 @@ class PreferencesService {
   // =======================  TIMES  ============================
   // ============================================================
 
-  static Future<void> addUserNicheTime({
+  Future<void> addUserNicheTime({
     required int nicheId,
     required int hour,
     required int minute,
   }) async {
-    final prefs = await _prefs();
-
     try {
       final current = await loadUserNicheTimes(nicheId: nicheId);
 
@@ -153,7 +142,7 @@ class PreferencesService {
         ),
       ];
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _timesKey,
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
@@ -162,13 +151,11 @@ class PreferencesService {
     }
   }
 
-  static Future<void> removeUserNicheTime({
+  Future<void> removeUserNicheTime({
     required int nicheId,
     required int hour,
     required int minute,
   }) async {
-    final prefs = await _prefs();
-
     try {
       final current = await loadUserNicheTimes(nicheId: nicheId);
 
@@ -176,7 +163,7 @@ class PreferencesService {
           .where((t) => !(t.hour == hour && t.minute == minute))
           .toList();
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _timesKey,
         jsonEncode(updated.map((e) => e.toJson()).toList()),
       );
@@ -185,13 +172,11 @@ class PreferencesService {
     }
   }
 
-  static Future<List<UserNicheTime>> loadUserNicheTimes({
+  Future<List<UserNicheTime>> loadUserNicheTimes({
     required int nicheId,
   }) async {
-    final prefs = await _prefs();
-
     try {
-      final jsonString = prefs.getString(_timesKey);
+      final jsonString = await _prefsRepo.getString(_timesKey);
       if (jsonString == null) return [];
 
       final list = jsonDecode(jsonString) as List;
@@ -206,13 +191,11 @@ class PreferencesService {
     }
   }
 
-  static Future<void> removeAllTimesForNiche({
+  Future<void> removeAllTimesForNiche({
     required int nicheId,
   }) async {
-    final prefs = await _prefs();
-
     try {
-      final jsonString = prefs.getString(_timesKey);
+      final jsonString = await _prefsRepo.getString(_timesKey);
       if (jsonString == null) return;
 
       final list = jsonDecode(jsonString) as List;
@@ -222,7 +205,7 @@ class PreferencesService {
           .where((t) => t.nicheId != nicheId)
           .toList();
 
-      await prefs.setString(
+      await _prefsRepo.setString(
         _timesKey,
         jsonEncode(filtered.map((e) => e.toJson()).toList()),
       );
@@ -235,19 +218,17 @@ class PreferencesService {
   // ======================  SMOKING  ===========================
   // ============================================================
 
-  static Future<void> saveSmokingSettings(SmokingSettingsModel settings) async {
-    final prefs = await _prefs();
+  Future<void> saveSmokingSettings(SmokingSettingsModel settings) async {
     try {
-      await prefs.setString(_smokingKey, jsonEncode(settings.toJson()));
+      await _prefsRepo.setString(_smokingKey, jsonEncode(settings.toJson()));
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configurações de cigarro locais', error: e);
     }
   }
 
-  static Future<SmokingSettingsModel?> getSmokingSettings() async {
-    final prefs = await _prefs();
+  Future<SmokingSettingsModel?> getSmokingSettings() async {
     try {
-      final jsonString = prefs.getString(_smokingKey);
+      final jsonString = await _prefsRepo.getString(_smokingKey);
       if (jsonString == null) return null;
       return SmokingSettingsModel.fromJson(jsonDecode(jsonString));
     } catch (e) {
@@ -256,22 +237,19 @@ class PreferencesService {
     }
   }
 
-  static Future<void> removeSmokingSettings() async {
-    final prefs = await _prefs();
-    await prefs.remove(_smokingKey);
+  Future<void> removeSmokingSettings() async {
+    await _prefsRepo.remove(_smokingKey);
   }
 
   // ============================================================
   // ================== EXPORT / CLEAR ===========================
   // ============================================================
 
-  static Future<Map<String, dynamic>> exportAll() async {
-    final prefs = await _prefs();
-
+  Future<Map<String, dynamic>> exportAll() async {
     try {
-      final apps = prefs.getString(_appsKey);
-      final times = prefs.getString(_timesKey);
-      final smoking = prefs.getString(_smokingKey);
+      final apps = await _prefsRepo.getString(_appsKey);
+      final times = await _prefsRepo.getString(_timesKey);
+      final smoking = await _prefsRepo.getString(_smokingKey);
 
       return {
         'apps': apps != null ? jsonDecode(apps) : [],
@@ -284,11 +262,10 @@ class PreferencesService {
     }
   }
 
-  static Future<void> clearAll() async {
-    final prefs = await _prefs();
-    await prefs.remove(_appsKey);
-    await prefs.remove(_timesKey);
-    await prefs.remove(_smokingKey);
-    await prefs.remove(_guestFlagKey);
+  Future<void> clearAll() async {
+    await _prefsRepo.remove(_appsKey);
+    await _prefsRepo.remove(_timesKey);
+    await _prefsRepo.remove(_smokingKey);
+    await _prefsRepo.remove(_guestFlagKey);
   }
 }

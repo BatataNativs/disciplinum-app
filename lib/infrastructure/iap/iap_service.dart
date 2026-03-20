@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 class IapService extends ChangeNotifier {
-  static final IapService _instance = IapService._internal();
-  factory IapService() => _instance;
-  IapService._internal();
-
+  final CloudSyncService _cloudSync;
+  final IsarPreferencesRepository _prefsRepo;
   final InAppPurchase _iap = InAppPurchase.instance;
+
+  IapService(this._cloudSync, this._prefsRepo);
   StreamSubscription<List<PurchaseDetails>>? _subscription;
 
   // IDs dos produtos
@@ -21,7 +21,7 @@ class IapService extends ChangeNotifier {
   static const String productIdCustomNotif = 'custom_notifications_unlock';
   static const String productIdMotivationPhrases = 'motivation_phrases_unlock';
 
-  // Chaves do SharedPreferences
+  // Chaves de preferência (Agora via Isar)
   static const String _kPrefsDarkMode = 'entitlement_dark_mode';
   static const String _kPrefsAdFree = 'entitlement_ad_free';
   static const String _kPrefsAdFreeLiteExp = 'entitlement_ad_free_lite_exp';
@@ -70,18 +70,16 @@ class IapService extends ChangeNotifier {
   Function(bool success)? onPurchaseResult;
 
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    _darkModeUnlocked = prefs.getBool(_kPrefsDarkMode) ?? false;
-    _adFreePermanent = prefs.getBool(_kPrefsAdFree) ?? false;
-    _customNotifUnlocked = prefs.getBool(_kPrefsCustomNotif) ?? false;
+    _darkModeUnlocked = await _prefsRepo.getBool(_kPrefsDarkMode) ?? false;
+    _adFreePermanent = await _prefsRepo.getBool(_kPrefsAdFree) ?? false;
+    _customNotifUnlocked = await _prefsRepo.getBool(_kPrefsCustomNotif) ?? false;
     _motivationPhrasesUnlocked =
-        prefs.getBool(_kPrefsMotivationPhrases) ?? false;
+        await _prefsRepo.getBool(_kPrefsMotivationPhrases) ?? false;
 
     // Carrega a expiração do Lite
-    final liteExpMillis = prefs.getInt(_kPrefsAdFreeLiteExp);
-    if (liteExpMillis != null) {
-      _adFreeLiteExpiration =
-          DateTime.fromMillisecondsSinceEpoch(liteExpMillis);
+    final liteExpStr = await _prefsRepo.getString(_kPrefsAdFreeLiteExp);
+    if (liteExpStr != null) {
+      _adFreeLiteExpiration = DateTime.tryParse(liteExpStr);
     }
 
     _subscription = _iap.purchaseStream.listen(
@@ -167,7 +165,7 @@ class IapService extends ChangeNotifier {
   }
 
   Future<void> _setEntitlement(String productId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _prefsRepo;
 
     String? entitlementType;
     DateTime? expiresAt;
@@ -198,7 +196,7 @@ class IapService extends ChangeNotifier {
     // Sincroniza com a nuvem se for um entitlement válido
     if (entitlementType != null) {
       try {
-        await CloudSyncService.addEntitlement(
+        await _cloudSync.addEntitlement(
           entitlementType: entitlementType,
           source: 'iap',
           expiresAt: expiresAt,

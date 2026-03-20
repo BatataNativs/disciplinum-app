@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
@@ -16,7 +16,7 @@ class ReadingService extends ChangeNotifier {
   static const String _localKey = 'reading_data';
   static const String _streakKey = 'reading_streak_data';
 
-  final SharedPreferences _prefs;
+  final IsarPreferencesRepository _prefs;
   final GamificationService _gamificationService;
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -41,7 +41,7 @@ class ReadingService extends ChangeNotifier {
 
   Future<void> _loadData() async {
     // 1. Carregar Livros
-    final String? data = _prefs.getString(_localKey);
+    final String? data = await _prefs.getString(_localKey);
     if (data != null) {
       try {
         final List<dynamic> decoded = jsonDecode(data);
@@ -52,7 +52,7 @@ class ReadingService extends ChangeNotifier {
     }
 
     // 2. Carregar Gamificação (Streak)
-    final String? streakData = _prefs.getString(_streakKey);
+    final String? streakData = await _prefs.getString(_streakKey);
     if (streakData != null) {
       try {
         final Map<String, dynamic> decoded = jsonDecode(streakData);
@@ -348,9 +348,9 @@ class ReadingService extends ChangeNotifier {
   // NOTIFICAÇÕES
   // ===========================================
 
-  TimeOfDay? get savedNotificationTime {
-    final h = _prefs.getInt('reading_notification_hour');
-    final m = _prefs.getInt('reading_notification_minute');
+  Future<TimeOfDay?> getSavedNotificationTime() async {
+    final h = await _prefs.getInt('reading_notification_hour');
+    final m = await _prefs.getInt('reading_notification_minute');
     if (h != null && m != null) {
       return TimeOfDay(hour: h, minute: m);
     }

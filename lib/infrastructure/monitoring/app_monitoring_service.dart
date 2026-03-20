@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -22,9 +22,13 @@ import 'package:disciplinum/core/database/isar_service.dart';
 
 class AppMonitoringService {
   GamificationService? _gamificationService;
+  late final IsarPreferencesRepository _prefsRepo;
+  IapService? _iapService;
   
-  AppMonitoringService([GamificationService? gamificationService]) {
+  AppMonitoringService(IsarPreferencesRepository prefsRepo, {GamificationService? gamificationService, IapService? iapService}) {
+    _prefsRepo = prefsRepo;
     _gamificationService = gamificationService;
+    _iapService = iapService;
     
     // ✅ Auto-inicializar SessionPersistenceService se necessário
     _initializeSessionPersistence();
@@ -103,9 +107,7 @@ class AppMonitoringService {
       _clearViolationState();
     }
 
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool(_prefsNotificationsPausedKey, value);
+    await _prefsRepo.setBool(_prefsNotificationsPausedKey, value);
   }
 
   Future<void> startMonitoring({
@@ -120,13 +122,11 @@ class AppMonitoringService {
 
     monitoredApps = List<String>.from(apps);
 
-    final prefs = await SharedPreferences.getInstance();
+    await _prefsRepo.setInt(_prefsActiveNicheKey, nicheId.id);
 
-    await prefs.setInt(_prefsActiveNicheKey, nicheId.id);
+    await _prefsRepo.setStringList(_prefsMonitoredAppsKey, monitoredApps);
 
-    await prefs.setStringList(_prefsMonitoredAppsKey, monitoredApps);
-
-    await prefs.setBool(_prefsNotificationsPausedKey, notificationsPaused);
+    await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
     // ✅ Persistir estado de monitoramento com Isar
     await SessionPersistenceService.instance.saveMonitoringState(
@@ -184,13 +184,11 @@ class AppMonitoringService {
 
     notificationsPaused = false;
 
-    final prefs = await SharedPreferences.getInstance();
+    await _prefsRepo.remove(_prefsActiveNicheKey);
 
-    await prefs.remove(_prefsActiveNicheKey);
+    await _prefsRepo.remove(_prefsMonitoredAppsKey);
 
-    await prefs.remove(_prefsMonitoredAppsKey);
-
-    await prefs.setBool(_prefsNotificationsPausedKey, notificationsPaused);
+    await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
     // ✅ Limpar estado de monitoramento com Isar
     await SessionPersistenceService.instance.clearMonitoringState();
@@ -323,9 +321,7 @@ class AppMonitoringService {
 
     if (now.difference(_lastHeartbeatSave).inSeconds < 10) return;
 
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setInt(_prefsLastHeartbeatKey, now.millisecondsSinceEpoch);
+    await _prefsRepo.setInt(_prefsLastHeartbeatKey, now.millisecondsSinceEpoch);
 
     _lastHeartbeatSave = now;
 
@@ -365,10 +361,8 @@ class AppMonitoringService {
 
     if (now.isBefore(endTime)) return;
 
-    final prefs = await SharedPreferences.getInstance();
-
     final lastCheckedEnd =
-        prefs.getInt('last_focus_checked_end_${activeNicheId.id}');
+        await _prefsRepo.getInt('last_focus_checked_end_${activeNicheId.id}');
 
     if (lastCheckedEnd == endTime.millisecondsSinceEpoch) {
       return;
@@ -388,7 +382,7 @@ class AppMonitoringService {
       );
     }
 
-    await prefs.setInt(
+    await _prefsRepo.setInt(
       'last_focus_checked_end_${activeNicheId.id}',
       endTime.millisecondsSinceEpoch,
     );
@@ -573,11 +567,10 @@ class AppMonitoringService {
       return;
     }
     
-    // Fallback para SharedPreferences (legado)
-    final prefs = await SharedPreferences.getInstance();
-
+    // Fallback para SharedPreferences (legado) - agora migrado para Isar via _prefsRepo
+    
     // Restore niche
-    final savedId = prefs.getInt(_prefsActiveNicheKey);
+    final savedId = await _prefsRepo.getInt(_prefsActiveNicheKey);
 
     if (savedId == null) return;
 
@@ -586,14 +579,14 @@ class AppMonitoringService {
     if (nicheId == null) return;
 
     // Restore monitored apps - CRITICAL FIX
-    final savedApps = prefs.getStringList(_prefsMonitoredAppsKey) ?? [];
+    final savedApps = await _prefsRepo.getStringList(_prefsMonitoredAppsKey) ?? [];
 
     if (savedApps.isEmpty) return;
 
     // Restore state
     currentNicheId = nicheId;
     monitoredApps = List<String>.from(savedApps);
-    notificationsPaused = prefs.getBool(_prefsNotificationsPausedKey) ?? false;
+    notificationsPaused = await _prefsRepo.getBool(_prefsNotificationsPausedKey) ?? false;
     _isModuleActive = true;
 
     // Start monitoring
@@ -689,7 +682,7 @@ class AppMonitoringService {
     // Preparar mensagem para o Overlay
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
-      isUnlocked: IapService().isCustomNotifUnlocked ||
+      isUnlocked: (_iapService?.isCustomNotifUnlocked ?? false) ||
           (_gamificationService?.isNotificationUnlocked(currentNicheId!) ?? false),
       customMessages: _gamificationService?.customMessages ?? {},
     );

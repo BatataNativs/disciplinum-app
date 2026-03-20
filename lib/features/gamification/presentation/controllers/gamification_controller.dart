@@ -10,6 +10,7 @@ import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 /// Gerencia estado da UI e interage com services de domínio
 class GamificationController extends ChangeNotifier {
   final ModuleRepository _moduleRepository;
+  final AuthService _authService;
   
   // Estado privado
   Map<int, ModuleState> _moduleStates = {};
@@ -34,7 +35,9 @@ class GamificationController extends ChangeNotifier {
 
   GamificationController({
     required ModuleRepository moduleRepository,
-  }) : _moduleRepository = moduleRepository;
+    required AuthService authService,
+  }) : _moduleRepository = moduleRepository,
+       _authService = authService;
 
   /// Carrega todos os estados dos módulos
   Future<void> loadModuleStates() async {
@@ -335,9 +338,8 @@ class GamificationController extends ChangeNotifier {
   }
 
   Future<void> _saveModuleState(ModuleState state) async {
-    // Obter userId do AuthService
-    final authService = AuthService();
-    final userId = authService.currentUser?.id ?? 'temp_user';
+    // Obter userId do AuthService injetado
+    final userId = _authService.currentUser?.id ?? 'temp_user';
     
     final userModuleStatus = state.toUserModuleStatus(userId: userId);
     await _moduleRepository.saveModuleStatus(userModuleStatus);

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
-import '../../domain/services/smoking_service.dart';
 import 'health_detail_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -18,7 +16,6 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'frases_motivacionais.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'daily_checkins_stats.dart';
-import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
@@ -27,21 +24,20 @@ import 'package:disciplinum/shared/widgets/sections/niche_checkin_section.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_consumption_settings.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class StopSmokingScreen extends StatefulWidget {
+class StopSmokingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const StopSmokingScreen({super.key, this.heroTag});
 
   @override
-  State<StopSmokingScreen> createState() => _StopSmokingScreenState();
+  ConsumerState<StopSmokingScreen> createState() => _StopSmokingScreenState();
 }
 
-class _StopSmokingScreenState extends State<StopSmokingScreen>
+class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     with WidgetsBindingObserver {
   SmokingSettingsModel? settings;
   bool isLoading = true;
   bool _gamificationRunning = false;
   bool isSaving = false;
-  final SmokingService _service = SmokingService();
 
   TimeOfDay? _checkinTime;
 
@@ -92,14 +88,15 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
-      final isGuest = await PreferencesService.isGuestMode();
+      final prefs = ref.read(preferencesServiceProvider);
+      final isGuest = await prefs.isGuestMode();
       final List<UserNicheTime> checkinTimes;
 
       if (isGuest) {
-        checkinTimes = await PreferencesService.loadUserNicheTimes(
+        checkinTimes = await prefs.loadUserNicheTimes(
             nicheId: NicheId.smoking.id);
       } else {
-        checkinTimes = await CloudSyncService.loadUserNicheTimes(
+        checkinTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
             nicheId: NicheId.smoking.id);
       }
 
@@ -122,8 +119,9 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
   }
 
   Future<void> _loadSettings() async {
-    final data = await _service.getSettings();
-    final status = await CloudSyncService.loadModuleStatus(NicheId.smoking);
+    final service = ref.read(smokingServiceProvider);
+    final data = await service.getSettings();
+    final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(NicheId.smoking);
 
     if (mounted) {
       setState(() {
@@ -209,20 +207,20 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
 
   Future<void> _syncCheckInWithGamification(
       {bool onlySyncSchedules = false}) async {
-    final isGuest = await PreferencesService.isGuestMode();
+    final prefs = ref.read(preferencesServiceProvider);
+    final isGuest = await prefs.isGuestMode();
     final List<UserNicheTime> times;
 
     if (isGuest) {
-      times = await PreferencesService.loadUserNicheTimes(
+      times = await prefs.loadUserNicheTimes(
           nicheId: NicheId.smoking.id);
     } else {
-      times = await CloudSyncService.loadUserNicheTimes(
+      times = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
           nicheId: NicheId.smoking.id);
     }
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
 
     gamification.scheduleByModule[NicheId.smoking] =
         times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
@@ -260,7 +258,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
     );
 
     try {
-      await _service.saveSettings(newSettings);
+      await ref.read(smokingServiceProvider).saveSettings(newSettings);
       if (mounted) {
         setState(() {
           settings = newSettings;
@@ -338,7 +336,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
             lastSavedTotal: settings!.lastSavedTotal,
             lastEndDate: settings!.lastEndDate,
           );
-          await _service.saveSettings(updatedSettings);
+          await ref.read(smokingServiceProvider).saveSettings(updatedSettings);
           if (mounted) {
             setState(() {
               settings = updatedSettings;
@@ -358,14 +356,12 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
   void _startGamificationCycle() {
     HapticFeedback.heavyImpact();
     setState(() => _gamificationRunning = true);
-    CloudSyncService.saveModuleStatus(nicheId: NicheId.smoking, isActive: true);
-    Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: NicheId.smoking);
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isActive: true);
+    ref.read(gamificationServiceProvider).startModuleCycle(nicheId: NicheId.smoking);
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     final confirmed = await DeactivateModuleDialog.show(
       context: context,
       nicheId: NicheId.smoking,
@@ -378,10 +374,10 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
       setState(() => isLoading = true);
 
       try {
-        await _service.archiveAndReset();
-        await CloudSyncService.removeAllTimesForNiche(
+        await ref.read(smokingServiceProvider).archiveAndReset();
+        await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id);
-        await CloudSyncService.removeAllTimesForNiche(
+        await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id + 100);
 
         gamification.resetMedals(
@@ -393,7 +389,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
         );
 
         if (mounted) {
-          final data = await _service.getSettings();
+          final data = await ref.read(smokingServiceProvider).getSettings();
           setState(() {
             settings = data;
             _gamificationRunning = false;
@@ -768,7 +764,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
             onPressed: () async {
               Navigator.pop(ctx);
 
-              await CloudSyncService.removeUserNicheTime(
+              await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
                 nicheId: NicheId.smoking.id,
                 hour: _checkinTime!.hour,
                 minute: _checkinTime!.minute,
@@ -1018,7 +1014,7 @@ class _StopSmokingScreenState extends State<StopSmokingScreen>
                       Navigator.pop(ctx);
                       final nicheId = _niche.id;
                       final initialItems =
-                          await CloudSyncService.loadUserNicheTimes(
+                          await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
                               nicheId: nicheId);
                       final initialTimes = initialItems
                           .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))

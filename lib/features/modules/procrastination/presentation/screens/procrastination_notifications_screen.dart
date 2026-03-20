@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 
-class ProcrastinationNotificationsScreen extends StatefulWidget {
+class ProcrastinationNotificationsScreen extends ConsumerStatefulWidget {
   const ProcrastinationNotificationsScreen({super.key});
 
   @override
-  State<ProcrastinationNotificationsScreen> createState() =>
+  ConsumerState<ProcrastinationNotificationsScreen> createState() =>
       _ProcrastinationNotificationsScreenState();
 }
 
 class _ProcrastinationNotificationsScreenState
-    extends State<ProcrastinationNotificationsScreen> {
+    extends ConsumerState<ProcrastinationNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.procrastination);
   int _checkInCount = 0;
   bool _isLoading = true;
@@ -30,7 +29,7 @@ class _ProcrastinationNotificationsScreenState
 
   Future<void> _loadCount() async {
     final checkInTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: _niche.id);
 
     if (mounted) {
       setState(() {
@@ -366,7 +365,7 @@ class _ProcrastinationNotificationsScreenState
     final nicheId = _niche.id; // ID 8
 
     final initialItems =
-        await CloudSyncService.loadUserNicheTimes(nicheId: nicheId);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheId);
     final initialTimes = initialItems
         .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
         .toList();
@@ -387,7 +386,7 @@ class _ProcrastinationNotificationsScreenState
             onChanged: (times) {
               _loadCount();
               // Notifica o GamificationService para recarregar e reagendar
-              Provider.of<GamificationService>(context, listen: false)
+              ref.read(gamificationServiceProvider)
                   .restoreMonitoringSession();
             },
           ),

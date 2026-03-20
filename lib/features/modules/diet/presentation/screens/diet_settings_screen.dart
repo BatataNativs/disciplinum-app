@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/diet_notifications_screen.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/meal_streak_screen.dart';
@@ -19,15 +18,15 @@ import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class DietSettingsScreen extends StatefulWidget {
+class DietSettingsScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const DietSettingsScreen({super.key, this.heroTag});
 
   @override
-  State<DietSettingsScreen> createState() => _DietSettingsScreenState();
+  ConsumerState<DietSettingsScreen> createState() => _DietSettingsScreenState();
 }
 
-class _DietSettingsScreenState extends State<DietSettingsScreen> {
+class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.diet);
   final List<TimeOfDay> _times = [];
   bool _gamificationRunning = false;
@@ -60,8 +59,8 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     try {
       final nId = _niche.nicheId;
       final userTimes =
-          await CloudSyncService.loadUserNicheTimes(nicheId: nId.id);
-      final status = await CloudSyncService.loadModuleStatus(nId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nId.id);
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nId);
 
       final times = userTimes
           .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
@@ -77,7 +76,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
         if (_gamificationRunning) {
           final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+              ref.read(gamificationServiceProvider);
           gamification.scheduleByModule[nId] = List.from(_times);
 
           final granted = await NotificationService.requestPermission();
@@ -119,7 +118,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     // For consistency we check notification perms.
 
     final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+        ref.read(gamificationServiceProvider);
 
     gamification.startMonitoringApps(
       nicheId: _niche.nicheId,
@@ -142,11 +141,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    Provider.of<GamificationService>(context, listen: false)
+    ref.read(gamificationServiceProvider)
         .startModuleCycle(nicheId: _niche.nicheId);
   }
 
@@ -190,7 +189,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+          ref.read(gamificationServiceProvider);
 
       // Reset medals and deactivate
       gamification.resetMedals(
@@ -201,8 +200,8 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
         deactivate: true,
       );
 
-      await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id + 100);
-      await CloudSyncService.saveModuleStatus(
+      await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id + 100);
+      await ref.read(cloudSyncServiceProvider).saveModuleStatus(
           nicheId: _niche.nicheId, isActive: false);
 
       if (mounted) {
@@ -243,11 +242,11 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
                   ..addAll(times);
               });
 
-              await CloudSyncService.removeAllTimesForNiche(
+              await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
                 nicheId: _niche.id + 100,
               );
               for (var t in times) {
-                await CloudSyncService.addUserNicheTime(
+                await ref.read(cloudSyncServiceProvider).addUserNicheTime(
                   nicheId: _niche.id + 100,
                   hour: t.hour,
                   minute: t.minute,
@@ -257,7 +256,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
               // Update gamification if module active
               if (mounted) {
                 final gamification =
-                    Provider.of<GamificationService>(context, listen: false);
+                    ref.read(gamificationServiceProvider);
                 if (gamification.isModuleActive(_niche.nicheId)) {
                   gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
                   gamification.startMonitoringApps(
@@ -280,7 +279,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
       _times.remove(time);
     });
 
-    await CloudSyncService.removeUserNicheTime(
+    await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
       nicheId: _niche.id + 100,
       hour: time.hour,
       minute: time.minute,
@@ -288,7 +287,7 @@ class _DietSettingsScreenState extends State<DietSettingsScreen> {
 
     if (mounted) {
       final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+          ref.read(gamificationServiceProvider);
       if (gamification.isModuleActive(_niche.nicheId)) {
         gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
         gamification.startMonitoringApps(

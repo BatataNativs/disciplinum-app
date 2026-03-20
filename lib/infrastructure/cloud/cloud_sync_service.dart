@@ -1,29 +1,32 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
 import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 class CloudSyncService {
-  static final supabase = Supabase.instance.client;
+  final SupabaseClient supabase;
+  final IsarPreferencesRepository? prefsRepo;
 
-  // CORRIGIDO: Timestamp UTC para sincronização confiável
-  static String _timestampUtc() {
+  CloudSyncService({
+    required this.supabase,
+    this.prefsRepo,
+  });
+
+  // --- MÉTODOS AUXILIARES ---
+
+  String _timestampUtc() {
     return DateTime.now().toUtc().toIso8601String();
   }
 
-  // Usar em todos os lugares que salvam timestamp na nuvem
-  static String _localTimestamp() {
-    // Para compatibilidade, manter nome mas documentar que é UTC
+  String _localTimestamp() {
     return _timestampUtc();
   }
 
-  static Future<T?> _retryOperation<T>(
+  Future<T?> _retryOperation<T>(
     Future<T> Function() operation, {
     int maxRetries = 3,
   }) async {
@@ -42,47 +45,58 @@ class CloudSyncService {
     return null;
   }
 
+  Future<String?> _getUserId() async {
+    final user = supabase.auth.currentUser;
+    if (user != null) return user.id;
+    
+    // Fallback para o Isar se o usuário não estiver na sessão do Supabase (ex: persistência local)
+    if (prefsRepo != null) {
+      return await prefsRepo!.getString('user_id');
+    }
+    return null;
+  }
+
   // --- APPS ---
-  static Future<void> addUserNicheApp({
+  Future<void> addUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_apps').insert({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId.id,
         'app_package': package,
       });
     });
   }
 
-  static Future<void> removeUserNicheApp({
+  Future<void> removeUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_apps').delete().match({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId.id,
         'app_package': package,
       });
     });
   }
 
-  static Future<List<UserNicheApp>> loadUserNicheApps({
+  Future<List<UserNicheApp>> loadUserNicheApps({
     required NicheId nicheId,
   }) async {
     return await _retryOperation(() async {
-          final user = supabase.auth.currentUser;
-          if (user == null) return <UserNicheApp>[];
+          final userId = await _getUserId();
+          if (userId == null) return <UserNicheApp>[];
           final result = await supabase
               .from('user_niche_apps')
               .select('user_id, niche_id, app_package')
-              .eq('user_id', user.id)
+              .eq('user_id', userId)
               .eq('niche_id', nicheId.id);
           return (result as List)
               .map((row) => UserNicheApp.fromJson(row))
@@ -91,31 +105,31 @@ class CloudSyncService {
         [];
   }
 
-  static Future<void> removeAllAppsForNiche({
+  Future<void> removeAllAppsForNiche({
     required NicheId nicheId,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_apps').delete().match({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId.id,
       });
     });
   }
 
   // --- HORÁRIOS ---
-  static Future<void> addUserNicheTime({
+  Future<void> addUserNicheTime({
     required int nicheId,
     required int hour,
     required int minute,
     String? phrase,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_times').insert({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId,
         'hour': hour,
         'minute': minute,
@@ -124,16 +138,16 @@ class CloudSyncService {
     });
   }
 
-  static Future<void> removeUserNicheTime({
+  Future<void> removeUserNicheTime({
     required int nicheId,
     required int hour,
     required int minute,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_times').delete().match({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId,
         'hour': hour,
         'minute': minute,
@@ -141,16 +155,16 @@ class CloudSyncService {
     });
   }
 
-  static Future<List<UserNicheTime>> loadUserNicheTimes({
+  Future<List<UserNicheTime>> loadUserNicheTimes({
     required int nicheId,
   }) async {
     return await _retryOperation(() async {
-          final user = supabase.auth.currentUser;
-          if (user == null) return <UserNicheTime>[];
+          final userId = await _getUserId();
+          if (userId == null) return <UserNicheTime>[];
           final result = await supabase
               .from('user_niche_times')
               .select('user_id, niche_id, hour, minute, phrase')
-              .eq('user_id', user.id)
+              .eq('user_id', userId)
               .eq('niche_id', nicheId);
           return (result as List)
               .map((row) => UserNicheTime.fromJson(row))
@@ -159,53 +173,52 @@ class CloudSyncService {
         [];
   }
 
-  static Future<void> removeAllTimesForNiche({
+  Future<void> removeAllTimesForNiche({
     required int nicheId,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_niche_times').delete().match({
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId,
       });
     });
   }
 
   // --- STATUS E MEDALHAS ---
-  static Future<UserModuleStatus?> loadModuleStatus(NicheId nicheId) async {
-    final result = await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return null;
+  Future<UserModuleStatus?> loadModuleStatus(NicheId nicheId) async {
+    return await _retryOperation<UserModuleStatus?>(() async {
+      final userId = await _getUserId();
+      if (userId == null) return null;
 
       final data = await supabase
           .from('user_module_status')
           .select()
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('niche_id', nicheId.id)
           .maybeSingle();
 
       if (data == null) return null;
       return UserModuleStatus.fromJson(data);
     });
-    return result;
   }
 
-  static Future<void> saveModuleStatus({
+  Future<void> saveModuleStatus({
     required NicheId nicheId,
     required bool isActive,
     int? consecutiveDays,
-    int? focusPeriodsRespected, // NOVO: Períodos de foco respeitados
+    int? focusPeriodsRespected,
     String? maxMedal,
     List<String>? earnedInsignias,
     bool forceClearMedal = false,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
 
       final Map<String, dynamic> partialData = {
-        'user_id': user.id,
+        'user_id': userId,
         'niche_id': nicheId.id,
         'is_active': isActive,
         'last_updated': _localTimestamp(),
@@ -216,7 +229,7 @@ class CloudSyncService {
       }
 
       if (focusPeriodsRespected != null) {
-        partialData['focus_periods_respected'] = focusPeriodsRespected; // NOVO
+        partialData['focus_periods_respected'] = focusPeriodsRespected;
       }
 
       if (forceClearMedal) {
@@ -236,19 +249,14 @@ class CloudSyncService {
     });
   }
 
-  static Future<bool> syncNow({required BuildContext context}) async {
-    try {
-      final gamificationService = Provider.of<GamificationService>(context, listen: false);
-      await gamificationService.refreshAllDataFromCloud();
-      return true;
-    } catch (e) {
-      LoggerService.instance.e('Erro durante sincronização global', error: e);
-      return false;
-    }
+  Future<bool> syncNow() async {
+    // A sincronização global agora deve ser iniciada pelo GamificationService
+    // usando este CloudSyncService como ferramenta.
+    return true;
   }
 
   // --- ENTITLEMENTS ---
-  static Future<void> addEntitlement({
+  Future<void> addEntitlement({
     required String entitlementType,
     int? nicheId,
     required String source,
@@ -256,10 +264,10 @@ class CloudSyncService {
     Map<String, dynamic>? metadata,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       await supabase.from('user_entitlements').insert({
-        'user_id': user.id,
+        'user_id': userId,
         'entitlement_type': entitlementType,
         'niche_id': nicheId,
         'source': source,
@@ -269,15 +277,15 @@ class CloudSyncService {
     });
   }
 
-  static Future<void> removeEntitlement({
+  Future<void> removeEntitlement({
     required String entitlementType,
     int? nicheId,
   }) async {
     await _retryOperation(() async {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
       final matchData = <String, Object>{
-        'user_id': user.id,
+        'user_id': userId,
         'entitlement_type': entitlementType,
       };
       if (nicheId != null) {
@@ -287,18 +295,18 @@ class CloudSyncService {
     });
   }
 
-  static Future<List<UserEntitlement>> loadEntitlements({
+  Future<List<UserEntitlement>> loadEntitlements({
     String? entitlementType,
     int? nicheId,
   }) async {
     return await _retryOperation(() async {
-          final user = supabase.auth.currentUser;
-          if (user == null) return <UserEntitlement>[];
+          final userId = await _getUserId();
+          if (userId == null) return <UserEntitlement>[];
 
           var query = supabase
               .from('user_entitlements')
               .select()
-              .eq('user_id', user.id);
+              .eq('user_id', userId);
 
           if (entitlementType != null) {
             query = query.eq('entitlement_type', entitlementType);
@@ -317,51 +325,35 @@ class CloudSyncService {
         [];
   }
 
-  static Future<void> syncAllEntitlements({required BuildContext context}) async {
+  /// Sincroniza entitlements, idealmente chamado pelo IapService ou GamificationService
+  Future<void> syncAllEntitlements({
+    required Future<void> Function(NicheId, String type) onUnlock,
+  }) async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = await _getUserId();
+      if (userId == null) return;
 
       LoggerService.instance.i('Sincronizando entitlements do usuário...');
-      
-      // Carrega todos os entitlements da nuvem
       final cloudEntitlements = await loadEntitlements();
       
-      // Verifica se o context ainda está válido antes de usar Provider
-      if (context.mounted) {
-        // Sincroniza com GamificationService usando Provider
-        final gamification = Provider.of<GamificationService>(context, listen: false);
-      
-      // Sincroniza desbloqueios por Ads (sem regravar na nuvem)
-      final notificationEntitlements = cloudEntitlements
-        .where((e) => e.entitlementType == 'notification');
-      
+      final notificationEntitlements = cloudEntitlements.where((e) => e.entitlementType == 'notification');
       for (final entitlement in notificationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
-          if (nicheId != null) {
-            await gamification.syncUnlockNotificationFromCloud(nicheId);
-          }
+          if (nicheId != null) await onUnlock(nicheId, 'notification');
         }
       }
-      
-      // Sincroniza desbloqueios por Motivações (sem regravar na nuvem)
-      final motivationEntitlements = cloudEntitlements
-        .where((e) => e.entitlementType == 'motivation');
-      
+    
+      final motivationEntitlements = cloudEntitlements.where((e) => e.entitlementType == 'motivation');
       for (final entitlement in motivationEntitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
-          if (nicheId != null) {
-            await gamification.syncUnlockMotivationFromCloud(nicheId);
-          }
+          if (nicheId != null) await onUnlock(nicheId, 'motivation');
         }
       }
-      
-      LoggerService.instance.i('Sincronização de entitlements concluída.');
-      } // Fecha o if (context.mounted)
     } catch (e) {
       LoggerService.instance.e('Erro na sincronização de entitlements', error: e);
     }
   }
+
 }

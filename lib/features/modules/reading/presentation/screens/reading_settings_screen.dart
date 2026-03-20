@@ -2,27 +2,34 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
-class ReadingSettingsScreen extends StatefulWidget {
+class ReadingSettingsScreen extends ConsumerStatefulWidget {
   const ReadingSettingsScreen({super.key});
 
   @override
-  State<ReadingSettingsScreen> createState() => _ReadingSettingsScreenState();
+  ConsumerState<ReadingSettingsScreen> createState() => _ReadingSettingsScreenState();
 }
 
-class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
+class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
   TimeOfDay? _notificationTime;
 
   @override
   void initState() {
     super.initState();
-    // Carregar horário salvo
-    final service = Provider.of<ReadingService>(context, listen: false);
-    _notificationTime = service.savedNotificationTime;
+    _loadSavedTime();
+  }
+
+  Future<void> _loadSavedTime() async {
+    final time = await ref.read(readingServiceProvider).getSavedNotificationTime();
+    if (mounted) {
+      setState(() {
+        _notificationTime = time;
+      });
+    }
   }
 
   Future<void> _selectTime(BuildContext context) async {
@@ -38,8 +45,7 @@ class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
         _notificationTime = picked;
       });
       // Salvar no service
-      Provider.of<ReadingService>(localContext, listen: false)
-          .scheduleDailyReminder(picked);
+      ref.read(readingServiceProvider).scheduleDailyReminder(picked);
 
       if (localContext.mounted) {
         EnhancedSnackBarHelper.showSuccess(localContext, 'Horário de leitura atualizado! 📚');
@@ -123,9 +129,7 @@ class _ReadingSettingsScreenState extends State<ReadingSettingsScreen> {
                             const SizedBox(width: 12),
                             IconButton(
                               onPressed: () {
-                                Provider.of<ReadingService>(context,
-                                        listen: false)
-                                    .cancelDailyReminder();
+                                ref.read(readingServiceProvider).cancelDailyReminder();
                                 setState(() {
                                   _notificationTime = null;
                                 });

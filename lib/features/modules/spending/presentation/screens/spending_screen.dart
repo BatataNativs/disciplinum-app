@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-
 import 'package:disciplinum/features/modules/spending/presentation/screens/spending_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
@@ -372,8 +369,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     try {
       final nicheId = _niche.nicheId;
       final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
-      final status = await CloudSyncService.loadModuleStatus(nicheId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: nicheId);
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nicheId);
 
       final apps = userApps.map((a) => a.appPackage).toList();
 
@@ -386,8 +383,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+          final gamification = ref.read(gamificationServiceProvider);
           gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
@@ -429,8 +425,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
 
     gamification.startMonitoringApps(
@@ -454,11 +449,11 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: NicheId.spending,
       isActive: true,
     );
-    Provider.of<GamificationService>(context, listen: false)
+    ref.read(gamificationServiceProvider)
         .startModuleCycle(nicheId: NicheId.spending);
   }
 
@@ -503,8 +498,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     if (!mounted) return;
 
     HapticFeedback.heavyImpact();
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.stopMonitoringApps();
 
     _resetMedalsForModule(
@@ -525,7 +519,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic);
     }
-    CloudSyncService.saveModuleStatus(
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: NicheId.spending,
       isActive: false,
     );
@@ -543,8 +537,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.resetMedals(
       NicheId.spending,
       notificationTitle: notificationTitle,
@@ -572,11 +565,11 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(
+              await ref.read(cloudSyncServiceProvider).removeAllAppsForNiche(
                 nicheId: NicheId.spending,
               );
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
+                await ref.read(cloudSyncServiceProvider).addUserNicheApp(
                   nicheId: NicheId.spending,
                   package: pkg,
                 );
@@ -609,15 +602,14 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     setState(() {
       _selectedApps.remove(package);
     });
-    await CloudSyncService.removeUserNicheApp(
+    await ref.read(cloudSyncServiceProvider).removeUserNicheApp(
       nicheId: NicheId.spending,
       package: package,
     );
     // Se o módulo estiver rodando, atualizar o serviço de monitoramento
     if (_gamificationRunning) {
       if (!mounted) return;
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+      final gamification = ref.read(gamificationServiceProvider);
       gamification.monitoredApps = Set<String>.from(_selectedApps);
     }
   }

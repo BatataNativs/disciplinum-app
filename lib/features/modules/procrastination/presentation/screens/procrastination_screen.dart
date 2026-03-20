@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:intl/intl.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/shared/widgets/dialogs/task_creation_dialog.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_notifications_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_stats_screen.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 
-class ProcrastinationScreen extends StatefulWidget {
+class ProcrastinationScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   final int initialTabIndex;
 
@@ -28,10 +27,10 @@ class ProcrastinationScreen extends StatefulWidget {
   });
 
   @override
-  State<ProcrastinationScreen> createState() => _ProcrastinationScreenState();
+  ConsumerState<ProcrastinationScreen> createState() => _ProcrastinationScreenState();
 }
 
-class _ProcrastinationScreenState extends State<ProcrastinationScreen>
+class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedListId = 'default';
@@ -55,8 +54,8 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final service = Provider.of<ProcrastinationService>(context);
-    final gamification = Provider.of<GamificationService>(context);
+    final service = ref.watch(procrastinationServiceProvider);
+    final gamification = ref.watch(gamificationServiceProvider);
     final isActive = gamification.isModuleActive(NicheId.procrastination);
 
     return Scaffold(
@@ -1021,8 +1020,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
   }
 
   Future<void> _toggleModule(bool isActive) async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
 
     if (isActive) {
       final confirmed = await showDialog<bool>(
@@ -1074,7 +1072,7 @@ class _ProcrastinationScreenState extends State<ProcrastinationScreen>
 
       if (granted) {
         HapticFeedback.heavyImpact();
-        CloudSyncService.saveModuleStatus(
+        ref.read(cloudSyncServiceProvider).saveModuleStatus(
           nicheId: NicheId.procrastination,
           isActive: true,
         );

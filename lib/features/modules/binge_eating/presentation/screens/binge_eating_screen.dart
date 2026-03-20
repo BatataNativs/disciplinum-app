@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/binge_eating_notifications_screen.dart';
@@ -8,15 +9,12 @@ import 'package:disciplinum/features/modules/binge_eating/presentation/screens/d
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
-import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
@@ -25,15 +23,15 @@ import 'package:disciplinum/shared/widgets/sections/niche_checkin_section.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 import 'dart:async';
 
-class BingeEatingScreen extends StatefulWidget {
+class BingeEatingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const BingeEatingScreen({super.key, this.heroTag});
 
   @override
-  State<BingeEatingScreen> createState() => _BingeEatingScreenState();
+  ConsumerState<BingeEatingScreen> createState() => _BingeEatingScreenState();
 }
 
-class _BingeEatingScreenState extends State<BingeEatingScreen>
+class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     with WidgetsBindingObserver {
   final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
   final List<String> _selectedApps = [];
@@ -83,14 +81,15 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
-      final isGuest = await PreferencesService.isGuestMode();
+      final prefs = ref.read(preferencesServiceProvider);
+      final isGuest = await prefs.isGuestMode();
       final List<UserNicheTime> checkinTimes;
 
       if (isGuest) {
-        checkinTimes = await PreferencesService.loadUserNicheTimes(
+        checkinTimes = await prefs.loadUserNicheTimes(
             nicheId: _niche.id + 200);
       } else {
-        checkinTimes = await CloudSyncService.loadUserNicheTimes(
+        checkinTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
             nicheId: _niche.id + 200);
       }
 
@@ -115,20 +114,20 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
   Future<void> _syncCheckInWithGamification(
       {bool onlySyncSchedules = false}) async {
-    final isGuest = await PreferencesService.isGuestMode();
+    final prefs = ref.read(preferencesServiceProvider);
+    final isGuest = await prefs.isGuestMode();
     final List<UserNicheTime> times;
 
     if (isGuest) {
-      times = await PreferencesService.loadUserNicheTimes(
+      times = await prefs.loadUserNicheTimes(
           nicheId: _niche.id + 200);
     } else {
-      times = await CloudSyncService.loadUserNicheTimes(
+      times = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
           nicheId: _niche.id + 200);
     }
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
 
     gamification.scheduleByModule[_niche.nicheId] =
         times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
@@ -167,8 +166,8 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     try {
       final nicheId = _niche.nicheId;
       final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
-      final status = await CloudSyncService.loadModuleStatus(nicheId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: nicheId);
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nicheId);
       final apps = userApps.map((a) => a.appPackage).toList();
 
       if (mounted) {
@@ -180,8 +179,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+          final gamification = ref.read(gamificationServiceProvider);
           gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
@@ -219,7 +217,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
       _selectedApps.remove(packageName);
     });
 
-    await CloudSyncService.removeUserNicheApp(
+    await ref.read(cloudSyncServiceProvider).removeUserNicheApp(
       nicheId: _niche.nicheId,
       package: packageName,
     );
@@ -250,8 +248,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
 
     if (!mounted) return;
 
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
     gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
 
@@ -270,9 +267,8 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(nicheId: _niche.nicheId, isActive: true);
-    Provider.of<GamificationService>(context, listen: false)
-        .startModuleCycle(nicheId: _niche.nicheId);
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: _niche.nicheId, isActive: true);
+    ref.read(gamificationServiceProvider).startModuleCycle(nicheId: _niche.nicheId);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -314,8 +310,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+      final gamification = ref.read(gamificationServiceProvider);
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
@@ -348,8 +343,7 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
     bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.resetMedals(
       _niche.nicheId,
       notificationTitle: notificationTitle,
@@ -376,9 +370,9 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(nicheId: _niche.nicheId);
+              await ref.read(cloudSyncServiceProvider).removeAllAppsForNiche(nicheId: _niche.nicheId);
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
+                await ref.read(cloudSyncServiceProvider).addUserNicheApp(
                     nicheId: _niche.nicheId, package: pkg);
               }
             },
@@ -748,17 +742,18 @@ class _BingeEatingScreenState extends State<BingeEatingScreen>
             onPressed: () async {
               Navigator.pop(ctx);
 
-              final isGuest = await PreferencesService.isGuestMode();
+              final prefs = ref.read(preferencesServiceProvider);
+              final isGuest = await prefs.isGuestMode();
 
               // Remove o horário específico
               if (isGuest) {
-                await PreferencesService.removeUserNicheTime(
+                await prefs.removeUserNicheTime(
                   nicheId: _niche.id + 200,
                   hour: _checkinTime!.hour,
                   minute: _checkinTime!.minute,
                 );
               } else {
-                await CloudSyncService.removeUserNicheTime(
+                await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
                   nicheId: _niche.id + 200,
                   hour: _checkinTime!.hour,
                   minute: _checkinTime!.minute,

@@ -4,14 +4,17 @@ import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 class SmokingService {
+  final PreferencesService _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  SmokingService(this._prefs);
 
   // Carregar configurações do usuário
   Future<SmokingSettingsModel?> getSettings() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        return await PreferencesService.getSmokingSettings();
+        return await _prefs.getSmokingSettings();
       }
 
       final response = await _supabase
@@ -34,7 +37,7 @@ class SmokingService {
   Future<void> saveSettings(SmokingSettingsModel settings) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) {
-      await PreferencesService.saveSmokingSettings(settings);
+      await _prefs.saveSmokingSettings(settings);
       return;
     }
 

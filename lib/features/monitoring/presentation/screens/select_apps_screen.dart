@@ -1,12 +1,12 @@
 import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:typed_data';
 
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -85,15 +85,15 @@ class _AsyncAppIconState extends State<AsyncAppIcon> {
   }
 }
 
-class SelectAppsScreen extends StatefulWidget {
+class SelectAppsScreen extends ConsumerStatefulWidget {
   final SelectAppsScreenArgs args;
   const SelectAppsScreen({super.key, required this.args});
 
   @override
-  State<SelectAppsScreen> createState() => _SelectAppsScreenState();
+  ConsumerState<SelectAppsScreen> createState() => _SelectAppsScreenState();
 }
 
-class _SelectAppsScreenState extends State<SelectAppsScreen> {
+class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
   final Set<String> _selected = <String>{};
   String _searchQuery = '';
 
@@ -114,13 +114,14 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
   Future<void> _loadInitialData() async {
     setState(() => _isLoadingApps = true);
 
-    _isGuest = await PreferencesService.isGuestMode();
+    final prefs = ref.read(preferencesServiceProvider);
+    _isGuest = await prefs.isGuestMode();
 
     try {
       final results = await Future.wait([
         _isGuest
-            ? PreferencesService.loadUserNicheApps(nicheId: _nicheId)
-            : CloudSyncService.loadUserNicheApps(nicheId: _nicheId),
+            ? prefs.loadUserNicheApps(nicheId: _nicheId)
+            : ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: _nicheId),
         InstalledAppService().getApps(
           excludeSystemApps: false,
         ),
@@ -203,17 +204,19 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     }
 
     if (_isGuest) {
-      await PreferencesService.removeAllAppsForNiche(nicheId: _nicheId);
+      final prefs = ref.read(preferencesServiceProvider);
+      await prefs.removeAllAppsForNiche(nicheId: _nicheId);
       for (final app in _selected) {
-        await PreferencesService.addUserNicheApp(
+        await prefs.addUserNicheApp(
           nicheId: _nicheId,
           package: app,
         );
       }
     } else {
-      await CloudSyncService.removeAllAppsForNiche(nicheId: _nicheId);
+      final cloudSync = ref.read(cloudSyncServiceProvider);
+      await cloudSync.removeAllAppsForNiche(nicheId: _nicheId);
       for (final app in _selected) {
-        await CloudSyncService.addUserNicheApp(
+        await cloudSync.addUserNicheApp(
           nicheId: _nicheId,
           package: app,
         );
@@ -234,12 +237,12 @@ class _SelectAppsScreenState extends State<SelectAppsScreen> {
     });
 
     if (_isGuest) {
-      await PreferencesService.removeUserNicheApp(
+      await ref.read(preferencesServiceProvider).removeUserNicheApp(
         nicheId: _nicheId,
         package: packageName,
       );
     } else {
-      await CloudSyncService.removeUserNicheApp(
+      await ref.read(cloudSyncServiceProvider).removeUserNicheApp(
         nicheId: _nicheId,
         package: packageName,
       );

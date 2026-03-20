@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/auth/data/datasources/avatar_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
@@ -12,16 +13,15 @@ import 'package:disciplinum/features/profile/presentation/widgets/edit_profile_d
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 import 'package:disciplinum/shared/widgets/lojinha.dart';
-import 'package:disciplinum/core/theme/theme_controller.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _bioController = TextEditingController();
   IapService? _iapService;
@@ -32,12 +32,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService = ref.read(authServiceProvider);
       _nameController.text = authService.userProfile?['name'] ?? '';
       _bioController.text = authService.userProfile?['bio'] ?? '';
 
       // Configura o feedback visual para as compras nesta tela
-      _iapService = Provider.of<IapService>(context, listen: false);
+      _iapService = ref.read(iapServiceProvider);
       _iapService!.onPurchaseResult = (success) {
         if (!mounted) return;
         
@@ -57,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = ref.read(authServiceProvider);
     if (_nameController.text.isEmpty) {
       _nameController.text = authService.userProfile?['name'] ?? '';
     }
@@ -79,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final ok = await AvatarService.uploadAvatar(userId: userId, file: file);
 
       if (!mounted) return;
-      await Provider.of<AuthService>(context, listen: false).loadUserProfile();
+      await ref.read(authServiceProvider).loadUserProfile();
 
       if (!mounted) return;
       setState(() {
@@ -641,7 +641,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () {
                         Navigator.pop(dialogContext);
                         final iapService =
-                            Provider.of<IapService>(context, listen: false);
+                            ref.read(iapServiceProvider);
                         
                         // Mostra snackbar de início da compra
                         EnhancedSnackBarHelper.showInfo(context, 'Iniciando compra de Dark Mode...');
@@ -691,7 +691,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showThemeOptionsDialog(BuildContext context, IapService iap) {
     final themeController =
-        Provider.of<ThemeController>(context, listen: false);
+        ref.read(themeControllerProvider.notifier);
     final isDark = themeController.isDarkMode;
 
     showDialog(
@@ -1051,8 +1051,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
-    final iap = context.watch<IapService>();
+    final authService = ref.watch(authServiceProvider);
+    final iap = ref.watch(iapServiceProvider);
     final theme = Theme.of(context);
 
     final userName = authService.isAuthenticated

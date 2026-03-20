@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 
-class ReadingNotificationsScreen extends StatefulWidget {
+class ReadingNotificationsScreen extends ConsumerStatefulWidget {
   const ReadingNotificationsScreen({super.key});
 
   @override
-  State<ReadingNotificationsScreen> createState() =>
+  ConsumerState<ReadingNotificationsScreen> createState() =>
       _ReadingNotificationsScreenState();
 }
 
 class _ReadingNotificationsScreenState
-    extends State<ReadingNotificationsScreen> {
+    extends ConsumerState<ReadingNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.reading);
   int _reminderCount = 0;
   bool _isLoading = true;
@@ -30,7 +29,7 @@ class _ReadingNotificationsScreenState
 
   Future<void> _loadCount() async {
     final reminderTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: _niche.id);
 
     if (mounted) {
       setState(() {
@@ -235,10 +234,10 @@ class _ReadingNotificationsScreenState
                 initialTimes: [], // ScheduleScreen carrega automaticamente
                 onChanged: (times) {
                   // Salva os novos horários
-                  CloudSyncService.removeAllTimesForNiche(
+                  ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
                       nicheId: _niche.id);
                   for (final time in times) {
-                    CloudSyncService.addUserNicheTime(
+                    ref.read(cloudSyncServiceProvider).addUserNicheTime(
                       nicheId: _niche.id,
                       hour: time.hour,
                       minute: time.minute,
@@ -246,7 +245,7 @@ class _ReadingNotificationsScreenState
                     );
                   }
                   // Reagendar notificações
-                  Provider.of<GamificationService>(context, listen: false)
+                  ref.read(gamificationServiceProvider)
                       .restoreMonitoringSession();
                   // Atualiza o contador
                   _loadCount();

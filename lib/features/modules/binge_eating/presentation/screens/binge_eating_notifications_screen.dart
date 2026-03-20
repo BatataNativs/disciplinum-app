@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 
-class BingeEatingNotificationsScreen extends StatefulWidget {
+class BingeEatingNotificationsScreen extends ConsumerStatefulWidget {
   const BingeEatingNotificationsScreen({super.key});
 
   @override
-  State<BingeEatingNotificationsScreen> createState() =>
+  ConsumerState<BingeEatingNotificationsScreen> createState() =>
       _BingeEatingNotificationsScreenState();
 }
 
 class _BingeEatingNotificationsScreenState
-    extends State<BingeEatingNotificationsScreen> {
+    extends ConsumerState<BingeEatingNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
   int _checkinCount = 0;
   bool _isLoading = true;
@@ -31,7 +30,7 @@ class _BingeEatingNotificationsScreenState
   Future<void> _loadCounts() async {
     // Carrega horários de check-in (ID + 200)
     final checkinTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id + 200);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: _niche.id + 200);
 
     if (mounted) {
       setState(() {
@@ -244,10 +243,10 @@ class _BingeEatingNotificationsScreenState
                 initialTimes: [], // ScheduleScreen carrega automaticamente
                 onChanged: (times) async {
                   // Salva os novos horários
-                  CloudSyncService.removeAllTimesForNiche(
+                  ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
                       nicheId: _niche.id + 200);
                   for (final time in times) {
-                    CloudSyncService.addUserNicheTime(
+                    ref.read(cloudSyncServiceProvider).addUserNicheTime(
                       nicheId: _niche.id + 200,
                       hour: time.hour,
                       minute: time.minute,
@@ -255,7 +254,7 @@ class _BingeEatingNotificationsScreenState
                     );
                   }
                   // Reagendar notificações
-                  final gamification = Provider.of<GamificationService>(context, listen: false);
+                  final gamification = ref.read(gamificationServiceProvider);
                   await gamification.restoreMonitoringSession();
                   // Atualiza o contador
                   _loadCounts();

@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 
-class BingeCheckinScheduleScreen extends StatefulWidget {
+class BingeCheckinScheduleScreen extends ConsumerStatefulWidget {
   const BingeCheckinScheduleScreen({super.key});
 
   @override
-  State<BingeCheckinScheduleScreen> createState() => _BingeCheckinScheduleScreenState();
+  ConsumerState<BingeCheckinScheduleScreen> createState() => _BingeCheckinScheduleScreenState();
 }
 
-class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen> {
+class _BingeCheckinScheduleScreenState extends ConsumerState<BingeCheckinScheduleScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.bingeEating);
   int _checkinCount = 0;
   bool _isLoading = true;
@@ -28,7 +29,7 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
   Future<void> _loadCounts() async {
     // Niche ID + 100 para check-in diário
     final checkinTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id + 200);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: _niche.id + 200);
 
     if (mounted) {
       setState(() {
@@ -189,7 +190,7 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
     final navigatorContext = context;
 
     // Carrega horários existentes
-    final existingTimes = await CloudSyncService.loadUserNicheTimes(nicheId: _niche.id + 200);
+    final existingTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: _niche.id + 200);
 
     if (!mounted) return;
 
@@ -207,9 +208,9 @@ class _BingeCheckinScheduleScreenState extends State<BingeCheckinScheduleScreen>
             initialTimes: existingTimes.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList(),
             onChanged: (times) {
               // Salva os novos horários
-              CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id + 200);
+              ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id + 200);
               for (final time in times) {
-                CloudSyncService.addUserNicheTime(
+                ref.read(cloudSyncServiceProvider).addUserNicheTime(
                   nicheId: _niche.id + 200,
                   hour: time.hour,
                   minute: time.minute,

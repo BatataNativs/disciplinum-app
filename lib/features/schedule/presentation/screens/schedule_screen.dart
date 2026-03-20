@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/core/storage/preferences_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
 class ScheduleScreenArgs {
   final int maxSlots;
@@ -18,15 +18,15 @@ class ScheduleScreenArgs {
   });
 }
 
-class ScheduleScreen extends StatefulWidget {
+class ScheduleScreen extends ConsumerStatefulWidget {
   final ScheduleScreenArgs args;
   const ScheduleScreen({super.key, required this.args});
 
   @override
-  State<ScheduleScreen> createState() => _ScheduleScreenState();
+  ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen> {
+class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   late List<TimeOfDay> _times;
   bool _loading = true;
   bool _isGuest = false;
@@ -38,10 +38,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _loadTimes() async {
-    _isGuest = await PreferencesService.isGuestMode();
+    final prefs = ref.read(preferencesServiceProvider);
+    _isGuest = await prefs.isGuestMode();
 
     if (_isGuest) {
-      final guestTimes = await PreferencesService.loadUserNicheTimes(
+      final guestTimes = await prefs.loadUserNicheTimes(
           nicheId: widget.args.nicheId);
 
       if (guestTimes.isNotEmpty) {
@@ -52,7 +53,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         _times = List.from(widget.args.initialTimes);
       }
     } else {
-      final userTimes = await CloudSyncService.loadUserNicheTimes(
+      final userTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
           nicheId: widget.args.nicheId);
 
       if (userTimes.isNotEmpty) {
@@ -78,22 +79,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Future<void> _saveTimes() async {
     if (_isGuest) {
-      await PreferencesService.removeAllTimesForNiche(
+      final prefs = ref.read(preferencesServiceProvider);
+      await prefs.removeAllTimesForNiche(
           nicheId: widget.args.nicheId);
 
       for (final t in _times) {
-        await PreferencesService.addUserNicheTime(
+        await prefs.addUserNicheTime(
           nicheId: widget.args.nicheId,
           hour: t.hour,
           minute: t.minute,
         );
       }
     } else {
-      await CloudSyncService.removeAllTimesForNiche(
+      final cloudSync = ref.read(cloudSyncServiceProvider);
+      await cloudSync.removeAllTimesForNiche(
           nicheId: widget.args.nicheId);
 
       for (final t in _times) {
-        await CloudSyncService.addUserNicheTime(
+        await cloudSync.addUserNicheTime(
           nicheId: widget.args.nicheId,
           hour: t.hour,
           minute: t.minute,
@@ -187,13 +190,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     if (!shouldRemove) return;
 
     if (_isGuest) {
-      await PreferencesService.removeUserNicheTime(
+      await ref.read(preferencesServiceProvider).removeUserNicheTime(
         nicheId: widget.args.nicheId,
         hour: _times[index].hour,
         minute: _times[index].minute,
       );
     } else {
-      await CloudSyncService.removeUserNicheTime(
+      await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
         nicheId: widget.args.nicheId,
         hour: _times[index].hour,
         minute: _times[index].minute,

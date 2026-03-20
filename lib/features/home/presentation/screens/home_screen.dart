@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
@@ -11,16 +12,15 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   bool _permissionsChecked = false;
   late final ConfettiController _confettiController;
 
@@ -73,8 +73,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           bool isAccessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
           if (isAccessibilityGranted && mounted) {
-            final gamification =
-                Provider.of<GamificationService>(context, listen: false);
+            final gamification = ref.read(gamificationServiceProvider);
             await gamification.restoreMonitoringSession();
           }
         }
@@ -83,8 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _checkPendingMedals() {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     final pending = gamification.pendingMedals;
 
     if (pending.isNotEmpty) {
@@ -137,8 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   onPressed: () {
                     // Consome e tenta mostrar próxima se houver
-                    Provider.of<GamificationService>(context, listen: false)
-                        .consumePendingMedal(medalData);
+                    ref.read(gamificationServiceProvider).consumePendingMedal(medalData);
                     Navigator.of(ctx).pop();
 
                     // Pequeno delay para animação de fechar e abrir a próxima
@@ -159,8 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _checkPendingInsignias() {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     final pending = gamification.pendingInsignias;
     if (pending.isNotEmpty) {
       _showInsigniaDialog(pending.first);
@@ -251,8 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       dialogConfettiController.stop();
                       dialogConfettiController.dispose(); // Safe para dialog-specific controller
                       
-                      Provider.of<GamificationService>(context, listen: false)
-                          .consumePendingInsignia(insigniaData);
+                      ref.read(gamificationServiceProvider).consumePendingInsignia(insigniaData);
                       Navigator.of(ctx).pop();
                       
                       // se houver outra insignia pendente, o diálogo abre novamente
@@ -503,9 +498,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             const SizedBox(height: 32),
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            return Selector<GamificationService, List<NicheId>>(
-                              selector: (context, service) => service.diasConsecutivosByModule.keys.toList(),
-                              builder: (context, activeModules, child) {
+                            return Consumer(
+                              builder: (context, ref, child) {
+                                final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
                                 return _buildActiveModulesSection(
                                   activeModules, isDark, textTheme);
                               },

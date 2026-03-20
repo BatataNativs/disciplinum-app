@@ -12,11 +12,9 @@ import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 
 class GamificationAwardEngine {
-  static final GamificationAwardEngine _instance =
-      GamificationAwardEngine._internal();
-  static GamificationAwardEngine get instance => _instance;
+  final CloudSyncService _cloudSync;
 
-  GamificationAwardEngine._internal();
+  GamificationAwardEngine(this._cloudSync);
 
   static const Map<int, FocusInsignia> _focusMilestones = {
     0: FocusInsignia.madeira,      // 🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
@@ -53,7 +51,7 @@ class GamificationAwardEngine {
     service.addPendingInsignia(data);
     await _sendInsigniaNotification(insignia, niche.name);
 
-    await CloudSyncService.saveModuleStatus(
+    await _cloudSync.saveModuleStatus(
       nicheId: NicheId.focus,
       isActive: true,
       earnedInsignias: service.earnedFocusInsignias
@@ -187,7 +185,7 @@ class GamificationAwardEngine {
     service.addEarnedFocusInsignia(insignia);
     await service.saveFocusInsignias();
 
-    await CloudSyncService.saveModuleStatus(
+    await _cloudSync.saveModuleStatus(
       nicheId: NicheId.focus,
       isActive: true,
       earnedInsignias: service.earnedFocusInsignias

@@ -1,27 +1,26 @@
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart' show NicheId;
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/shared/widgets/lojinha.dart';
-import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
+import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 
-class FrasesMotivacionaisScreen extends StatefulWidget {
+class FrasesMotivacionaisScreen extends ConsumerStatefulWidget {
   const FrasesMotivacionaisScreen({super.key});
 
   @override
-  State<FrasesMotivacionaisScreen> createState() =>
+  ConsumerState<FrasesMotivacionaisScreen> createState() =>
       _FrasesMotivacionaisScreenState();
 }
 
-class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
+class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
   bool _isLoading = true;
   List<PhraseSlot> _slots = [];
@@ -33,14 +32,13 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   Future<void> _loadData() async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    final iap = Provider.of<IapService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
+    final iap = ref.read(iapServiceProvider);
 
     // Niche ID + 100 para motivação
     final nicheIdMotivation = _niche.id + 100;
     final serverTimes =
-        await CloudSyncService.loadUserNicheTimes(nicheId: nicheIdMotivation);
+        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheIdMotivation);
     final customPhrases = gamification.customPhrases[_niche.nicheId] ?? [];
 
     setState(() {
@@ -86,19 +84,18 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   Future<void> _saveData() async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
-    final iap = Provider.of<IapService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
+    final iap = ref.read(iapServiceProvider);
 
     setState(() => _isLoading = true);
     final nicheIdMotivation = _niche.id + 100;
 
     // 1. Limpa horários antigos no Supabase
-    await CloudSyncService.removeAllTimesForNiche(nicheId: nicheIdMotivation);
+    await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: nicheIdMotivation);
 
     // 2. Salva novos horários e frases
     for (final slot in _slots) {
-      await CloudSyncService.addUserNicheTime(
+      await ref.read(cloudSyncServiceProvider).addUserNicheTime(
         nicheId: nicheIdMotivation,
         hour: slot.time.hour,
         minute: slot.time.minute,
@@ -130,9 +127,8 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
 
   void _addSlot() {
     if (_slots.length >= 8) return;
-    final iap = Provider.of<IapService>(context, listen: false);
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final iap = ref.read(iapServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider);
     setState(() {
       _slots.add(PhraseSlot(
         text: GamificationMessages.getModuleMessage(
@@ -181,9 +177,8 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final iap = Provider.of<IapService>(context);
-
-    final gamification = Provider.of<GamificationService>(context);
+    final iap = ref.watch(iapServiceProvider);
+    final gamification = ref.watch(gamificationServiceProvider);
 
     // Define se o usuário pode EDITAR O TEXTO (IAP Global ou Desbloqueio Local via Ad)
     final bool canEditText = iap.isMotivationPhrasesUnlocked ||
@@ -392,9 +387,8 @@ class _FrasesMotivacionaisScreenState extends State<FrasesMotivacionaisScreen> {
   }
 
   void _showUnlockDialog() {
-    final adService = Provider.of<AdService>(context, listen: false);
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final adService = ref.read(adServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider);
 
     adService.loadRewardedAd();
 

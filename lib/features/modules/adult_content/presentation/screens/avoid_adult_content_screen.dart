@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/features/modules/adult_content/presentation/screens/avoid_adult_content_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/features/modules/adult_content/presentation/widgets/my_progress_adult_content.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
@@ -20,16 +19,16 @@ import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class AvoidAdultContentScreen extends StatefulWidget {
+class AvoidAdultContentScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const AvoidAdultContentScreen({super.key, this.heroTag});
 
   @override
-  State<AvoidAdultContentScreen> createState() =>
+  ConsumerState<AvoidAdultContentScreen> createState() =>
       _AvoidAdultContentScreenState();
 }
 
-class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
+class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.adultContent);
   final List<String> _selectedApps = [];
   bool _gamificationRunning = false;
@@ -63,8 +62,8 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     try {
       final nicheId = _niche.nicheId;
       final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
-      final status = await CloudSyncService.loadModuleStatus(nicheId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: nicheId);
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nicheId);
       final apps = userApps.map((a) => a.appPackage).toList();
 
       if (mounted) {
@@ -77,7 +76,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
 
         if (_gamificationRunning) {
           final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+              ref.read(gamificationServiceProvider);
           gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
@@ -109,7 +108,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       _selectedApps.remove(packageName);
     });
 
-    await CloudSyncService.removeUserNicheApp(
+    await ref.read(cloudSyncServiceProvider).removeUserNicheApp(
       nicheId: _niche.nicheId,
       package: packageName,
     );
@@ -141,7 +140,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     if (!mounted) return;
 
     final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+        ref.read(gamificationServiceProvider);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
     gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
 
@@ -160,11 +159,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    Provider.of<GamificationService>(context, listen: false)
+    ref.read(gamificationServiceProvider)
         .startModuleCycle(nicheId: _niche.nicheId);
   }
 
@@ -208,7 +207,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+          ref.read(gamificationServiceProvider);
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
@@ -242,7 +241,7 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
     bool deactivate = false,
   }) {
     final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+        ref.read(gamificationServiceProvider);
     gamification.resetMedals(
       _niche.nicheId,
       notificationTitle: notificationTitle,
@@ -269,11 +268,11 @@ class _AvoidAdultContentScreenState extends State<AvoidAdultContentScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(
+              await ref.read(cloudSyncServiceProvider).removeAllAppsForNiche(
                 nicheId: _niche.nicheId,
               );
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
+                await ref.read(cloudSyncServiceProvider).addUserNicheApp(
                     nicheId: _niche.nicheId, package: pkg);
               }
             },

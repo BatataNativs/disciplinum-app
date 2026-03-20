@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -9,15 +7,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
-import 'package:disciplinum/features/gamification/presentation/controllers/gamification_controller.dart';
-import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
-import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
-import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
-import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/config/app_config.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/app/startup_data.dart';
 
 // Import para notificações
@@ -161,28 +152,6 @@ class AppBootstrap {
       }
       // Theme não é crítico, usa tema padrão em caso de erro
     }
-  }
-
-  /// Configura os providers do Provider
-  static List<SingleChildWidget> setupProviders(SharedPreferences prefs) {
-    return [
-      // Serviços principais que são ChangeNotifier
-      ChangeNotifierProvider<GamificationService>(
-        create: (_) => GamificationService(),
-      ),
-      ChangeNotifierProvider<GamificationController>(
-        create: (_) => GamificationController(
-          moduleRepository: ModuleRepository(
-            localDatasource: LocalModuleDatasource(),
-            cloudDatasource: CloudModuleDatasource(),
-          ),
-        ),
-      ),
-      ChangeNotifierProvider<AuthService>(create: (_) => AuthService()),
-      ChangeNotifierProvider<ThemeController>(create: (_) => ThemeController()),
-
-      // Outros serviços serão adicionados conforme refatoração
-    ];
   }
 
   /// Verifica se o app foi inicializado

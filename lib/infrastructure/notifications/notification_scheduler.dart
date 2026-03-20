@@ -17,7 +17,7 @@ class NotificationScheduler {
   NotificationScheduler._internal();
 
   Future<void> scheduleNativeNotifications(
-      NicheId nicheId, GamificationService service) async {
+      NicheId nicheId, GamificationService service, IapService iapService) async {
     LoggerService.instance.d('📅 Configurando alarmes nativos para: ${nicheId.name}');
 
     // 1. Agendar Check-ins
@@ -51,7 +51,7 @@ class NotificationScheduler {
 
         String body = GamificationMessages.getModuleMessage(
           nicheId,
-          isUnlocked: IapService().isCustomNotifUnlocked ||
+          isUnlocked: iapService.isCustomNotifUnlocked ||
               service.isNotificationUnlocked(nicheId),
           customMessages: service.customMessages,
         );
@@ -127,7 +127,7 @@ class NotificationScheduler {
         final phrase = GamificationMessages.getMotivationalPhrase(
           nicheId,
           time,
-          isUnlocked: IapService().isMotivationPhrasesUnlocked ||
+          isUnlocked: iapService.isMotivationPhrasesUnlocked ||
               service.isMotivationUnlocked(nicheId),
           motivationSchedules: service.motivationSchedulesByModule,
           customPhrases: service.customPhrases,
@@ -145,12 +145,12 @@ class NotificationScheduler {
 
     // 3. Agendar Desafio da Poupança (Módulo 7)
     if (nicheId == NicheId.moneySavingChallenge) {
-      await scheduleChallengeNotification(service);
+      await scheduleChallengeNotification(service, iapService);
     }
   }
 
   Future<void> scheduleChallengeNotification(
-      GamificationService service) async {
+      GamificationService service, IapService iapService) async {
     try {
       final challenge =
           await MoneySavingChallengeService().getActiveChallenge();
@@ -168,7 +168,7 @@ class NotificationScheduler {
       final title = 'Desafio da Poupança 💰';
       final body = GamificationMessages.getModuleMessage(
         NicheId.moneySavingChallenge,
-        isUnlocked: IapService().isCustomNotifUnlocked ||
+        isUnlocked: iapService.isCustomNotifUnlocked ||
             service.isNotificationUnlocked(NicheId.moneySavingChallenge),
         customMessages: service.customMessages,
       );

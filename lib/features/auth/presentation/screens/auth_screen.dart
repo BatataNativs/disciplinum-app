@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   final int initialAuthMode;
 
   const AuthScreen({super.key, this.initialAuthMode = 0});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   late int _authMode;
 
   final _nameController = TextEditingController();
@@ -45,7 +45,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _submit() async {
     HapticFeedback.vibrate();
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = ref.read(authServiceProvider);
 
     if (_authMode == 1 && _nameController.text.isEmpty) {
       _showSnack('Digite seu nome');
@@ -113,7 +113,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _googleAuth() async {
     HapticFeedback.vibrate();
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = ref.read(authServiceProvider);
     final started = await authService.loginWithGoogle();
 
     if (!started && mounted) {
@@ -197,8 +197,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final authService =
-                  Provider.of<AuthService>(context, listen: false);
+              final authService = ref.read(authServiceProvider);
               final success = await authService
                   .resetPassword(emailResetController.text.trim());
               if (mounted) {
@@ -218,7 +217,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = ref.watch(authServiceProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color primaryColor = const Color.fromARGB(255, 14, 180, 180);

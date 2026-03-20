@@ -29,9 +29,9 @@ class ServiceFactory {
     return throw UnimplementedError('ProcrastinationService singleton access - implementar getter público');
   }
 
-  /// Cria GamificationService com injeção de dependências
+  /// NÃO USAR - Use o [gamificationServiceProvider] do Riverpod
   static GamificationService createGamificationService() {
-    return GamificationService();
+    throw UnimplementedError('Use gamificationServiceProvider via Riverpod para injeção correta.');
   }
 
   /// Wrapper para log de operações

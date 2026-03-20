@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 
-class LojinhaScreen extends StatefulWidget {
+class LojinhaScreen extends ConsumerStatefulWidget {
   const LojinhaScreen({super.key});
 
   @override
-  State<LojinhaScreen> createState() => _LojinhaScreenState();
+  ConsumerState<LojinhaScreen> createState() => _LojinhaScreenState();
 }
 
-class _LojinhaScreenState extends State<LojinhaScreen> {
+class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
   IapService? _iapService;
   Timer? _errorTimeout;
 
@@ -23,7 +24,7 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
     // Configura o callback para mostrar snackbars de resultado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _iapService = Provider.of<IapService>(context, listen: false);
+      _iapService = ref.read(iapServiceProvider);
       _iapService?.onPurchaseResult = (success) {
         if (!mounted) return;
 
@@ -72,7 +73,7 @@ class _LojinhaScreenState extends State<LojinhaScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iap = Provider.of<IapService>(context);
+    final iap = ref.watch(iapServiceProvider);
 
     // Cores do gradiente (Mantive o fundo escuro no dark mode)
     final gradientColors = isDark

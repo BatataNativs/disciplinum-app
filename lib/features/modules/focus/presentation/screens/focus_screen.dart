@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
@@ -19,15 +19,15 @@ import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class FocusScreen extends StatefulWidget {
+class FocusScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const FocusScreen({super.key, this.heroTag});
 
   @override
-  State<FocusScreen> createState() => _FocusScreenState();
+  ConsumerState<FocusScreen> createState() => _FocusScreenState();
 }
 
-class _FocusScreenState extends State<FocusScreen> {
+class _FocusScreenState extends ConsumerState<FocusScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.focus);
   final List<String> _selectedApps = [];
   TimeOfDay? _focusStart;
@@ -49,7 +49,7 @@ class _FocusScreenState extends State<FocusScreen> {
     // NOVO: Escutar mudanças na gamificação para remover intervalo quando período for cumprido
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final gamification = Provider.of<GamificationService>(context, listen: false);
+        final gamification = ref.read(gamificationServiceProvider);
         gamification.addListener(_onGamificationChanged);
       }
     });
@@ -58,7 +58,7 @@ class _FocusScreenState extends State<FocusScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    final gamification = Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     gamification.removeListener(_onGamificationChanged);
     super.dispose();
   }
@@ -67,7 +67,7 @@ class _FocusScreenState extends State<FocusScreen> {
   void _onGamificationChanged() {
     if (!mounted) return;
     
-    final gamification = Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
     final currentPeriods = gamification.getRespectedFocusPeriods(NicheId.focus);
     
     // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
@@ -85,10 +85,10 @@ class _FocusScreenState extends State<FocusScreen> {
     try {
       final nicheId = _niche.nicheId;
       final userApps =
-          await CloudSyncService.loadUserNicheApps(nicheId: nicheId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: nicheId);
       final userTimes =
-          await CloudSyncService.loadUserNicheTimes(nicheId: nicheId.id);
-      final status = await CloudSyncService.loadModuleStatus(nicheId);
+          await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheId.id);
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nicheId);
 
       final apps = userApps.map((a) => a.appPackage).toList();
 
@@ -112,7 +112,7 @@ class _FocusScreenState extends State<FocusScreen> {
 
         if (_gamificationRunning) {
           final gamification =
-              Provider.of<GamificationService>(context, listen: false);
+              ref.read(gamificationServiceProvider);
           gamification.monitoredApps = Set<String>.from(_selectedApps);
 
           bool accessibilityGranted =
@@ -150,7 +150,7 @@ class _FocusScreenState extends State<FocusScreen> {
       _selectedApps.remove(packageName);
     });
 
-    await CloudSyncService.removeUserNicheApp(
+    await ref.read(cloudSyncServiceProvider).removeUserNicheApp(
       nicheId: _niche.nicheId,
       package: packageName,
     );
@@ -183,7 +183,7 @@ class _FocusScreenState extends State<FocusScreen> {
     if (!mounted) return;
 
     final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+        ref.read(gamificationServiceProvider);
     gamification.monitoredApps = Set<String>.from(_selectedApps);
 
     TimeOfDayRange? range;
@@ -209,11 +209,11 @@ class _FocusScreenState extends State<FocusScreen> {
     setState(() {
       _gamificationRunning = true;
     });
-    CloudSyncService.saveModuleStatus(
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    Provider.of<GamificationService>(context, listen: false)
+    ref.read(gamificationServiceProvider)
         .startModuleCycle(nicheId: _niche.nicheId);
   }
 
@@ -257,7 +257,7 @@ class _FocusScreenState extends State<FocusScreen> {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+          ref.read(gamificationServiceProvider);
       gamification.stopMonitoringApps();
 
       _resetMedalsForModule(
@@ -277,7 +277,7 @@ class _FocusScreenState extends State<FocusScreen> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic);
       }
-      await CloudSyncService.saveModuleStatus(
+      await ref.read(cloudSyncServiceProvider).saveModuleStatus(
         nicheId: _niche.nicheId,
         isActive: false,
       );
@@ -295,7 +295,7 @@ class _FocusScreenState extends State<FocusScreen> {
     bool deactivate = false,
   }) {
     final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+        ref.read(gamificationServiceProvider);
     gamification.resetMedals(
       _niche.nicheId,
       notificationTitle: notificationTitle,
@@ -323,11 +323,11 @@ class _FocusScreenState extends State<FocusScreen> {
                   ..addAll(apps);
               });
 
-              await CloudSyncService.removeAllAppsForNiche(
+              await ref.read(cloudSyncServiceProvider).removeAllAppsForNiche(
                 nicheId: _niche.nicheId,
               );
               for (var pkg in apps) {
-                await CloudSyncService.addUserNicheApp(
+                await ref.read(cloudSyncServiceProvider).addUserNicheApp(
                   nicheId: _niche.nicheId,
                   package: pkg,
                 );
@@ -400,13 +400,13 @@ class _FocusScreenState extends State<FocusScreen> {
     });
 
     // Save to DB (Quick hack: save as UserNicheTimes, index 0=start, 1=end)
-    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id);
-    await CloudSyncService.addUserNicheTime(
+    await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id);
+    await ref.read(cloudSyncServiceProvider).addUserNicheTime(
       nicheId: _niche.id,
       hour: start.hour,
       minute: start.minute,
     );
-    await CloudSyncService.addUserNicheTime(
+    await ref.read(cloudSyncServiceProvider).addUserNicheTime(
       nicheId: _niche.id,
       hour: end.hour,
       minute: end.minute,
@@ -424,7 +424,7 @@ class _FocusScreenState extends State<FocusScreen> {
       _focusEnd = null;
     });
 
-    await CloudSyncService.removeAllTimesForNiche(nicheId: _niche.id);
+    await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id);
 
     if (mounted && showNotification) {
       EnhancedSnackBarHelper.showInfo(context, 'Intervalo de foco removido');

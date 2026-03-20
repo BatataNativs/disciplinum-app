@@ -1,11 +1,11 @@
 import 'dart:ui'; // Necessário para o ImageFilter
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/router/app_router.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class DisciplinumBottomNavBar extends StatelessWidget {
+class DisciplinumBottomNavBar extends ConsumerWidget {
   final int currentIndex;
 
   const DisciplinumBottomNavBar({
@@ -13,7 +13,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
     required this.currentIndex,
   });
 
-  void _onItemTap(BuildContext context, int index) {
+  void _onItemTap(BuildContext context, WidgetRef ref, int index) {
     HapticFeedback.lightImpact();
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
@@ -25,7 +25,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
       );
     } else if (index == 1) {
       if (currentRoute == AppRouter.profile) return;
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService = ref.read(authServiceProvider);
       if (authService.isAuthenticated) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -39,7 +39,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
       // --- Rota da Lojinha ---
       if (currentRoute != AppRouter.shop) {
         Navigator.pushNamedAndRemoveUntil(
-            context, AppRouter.shop, (route) => route.isFirst);
+          context, AppRouter.shop, (route) => route.isFirst);
       }
     } else if (index == 3 && currentRoute != AppRouter.settings) {
       // Configurações agora é índice 3
@@ -52,7 +52,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Cores ajustadas para Glassmorphism
@@ -102,6 +102,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
               children: [
                 _buildIconItem(
                   context,
+                  ref,
                   index: 0,
                   icon: Icons.home_rounded,
                   isActive: currentIndex == 0,
@@ -111,6 +112,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
                 ),
                 _buildIconItem(
                   context,
+                  ref,
                   index: 1,
                   icon: Icons.person_rounded,
                   isActive: currentIndex == 1,
@@ -121,6 +123,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
                 // --- NOVO ÍCONE: LOJINHA (COM ASSET) ---
                 _buildIconItem(
                   context,
+                  ref,
                   index: 2,
                   // Ajuste o caminho conforme sua estrutura de pastas (ex: assets/images/...)
                   assetPath: 'assets/icons/icone_carrinho_compra.png',
@@ -132,6 +135,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
                 // --- FIM NOVO ÍCONE ---
                 _buildIconItem(
                   context,
+                  ref,
                   index: 3,
                   icon: Icons.settings_rounded,
                   isActive: currentIndex == 3,
@@ -148,7 +152,8 @@ class DisciplinumBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildIconItem(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
     required int index,
     IconData? icon,
     String? assetPath,
@@ -159,7 +164,7 @@ class DisciplinumBottomNavBar extends StatelessWidget {
   }) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => _onItemTap(context, index),
+        onTap: () => _onItemTap(context, ref, index),
         behavior: HitTestBehavior.opaque,
         child: Container(
           height: double.infinity,

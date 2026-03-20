@@ -1,33 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; // Clipboard
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; // Import do Widget
-// import 'package:disciplinum/shared/widgets/common/scroll_indicator_arrow.dart'; // Removido pois não é mais usado aqui
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
-import 'package:disciplinum/core/theme/theme_controller.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'secret_menu_screen.dart'; // Importe a nova tela
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _soundEnabled = NotificationService.soundEnabled;
   bool _isSyncing = false;
 
@@ -89,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _sincronizarAgora() async {
     setState(() => _isSyncing = true);
 
-    final auth = Provider.of<AuthService>(context, listen: false);
+    final auth = ref.read(authServiceProvider);
     if (!auth.isAuthenticated) {
       if (mounted) {
         setState(() => _isSyncing = false);
@@ -99,13 +95,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    final ok = await CloudSyncService.syncNow(context: context);
+    final ok = await ref.read(cloudSyncServiceProvider).syncNow();
 
     if (!mounted) return;
     setState(() => _isSyncing = false);
-
-    // Força atualização da UI do GamificationService via Provider se necessário
-    // mas refreshAllDataFromCloud já chama notifyListeners()
 
     if (ok) {
       EnhancedSnackBarHelper.showSuccess(context, 'Dados sincronizados com sucesso!');
@@ -113,10 +106,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       EnhancedSnackBarHelper.showError(context, 'Não foi possível sincronizar agora.');
     }
   }
-
-  // OBS: _exportarDados foi removido daqui e movido para secret_menu_screen.dart
-  // OBS: _mostrarMenuSobre foi removido
-  // OBS: _buildMenuCard foi removido
 
   void _mostrarDialogoComoFunciona() {
     Navigator.push(
@@ -222,7 +211,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gamification = Provider.of<GamificationService>(context);
+    final gamification = ref.watch(gamificationServiceProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -313,7 +302,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: isDark ? Colors.white70 : Colors.black54),
                   value: gamification.notificationsPaused,
                   onChanged: (val) =>
-                      setState(() => gamification.setNotificationsPaused(val)),
+                      gamification.setNotificationsPaused(val),
                 ),
                 Divider(
                     height: 1,
@@ -522,8 +511,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   IconButton(
                     icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
                     onPressed: () {
-                      Provider.of<ThemeController>(context, listen: false)
-                          .toggleTheme();
+                      ref.read(themeControllerProvider.notifier).toggleTheme();
                       EnhancedSnackBarHelper.showInfo(context,
                           "Dev, lembre-se de remover esse botão antes de publicar o app!");
                     },

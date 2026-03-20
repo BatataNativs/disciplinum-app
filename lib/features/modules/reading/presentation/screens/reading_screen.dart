@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/my_shelf_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_settings_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart';
@@ -18,7 +17,7 @@ import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 import 'dart:async';
 
-class ReadingScreen extends StatefulWidget {
+class ReadingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   final int initialTabIndex;
 
@@ -29,10 +28,10 @@ class ReadingScreen extends StatefulWidget {
   });
 
   @override
-  State<ReadingScreen> createState() => _ReadingScreenState();
+  ConsumerState<ReadingScreen> createState() => _ReadingScreenState();
 }
 
-class _ReadingScreenState extends State<ReadingScreen>
+class _ReadingScreenState extends ConsumerState<ReadingScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final Niche _niche = NicheRepository.getById(NicheId.reading);
   late TabController _tabController;
@@ -86,7 +85,7 @@ class _ReadingScreenState extends State<ReadingScreen>
 
   Future<void> _loadReminderData() async {
     try {
-      final reminderTimes = await CloudSyncService.loadUserNicheTimes(
+      final reminderTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
           nicheId: _niche.nicheId.id + 200);
 
       TimeOfDay? newReminderTime;
@@ -111,7 +110,7 @@ class _ReadingScreenState extends State<ReadingScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamification = Provider.of<GamificationService>(context);
+    final gamification = ref.watch(gamificationServiceProvider);
     final isActive = gamification.isModuleActive(NicheId.reading);
 
     return Scaffold(
@@ -446,8 +445,7 @@ class _ReadingScreenState extends State<ReadingScreen>
 
 
   Future<void> _toggleModule(bool isActive) async {
-    final gamification =
-        Provider.of<GamificationService>(context, listen: false);
+    final gamification = ref.read(gamificationServiceProvider);
 
     if (isActive) {
       final confirmed = await showDialog<bool>(
@@ -603,7 +601,7 @@ class _ReadingScreenState extends State<ReadingScreen>
                 foregroundColor: Colors.white),
             onPressed: () async {
               // Remove o horário específico
-              await CloudSyncService.removeUserNicheTime(
+              await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
                 nicheId: _niche.nicheId.id + 200,
                 hour: _reminderTime!.hour,
                 minute: _reminderTime!.minute,

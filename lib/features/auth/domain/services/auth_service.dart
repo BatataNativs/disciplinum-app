@@ -15,6 +15,8 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
 
 class AuthService extends ChangeNotifier {
+  final PreferencesService _prefs;
+  final CloudSyncService _cloudSync;
   final supabase = Supabase.instance.client;
 
   User? _currentUser;
@@ -35,7 +37,7 @@ class AuthService extends ChangeNotifier {
   late final StreamSubscription _authSubscription;
   Function()? onLogoutCallback;
 
-  AuthService() {
+  AuthService(this._prefs, this._cloudSync) {
     _initializeAuth();
   }
 
@@ -112,17 +114,17 @@ class AuthService extends ChangeNotifier {
 
   // ===================== MIGRAÇÃO GUEST ========================
   Future<void> _migrateGuestData() async {
-    if (!await PreferencesService.isGuestMode()) return;
+    if (!await _prefs.isGuestMode()) return;
 
     try {
-      final guestData = await PreferencesService.exportAll();
+      final guestData = await _prefs.exportAll();
 
       // Migrar apps
       final apps = (guestData['apps'] as List)
           .map((e) => UserNicheApp.fromJson(e))
           .toList();
       for (final app in apps) {
-        await CloudSyncService.addUserNicheApp(
+        await _cloudSync.addUserNicheApp(
           nicheId: NicheId.fromInt(app.nicheId),
           package: app.appPackage,
         );
@@ -133,7 +135,7 @@ class AuthService extends ChangeNotifier {
           .map((e) => UserNicheTime.fromJson(e))
           .toList();
       for (final t in times) {
-        await CloudSyncService.addUserNicheTime(
+        await _cloudSync.addUserNicheTime(
           nicheId: t.nicheId,
           hour: t.hour,
           minute: t.minute,
@@ -145,13 +147,13 @@ class AuthService extends ChangeNotifier {
       if (smokingData != null) {
         try {
           final settings = SmokingSettingsModel.fromJson(smokingData);
-          await SmokingService().saveSettings(settings);
+          await SmokingService(_prefs).saveSettings(settings);
         } catch (e) {
           LoggerService.instance.e('Erro ao migrar dados de cigarro', error: e);
         }
       }
 
-      await PreferencesService.clearAll();
+      await _prefs.clearAll();
     } catch (e) {
       LoggerService.instance.e('Erro ao migrar dados do guest', error: e);
     }

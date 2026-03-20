@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import '../widgets/health_timeline_card.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:provider/provider.dart';
 
-class HealthDetailScreen extends StatelessWidget {
+class HealthDetailScreen extends ConsumerWidget {
   final SmokingSettingsModel settings;
 
   const HealthDetailScreen({super.key, required this.settings});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamification = Provider.of<GamificationService>(context);
+    final gamification = ref.watch(gamificationServiceProvider);
     final isActive = gamification.isModuleActive(NicheId.smoking);
     final effectiveDuration = isActive ? settings.timeSmokeFree : Duration.zero;
 
