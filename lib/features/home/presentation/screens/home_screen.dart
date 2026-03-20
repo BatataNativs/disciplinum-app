@@ -47,7 +47,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     if (state == AppLifecycleState.resumed) {
       PermissionService.verifyPermissionAfterReturn(context);
       _checkPendingMedals();
-      _checkPendingInsignias();
     }
   }
 
@@ -62,7 +61,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
         // Verifica medalhas pendentes assim que a tela monta
         _checkPendingMedals();
-        _checkPendingInsignias();
 
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
@@ -153,116 +151,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         ),
       ),
     );
-  }
-
-  void _checkPendingInsignias() {
-    final gamification = ref.read(gamificationServiceProvider);
-    final pending = gamification.pendingInsignias;
-    if (pending.isNotEmpty) {
-      _showInsigniaDialog(pending.first);
-    }
-  }
-
-  void _showInsigniaDialog(Map<String, dynamic> insigniaData) {
-    _confettiController.stop(); // Parar qualquer confete anterior
-    
-    // CORREÇÃO: Criar um novo controller para cada dialog
-    final dialogConfettiController = ConfettiController(
-      duration: const Duration(seconds: 3),
-    );
-    
-    dialogConfettiController.play();
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          ConfettiWidget(
-            confettiController: dialogConfettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            emissionFrequency: 0.05,
-            numberOfParticles: 20,
-            gravity: 0.3,
-            colors: const [
-              Color(0xFF6366F1),
-              Color(0xFFEC4899),
-              Color(0xFFF59E0B),
-              Color(0xFF10B981),
-            ],
-          ),
-          AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E1E2E)
-                : Colors.white,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  insigniaData['insignia_asset'],
-                  width: 80,
-                  height: 80,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Nova insígnia conquistada!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  insigniaData['insignia_name'],
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF6366F1),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Parabéns! Continue assim!',
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      // CORREÇÃO: Parar confete imediatamente e fechar dialog
-                      dialogConfettiController.stop();
-                      dialogConfettiController.dispose(); // Safe para dialog-specific controller
-                      
-                      ref.read(gamificationServiceProvider).consumePendingInsignia(insigniaData);
-                      Navigator.of(ctx).pop();
-                      
-                      // se houver outra insignia pendente, o diálogo abre novamente
-                    },
-                    child: const Text('Ok, guardar!',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    ); // REMOVIDO: .then((_) { dialogConfettiController.dispose(); });
   }
 
   Future<void> _handleNicheTap(Niche niche, String heroTag) async {

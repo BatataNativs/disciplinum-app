@@ -255,6 +255,73 @@ class CloudSyncService {
     return true;
   }
 
+  // --- DAILY CHECKINS (Smoking, Binge Eating, etc.) ---
+  
+  Future<void> saveDailyCheckin({
+    required NicheId nicheId,
+    required String dateStr,
+  }) async {
+    final tableName = _getCheckinTableForNiche(nicheId);
+    if (tableName == null) return;
+
+    await _retryOperation(() async {
+      final userId = await _getUserId();
+      if (userId == null) return;
+
+      await supabase.from(tableName).upsert(
+        {
+          'user_id': userId,
+          'check_date': dateStr,
+        },
+        onConflict: 'user_id, check_date',
+        ignoreDuplicates: true,
+      );
+    });
+  }
+
+  Future<List<String>> loadDailyCheckins(NicheId nicheId) async {
+    final tableName = _getCheckinTableForNiche(nicheId);
+    if (tableName == null) return [];
+
+    return await _retryOperation(() async {
+          final userId = await _getUserId();
+          if (userId == null) return <String>[];
+          
+          final result = await supabase
+              .from(tableName)
+              .select('check_date')
+              .eq('user_id', userId)
+              .order('check_date', ascending: true);
+
+          return (result as List)
+              .map((row) => row['check_date'] as String)
+              .toList();
+        }) ??
+        [];
+  }
+
+  Future<void> clearDailyCheckins(NicheId nicheId) async {
+    final tableName = _getCheckinTableForNiche(nicheId);
+    if (tableName == null) return;
+
+    await _retryOperation(() async {
+      final userId = await _getUserId();
+      if (userId == null) return;
+      await supabase.from(tableName).delete().eq('user_id', userId);
+    });
+  }
+
+  String? _getCheckinTableForNiche(NicheId nicheId) {
+    switch (nicheId) {
+      case NicheId.smoking:
+        return 'smoking_daily_checkins';
+      case NicheId.diet:
+        return 'binge_daily_checkins';
+      default:
+        return null;
+    }
+  }
+
   // --- ENTITLEMENTS ---
   Future<void> addEntitlement({
     required String entitlementType,

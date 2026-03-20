@@ -23,12 +23,42 @@ import 'package:disciplinum/features/modules/reading/domain/services/reading_ser
 import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
-
-// ... (imports anteriores mantidos)
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
+import 'package:disciplinum/core/storage/session_persistence_service.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
   return IsarService.instance;
+});
+
+/// Provider para SharedPreferences
+/// Assumindo que já foi inicializado no bootstrap
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferences deve ser sobrescrito no ProviderScope');
+});
+
+/// Provider para SessionPersistenceService
+final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((ref) {
+  final isarService = ref.watch(isarServiceProvider);
+  return SessionPersistenceService(isarService);
+});
+
+/// Provider para SmokingCheckinService
+final smokingCheckinServiceProvider = Provider<SmokingCheckinService>((ref) {
+  final isarService = ref.watch(isarServiceProvider);
+  final cloudSync = ref.watch(cloudSyncServiceProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return SmokingCheckinService(isarService, cloudSync, prefs);
+});
+
+/// Provider para BingeEatingCheckinService
+final bingeEatingCheckinServiceProvider = Provider<BingeEatingCheckinService>((ref) {
+  final isarService = ref.watch(isarServiceProvider);
+  final cloudSync = ref.watch(cloudSyncServiceProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return BingeEatingCheckinService(isarService, cloudSync, prefs);
 });
 
 /// Provider para ModuleRepository
@@ -45,10 +75,7 @@ final isarPreferencesRepositoryProvider = Provider<IsarPreferencesRepository>((r
   return IsarPreferencesRepository(isarService.database);
 });
 
-/// Provider para SharedPreferences (LEGADO - remover após migração total)
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
-  return await SharedPreferences.getInstance();
-});
+// Removido FutureProvider duplicado
 
 /// Provider para LocalStorageService
 final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
@@ -93,8 +120,15 @@ final themeControllerProvider = ChangeNotifierProvider<ThemeController>((ref) {
 /// Provider para AppMonitoringService
 final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  final sessionPersistence = ref.watch(sessionPersistenceServiceProvider);
   final iapService = ref.watch(iapServiceProvider);
-  return AppMonitoringService(prefs, iapService: iapService);
+  final focusService = ref.watch(focusServiceProvider);
+  return AppMonitoringService(
+    prefs,
+    sessionPersistence,
+    iapService: iapService,
+    focusService: focusService,
+  );
 });
 
 /// Provider para GamificationAwardEngine
@@ -109,7 +143,20 @@ final gamificationServiceProvider = ChangeNotifierProvider<GamificationService>(
   final cloudSync = ref.watch(cloudSyncServiceProvider);
   final awardEngine = ref.watch(gamificationAwardEngineProvider);
   final iapService = ref.watch(iapServiceProvider);
-  return GamificationService(cloudSync, appMonitoring, awardEngine, iapService);
+  final smokingCheckin = ref.watch(smokingCheckinServiceProvider);
+  final bingeEatingCheckin = ref.watch(bingeEatingCheckinServiceProvider);
+  final focusService = ref.watch(focusServiceProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return GamificationService(
+    cloudSync,
+    appMonitoring,
+    awardEngine,
+    iapService,
+    smokingCheckin,
+    bingeEatingCheckin,
+    focusService,
+    prefs,
+  );
 });
 
 final gamificationControllerProvider = ChangeNotifierProvider<GamificationController>((ref) {
@@ -125,17 +172,20 @@ final gamificationControllerProvider = ChangeNotifierProvider<GamificationContro
 /// Provider para ProcrastinationService
 final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
   final gamification = ref.watch(gamificationServiceProvider);
-  final prefsAsync = ref.watch(sharedPreferencesProvider);
-  return prefsAsync.when(
-    data: (prefs) => ProcrastinationService(gamification, prefs),
-    loading: () => throw StateError('SharedPreferences not ready'),
-    error: (error, stack) => throw error,
-  );
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return ProcrastinationService(gamification, prefs);
 });
 
 /// Provider para MoneySavingChallengeService
 final moneySavingChallengeServiceProvider = Provider<MoneySavingChallengeService>((ref) {
   return MoneySavingChallengeService();
+});
+
+final focusServiceProvider = Provider<FocusService>((ref) {
+  return FocusService(
+    ref.watch(isarServiceProvider),
+    ref.watch(cloudSyncServiceProvider),
+  );
 });
 
 /// Provider para ReadingService (SINGLETON legado em transição para Riverpod)

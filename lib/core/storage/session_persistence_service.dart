@@ -9,20 +9,9 @@ import 'package:isar/isar.dart';
 /// SessionPersistenceService com sintaxe Isar 3.0.5 corrigida
 /// Baseado na documentação: https://isar.dev/queries.html
 class SessionPersistenceService {
-  static SessionPersistenceService? _instance;
-  static SessionPersistenceService get instance {
-    _instance ??= SessionPersistenceService._internal();
-    return _instance!;
-  }
+  final IsarService _isarService;
   
-  SessionPersistenceService._internal();
-  
-  late IsarService _isarService;
-  
-  /// Inicializa o serviço com a instância do Isar
-  void initialize(IsarService isarService) {
-    _isarService = isarService;
-  }
+  SessionPersistenceService(this._isarService);
   
   /// Salva uma sessão de detecção ativa
   Future<void> saveDetectionSession({

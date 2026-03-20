@@ -14,8 +14,7 @@ void main() {
       await isarService.initialize();
       
       // Inicializar SessionPersistenceService
-      persistenceService = SessionPersistenceService.instance;
-      persistenceService.initialize(isarService);
+      persistenceService = SessionPersistenceService(isarService);
     });
 
     tearDownAll(() async {

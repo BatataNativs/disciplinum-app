@@ -8,6 +8,8 @@ import 'package:disciplinum/core/storage/entities/detection_session_entity.dart'
 import 'package:disciplinum/core/storage/entities/monitoring_state_entity.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/expense_entity.dart';
 import 'package:disciplinum/core/database/entities/app_preference.dart';
+import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
+import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -35,6 +37,8 @@ class IsarService {
           MonitoringStateSchema,      
           ExpenseEntitySchema,
           AppPreferenceSchema,
+          DailyCheckinSchema,
+          FocusStatusEntitySchema,
         ],
         directory: dbPath,
       );
@@ -66,6 +70,12 @@ class IsarService {
 
   /// Getter para Expenses
   IsarCollection<ExpenseEntity> get expenses => database.expenseEntitys;
+
+  /// Getter para DailyCheckins
+  IsarCollection<DailyCheckin> get dailyCheckins => database.dailyCheckins;
+
+  /// Getter para FocusStatus
+  IsarCollection<FocusStatusEntity> get focusStatus => database.focusStatusEntitys;
 
   /// Limpa todo o banco (apenas para desenvolvimento)
   Future<void> clearAll() async {

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class DailyCheckinsStats extends StatefulWidget {
+class DailyCheckinsStats extends ConsumerStatefulWidget {
   const DailyCheckinsStats({super.key});
 
   @override
-  State<DailyCheckinsStats> createState() => _DailyCheckinsStatsState();
+  ConsumerState<DailyCheckinsStats> createState() => _DailyCheckinsStatsState();
 }
 
-class _DailyCheckinsStatsState extends State<DailyCheckinsStats> {
+class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
   bool _isLoading = true;
   Set<String> _checkinDates = {};
 
@@ -21,7 +22,7 @@ class _DailyCheckinsStatsState extends State<DailyCheckinsStats> {
   }
 
   Future<void> _loadData() async {
-    final dates = await SmokingCheckinService().loadCheckins();
+    final dates = await ref.read(smokingCheckinServiceProvider).loadCheckins();
     if (mounted) {
       setState(() {
         _checkinDates = dates

@@ -6,7 +6,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/app/startup_data.dart';
@@ -125,8 +124,7 @@ class AppBootstrap {
       // ✅ Inicializar Isar primeiro (dependência para SessionPersistenceService)
       await IsarService.instance.initialize();
       
-      // ✅ Inicializar SessionPersistenceService com Isar
-      SessionPersistenceService.instance.initialize(IsarService.instance);
+      // SessionPersistenceService agora é injetado via Riverpod
       
       // Inicializar serviços em ordem de dependência
       await PrivacyService.initAtStartup();

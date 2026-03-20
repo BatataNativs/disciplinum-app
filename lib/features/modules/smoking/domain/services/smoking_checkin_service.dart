@@ -1,18 +1,24 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:isar/isar.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 
 /// Serviço responsável por registrar e carregar os check-ins diários
 /// do módulo Parar de Fumar (resposta "Sim" na notificação diária).
 class SmokingCheckinService {
   static const String _prefsKey = 'smoking_checkin_dates';
-  final SupabaseClient _supabase = Supabase.instance.client;
+  
+  final IsarService _isarService;
+  final CloudSyncService _cloudSync;
+  final SharedPreferences _prefs;
 
-  // Singleton
-  static final SmokingCheckinService _instance =
-      SmokingCheckinService._internal();
-  factory SmokingCheckinService() => _instance;
-  SmokingCheckinService._internal();
+  SmokingCheckinService(this._isarService, this._cloudSync, this._prefs) {
+    // Tentar migração ao inicializar
+    _migrateFromPrefs();
+  }
 
   /// Formata DateTime como string de data (yyyy-MM-dd)
   String _dateKey(DateTime date) =>
@@ -24,97 +30,145 @@ class SmokingCheckinService {
     final target = date ?? DateTime.now();
     final dateStr = _dateKey(target);
 
-    // 1. Persiste localmente
-    await _saveLocalCheckin(dateStr);
-
-    // 2. Persiste no Supabase
+    // 1. Persiste localmente no Isar
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return;
+      final existing = await _isarService.dailyCheckins
+          .filter()
+          .nicheIdEqualTo(NicheId.smoking)
+          .dateStrEqualTo(dateStr)
+          .findFirst();
 
-      await _supabase.from('smoking_daily_checkins').upsert(
-        {
-          'user_id': userId,
-          'check_date': dateStr,
-        },
-        onConflict: 'user_id, check_date',
-        ignoreDuplicates: true,
-      );
-      LoggerService.instance.i('✅ Check-in registrado para $dateStr');
+      if (existing == null) {
+        await _isarService.database.writeTxn(() async {
+          await _isarService.dailyCheckins.put(
+            DailyCheckin(
+              nicheId: NicheId.smoking,
+              dateStr: dateStr,
+            ),
+          );
+        });
+        LoggerService.instance.i('✅ Check-in local registrado para $dateStr (Smoking)');
+      }
     } catch (e) {
-      LoggerService.instance.w('Erro ao salvar check-in no Supabase', error: e);
-      // Não lança — o local já foi salvo como fallback
+      LoggerService.instance.e('Erro ao salvar check-in no Isar', error: e);
     }
+
+    // 2. Persiste na nuvem
+    await _cloudSync.saveDailyCheckin(
+      nicheId: NicheId.smoking,
+      dateStr: dateStr,
+    );
   }
 
   /// Carrega todas as datas de check-in.
-  /// Tenta Supabase primeiro, com fallback local.
+  /// Tenta nuvem primeiro, com fallback local (Isar).
   Future<List<DateTime>> loadCheckins() async {
+    // 1. Tentar carregar da nuvem e sincronizar
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId != null) {
-        final result = await _supabase
-            .from('smoking_daily_checkins')
-            .select('check_date')
-            .eq('user_id', userId)
-            .order('check_date', ascending: true);
-
-        final dates = (result as List)
-            .map((row) => DateTime.parse(row['check_date'] as String))
-            .toList();
-
-        // Atualiza cache local com dados da nuvem
-        await _syncLocalFromCloud(dates);
-        return dates;
+      final cloudDatesStr = await _cloudSync.loadDailyCheckins(NicheId.smoking);
+      if (cloudDatesStr.isNotEmpty) {
+        await _syncIsarFromCloud(cloudDatesStr);
+        return cloudDatesStr.map((s) => DateTime.parse(s)).toList();
       }
     } catch (e) {
-      LoggerService.instance.w('Erro ao carregar check-ins do Supabase', error: e);
+      LoggerService.instance.w('Erro ao carregar check-ins da nuvem', error: e);
     }
 
-    // Fallback: dados locais
-    return _loadLocalCheckins();
+    // 2. Fallback: carregar do Isar
+    try {
+      final localCheckins = await _isarService.dailyCheckins
+          .filter()
+          .nicheIdEqualTo(NicheId.smoking)
+          .findAll();
+      
+      return localCheckins.map((c) => DateTime.parse(c.dateStr)).toList();
+    } catch (e) {
+      LoggerService.instance.e('Erro ao carregar check-ins do Isar', error: e);
+      return [];
+    }
   }
 
   /// Apaga todos os check-ins do usuário (usado no reset de módulo).
   Future<void> clearAllCheckins() async {
-    // Limpa local
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefsKey);
-
-    // Limpa Supabase
+    // 1. Limpa Isar
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return;
-      await _supabase
-          .from('smoking_daily_checkins')
-          .delete()
-          .eq('user_id', userId);
-      LoggerService.instance.i('🗑️ Todos os check-ins apagados.');
+      await _isarService.database.writeTxn(() async {
+        await _isarService.dailyCheckins
+            .filter()
+            .nicheIdEqualTo(NicheId.smoking)
+            .deleteAll();
+      });
+      LoggerService.instance.i('🗑️ Check-ins locais apagados (Smoking)');
     } catch (e) {
-      LoggerService.instance.w('Erro ao apagar check-ins no Supabase', error: e);
+      LoggerService.instance.e('Erro ao apagar check-ins no Isar', error: e);
+    }
+
+    // 2. Limpa Nuvem
+    await _cloudSync.clearDailyCheckins(NicheId.smoking);
+  }
+
+  // --- MÉTODOS DE MANUTENÇÃO ---
+
+  /// Migra dados do SharedPreferences para o Isar (uma única vez)
+  Future<void> _migrateFromPrefs() async {
+    try {
+      if (!_prefs.containsKey(_prefsKey)) return;
+
+      final stored = _prefs.getStringList(_prefsKey) ?? [];
+      if (stored.isEmpty) return;
+
+      LoggerService.instance.i('📦 Iniciando migração de SmokingCheckins para Isar (${stored.length} itens)');
+
+      await _isarService.database.writeTxn(() async {
+        for (final dateStr in stored) {
+          // Verificar se já existe no Isar para evitar duplicatas por causa do rollback/crash
+          final exists = await _isarService.dailyCheckins
+              .filter()
+              .nicheIdEqualTo(NicheId.smoking)
+              .dateStrEqualTo(dateStr)
+              .findFirst();
+
+          if (exists == null) {
+            await _isarService.dailyCheckins.put(
+              DailyCheckin(
+                nicheId: NicheId.smoking,
+                dateStr: dateStr,
+              ),
+            );
+          }
+        }
+      });
+
+      // Remover do Prefs após migração bem-sucedida
+      await _prefs.remove(_prefsKey);
+      LoggerService.instance.i('✅ Migração de SmokingCheckins concluída e Prefs limpo.');
+    } catch (e) {
+      LoggerService.instance.e('Erro durante migração de SmokingCheckins', error: e);
     }
   }
 
-  // --- Helpers privados ---
+  Future<void> _syncIsarFromCloud(List<String> cloudDatesStr) async {
+    try {
+      await _isarService.database.writeTxn(() async {
+        for (final dateStr in cloudDatesStr) {
+          final exists = await _isarService.dailyCheckins
+              .filter()
+              .nicheIdEqualTo(NicheId.smoking)
+              .dateStrEqualTo(dateStr)
+              .findFirst();
 
-  Future<void> _saveLocalCheckin(String dateStr) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getStringList(_prefsKey) ?? [];
-    if (!existing.contains(dateStr)) {
-      existing.add(dateStr);
-      await prefs.setStringList(_prefsKey, existing);
+          if (exists == null) {
+            await _isarService.dailyCheckins.put(
+              DailyCheckin(
+                nicheId: NicheId.smoking,
+                dateStr: dateStr,
+              ),
+            );
+          }
+        }
+      });
+    } catch (e) {
+      LoggerService.instance.e('Erro ao sincronizar Isar com nuvem', error: e);
     }
-  }
-
-  Future<List<DateTime>> _loadLocalCheckins() async {
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_prefsKey) ?? [];
-    return stored.map((s) => DateTime.parse(s)).toList();
-  }
-
-  Future<void> _syncLocalFromCloud(List<DateTime> cloudDates) async {
-    final prefs = await SharedPreferences.getInstance();
-    final dateStrings = cloudDates.map(_dateKey).toList();
-    await prefs.setStringList(_prefsKey, dateStrings);
   }
 }

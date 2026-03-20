@@ -8,13 +8,13 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 import 'package:disciplinum/infrastructure/notifications/notification_scheduler.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 
@@ -23,8 +23,21 @@ class GamificationService extends ChangeNotifier {
   final AppMonitoringService _appMonitoring;
   final GamificationAwardEngine _awardEngine;
   final IapService _iapService;
+  final SmokingCheckinService _smokingCheckin;
+  final BingeEatingCheckinService _bingeEatingCheckin;
+  final FocusService _focusService;
+  final SharedPreferences _prefs;
 
-  GamificationService(this._cloudSync, this._appMonitoring, this._awardEngine, this._iapService) {
+  GamificationService(
+    this._cloudSync,
+    this._appMonitoring,
+    this._awardEngine,
+    this._iapService,
+    this._smokingCheckin,
+    this._bingeEatingCheckin,
+    this._focusService,
+    this._prefs,
+  ) {
     _loadPreferences();
     NotificationService.onRelapseDetected = _handleRelapseFromNotification;
     NotificationService.onCheckInSim = _handleCheckInSimFromNotification;
@@ -45,10 +58,6 @@ class GamificationService extends ChangeNotifier {
   List<Map<String, dynamic>> get pendingMedals =>
       List.unmodifiable(_pendingMedals);
 
-  final Set<FocusInsignia> _earnedFocusInsignias = {};
-  Set<FocusInsignia> get earnedFocusInsignias =>
-      Set.unmodifiable(_earnedFocusInsignias);
-
   final List<Map<String, dynamic>> _pendingInsignias = [];
   List<Map<String, dynamic>> get pendingInsignias =>
       List.unmodifiable(_pendingInsignias);
@@ -58,7 +67,6 @@ class GamificationService extends ChangeNotifier {
   static const String _prefsPendingMedalsKey = 'pending_medals';
   static const String _prefsUnlockedNotifsKey = 'unlocked_notifications';
   static const String _prefsUnlockedMotivationsKey = 'unlocked_motivations';
-  static const String _prefsFocusInsigniasKey = 'focus_insignias_earned';
 
   // Getters Públicos para Sub-serviços e Telas
   Map<NicheId, String> get customMessages => _customMessages;
@@ -115,7 +123,7 @@ class GamificationService extends ChangeNotifier {
             orElse: () => NicheId.smoking)
         : currentNicheId;
     if (nicheId == NicheId.smoking) {
-      SmokingCheckinService().clearAllCheckins();
+      _smokingCheckin.clearAllCheckins();
       resetMedals(nicheId!,
           notificationTitle: 'Módulo Desativado 🛑', deactivate: true);
     }
@@ -123,43 +131,42 @@ class GamificationService extends ChangeNotifier {
 
   void _handleBingeRelapseFromNotification(String? payload) {
     if (payload == 'binge_checkin') {
-      BingeEatingCheckinService().clearAllCheckins();
+      _bingeEatingCheckin.clearAllCheckins();
       resetMedals(NicheId.bingeEating,
           notificationTitle: 'Módulo Desativado 🛑', deactivate: true);
     }
   }
 
   void _handleBingeCheckInSimFromNotification(String? payload) =>
-      BingeEatingCheckinService().recordCheckin();
+      _bingeEatingCheckin.recordCheckin();
   void _handleCheckInSimFromNotification(String? payload) =>
-      SmokingCheckinService().recordCheckin();
+      _smokingCheckin.recordCheckin();
 
-  Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
+  void _loadPreferences() {
     _appMonitoring.notificationsPaused =
-        prefs.getBool('settings_notifications_paused') ?? false;
+        _prefs.getBool('settings_notifications_paused') ?? false;
 
     for (final niche in NicheId.values) {
-      final msg = prefs.getString('custom_msg_${niche.id}');
+      final msg = _prefs.getString('custom_msg_${niche.id}');
       if (msg != null) _customMessages[niche] = msg;
-      final phrases = prefs.getStringList('custom_phrases_${niche.id}');
+      final phrases = _prefs.getStringList('custom_phrases_${niche.id}');
       if (phrases != null) _customPhrases[niche] = phrases;
     }
 
-    final unlockedIds = prefs.getStringList(_prefsUnlockedNotifsKey) ?? [];
+    final unlockedIds = _prefs.getStringList(_prefsUnlockedNotifsKey) ?? [];
     for (var id in unlockedIds) {
       final nid = NicheId.tryFromInt(int.parse(id));
       if (nid != null) _unlockedNotifications.add(nid);
     }
 
     final unlockedMotivsIds =
-        prefs.getStringList(_prefsUnlockedMotivationsKey) ?? [];
+        _prefs.getStringList(_prefsUnlockedMotivationsKey) ?? [];
     for (var id in unlockedMotivsIds) {
       final nid = NicheId.tryFromInt(int.parse(id));
       if (nid != null) _unlockedMotivations.add(nid);
     }
 
-    final pendingJson = prefs.getString(_prefsPendingMedalsKey);
+    final pendingJson = _prefs.getString(_prefsPendingMedalsKey);
     if (pendingJson != null) {
       try {
         _pendingMedals
@@ -167,22 +174,15 @@ class GamificationService extends ChangeNotifier {
       } catch (_) {}
     }
 
-    final insigniasList = prefs.getStringList(_prefsFocusInsigniasKey) ?? [];
-    for (var name in insigniasList) {
-      try {
-        _earnedFocusInsignias
-            .add(FocusInsignia.values.firstWhere((e) => e.name == name));
-      } catch (_) {}
-    }
+    // Nota: FocusService agora cuida das insignias no Isar,
+    // mantendo compatibilidade temporária se necessário.
 
     notifyListeners();
-    await _restoreAllActiveModules();
-    await restoreMonitoringSession();
+    _restoreAllActiveModules();
   }
 
   Future<void> _restoreAllActiveModules() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!(prefs.getBool('seen_onboarding') ?? false)) return;
+    if (!(_prefs.getBool('seen_onboarding') ?? false)) return;
 
     for (final nicheId in NicheId.values) {
       await _syncWithCloud(nicheId);
@@ -249,7 +249,7 @@ class GamificationService extends ChangeNotifier {
         // NOVO: Carregar períodos de foco respeitados
 
         if (status.maxMedal != null) {}
-        _awardEngine.checkTimeBasedMedals(nicheId, this);
+        _awardEngine.checkTimeBasedMedals(nicheId, this, _focusService);
       }
       _saveLocalStatus(nicheId);
     }
@@ -274,7 +274,7 @@ class GamificationService extends ChangeNotifier {
       if (nicheId == NicheId.focus) {
         _ensureStateExistsAnd(nicheId, focusPeriodsRespected: 0);
         // Conceder insígnia de madeira imediatamente ao ativar o módulo
-        await _awardEngine.awardMadeiraOnActivation(this);
+        await _awardEngine.awardMadeiraOnActivation(_focusService);
       }
     }
     final prefs = await SharedPreferences.getInstance();
@@ -292,7 +292,7 @@ class GamificationService extends ChangeNotifier {
         .scheduleNativeNotifications(nicheId, this, _iapService);
 
     // Força checagem imediata para premiar insígnias de "Dia 0" (ex: Ferro)
-    await _awardEngine.checkTimeBasedMedals(nicheId, this);
+    await _awardEngine.checkTimeBasedMedals(nicheId, this, _focusService);
 
     notifyListeners();
   }
@@ -335,16 +335,15 @@ class GamificationService extends ChangeNotifier {
       if (_moduleStates.containsKey(nicheId)) _moduleStates.remove(nicheId);
 
       if (nicheId == NicheId.focus) {
-        resetFocusInsignias();
+        // Responsabilidade movida para FocusService
+        // O controlador de UI deve chamar focusService.resetProgress()
       }
       if (currentNicheId == nicheId) stopMonitoringApps();
     } else {
       _ensureStateExistsAnd(nicheId, consecutiveDays: 0);
 
-      // CORRIGIDO: Resetar TUDO em violações (períodos + insígnias)
       if (nicheId == NicheId.focus) {
-        resetFocusPeriods(nicheId);
-        resetFocusInsignias(); // Resetar insígnias também!
+        // Responsabilidade movida para FocusService
       }
     }
     await _saveLocalStatus(nicheId);
@@ -373,11 +372,6 @@ class GamificationService extends ChangeNotifier {
   void consumePendingMedal(Map<String, dynamic> medal) {
     _pendingMedals.remove(medal);
     _savePendingMedals();
-    notifyListeners();
-  }
-
-  void consumePendingInsignia(Map<String, dynamic> insignia) {
-    _pendingInsignias.remove(insignia);
     notifyListeners();
   }
 
@@ -482,52 +476,8 @@ class GamificationService extends ChangeNotifier {
         earnedInsignias: exist?.earnedInsignias ?? []);
   }
 
-  // NOVOS: Métodos para períodos de foco respeitados
-  Future<void> addRespectedFocusPeriod(NicheId nicheId) async {
-    final current = _moduleStates[nicheId]?.focusPeriodsRespected ?? 0;
-    final updated = current + 1;
-    
-    // CORREÇÃO: Verificar se já foi incrementado para evitar duplicação
-    if (_moduleStates[nicheId]?.focusPeriodsRespected == updated) {
-      return; // Já foi incrementado, evitar duplicação
-    }
-    
-    _ensureStateExistsAnd(nicheId, focusPeriodsRespected: updated);
-    await _saveLocalStatus(nicheId);
-
-    // CORREÇÃO: Sincronizar com cloud
-    await _cloudSync.saveModuleStatus(
-      nicheId: nicheId,
-      isActive: true,
-      consecutiveDays: _moduleStates[nicheId]?.consecutiveDays ?? 0,
-      focusPeriodsRespected: updated,
-      maxMedal: _moduleStates[nicheId]?.maxMedal,
-    );
-    
-    notifyListeners();
-    await _awardEngine.checkFocusInsigniasByPeriods(nicheId, this);
-  }
-
-  Future<void> resetFocusPeriods(NicheId nicheId) async {
-    await _saveLocalStatus(nicheId);
-
-    // CORREÇÃO OBRIGATÓRIA: Sincronizar com cloud
-    await _cloudSync.saveModuleStatus(
-      nicheId: nicheId,
-      isActive: isModuleActive(nicheId),
-      consecutiveDays: _moduleStates[nicheId]?.consecutiveDays ?? 0,
-      focusPeriodsRespected: 0,
-      maxMedal: _moduleStates[nicheId]?.maxMedal,
-    );
-
-    // NOVO: Verificar insígnias ao resetar períodos
-    await _awardEngine.checkFocusInsigniasByPeriods(nicheId, this);
-
-    notifyListeners();
-  }
-
-  int getRespectedFocusPeriods(NicheId nicheId) =>
-      _moduleStates[nicheId]?.focusPeriodsRespected ?? 0;
+  void awardMedal(NicheId nicheId, GamificationMedal medal) =>
+      _awardEngine.awardMedal(nicheId, medal, this);
 
   void setMaxMedal(NicheId nicheId, GamificationMedal medal) {
     _ensureStateExistsAnd(nicheId, maxMedal: medal.name);
@@ -550,52 +500,12 @@ class GamificationService extends ChangeNotifier {
   DateTime? getModuleStartDate(NicheId nicheId) => _moduleStates[nicheId]
       ?.lastUpdated
       ?.subtract(Duration(days: _moduleStates[nicheId]?.consecutiveDays ?? 0));
-  void awardMedal(NicheId nicheId, GamificationMedal medal) =>
-      _awardEngine.awardMedal(nicheId, medal, this);
-
-  // Foco e Insígnias
-  void awardInsignia(FocusInsignia insignia) async {
-    if (_earnedFocusInsignias.contains(insignia)) return;
-    _earnedFocusInsignias.add(insignia);
-    await _saveFocusInsignias();
-    _pendingInsignias.add({
-      'type': 'focus_insignia',
-      'insignia_name': insignia.nameBr
-          .split(' ')
-          .last, // CORRIGIDO: Pega apenas "Madeira", "Ferro", etc.
-      'insignia_key': insignia.name,
-      'insignia_asset': insignia.asset
-    });
-    notifyListeners();
-  }
-
-  void addEarnedFocusInsignia(FocusInsignia insignia) =>
-      _earnedFocusInsignias.add(insignia);
-  void resetFocusInsignias() {
-    // Preserva a insígnia de Madeira — ela é permanente (concedida na primeira ativação)
-    final hadMadeira = _earnedFocusInsignias.contains(FocusInsignia.madeira);
-    _earnedFocusInsignias.clear();
-    if (hadMadeira) {
-      _earnedFocusInsignias.add(FocusInsignia.madeira);
-    }
-    resetFocusPeriods(NicheId.focus);
-    _saveFocusInsignias();
-    notifyListeners();
-  }
-
-  Future<void> saveFocusInsignias() async =>
-      (await SharedPreferences.getInstance()).setStringList(
-          _prefsFocusInsigniasKey,
-          _earnedFocusInsignias.map((e) => e.name).toList());
-  Future<void> _saveFocusInsignias() async => saveFocusInsignias();
 
   // Utilitários
   Future<void> _savePendingMedals() async =>
-      (await SharedPreferences.getInstance())
-          .setString(_prefsPendingMedalsKey, jsonEncode(_pendingMedals));
+      await _prefs.setString(_prefsPendingMedalsKey, jsonEncode(_pendingMedals));
 
   Future<void> _saveLocalStatus(NicheId nicheId) async {
-    final prefs = await SharedPreferences.getInstance();
     final user = Supabase.instance.client.auth.currentUser;
     final status = UserModuleStatus(
       userId: user?.id ?? 'local',
@@ -604,19 +514,18 @@ class GamificationService extends ChangeNotifier {
       consecutiveDays: _moduleStates[nicheId]?.consecutiveDays ?? 0,
       focusPeriodsRespected: nicheId == NicheId.focus
           ? _moduleStates[nicheId]?.focusPeriodsRespected
-          : null, // NOVO: Salvar períodos de foco apenas para módulo Foco
+          : null,
       lastUpdated: DateTime.now(),
       earnedInsignias: nicheId == NicheId.focus
-          ? _earnedFocusInsignias.map((e) => e.name).toList()
+          ? [] // Gerenciado pelo FocusService
           : [],
     );
-    await prefs.setString(
+    await _prefs.setString(
         '$_prefsModuleStatusPrefix${nicheId.id}', jsonEncode(status.toJson()));
   }
 
   Future<UserModuleStatus?> _getLocalStatus(NicheId nicheId) async {
-    final json = (await SharedPreferences.getInstance())
-        .getString('$_prefsModuleStatusPrefix${nicheId.id}');
+    final json = _prefs.getString('$_prefsModuleStatusPrefix${nicheId.id}');
     return json != null ? UserModuleStatus.fromJson(jsonDecode(json)) : null;
   }
 
@@ -660,7 +569,7 @@ class GamificationService extends ChangeNotifier {
       final now = DateTime.now();
       if (_lastMidnightCheckByModule[nid]?.day != now.day) {
         _lastMidnightCheckByModule[nid] = now;
-        await _awardEngine.checkTimeBasedMedals(nid, this);
+        await _awardEngine.checkTimeBasedMedals(nid, this, _focusService);
       }
     }
   }
@@ -683,19 +592,6 @@ class GamificationService extends ChangeNotifier {
 
   Future<void> scheduleChallengeNotification() async {
     await NotificationScheduler.instance.scheduleChallengeNotification(this, _iapService);
-  }
-
-  bool historyFocusInterval(NicheId? nicheId, DateTime now) {
-    if (nicheId == null || focusIntervalByModule[nicheId] == null) {
-      return nicheId != NicheId.focus;
-    }
-    final foco = focusIntervalByModule[nicheId]!;
-    final minsNow = now.hour * 60 + now.minute;
-    final minsIni = foco.start.hour * 60 + foco.start.minute;
-    final minsFim = foco.end.hour * 60 + foco.end.minute;
-    return minsIni > minsFim
-        ? (minsNow >= minsIni || minsNow <= minsFim)
-        : (minsNow >= minsIni && minsNow <= minsFim);
   }
 }
 

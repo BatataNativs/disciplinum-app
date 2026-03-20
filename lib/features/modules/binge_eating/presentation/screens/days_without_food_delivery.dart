@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class DaysWithoutFoodDelivery extends StatefulWidget {
+class DaysWithoutFoodDelivery extends ConsumerStatefulWidget {
   const DaysWithoutFoodDelivery({super.key});
 
   @override
-  State<DaysWithoutFoodDelivery> createState() => _DaysWithoutFoodDeliveryState();
+  ConsumerState<DaysWithoutFoodDelivery> createState() => _DaysWithoutFoodDeliveryState();
 }
 
-class _DaysWithoutFoodDeliveryState extends State<DaysWithoutFoodDelivery> {
+class _DaysWithoutFoodDeliveryState extends ConsumerState<DaysWithoutFoodDelivery> {
   bool _isLoading = true;
   Set<String> _checkinDates = {};
 
@@ -21,7 +22,7 @@ class _DaysWithoutFoodDeliveryState extends State<DaysWithoutFoodDelivery> {
   }
 
   Future<void> _loadData() async {
-    final dates = await BingeEatingCheckinService().loadCheckins();
+    final dates = await ref.read(bingeEatingCheckinServiceProvider).loadCheckins();
     if (mounted) {
       setState(() {
         _checkinDates = dates

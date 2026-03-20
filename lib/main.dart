@@ -18,6 +18,7 @@ void main() async {
       ProviderScope(
         overrides: [
           seenOnboardingProvider.overrideWithValue(startupData.seenOnboarding),
+          sharedPreferencesProvider.overrideWithValue(startupData.prefs),
         ],
         child: const DisciplinumApp(),
       ),

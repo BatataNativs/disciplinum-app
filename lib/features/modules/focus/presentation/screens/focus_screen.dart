@@ -64,11 +64,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   // NOVO: Método chamado quando gamificação muda (período de foco cumprido)
-  void _onGamificationChanged() {
+  Future<void> _onGamificationChanged() async {
     if (!mounted) return;
     
-    final gamification = ref.read(gamificationServiceProvider);
-    final currentPeriods = gamification.getRespectedFocusPeriods(NicheId.focus);
+    final focusService = ref.read(focusServiceProvider);
+    final currentPeriods = await focusService.getRespectedPeriods();
     
     // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
     if (currentPeriods > 0 && (_focusStart != null && _focusEnd != null)) {

@@ -12,40 +12,31 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 
 class AppMonitoringService {
   GamificationService? _gamificationService;
   late final IsarPreferencesRepository _prefsRepo;
   IapService? _iapService;
-  
-  AppMonitoringService(IsarPreferencesRepository prefsRepo, {GamificationService? gamificationService, IapService? iapService}) {
+  final SessionPersistenceService _sessionPersistence;
+  final FocusService? _focusService;
+
+  AppMonitoringService(
+    IsarPreferencesRepository prefsRepo,
+    this._sessionPersistence, {
+    GamificationService? gamificationService,
+    IapService? iapService,
+    FocusService? focusService,
+  }) : _focusService = focusService {
     _prefsRepo = prefsRepo;
     _gamificationService = gamificationService;
     _iapService = iapService;
-    
-    // ✅ Auto-inicializar SessionPersistenceService se necessário
-    _initializeSessionPersistence();
-  }
-  
-  /// Inicializa SessionPersistenceService se ainda não foi feito
-  void _initializeSessionPersistence() {
-    try {
-      // Verificar se IsarService está disponível
-      if (IsarService.instance.isInitialized) {
-        // Inicializar SessionPersistenceService se ainda não foi feito
-        SessionPersistenceService.instance.initialize(IsarService.instance);
-        LoggerService.instance.i('SessionPersistenceService initialized in AppMonitoringService');
-      }
-    } catch (e) {
-      LoggerService.instance.e('Failed to initialize SessionPersistenceService', error: e);
-    }
   }
 
   // ID para a notificação persistente (Serviço de Primeiro Plano)
@@ -129,7 +120,7 @@ class AppMonitoringService {
     await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
     // ✅ Persistir estado de monitoramento com Isar
-    await SessionPersistenceService.instance.saveMonitoringState(
+    await _sessionPersistence.saveMonitoringState(
       activeNicheId: nicheId,
       isMonitoringActive: true,
       monitoredApps: apps,
@@ -191,7 +182,7 @@ class AppMonitoringService {
     await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
     // ✅ Limpar estado de monitoramento com Isar
-    await SessionPersistenceService.instance.clearMonitoringState();
+    await _sessionPersistence.clearMonitoringState();
 
     await _stopForegroundService();
 
@@ -210,12 +201,12 @@ class AppMonitoringService {
       
       // ✅ Atualizar heartbeat no Isar a cada 60 segundos
       if (timer.tick % 60 == 0) {
-        await SessionPersistenceService.instance.updateHeartbeat();
+        await _sessionPersistence.updateHeartbeat();
       }
       
       // ✅ Cleanup periódico a cada 5 minutos
       if (timer.tick % 300 == 0) {
-        await SessionPersistenceService.instance.cleanupOldSessions();
+        await _sessionPersistence.cleanupOldSessions();
       }
       
       _gamificationService?.runProgressCheck();
@@ -239,8 +230,8 @@ class AppMonitoringService {
 
       // Focus validation
       if (activeNicheId == NicheId.focus) {
-        if (!(_gamificationService
-            ?.historyFocusInterval(activeNicheId, DateTime.now()) ?? false)) {
+        final interval = await _focusService?.getInterval();
+        if (!(_focusService?.isWithinInterval(DateTime.now(), interval) ?? false)) {
           _violationStartByApp.clear();
           _warnedApps.clear();
           _lastSeenMonitoredApp.clear();
@@ -371,15 +362,18 @@ class AppMonitoringService {
     final hadViolations = await _hadViolationsInFocusPeriod(startTime, endTime);
 
     if (!hadViolations) {
-      gamification?.addRespectedFocusPeriod(activeNicheId);
+      if (_focusService != null) {
+        await _focusService.addRespectedPeriod();
 
-      LoggerService.instance.gamification(
-        'Período de foco respeitado',
-        data: {
-          'nicheId': activeNicheId.id,
-          'total': gamification?.getRespectedFocusPeriods(activeNicheId) ?? 0,
-        },
-      );
+        final total = await _focusService.getRespectedPeriods();
+        LoggerService.instance.gamification(
+          'Período de foco respeitado',
+          data: {
+            'nicheId': activeNicheId.id,
+            'total': total,
+          },
+        );
+      }
     }
 
     await _prefsRepo.setInt(
@@ -539,7 +533,7 @@ class AppMonitoringService {
 
   Future<void> restoreSession() async {
     // ✅ Primeiro tentar recuperar do Isar
-    final monitoringState = await SessionPersistenceService.instance.getMonitoringState();
+    final monitoringState = await _sessionPersistence.getMonitoringState();
     
     if (monitoringState != null && monitoringState.isMonitoringActive) {
       LoggerService.instance.i('Recuperando estado de monitoramento do Isar');
@@ -550,7 +544,7 @@ class AppMonitoringService {
       _isModuleActive = true;
       
       // Recuperar sessões ativas
-      final activeSessions = await SessionPersistenceService.instance.getActiveSessions();
+      final activeSessions = await _sessionPersistence.getActiveSessions();
       if (activeSessions.isNotEmpty) {
         LoggerService.instance.i('Recuperadas ${activeSessions.length} sessões ativas');
         
@@ -660,7 +654,7 @@ class AppMonitoringService {
       // ou se ele voltou para o Disciplinum.
 
       // ✅ Marcar sessão como inativa com Isar
-      await SessionPersistenceService.instance.markSessionInactive(packageName);
+      await _sessionPersistence.markSessionInactive(packageName);
 
       _violationStartByApp.remove(packageName);
       _warnedApps.remove(packageName);
@@ -730,7 +724,7 @@ class AppMonitoringService {
     }
 
     // ✅ Persistir sessão de violação com Isar
-    await SessionPersistenceService.instance.saveDetectionSession(
+    await _sessionPersistence.saveDetectionSession(
       packageName: packageName,
       nicheId: currentNicheId!,
       duration: 30, // 30 segundos de violação
