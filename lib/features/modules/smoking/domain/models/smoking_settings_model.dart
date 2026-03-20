@@ -44,6 +44,40 @@ class SmokingSettingsModel {
     return daysWithoutSmoking * dailyCost;
   }
   double get monthlySavings => moneySavedTotal * 30 / timeSmokeFree.inDays.clamp(1, 30);
+  
+  bool get isConfigured => dailyCigarettes > 0 && pricePerPack > 0 && cigarettesPerPack > 0;
+
+  SmokingSettingsModel copyWith({
+    int? dailyCigarettes,
+    double? pricePerPack,
+    int? cigarettesPerPack,
+    DateTime? startDate,
+    DateTime? quitDate,
+    bool? isActive,
+    String? currency,
+    double? lastPackPrice,
+    double? lastPacksPerDay,
+    DateTime? lastQuitDate,
+    String? lastCurrency,
+    double? lastSavedTotal,
+    DateTime? lastEndDate,
+  }) {
+    return SmokingSettingsModel(
+      dailyCigarettes: dailyCigarettes ?? this.dailyCigarettes,
+      pricePerPack: pricePerPack ?? this.pricePerPack,
+      cigarettesPerPack: cigarettesPerPack ?? this.cigarettesPerPack,
+      startDate: startDate ?? this.startDate,
+      quitDate: quitDate ?? this.quitDate,
+      isActive: isActive ?? this.isActive,
+      currency: currency ?? this.currency,
+      lastPackPrice: lastPackPrice ?? this.lastPackPrice,
+      lastPacksPerDay: lastPacksPerDay ?? this.lastPacksPerDay,
+      lastQuitDate: lastQuitDate ?? this.lastQuitDate,
+      lastCurrency: lastCurrency ?? this.lastCurrency,
+      lastSavedTotal: lastSavedTotal ?? this.lastSavedTotal,
+      lastEndDate: lastEndDate ?? this.lastEndDate,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'dailyCigarettes': dailyCigarettes,

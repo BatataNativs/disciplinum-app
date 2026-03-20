@@ -28,6 +28,13 @@ class IsarPreferencesRepository {
     return pref?.value;
   }
 
+  Future<void> deleteByKey(String key) async {
+    final existing = await _collection.filter().keyEqualTo(key).findFirst();
+    if (existing != null) {
+      await _collection.delete(existing.id);
+    }
+  }
+
   Future<void> setBool(String key, bool value) async {
     await setString(key, value.toString());
   }

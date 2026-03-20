@@ -222,6 +222,11 @@ class MoneySavingChallengeService extends ChangeNotifier {
     }
   }
 
+  /// Alias para deleteAllChallenges (mantém compatibilidade)
+  Future<void> resetAllData() async {
+    await deleteAllChallenges();
+  }
+
   /// Cria um novo desafio com as configurações fornecidas e adiciona à lista
   Future<MoneySavingChallengeModel> createChallenge({
     required String title,

@@ -24,6 +24,7 @@ import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/controllers/stop_smoking_controller.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
@@ -178,7 +179,14 @@ final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
 
 /// Provider para MoneySavingChallengeService
 final moneySavingChallengeServiceProvider = Provider<MoneySavingChallengeService>((ref) {
-  return MoneySavingChallengeService();
+  final moneySavingService = MoneySavingChallengeService();
+  return moneySavingService;
+});
+
+/// Provider para StopSmokingController
+final stopSmokingControllerProvider = StateNotifierProvider<StopSmokingController, StopSmokingState>((ref) {
+  final smokingService = ref.watch(smokingServiceProvider);
+  return StopSmokingController(smokingService);
 });
 
 final focusServiceProvider = Provider<FocusService>((ref) {

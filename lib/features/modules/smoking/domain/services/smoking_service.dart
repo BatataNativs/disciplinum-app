@@ -125,4 +125,24 @@ class SmokingService {
       throw Exception('Falha ao resetar dados');
     }
   }
+
+  // Deletar configurações (Resetar módulo para estado inicial absoluto)
+  Future<void> resetAllData() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        await _prefs.clearSmokingSettings();
+      } else {
+        // Remove from Supabase
+        await _supabase
+            .from('user_module_settings')
+            .delete()
+            .eq('user_id', userId)
+            .eq('module_id', 'smoking');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar dados do smoking: $e');
+      throw Exception('Falha ao resetar dados');
+    }
+  }
 }

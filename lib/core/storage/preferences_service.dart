@@ -18,6 +18,14 @@ class PreferencesService {
 
   // ============================================================
   // ===================== GUEST MODE ============================
+
+  Future<void> clearSmokingSettings() async {
+    try {
+      await _prefsRepo.deleteByKey(_smokingKey);
+    } catch (e) {
+      LoggerService.instance.e('Erro ao limpar settings do smoking: $e');
+    }
+  }
   // ============================================================
 
   Future<void> setGuestMode(bool value) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
@@ -11,18 +12,17 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/services.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'frases_motivacionais.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'daily_checkins_stats.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/sections/niche_checkin_section.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_consumption_settings.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_header_widget.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_segmented_control.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_tab_content.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_actions_widget.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -497,29 +497,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           child: Column(
             children: [
               // Header Row
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
+              StopSmokingHeaderWidget(
+                niche: _niche,
+                onBackPressed: () => Navigator.pop(context),
               ),
               Expanded(
                 child: Column(
@@ -527,7 +507,19 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
-                      child: _buildSegmentedControl(),
+                      child: StopSmokingSegmentedControl(
+                        selectedIndex: _selectedIndex,
+                        onIndexChanged: (index) {
+                          HapticFeedback.selectionClick();
+                          if (_pageController.hasClients) {
+                            _pageController.animateToPage(index,
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOutQuad);
+                          } else {
+                            setState(() => _selectedIndex = index);
+                          }
+                        },
+                      ),
                     ),
                     Expanded(
                       child: PageView(
@@ -542,7 +534,39 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                _buildTabContent(0),
+                                StopSmokingTabContent(
+                                  tabIndex: 0,
+                                  isDark: isDark,
+                                  priceController: _priceController,
+                                  packsController: _packsController,
+                                  selectedCurrency: _selectedCurrency,
+                                  selectedDate: _selectedDate,
+                                  checkinTime: _checkinTime,
+                                  onCurrencyChanged: (newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _selectedCurrency = newValue;
+                                        _formatCurrencyInput(_priceController.text);
+                                      });
+                                    }
+                                  },
+                                  onPriceChanged: _formatCurrencyInput,
+                                  onDateTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: _selectedDate,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime.now(),
+                                      locale: const Locale('pt', 'BR'),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        _selectedDate = picked;
+                                      });
+                                    }
+                                  },
+                                  onDeleteTime: _showDeleteTimeDialog,
+                                ),
                                 const SizedBox(height: 100),
                               ],
                             ),
@@ -551,7 +575,39 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                _buildTabContent(1),
+                                StopSmokingTabContent(
+                                  tabIndex: 1,
+                                  isDark: isDark,
+                                  priceController: _priceController,
+                                  packsController: _packsController,
+                                  selectedCurrency: _selectedCurrency,
+                                  selectedDate: _selectedDate,
+                                  checkinTime: _checkinTime,
+                                  onCurrencyChanged: (newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _selectedCurrency = newValue;
+                                        _formatCurrencyInput(_priceController.text);
+                                      });
+                                    }
+                                  },
+                                  onPriceChanged: _formatCurrencyInput,
+                                  onDateTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: _selectedDate,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime.now(),
+                                      locale: const Locale('pt', 'BR'),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        _selectedDate = picked;
+                                      });
+                                    }
+                                  },
+                                  onDeleteTime: _showDeleteTimeDialog,
+                                ),
                                 const SizedBox(height: 100),
                               ],
                             ),
@@ -565,18 +621,40 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_selectedIndex == 0)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _buildTabActions(0),
-                    )
-                  else ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildTabActions(1),
-                    ),
-                    _buildBottomButtons(isDark),
-                  ],
+                  StopSmokingActionsWidget(
+                    selectedIndex: _selectedIndex,
+                    isDark: isDark,
+                    isSaving: isSaving,
+                    pageController: _pageController,
+                    onOpenCheckInManager: _openCheckInManager,
+                    onShowStatisticsMenu: _showStatisticsMenu,
+                    gamificationRunning: _gamificationRunning,
+                    onToggleModule: _gamificationRunning
+                        ? _desativarNichoMonitoramento
+                        : _ativarNichoMonitoramento,
+                    onSaveSettings: () {
+                      if (_priceController.text.isNotEmpty &&
+                          _packsController.text.isNotEmpty) {
+                        String cleanPrice = _priceController.text;
+                        if (_selectedCurrency == 'US\$') {
+                          cleanPrice = cleanPrice.replaceAll(',', '');
+                        } else {
+                          cleanPrice =
+                              cleanPrice.replaceAll('.', '').replaceAll(',', '.');
+                        }
+                        // Fallback caso sobre algo (ex letras)
+                        cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
+
+                        _saveSettings(
+                          double.tryParse(cleanPrice) ?? 0.0,
+                          int.tryParse(_packsController.text) ?? 0,
+                          _selectedDate,
+                          _selectedCurrency,
+                        );
+                      }
+                    },
+                    context: context,
+                  ),
                 ],
               ),
             ],
@@ -586,160 +664,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     );
   }
 
-  Widget _buildSegmentedControl() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Parar de fumar'];
 
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: List.generate(options.length, (index) {
-          final isSelected = _selectedIndex == index;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                if (_pageController.hasClients) {
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutQuad);
-                } else {
-                  setState(() => _selectedIndex = index);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color:
-                      isSelected ? const Color(0xFF6366F1) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF6366F1).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  options[index],
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
-                    letterSpacing: isSelected ? 0.3 : 0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildTabContent(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    switch (index) {
-      case 0:
-        return Column(
-          children: [
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.settings_outlined,
-              title: 'No topo da tela, preencha como é o seu consumo',
-              content:
-                  'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.check_box_outlined,
-              title:
-                  'Em "Check-in diário", selecione horario para o Check-in diário',
-              content:
-                  'No horário configurado, você receberá uma notificação para que você faça o "check-in diário" da sua disciplina, informando se você fumou ou não no dia.',
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.notifications_outlined,
-              title: 'Em "Notificações", configure notificações motivacionais',
-              content:
-                  'Insira até 8 horários para receber notificações motivacionais durante o dia. Pra te lembrar de manter a disciplina.',
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.bar_chart_rounded,
-              title:
-                  'Em "Estatisticas", veja estatisticas financeiras e de saude',
-              content:
-                  'Veja dados de quanto você pode economizar, e como sua saúde pode melhorar, caso mantenha a disciplina.',
-            ),
-          ],
-        );
-      case 1:
-        return Column(
-          children: [
-            SmokingConsumptionSettings(
-              isDark: isDark,
-              priceController: _priceController,
-              packsController: _packsController,
-              selectedCurrency: _selectedCurrency,
-              selectedDate: _selectedDate,
-              onCurrencyChanged: (newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    _selectedCurrency = newValue;
-                    _formatCurrencyInput(_priceController.text);
-                  });
-                }
-              },
-              onPriceChanged: _formatCurrencyInput,
-              onDateTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
-                  locale: const Locale('pt', 'BR'),
-                );
-                if (picked != null) {
-                  setState(() {
-                    _selectedDate = picked;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 24),
-            NicheCheckinSection(
-              checkinTime: _checkinTime,
-              isDark: isDark,
-              onDeleteTime: _showDeleteTimeDialog,
-            ),
-            const SizedBox(height: 24),
-          ],
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
 
 
 
@@ -784,142 +709,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     );
   }
 
-  Widget _buildTabActions(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    switch (index) {
-      case 0:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
-            icon: Icons.rocket_launch_rounded,
-            label: 'Começar',
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
-              }
-            },
-          ),
-        );
-      case 1:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
-            icon: Icons.save_rounded,
-            label: isSaving ? 'Salvando...' : 'Salvar',
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: isSaving
-                ? () {}
-                : () {
-                    if (_priceController.text.isNotEmpty &&
-                        _packsController.text.isNotEmpty) {
-                      String cleanPrice = _priceController.text;
-                      if (_selectedCurrency == 'US\$') {
-                        cleanPrice = cleanPrice.replaceAll(',', '');
-                      } else {
-                        cleanPrice =
-                            cleanPrice.replaceAll('.', '').replaceAll(',', '.');
-                      }
-                      // Fallback caso sobre algo (ex letras)
-                      cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
 
-                      _saveSettings(
-                        double.tryParse(cleanPrice) ?? 0.0,
-                        int.tryParse(_packsController.text) ?? 0,
-                        _selectedDate,
-                        _selectedCurrency,
-                      );
-                    }
-                  },
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Widget _buildBottomButtons(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: NicheActionButton(
-                  icon: Icons.check_circle_outline,
-                  label: 'Check-in diário',
-                  color: const Color(0xFF6366F1),
-                  isDark: isDark,
-                  onTap: _openCheckInManager,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: NicheActionButton(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notificações',
-                  color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FrasesMotivacionaisScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: NicheActionButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatisticas',
-                  color: Colors.teal,
-                  isDark: isDark,
-                  onTap: _showStatisticsMenu,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: NicheActionButton(
-                  icon: _gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: _gamificationRunning
-                      ? 'Desativar Módulo'
-                      : 'Ativar Módulo',
-                  color: _gamificationRunning ? Colors.red : Colors.green,
-                  isDark: isDark,
-                  isDestructive: _gamificationRunning,
-                  onTap: _gamificationRunning
-                      ? _desativarNichoMonitoramento
-                      : _ativarNichoMonitoramento,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
 
   void _openCheckInManager() {
