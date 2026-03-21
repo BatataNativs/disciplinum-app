@@ -20,6 +20,7 @@ import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
+import 'package:disciplinum/features/modules/spending/domain/services/spending_service_wrapper.dart';
 import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
@@ -208,6 +209,11 @@ final readingServiceProvider = ChangeNotifierProvider<ReadingService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);
   final gamification = ref.watch(gamificationServiceProvider);
   return ReadingService(prefs, gamification);
+});
+
+/// Provider para SpendingService
+final spendingServiceProvider = Provider<SpendingService>((ref) {
+  return SpendingService(ref);
 });
 
 /// Provider para ReadingServiceAdapter
