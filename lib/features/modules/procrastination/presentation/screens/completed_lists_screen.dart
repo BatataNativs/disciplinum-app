@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
-import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 
 /// Tela que exibe listas de tarefas 100% concluídas sem atraso
-class CompletedListsScreen extends StatelessWidget {
+class CompletedListsScreen extends ConsumerWidget {
   const CompletedListsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final service = Provider.of<ProcrastinationService>(context);
+    final service = ref.watch(procrastinationServiceProvider);
     final completedLists = service.getFullyCompletedLists();
 
     return Scaffold(

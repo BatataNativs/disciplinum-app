@@ -15,9 +15,10 @@ import 'package:disciplinum/features/modules/focus/presentation/screens/focus_no
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
+import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -462,29 +463,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           child: Column(
             children: [
               // Header Row
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
+              ModuleScreenHeader(
+                title: _niche.name,
               ),
               Expanded(
                 child: Column(
@@ -751,30 +731,24 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return Column(
-          children: [
-            NicheInfoCard(
-              isDark: isDark,
+        return HowItWorksSection(
+          isDark: isDark,
+          onGetStarted: () => _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+          infoCards: const [
+            InfoCardData(
               icon: Icons.settings_outlined,
               title: 'Em "Configurar", defina seus intervalos de foco',
-              content:
-                  'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
+              content: 'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
             ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
+            InfoCardData(
               icon: Icons.notifications_outlined,
               title: 'Notificações',
-              content:
-                  'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
+              content: 'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
             ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
+            InfoCardData(
               icon: Icons.bar_chart_rounded,
               title: 'Em "Estatísticas", monitore seu foco',
-              content:
-                  'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
+              content: 'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
             ),
           ],
         );

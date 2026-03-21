@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
-import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/challenge_cell.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/savings_overview_card.dart';
 
-class FullScreenGridPage extends StatefulWidget {
+class FullScreenGridPage extends ConsumerStatefulWidget {
   final MoneySavingChallengeModel challenge;
 
   const FullScreenGridPage({super.key, required this.challenge});
 
   @override
-  State<FullScreenGridPage> createState() => _FullScreenGridPageState();
+  ConsumerState<FullScreenGridPage> createState() => _FullScreenGridPageState();
 }
 
-class _FullScreenGridPageState extends State<FullScreenGridPage> {
+class _FullScreenGridPageState extends ConsumerState<FullScreenGridPage> {
   late MoneySavingChallengeModel _currentChallenge;
   bool _isProcessing = false;
   late ConfettiController _confettiController;
@@ -48,8 +48,7 @@ class _FullScreenGridPageState extends State<FullScreenGridPage> {
     HapticFeedback.lightImpact();
 
     try {
-      final service =
-          Provider.of<MoneySavingChallengeService>(context, listen: false);
+      final service = ref.read(moneySavingChallengeServiceProvider);
       final updated = await service.toggleCell(index);
 
       if (mounted && updated != null) {

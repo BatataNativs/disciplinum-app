@@ -26,6 +26,7 @@ import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/controllers/stop_smoking_controller.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 
@@ -60,6 +61,12 @@ final bingeEatingCheckinServiceProvider = Provider<BingeEatingCheckinService>((r
   final cloudSync = ref.watch(cloudSyncServiceProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
   return BingeEatingCheckinService(isarService, cloudSync, prefs);
+});
+
+/// Provider para BingeEatingService
+final bingeEatingServiceProvider = Provider<BingeEatingService>((ref) {
+  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  return BingeEatingService(repository);
 });
 
 /// Provider para ModuleRepository

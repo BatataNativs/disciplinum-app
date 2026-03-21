@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/completed_lists_screen.dart';
 
-class ProcrastinationStatsScreen extends StatelessWidget {
+class ProcrastinationStatsScreen extends ConsumerWidget {
   const ProcrastinationStatsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final service = Provider.of<ProcrastinationService>(context);
+    final service = ref.watch(procrastinationServiceProvider);
     final stats = service.getCompletedTasksStats();
 
     final totalCompleted = stats['totalCompleted'] as int;

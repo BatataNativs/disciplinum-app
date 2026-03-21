@@ -1,19 +1,19 @@
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 
-class UpdateProgressDialog extends StatefulWidget {
+class UpdateProgressDialog extends ConsumerStatefulWidget {
   final ReadingBook book;
 
   const UpdateProgressDialog({super.key, required this.book});
 
   @override
-  State<UpdateProgressDialog> createState() => _UpdateProgressDialogState();
+  ConsumerState<UpdateProgressDialog> createState() => _UpdateProgressDialogState();
 }
 
-class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
+class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
   late TextEditingController _controller;
 
   @override
@@ -32,8 +32,7 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
         return;
       }
 
-      Provider.of<ReadingService>(context, listen: false)
-          .updateProgress(widget.book.id, newPage);
+      ref.read(readingServiceProvider).updateProgress(widget.book.id, newPage);
       Navigator.of(context).pop();
     }
   }
@@ -51,8 +50,7 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
                     child: const Text('Cancelar')),
                 TextButton(
                   onPressed: () {
-                    Provider.of<ReadingService>(context, listen: false)
-                        .deleteBook(widget.book.id);
+                    ref.read(readingServiceProvider).deleteBook(widget.book.id);
                     Navigator.pop(ctx); // fecha confirmacao
                     Navigator.pop(context); // fecha dialogo de update
                   },

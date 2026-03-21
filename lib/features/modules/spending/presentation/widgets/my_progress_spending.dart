@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 
-class MyProgressSpending extends StatelessWidget {
+class MyProgressSpending extends ConsumerWidget {
   const MyProgressSpending({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final gamification = Provider.of<GamificationService>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gamification = ref.watch(gamificationServiceProvider);
     final dias = gamification.diasConsecutivosByModule[NicheId.spending] ?? 0;
 
     return _BaseProgressDetailScreen(
@@ -20,15 +19,15 @@ class MyProgressSpending extends StatelessWidget {
   }
 }
 
-class _BaseProgressDetailScreen extends StatelessWidget {
+class _BaseProgressDetailScreen extends ConsumerWidget {
   final String title;
   final int dias;
 
   const _BaseProgressDetailScreen({required this.title, required this.dias});
 
   @override
-  Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
     String fullName = authService.userProfile?['name'] ?? 'Usuário';

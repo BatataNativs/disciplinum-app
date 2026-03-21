@@ -1,18 +1,18 @@
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/shared/widgets/reading/update_progress_dialog.dart';
 import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class BookDetailsDialog extends StatelessWidget {
+class BookDetailsDialog extends ConsumerWidget {
   final ReadingBook book;
 
   const BookDetailsDialog({super.key, required this.book});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
@@ -110,7 +110,7 @@ class BookDetailsDialog extends StatelessWidget {
                     book: book,
                     onUpdate: (updatedBook) {
                       // Implementar atualização
-                      final service = Provider.of<ReadingService>(context, listen: false);
+                      final service = ref.read(readingServiceProvider);
                       service.updateBook(
                         bookId: updatedBook.id,
                         title: updatedBook.title,

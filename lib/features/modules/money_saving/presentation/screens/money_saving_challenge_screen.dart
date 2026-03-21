@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:provider/provider.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/full_screen_grid_page.dart';
 
 // Widgets importados
@@ -19,17 +19,17 @@ import 'package:disciplinum/features/modules/money_saving/presentation/widgets/m
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
 
-class MoneySavingChallengeScreen extends StatefulWidget {
+class MoneySavingChallengeScreen extends ConsumerStatefulWidget {
   final String? heroTag;
   const MoneySavingChallengeScreen({super.key, this.heroTag});
 
   @override
-  State<MoneySavingChallengeScreen> createState() =>
+  ConsumerState<MoneySavingChallengeScreen> createState() =>
       _MoneySavingChallengeScreenState();
 }
 
 class _MoneySavingChallengeScreenState
-    extends State<MoneySavingChallengeScreen> {
+    extends ConsumerState<MoneySavingChallengeScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.moneySavingChallenge);
   late MoneySavingChallengeService _service;
 
@@ -48,8 +48,7 @@ class _MoneySavingChallengeScreenState
     // Buscamos o serviço do provider no próximo frame para ter o context pronto
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _service =
-            Provider.of<MoneySavingChallengeService>(context, listen: false);
+        _service = ref.read(moneySavingChallengeServiceProvider);
         _loadChallenge();
       }
     });
@@ -88,8 +87,7 @@ class _MoneySavingChallengeScreenState
 
     if (mounted) {
       // Inicia ciclo de gamificação
-      final gamification =
-          Provider.of<GamificationService>(context, listen: false);
+      final gamification = ref.read(gamificationServiceProvider);
       gamification.startModuleCycle(nicheId: _niche.nicheId);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,8 +138,7 @@ class _MoneySavingChallengeScreenState
         }
 
         // Reseta gamificação e notifica
-        final gamification =
-            Provider.of<GamificationService>(context, listen: false);
+        final gamification = ref.read(gamificationServiceProvider);
 
         gamification.resetMedals(
           _niche.nicheId,
@@ -382,8 +379,7 @@ class _MoneySavingChallengeScreenState
       await _loadChallenge();
 
       if (_service.challengesList.isEmpty && mounted) {
-        final gamification =
-            Provider.of<GamificationService>(context, listen: false);
+        final gamification = ref.read(gamificationServiceProvider);
         gamification.resetMedals(
           _niche.nicheId,
           deactivate: true,
@@ -432,8 +428,7 @@ class _MoneySavingChallengeScreenState
 
               // --- ATIVAÇÃO DE GAMIFICAÇÃO NOVO DESAFIO ---
               if (editId == null) {
-                final gamification =
-                    Provider.of<GamificationService>(context, listen: false);
+                final gamification = ref.read(gamificationServiceProvider);
                 gamification.startModuleCycle(nicheId: _niche.nicheId);
               }
 
@@ -468,7 +463,7 @@ class _MoneySavingChallengeScreenState
 
   @override
   Widget build(BuildContext context) {
-    _service = context.watch<MoneySavingChallengeService>();
+    _service = ref.watch(moneySavingChallengeServiceProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

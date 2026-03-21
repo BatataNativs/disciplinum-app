@@ -1,9 +1,9 @@
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class AddBookDialog extends StatefulWidget {
+class AddBookDialog extends ConsumerStatefulWidget {
   /// Se não-nulo, o diálogo entra em modo de edição
   final ReadingBook? bookToEdit;
 
@@ -19,10 +19,10 @@ class AddBookDialog extends StatefulWidget {
   }
 
   @override
-  State<AddBookDialog> createState() => _AddBookDialogState();
+  ConsumerState<AddBookDialog> createState() => _AddBookDialogState();
 }
 
-class _AddBookDialogState extends State<AddBookDialog> {
+class _AddBookDialogState extends ConsumerState<AddBookDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
@@ -45,7 +45,7 @@ class _AddBookDialogState extends State<AddBookDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final service = Provider.of<ReadingService>(context, listen: false);
+      final service = ref.read(readingServiceProvider);
       if (_isEditing) {
         service.updateBook(
           bookId: widget.bookToEdit!.id,

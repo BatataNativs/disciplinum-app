@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 
-class MoneySavingChallengeTotalContributionsScreen extends StatelessWidget {
+class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
   const MoneySavingChallengeTotalContributionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final service = Provider.of<MoneySavingChallengeService>(context);
+    final service = ref.watch(moneySavingChallengeServiceProvider);
     final challenges = service.challengesList;
 
     double totalGeneralSaved = 0;

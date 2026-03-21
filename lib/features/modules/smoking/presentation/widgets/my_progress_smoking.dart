@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 
-class MyProgressSmoking extends StatelessWidget {
+class MyProgressSmoking extends ConsumerWidget {
   const MyProgressSmoking({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final gamification = Provider.of<GamificationService>(context);
-    final authService = Provider.of<AuthService>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gamification = ref.watch(gamificationServiceProvider);
+    final authService = ref.watch(authServiceProvider);
     final dias = gamification.diasConsecutivosByModule[NicheId.smoking] ?? 0;
 
     // Lógica para obter o primeiro nome
