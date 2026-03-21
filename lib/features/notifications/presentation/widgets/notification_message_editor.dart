@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/widgets/lojinha.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
-class NotificationMessageEditor extends StatelessWidget {
+class NotificationMessageEditor extends ConsumerWidget {
   final NicheId nicheId;
 
   const NotificationMessageEditor({super.key, required this.nicheId});
 
   @override
-  Widget build(BuildContext context) {
-    final iap = Provider.of<IapService>(context);
-    final gamification = Provider.of<GamificationService>(context);
-    final adService = Provider.of<AdService>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final iap = ref.watch(iapServiceProvider);
+    final gamification = ref.watch(gamificationServiceProvider);
+    final adService = ref.read(adServiceProvider);
     final currentMsg = GamificationMessages.getModuleMessage(
       nicheId,
       isUnlocked: iap.isCustomNotifUnlocked ||
@@ -72,7 +72,7 @@ class NotificationMessageEditor extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 if (hasAccess) {
-                  _openEditMessageDialog(context, gamification);
+                  _openEditMessageDialog(context, ref, gamification);
                 } else {
                   _showPremiumFeatureDialog(context, gamification, adService);
                 }
@@ -169,8 +169,8 @@ class NotificationMessageEditor extends StatelessWidget {
   }
 
   void _openEditMessageDialog(
-      BuildContext context, GamificationService gamification) {
-    final iap = Provider.of<IapService>(context, listen: false);
+      BuildContext context, WidgetRef ref, GamificationService gamification) {
+    final iap = ref.read(iapServiceProvider);
     final controller = TextEditingController(
         text: GamificationMessages.getModuleMessage(
       nicheId,

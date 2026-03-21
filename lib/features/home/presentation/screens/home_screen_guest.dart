@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/common/niche_category.dart';
@@ -12,16 +12,15 @@ import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_se
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 
-class HomeScreenGuest extends StatefulWidget {
+class HomeScreenGuest extends ConsumerStatefulWidget {
   const HomeScreenGuest({super.key});
 
   @override
-  State<HomeScreenGuest> createState() => _HomeScreenGuestState();
+  ConsumerState<HomeScreenGuest> createState() => _HomeScreenGuestState();
 }
 
-class _HomeScreenGuestState extends State<HomeScreenGuest>
+class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     with WidgetsBindingObserver {
   bool _permissionsChecked = false;
 
@@ -65,8 +64,7 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
           bool isAccessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
           if (isAccessibilityGranted && mounted) {
-            final gamification =
-                Provider.of<GamificationService>(context, listen: false);
+            final gamification = ref.read(gamificationServiceProvider);
             await gamification.restoreMonitoringSession();
           }
         }
@@ -311,18 +309,11 @@ class _HomeScreenGuestState extends State<HomeScreenGuest>
                             const SizedBox(height: 32),
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            return Selector<GamificationService, List<NicheId>>(
-                              selector: (_, gamificationService) {
-                                return NicheId.values
-                                    .where((id) =>
-                                        gamificationService.isModuleActive(id))
-                                    .toList(growable: false);
-                              },
-                              shouldRebuild: (prev, next) =>
-                                  !listEquals(prev, next),
-                              builder: (context, activeNiches, _) {
+                            return Consumer(
+                              builder: (context, ref, child) {
+                                final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
                                 return _buildActiveModulesSection(
-                                    activeNiches, isDark, textTheme);
+                                    activeModules, isDark, textTheme);
                               },
                             );
                           }

@@ -4,23 +4,23 @@ import 'package:flutter/foundation.dart'; // Para kIsWeb
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Para HapticFeedback
-import 'package:provider/provider.dart'; // Import necessário para Auth
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart'; // Import do seu serviço de Auth
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
-class SecretMenuScreen extends StatefulWidget {
+class SecretMenuScreen extends ConsumerStatefulWidget {
   const SecretMenuScreen({super.key});
 
   @override
-  State<SecretMenuScreen> createState() => _SecretMenuScreenState();
+  ConsumerState<SecretMenuScreen> createState() => _SecretMenuScreenState();
 }
 
 enum ScreenStage { normal, fringeLock, terminal }
 
-class _SecretMenuScreenState extends State<SecretMenuScreen> {
+class _SecretMenuScreenState extends ConsumerState<SecretMenuScreen> {
   // Estado da Tela
   ScreenStage _currentStage = ScreenStage.normal;
 
@@ -317,7 +317,7 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
   void _showEasterEggDialog() {
     setState(() => _dialogShown = true);
 
-    final auth = Provider.of<AuthService>(context, listen: false);
+    final auth = ref.read(authServiceProvider);
 
     // LÓGICA CORRIGIDA PARA ACESSAR OS DADOS DO SEU AUTH SERVICE
     String userName = "Visitante";

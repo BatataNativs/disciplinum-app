@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
-import 'package:disciplinum/config/app_config.dart'; // Importe para pegar o ID do anúncio
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/config/app_config.dart';
 
-class SettingsBannerAd extends StatefulWidget {
+class SettingsBannerAd extends ConsumerStatefulWidget {
   const SettingsBannerAd({super.key});
 
   @override
-  State<SettingsBannerAd> createState() => _SettingsBannerAdState();
+  ConsumerState<SettingsBannerAd> createState() => _SettingsBannerAdState();
 }
 
-class _SettingsBannerAdState extends State<SettingsBannerAd> {
+class _SettingsBannerAdState extends ConsumerState<SettingsBannerAd> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
 
@@ -20,7 +20,7 @@ class _SettingsBannerAdState extends State<SettingsBannerAd> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Carrega o anúncio se ainda não estiver carregado e o usuário não for AdFree
-    final iap = Provider.of<IapService>(context, listen: false);
+    final iap = ref.read(iapServiceProvider);
     if (!iap.isAdFree && _bannerAd == null) {
       _loadAd();
     }
@@ -60,7 +60,7 @@ class _SettingsBannerAdState extends State<SettingsBannerAd> {
 
   @override
   Widget build(BuildContext context) {
-    final iap = Provider.of<IapService>(context);
+    final iap = ref.watch(iapServiceProvider);
 
     if (iap.isAdFree) {
       return const SizedBox.shrink();

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -9,15 +8,15 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 // Import das telas de progresso de cada módulo
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 
-class MyProgressScreen extends StatelessWidget {
+class MyProgressScreen extends ConsumerWidget {
   const MyProgressScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final authService = Provider.of<AuthService>(context);
-    final gamification = Provider.of<GamificationService>(context);
+    final authService = ref.watch(authServiceProvider);
+    final gamification = ref.watch(gamificationServiceProvider);
     final niches = NicheRepository.getAll();
 
     // Lógica para obter o primeiro nome
