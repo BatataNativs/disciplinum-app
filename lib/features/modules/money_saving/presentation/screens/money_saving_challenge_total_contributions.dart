@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 
 class MoneySavingChallengeTotalContributionsScreen extends StatelessWidget {
   const MoneySavingChallengeTotalContributionsScreen({super.key});

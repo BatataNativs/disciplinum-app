@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 
 /// Widget de grade de progresso do desafio de poupança
 class SavingsGridWidget extends StatelessWidget {

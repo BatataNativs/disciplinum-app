@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
 /// Estado da tela Money Saving Challenge

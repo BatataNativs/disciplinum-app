@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/controllers/money_saving_challenge_controller.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 /// Widget de barra de ações do desafio de poupança

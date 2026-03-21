@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
-import 'package:disciplinum/features/modules/money_saving_challenge/domain/entities/money_saving_challenge_model.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/challenge_cell.dart';
