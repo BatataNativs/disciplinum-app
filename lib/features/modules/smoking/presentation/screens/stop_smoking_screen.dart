@@ -19,7 +19,7 @@ import 'daily_checkins_stats.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_header_widget.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_segmented_control.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_tab_content.dart';
@@ -48,7 +48,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
   final TextEditingController _priceController =
-      TextEditingController(text: '');
+      TextEditingController();
   final TextEditingController _packsController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedCurrency = 'R\$';
@@ -133,12 +133,18 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
       if (settings != null) {
         _selectedCurrency = settings!.currency;
-        // Só formata se o preço for maior que zero
-        if (settings!.packPrice > 0) {
-          _formatCurrencyInput(settings!.packPrice.toStringAsFixed(2));
+        
+        // Lógica inteligente: NÃO preenche campos automaticamente
+        // Usuário deve preencher manualmente para ativar o módulo
+        if (!_gamificationRunning) {
+          // Módulo não está ativo - campos vazios para preenchimento manual
+          _priceController.clear();
+          _packsController.clear();
+        } else {
+          // Módulo está ativo - mostrar hints para facilitar edição
+          _priceController.clear();
+          _packsController.clear();
         }
-        _packsController.text =
-            settings!.packsPerDay > 0 ? settings!.packsPerDay.toString() : '';
 
         if (!_gamificationRunning) {
           _selectedDate = DateTime.now();
@@ -148,25 +154,23 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
         _reloadCheckinData();
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
+      } else {
+        // Se não há configurações, garante que os campos estejam vazios
+        _priceController.clear();
+        _packsController.clear();
       }
     }
   }
 
   void _formatCurrencyInput(String value) {
     if (value.isEmpty) {
-      _priceController.value = const TextEditingValue(
-        text: '0,00',
-        selection: TextSelection.collapsed(offset: 4),
-      );
+      _priceController.clear();
       return;
     }
 
     String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
     if (numbers.isEmpty) {
-      _priceController.value = const TextEditingValue(
-        text: '0,00',
-        selection: TextSelection.collapsed(offset: 4),
-      );
+      _priceController.clear();
       return;
     }
 
@@ -201,6 +205,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         break;
       default:
         formatted = val.toStringAsFixed(2);
+    }
+
+    // Se o valor formatado for essencialmente zero, limpa o campo para mostrar o hint
+    if (val <= 0.009) { // Valores muito próximos de zero
+      _priceController.clear();
+      return;
     }
 
     _priceController.value = TextEditingValue(
@@ -297,42 +307,52 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   }
 
   Future<void> _ativarNichoMonitoramento() async {
+    LoggerService.instance.d('🔥 _ativarNichoMonitoramento iniciado');
     HapticFeedback.mediumImpact();
-    await PermissionService.ensurePermissions(context);
-    bool accessibilityGranted =
-        await PermissionService.hasAccessibilityPermission();
-    if (!accessibilityGranted) return;
+    await PermissionService.ensurePermissions(context, nicheId: NicheId.smoking);
+    
     if (!mounted) return;
 
-    // VALIDAÇÃO: Verificar se configurou informações de consumo E check-in diário
-    bool hasConsumptionInfo = settings != null;
+    // VALIDAÇÃO: Verificar se PREENCHEU informações de consumo E configurou check-in diário
+    String priceText = _priceController.text.trim();
+    String packsText = _packsController.text.trim();
+    bool hasCurrentConsumptionInfo = priceText.isNotEmpty && packsText.isNotEmpty;
     bool hasCheckinConfigured = _checkinTime != null;
+    
+    LoggerService.instance.d('🔥 priceText: "$priceText"');
+    LoggerService.instance.d('🔥 packsText: "$packsText"');
+    LoggerService.instance.d('🔥 hasCurrentConsumptionInfo: $hasCurrentConsumptionInfo');
+    LoggerService.instance.d('🔥 hasCheckinConfigured: $hasCheckinConfigured');
+    LoggerService.instance.d('🔥 _checkinTime: $_checkinTime');
 
-    if (!hasConsumptionInfo && !hasCheckinConfigured) {
-      EnhancedSnackBarHelper.showWarning(
-        context,
-        "Configure informações de consumo e check-in diário.",
-      );
+    // SÓ permite ativar se AMBAS as informações estiverem configuradas
+    if (!hasCurrentConsumptionInfo || !hasCheckinConfigured) {
+      if (!hasCurrentConsumptionInfo && !hasCheckinConfigured) {
+        LoggerService.instance.d('🔥 Mostrando: Configure informações de consumo e check-in diário');
+        EnhancedSnackBarHelper.showWarning(
+          context,
+          "Configure informações de consumo e check-in diário.",
+        );
+      } else if (!hasCurrentConsumptionInfo) {
+        LoggerService.instance.d('🔥 Mostrando: Configure informações de consumo');
+        EnhancedSnackBarHelper.showWarning(
+          context,
+          "Configure informações de consumo.",
+        );
+      } else {
+        LoggerService.instance.d('🔥 Mostrando: Configure check-in diário');
+        EnhancedSnackBarHelper.showWarning(
+          context,
+          "Configure check-in diário.",
+        );
+      }
       return;
     }
 
-    if (!hasConsumptionInfo && hasCheckinConfigured) {
-      EnhancedSnackBarHelper.showWarning(
-        context,
-        "Configure informações de consumo.",
-      );
-      return;
-    }
-
-    if (hasConsumptionInfo && !hasCheckinConfigured) {
-      EnhancedSnackBarHelper.showWarning(
-        context,
-        "Configure check-in diário.",
-      );
-      return;
-    }
-
+    LoggerService.instance.d('🔥 Todas as validações passaram, continuando ativação');
     bool notificationGranted = await NotificationService.requestPermission();
+    LoggerService.instance.d('🔥 notificationGranted: $notificationGranted');
+    
     if (notificationGranted) {
       if (settings != null) {
         setState(() => isSaving = true);
@@ -352,6 +372,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             lastSavedTotal: settings!.lastSavedTotal,
             lastEndDate: settings!.lastEndDate,
           );
+          LoggerService.instance.d('🔥 Salvando configurações para ativação...');
           await ref.read(smokingServiceProvider).saveSettings(updatedSettings);
           if (mounted) {
             setState(() {
@@ -359,12 +380,16 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               isSaving = false;
             });
           }
+          LoggerService.instance.d('🔥 Configurações salvas com sucesso');
         } catch (e) {
+          LoggerService.instance.e('🔥 Erro ao salvar configurações', error: e);
           if (mounted) setState(() => isSaving = false);
         }
       }
+      LoggerService.instance.d('🔥 Iniciando ciclo de gamificação');
       _startGamificationCycle();
     } else {
+      LoggerService.instance.d('🔥 Mostrando diálogo de configurações de notificação');
       _showNotificationSettingsDialog();
     }
   }
@@ -378,8 +403,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   Future<void> _desativarNichoMonitoramento() async {
     final gamification = ref.read(gamificationServiceProvider);
-    final confirmed = await DeactivateModuleDialog.show(
+    final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
+      gamificationService: gamification,
       nicheId: NicheId.smoking,
       customMessage: "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
     );
@@ -396,6 +422,10 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id + 100);
 
+        // Para o ciclo da gamificação primeiro
+        await gamification.stopModuleCycle(nicheId: NicheId.smoking);
+        
+        // Depois reseta as medalhas
         gamification.resetMedals(
           NicheId.smoking,
           notificationTitle: 'Módulo Desativado 🛑',
@@ -406,9 +436,13 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
         if (mounted) {
           final data = await ref.read(smokingServiceProvider).getSettings();
+          
+          // Força atualização do estado da gamificação
+          final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.smoking);
+          
           setState(() {
             settings = data;
-            _gamificationRunning = false;
+            _gamificationRunning = gamificationStatus?.isActive ?? false;
             isLoading = false;
             _selectedIndex = 0;
           });
@@ -420,13 +454,22 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           }
 
           if (mounted) {
-            EnhancedSnackBarHelper.showSuccess(context, "Módulo desativado");
+            EnhancedSnackBarHelper.showError(
+              context,
+              "Módulo desativado",
+            );
           }
         }
       } catch (e) {
         if (mounted) {
           setState(() => isLoading = false);
-          EnhancedSnackBarHelper.showError(context, "Erro ao desativar: $e");
+        }
+        LoggerService.instance.e('Erro ao desativar módulo', error: e);
+        if (mounted) {
+          EnhancedSnackBarHelper.showError(
+            context,
+            'Erro ao desativar módulo. Tente novamente.',
+          );
         }
       }
     }
@@ -645,9 +688,14 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     onOpenCheckInManager: _openCheckInManager,
                     onShowStatisticsMenu: _showStatisticsMenu,
                     gamificationRunning: _gamificationRunning,
-                    onToggleModule: _gamificationRunning
-                        ? _desativarNichoMonitoramento
-                        : _ativarNichoMonitoramento,
+                    onToggleModule: () {
+                      LoggerService.instance.d('🔥 Botão Ativar/Desativar Módulo pressionado');
+                      if (_gamificationRunning) {
+                        _desativarNichoMonitoramento();
+                      } else {
+                        _ativarNichoMonitoramento();
+                      }
+                    },
                     onSaveSettings: () {
                       LoggerService.instance.d('Botão Salvar pressionado');
                       LoggerService.instance.d('_priceController.text="${_priceController.text}"');
@@ -657,9 +705,14 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                       String priceText = _priceController.text.trim();
                       String packsText = _packsController.text.trim();
                       
+                      LoggerService.instance.d('🔍 priceText: "$priceText"');
+                      LoggerService.instance.d('🔍 packsText: "$packsText"');
+                      
                       // Validação - campos não podem estar vazios
                       bool hasPrice = priceText.isNotEmpty;
                       bool hasPacks = packsText.isNotEmpty;
+                      
+                      LoggerService.instance.d('🔍 hasPrice: $hasPrice, hasPacks: $hasPacks');
                       
                       LoggerService.instance.d('hasPrice=$hasPrice, hasPacks=$hasPacks');
                       
@@ -702,8 +755,15 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                       // Fallback caso sobre algo (ex letras)
                       cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
 
+                      LoggerService.instance.d('🔍 cleanPrice: "$cleanPrice"');
+                      
                       double priceValue = double.tryParse(cleanPrice) ?? 0.0;
-                      int packsValue = int.tryParse(packsText) ?? 0;
+                      // Converte packsText para double primeiro, depois para int
+                      double packsDouble = double.tryParse(packsText) ?? 0.0;
+                      int packsValue = packsDouble.round();
+                      
+                      LoggerService.instance.d('🔍 priceValue: $priceValue');
+                      LoggerService.instance.d('🔍 packsValue: $packsValue');
                       
                       if (priceValue <= 0) {
                         LoggerService.instance.w('Preço inválido (zero)');
@@ -877,7 +937,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             Row(
               children: [
                 Expanded(
-                  child: NicheActionButton(
+                  child: ModernStartButton(
                     icon: Icons.access_time_rounded,
                     label: 'Configurar Horário',
                     color: const Color(0xFF6366F1),

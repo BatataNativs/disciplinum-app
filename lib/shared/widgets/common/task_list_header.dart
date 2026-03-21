@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
-import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 
 /// Cabeçalho da lista de tarefas com estatísticas
 class TaskListHeader extends StatelessWidget {
@@ -68,20 +67,22 @@ class TaskListHeader extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ListActionTile(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notificações',
-                    color: const Color(0xFF6366F1),
-                    onTap: onNotifications,
-                    isDark: isDark,
+                  IconButton(
+                    icon: Icon(Icons.notifications_outlined, color: const Color(0xFF6366F1)),
+                    onPressed: onNotifications,
+                    tooltip: 'Notificações',
                   ),
                   const SizedBox(width: 8),
-                  ListActionTile(
-                    icon: Icons.bar_chart_rounded,
-                    label: 'Estatísticas',
-                    color: const Color(0xFF6366F1),
-                    onTap: onStats,
-                    isDark: isDark,
+                  IconButton(
+                    icon: Icon(Icons.bar_chart_rounded, color: const Color(0xFF6366F1)),
+                    onPressed: onStats,
+                    tooltip: 'Estatísticas',
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(Icons.add, color: const Color(0xFF6366F1)),
+                    onPressed: onAddTask,
+                    tooltip: 'Adicionar tarefa',
                   ),
                 ],
               ),

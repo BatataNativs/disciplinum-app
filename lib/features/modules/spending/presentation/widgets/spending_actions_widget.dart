@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/spending_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_expenses_screen.dart';
@@ -36,27 +36,53 @@ class SpendingActionsWidget extends StatelessWidget {
     if (selectedIndex == 0) {
       return _buildTabActions(0);
     } else {
-      return _buildBottomButtons();
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTabActions(1),
+          _buildBottomButtons(),
+        ],
+      );
     }
   }
 
   Widget _buildTabActions(int index) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: NicheActionButton(
-        icon: Icons.rocket_launch_rounded,
-        label: 'Começar',
-        color: const Color(0xFF6366F1),
-        isDark: isDark,
-        onTap: () {
-          if (pageController.hasClients) {
-            pageController.animateToPage(1,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic);
-          }
-        },
-      ),
-    );
+    switch (index) {
+      case 0:
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ModernStartButton(
+              icon: Icons.rocket_launch_rounded,
+              label: 'Começar',
+              color: const Color(0xFF6366F1),
+              isDark: isDark,
+              onTap: () {
+                if (pageController.hasClients) {
+                  pageController.animateToPage(
+                    1,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      case 1:
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.apps_rounded,
+            label: 'Selecionar Apps',
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: onOpenSelectApps,
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   Widget _buildBottomButtons() {
@@ -73,7 +99,7 @@ class SpendingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.account_balance_wallet_rounded,
                   label: 'Controle de gastos',
                   color: const Color(0xFF6366F1),
@@ -83,7 +109,7 @@ class SpendingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -105,7 +131,7 @@ class SpendingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
@@ -115,7 +141,7 @@ class SpendingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -124,7 +150,6 @@ class SpendingActionsWidget extends StatelessWidget {
                       : 'Ativar módulo',
                   color: gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: gamificationRunning,
                   onTap: onToggleModule,
                 ),
               ),

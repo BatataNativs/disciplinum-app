@@ -116,10 +116,8 @@ class NicheCategory {
         return [NicheId.spending, NicheId.moneySavingChallenge];
       case 3: // Produtividade
         return [NicheId.focus, NicheId.procrastination];
-      case 4: // Comportamento
-        return [NicheId.adultContent];
-      case 5: // Desenvolvimento
-        return [NicheId.reading];
+      case 4: // Mente e autocontrole
+        return [NicheId.adultContent, NicheId.reading];
       default:
         return [];
     }

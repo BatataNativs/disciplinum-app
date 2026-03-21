@@ -7,6 +7,7 @@ import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/theme/app_themes.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/storage/storage_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,9 @@ void main() async {
   }).sendPort);
   
   try {
+    // Verificar espaço de armazenamento antes de inicializar
+    await StorageManager.checkAndCleanIfNeeded();
+    
     final startupData = await AppBootstrap.initialize();
     
     runApp(
@@ -50,7 +54,21 @@ void main() async {
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
-          child: SelectableText('Critical error during app startup:\n$e'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Erro ao inicializar app'),
+              const SizedBox(height: 8),
+              Text('Detalhes: $e'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => main(),
+                child: const Text('Tentar Novamente'),
+              ),
+            ],
+          ),
         ),
       ),
     ));

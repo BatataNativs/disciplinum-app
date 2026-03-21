@@ -6,6 +6,7 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/core/navigation/navigation_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 class PermissionService {
   static bool _isChecking = false;
@@ -17,7 +18,7 @@ class PermissionService {
 
   /// Garante que as permissões de Notificação e Acessibilidade sejam verificadas.
   static Future<void> ensurePermissions(BuildContext context,
-      {bool forceUsage = false}) async {
+      {bool forceUsage = false, NicheId? nicheId}) async {
     final now = DateTime.now();
 
     if (_isChecking && !forceUsage) return;
@@ -34,36 +35,38 @@ class PermissionService {
       // 1. Notificação
       await NotificationService.requestPermission();
 
-      if (!context.mounted) return;
-
-      // 2. Sobreposição (Fase 7) - Necessária para as dicas visuais e bloqueio
-      await ensureOverlayPermission(context);
-
-      if (!context.mounted) return;
-
-      // 3. Acessibilidade (Fase 6) - Substituindo Usage Stats como requisito principal
-      final prefs = await SharedPreferences.getInstance();
-      bool alreadyAsked =
-          prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
-
-      bool accessibilityGranted = await hasAccessibilityPermission();
-
-      if (accessibilityGranted) {
-        if (!alreadyAsked) {
-          await prefs.setBool(
-              'asked_accessibility_permission_onboarding', true);
+      // 2. Sobreposição (Fase 7) - Apenas para módulos que monitoram apps
+      if (nicheId != null && await shouldRequestOverlayPermission(nicheId)) {
+        if (context.mounted) {
+          await ensureOverlayPermission(context);
         }
-        return;
       }
 
-      if (!accessibilityGranted && (forceUsage || !alreadyAsked)) {
-        if (!context.mounted) return;
+      // 3. Acessibilidade (Fase 6) - Apenas para módulos que monitoram apps
+      if (nicheId != null && _moduleNeedsAccessibilityPermission(nicheId)) {
+        final prefs = await SharedPreferences.getInstance();
+        bool alreadyAsked =
+            prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
 
-        final bool result = await _showAccessibilityPermissionDialog(context);
+        bool accessibilityGranted = await hasAccessibilityPermission();
 
-        if (!forceUsage && result) {
-          await prefs.setBool(
-              'asked_accessibility_permission_onboarding', true);
+        if (accessibilityGranted) {
+          if (!alreadyAsked) {
+            await prefs.setBool(
+                'asked_accessibility_permission_onboarding', true);
+          }
+          return;
+        }
+
+        if (!accessibilityGranted && (forceUsage || !alreadyAsked)) {
+          if (context.mounted) {
+            final bool result = await _showAccessibilityPermissionDialog(context);
+
+            if (!forceUsage && result) {
+              await prefs.setBool(
+                  'asked_accessibility_permission_onboarding', true);
+            }
+          }
         }
       }
     } finally {
@@ -103,7 +106,6 @@ class PermissionService {
 
     final bool? wentToSettings = await showDialog<bool>(
       context: dialogContext,
-      barrierDismissible: false,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 20,
@@ -139,18 +141,18 @@ class PermissionService {
                       BoxShadow(
                         color: Color(0xFF6366F1).withValues(alpha: 0.3),
                         blurRadius: 20,
-                        offset: Offset(0, 8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.accessibility_new_rounded,
                     color: Colors.white,
                     size: 32,
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
+                const Text(
                   "Permissão de Acessibilidade",
                   style: TextStyle(
                     fontSize: 18,
@@ -160,7 +162,7 @@ class PermissionService {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   "Para a detecção de uso de apps selecionados por VOCÊ funcionar corretamente, o app Disciplinum precisa ativar o Serviço de Acessibilidade:",
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -172,7 +174,7 @@ class PermissionService {
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                   decoration: BoxDecoration(
                     color: Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(12),
@@ -193,12 +195,12 @@ class PermissionService {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.settings, size: 16),
+                        const Icon(Icons.settings, size: 16),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             "Ativar Acessibilidade",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               height: 0,
@@ -211,7 +213,7 @@ class PermissionService {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   "Em 'Aplicativos Instalados' selecione o Disciplinum",
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -227,13 +229,13 @@ class PermissionService {
                     onPressed: () => Navigator.pop(ctx, false),
                     style: TextButton.styleFrom(
                       padding:
-                          EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                          const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: Color(0xFFE5E7EB)),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       "Agora não",
                       style: TextStyle(
                         color: Color.fromARGB(255, 0, 0, 0),
@@ -311,6 +313,54 @@ class PermissionService {
     }
   }
 
+  /// Verifica se o módulo deve pedir permissão de sobreposição.
+  /// Retorna true se precisa, false se não precisa.
+  static Future<bool> shouldRequestOverlayPermission(NicheId nicheId) async {
+    return _moduleNeedsOverlayPermission(nicheId);
+  }
+
+  /// Verifica se o módulo precisa de permissão de acessibilidade (monitora apps).
+  static bool _moduleNeedsAccessibilityPermission(NicheId nicheId) {
+    // Apenas módulos que realmente monitoram apps precisam de acessibilidade
+    switch (nicheId) {
+      case NicheId.focus:
+        return true; // Focus monitora outros apps
+      case NicheId.spending:
+        return true; // Spending monitora apps
+      case NicheId.adultContent:
+        return true; // Adult Content monitora apps
+      case NicheId.bingeEating:
+        return true; // Binge Eating monitora apps
+      case NicheId.procrastination:
+        return false; // Procrastination NÃO monitora apps (apenas gerencia tarefas)
+      default:
+        return false; // Demais módulos não monitoram apps
+    }
+  }
+
+  /// Verifica se o módulo precisa de permissão de sobreposição (monitora apps).
+  static bool _moduleNeedsOverlayPermission(NicheId nicheId) {
+    // Apenas módulos que realmente monitoram apps precisam de overlay
+    switch (nicheId) {
+      case NicheId.focus:
+        return true; // Focus monitora outros apps
+      default:
+        return false; // Demais módulos não monitoram apps
+    }
+  }
+
+  /// Retorna o texto personalizado para o diálogo de sobreposição.
+  static String _getOverlayPermissionText(NicheId nicheId) {
+    // Apenas módulos que realmente monitoram apps precisam desta permissão
+    switch (nicheId) {
+      case NicheId.focus:
+        return "Para você ser alertado a sair de apps que VOCÊ selecionou para bloqueio ou que você queira evitar (neste caso, você terá 30 segundos para sair do app), ative a permissão de 'Sobrepor a outros apps':";
+      default:
+        // Módulos que não monitoram apps não devem pedir esta permissão
+        return ""; // Retorna vazio para não mostrar diálogo
+    }
+  }
+
   /// Exibe o diálogo de permissão de sobreposição se necessário.
   static Future<bool> ensureOverlayPermission(BuildContext context) async {
     if (await hasOverlayPermission()) return true;
@@ -319,12 +369,35 @@ class PermissionService {
     return await _showOverlayPermissionDialog(context);
   }
 
+  /// Exibe o diálogo de permissão de sobreposição personalizado por módulo.
+  /// Retorna true se permissão foi concedida, false se usuário clicou "Depois".
+  static Future<bool> ensureOverlayPermissionForModule(
+    BuildContext context,
+    NicheId nicheId,
+  ) async {
+    if (await hasOverlayPermission()) return true;
+
+    if (!context.mounted) return false;
+    return await _showOverlayPermissionDialogForModule(context, nicheId);
+  }
+
   static Future<bool> _showOverlayPermissionDialog(BuildContext context) async {
+    return await _showOverlayPermissionDialogForModule(context, NicheId.focus);
+  }
+
+  /// Exibe o diálogo de permissão de sobreposição personalizado por módulo.
+  static Future<bool> _showOverlayPermissionDialogForModule(
+    BuildContext context,
+    NicheId nicheId,
+  ) async {
     final dialogContext = NavigationService.navigator?.context ?? context;
+    final permissionText = _getOverlayPermissionText(nicheId);
+
+    // Se não houver texto de permissão, não mostra o diálogo
+    if (permissionText.isEmpty) return false;
 
     final bool? wentToSettings = await showDialog<bool>(
       context: dialogContext,
-      barrierDismissible: false,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 20,
@@ -366,10 +439,10 @@ class PermissionService {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  "Para você ser alertado a sair de apps que VOCÊ selecionou para bloqueio ou que você queira evitar (neste caso, você terá 30 segundos para sair do app), ative a permissão de 'Sobrepor a outros apps':",
+                Text(
+                  permissionText,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     color: Color(0xFF4B5563),
                     height: 1.5,

@@ -837,4 +837,30 @@ class AppMonitoringService {
       LoggerService.instance.e('Erro ao esconder overlay', error: e);
     }
   }
+
+  /// 🚨 MÉTODO ESSENCIAL: Libera todos os recursos para prevenir memory leaks
+  void dispose() {
+    try {
+      // 1. Cancelar timer de monitoramento
+      _monitorTimer?.cancel();
+      _monitorTimer = null;
+      
+      // 2. Cancelar subscription de acessibilidade
+      _accessibilitySubscription?.cancel();
+      _accessibilitySubscription = null;
+      
+      // 3. Limpar maps e lists
+      _violationStartByApp.clear();
+      monitoredApps.clear();
+      
+      // 4. Limpar estados
+      _isModuleActive = false;
+      _lastAccessibilityApp = null;
+      _currentOverlayMessage = null;
+      
+      LoggerService.instance.i('AppMonitoringService disposed - memory leaks prevenidos');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao fazer dispose do AppMonitoringService', error: e);
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 /// Seção "Como Funciona" reutilizável para módulos
 class HowItWorksSection extends StatelessWidget {
@@ -18,12 +18,14 @@ class HowItWorksSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: infoCards.map((card) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -39,17 +41,13 @@ class HowItWorksSection extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: SizedBox(
-            width: double.infinity,
-            height: 55,
-            child: NicheActionButton(
-              icon: Icons.rocket_launch_rounded,
-              label: 'Começar',
-              color: const Color(0xFF6366F1),
-              isDark: isDark,
-              onTap: onGetStarted,
-            ),
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.rocket_launch_rounded,
+            label: 'Começar',
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: onGetStarted,
           ),
         ),
       ],

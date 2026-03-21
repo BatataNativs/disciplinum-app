@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 /// Widget de ações da tela Binge Eating
 class BingeEatingActionsWidget extends StatelessWidget {
@@ -36,10 +36,9 @@ class BingeEatingActionsWidget extends StatelessWidget {
   Widget _buildTabActions(int index) {
     switch (index) {
       case 0:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
             icon: Icons.rocket_launch_rounded,
             label: "Começar",
             color: const Color(0xFF6366F1),
@@ -56,10 +55,9 @@ class BingeEatingActionsWidget extends StatelessWidget {
           ),
         );
       case 1:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
             icon: Icons.apps_rounded,
             label: "Selecionar aplicativos",
             color: const Color(0xFF6366F1),
@@ -86,7 +84,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.touch_app_outlined,
                   label: "Selecionar apps",
                   color: const Color(0xFF6366F1),
@@ -96,7 +94,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: "Notificações",
                   color: Colors.amber,
@@ -110,7 +108,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: "Estatísticas",
                   color: const Color(0xFF6366F1),
@@ -120,7 +118,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -129,7 +127,6 @@ class BingeEatingActionsWidget extends StatelessWidget {
                       : "Ativar Módulo",
                   color: gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: gamificationRunning,
                   onTap: onToggleModule,
                 ),
               ),

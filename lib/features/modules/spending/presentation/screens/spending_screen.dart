@@ -39,7 +39,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Como Funciona"
+    LoggerService.instance.i('SpendingScreen: Iniciando com selectedIndex=$_selectedIndex, pageController inicializado');
     _loadAllPersistentData();
   }
 
@@ -48,8 +49,13 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     _isLoadingData = true;
 
     try {
+      LoggerService.instance.i('SpendingScreen: Iniciando carregamento de dados');
+      
       // Carrega apps monitorados
+      LoggerService.instance.i('SpendingScreen: Carregando apps monitorados');
       final apps = await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: NicheId.spending);
+      LoggerService.instance.i('SpendingScreen: ${apps.length} apps encontrados');
+      
       if (mounted) {
         setState(() {
           _selectedApps.clear();
@@ -58,22 +64,24 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       }
 
       // Carrega status da gamificação
+      LoggerService.instance.i('SpendingScreen: Carregando status da gamificação');
       final gamification = ref.read(gamificationServiceProvider);
       final isRunning = gamification.isModuleActive(NicheId.spending);
+      LoggerService.instance.i('SpendingScreen: Gamificação ativa: $isRunning');
+      
       if (mounted) {
         setState(() => _gamificationRunning = isRunning);
       }
 
-      // Se tiver apps e o controller estiver ok, avança para Controle
-      if (_selectedApps.isNotEmpty && _pageController.hasClients) {
-        _pageController.animateToPage(1,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
-      } else {
-        setState(() => _selectedIndex = 1);
+      // Mantém o usuário na aba atual - não força mudança para Controle
+      if (_selectedApps.isNotEmpty && _pageController.hasClients && _selectedIndex == 0) {
+        // Só avança para Controle se o usuário estiver na aba "Como Funciona" e quiser avançar
+        // Isso permite que o usuário acesse ambas as abas livremente
       }
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar dados', error: e);
+      
+      LoggerService.instance.i('SpendingScreen: Dados carregados com sucesso');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('SpendingScreen: Erro ao carregar dados', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() {
           _loadingData = false;
@@ -81,18 +89,39 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       }
     } finally {
       _isLoadingData = false;
+      if (mounted) {
+        setState(() {
+          _loadingData = false;
+        });
+      }
     }
   }
 
   Future<void> _ativarNichoMonitoramento() async {
     HapticFeedback.mediumImpact();
 
+    // NOVO: Verificar permissão de sobreposição primeiro
+    bool overlayGranted = await PermissionService.ensureOverlayPermissionForModule(
+      context,
+      NicheId.spending,
+    );
+    
+    if (!overlayGranted) {
+      // Usuário clicou "Depois" - desativar módulo e mostrar snackbar
+      if (mounted) {
+        SnackBarHelper.showInfo(
+          context,
+          'Você precisa conceder a permissão de sobreposição para ativar o módulo de Controle de Gastos.',
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
     await PermissionService.ensurePermissions(context, forceUsage: true);
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
-    if (!accessibilityGranted) {
-      return;
-    }
+    if (!accessibilityGranted) return;
 
     if (!mounted) return;
 
@@ -158,8 +187,10 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await DeactivateModuleDialog.show(
+    final gamification = ref.read(gamificationServiceProvider);
+    final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
+      gamificationService: gamification,
       nicheId: NicheId.spending,
       customMessage:
           'Ao desativar o módulo, seu progresso e estatísticas serão reiniciados.\n\nDeseja continuar?',
@@ -169,7 +200,10 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     if (!mounted) return;
 
     HapticFeedback.heavyImpact();
-    final gamification = ref.read(gamificationServiceProvider);
+    
+    // Para o ciclo da gamificação primeiro
+    await gamification.stopModuleCycle(nicheId: NicheId.spending);
+    
     gamification.stopMonitoringApps();
 
     _resetMedalsForModule(
@@ -179,9 +213,11 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       deactivate: true,
     );
 
-    if (!mounted) return;
+    // Força atualização do estado da gamificação
+    final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.spending);
+
     setState(() {
-      _gamificationRunning = false;
+      _gamificationRunning = gamificationStatus?.isActive ?? false;
       _selectedIndex = 0;
     });
 
@@ -254,15 +290,10 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
     if (!mounted) return;
 
-    // Se tiver apps e o controller estiver ok, avança para Controle
+    // Permite que o usuário permaneça na aba atual após selecionar apps
     if (_selectedApps.isNotEmpty) {
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(1,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
-      } else {
-        setState(() => _selectedIndex = 1);
-      }
+      // Não força mudança de aba - permite acesso livre a ambas as abas
+      setState(() {});
     } else {
       setState(() {});
     }
@@ -280,17 +311,19 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     // Se o módulo estiver rodando, atualizar o serviço de monitoramento
     if (_gamificationRunning) {
       if (!mounted) return;
-      final gamification = ref.read(gamificationServiceProvider);
-      gamification.monitoredApps = Set<String>.from(_selectedApps);
+      ref.read(gamificationServiceProvider);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    LoggerService.instance.i('SpendingScreen: Build chamado, loadingData=$_loadingData, isLoadingData=$_isLoadingData, selectedIndex=$_selectedIndex');
+  
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     if (_loadingData) {
+      LoggerService.instance.i('SpendingScreen: Mostrando loading');
       return Scaffold(
         appBar: AppBar(title: Text(_niche.name), centerTitle: true),
         body: const Center(child: CircularProgressIndicator()),
@@ -343,6 +376,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                       child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
+                          LoggerService.instance.i('SpendingScreen: PageView mudou para página $index (Como Funciona=0, Controlar Gastos=1)');
                           setState(() {
                             _selectedIndex = index;
                           });
@@ -384,18 +418,20 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                   ],
                 ),
               ),
-              SpendingActionsWidget(
-                selectedIndex: _selectedIndex,
-                isDark: isDark,
-                gamificationRunning: _gamificationRunning,
-                pageController: _pageController,
-                onOpenSelectApps: _openSelectApps,
-                onShowControlGastosMenu: () {},
-                onShowStatisticsMenu: () {},
-                onToggleModule: _gamificationRunning
-                    ? _desativarNichoMonitoramento
-                    : _ativarNichoMonitoramento,
-                context: context,
+              Center(
+                child: SpendingActionsWidget(
+                  selectedIndex: _selectedIndex,
+                  isDark: isDark,
+                  gamificationRunning: _gamificationRunning,
+                  pageController: _pageController,
+                  onOpenSelectApps: _openSelectApps,
+                  onShowControlGastosMenu: () {},
+                  onShowStatisticsMenu: () {},
+                  onToggleModule: _gamificationRunning
+                      ? _desativarNichoMonitoramento
+                      : _ativarNichoMonitoramento,
+                  context: context,
+                ),
               ),
             ],
           ),

@@ -9,9 +9,10 @@ import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/shared/widgets/dialogs/task_creation_dialog.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_notifications_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_stats_screen.dart';
+import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/common/custom_segmented_control.dart';
@@ -127,9 +128,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     );
   }
 
-
-  Widget _buildTasksView(
-      bool isDark, ProcrastinationService service, bool isActive) {
+  Widget _buildTasksView(bool isDark, ProcrastinationService service, bool isActive) {
     final lists = service.getAllLists();
     final currentList = lists.firstWhere(
       (l) => l.id == _selectedListId,
@@ -234,7 +233,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.add,
                   label: 'Nova Tarefa',
                   color: const Color(0xFF6366F1),
@@ -254,7 +253,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificacoes',
                   color: Colors.amber,
@@ -276,7 +275,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatisticas',
                   color: const Color(0xFF6366F1),
@@ -286,12 +285,11 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar modulo' : 'Ativar modulo',
                   color: isActive ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: isActive,
                   onTap: () => _toggleModule(isActive),
                 ),
               ),
@@ -375,7 +373,9 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         if (!mounted) return;
         HapticFeedback.heavyImpact();
 
-        gamification.stopModuleCycle(nicheId: NicheId.procrastination);
+        // Para o ciclo da gamificação primeiro
+        await gamification.stopModuleCycle(nicheId: NicheId.procrastination);
+        
         gamification.resetMedals(
           NicheId.procrastination,
           deactivate: true,
@@ -383,6 +383,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
           notificationBody:
               'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
         );
+
+        // Força atualização do estado da gamificação
+        await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.procrastination);
+
+        setState(() {
+          // O estado será atualizado automaticamente pelo gamification.isModuleActive() no build
+        });
+        
         _tabController.animateTo(0);
 
         if (mounted) {
@@ -393,46 +401,31 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
       HapticFeedback.mediumImpact();
       if (!mounted) return;
 
-      bool granted = await NotificationService.requestPermission();
+      // Usar o novo sistema de permissões unificado
+      await PermissionService.ensurePermissions(context, nicheId: NicheId.procrastination);
       if (!mounted) return;
 
-      if (granted) {
-        HapticFeedback.heavyImpact();
-        ref.read(cloudSyncServiceProvider).saveModuleStatus(
-          nicheId: NicheId.procrastination,
-          isActive: true,
-        );
-        gamification.startModuleCycle(nicheId: NicheId.procrastination);
+      // Procrastination não precisa de acessibilidade/sobreposição, apenas notificação
+      // Verificar se tem permissão de notificação
+      bool notificationGranted = await NotificationService.requestPermission();
+      if (!mounted) return;
 
+      if (!notificationGranted) {
+        if (mounted) {
+          SnackBarHelper.showWarning(context, 'Permissão de notificação necessária para funcionar.');
+        }
+        return;
+      }
+
+      HapticFeedback.heavyImpact();
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.procrastination,
+        isActive: true,
+      );
+      gamification.startModuleCycle(nicheId: NicheId.procrastination);
+
+      if (mounted) {
         SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');
-      } else {
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Permissão necessária'),
-            content: const Text(
-              'Para o módulo de Procrastinação funcionar, habilite as notificações do app nas configurações.',
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Abrir configurações'),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.of(context).pop();
-                  NotificationService.openNotificationSettings();
-                },
-              ),
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        );
       }
     }
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import '../screens/frases_motivacionais.dart';
 
 /// Widget de ações da tela Stop Smoking
@@ -47,10 +47,9 @@ class StopSmokingActionsWidget extends StatelessWidget {
   Widget _buildTabActions(int index) {
     switch (index) {
       case 0:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
             icon: Icons.rocket_launch_rounded,
             label: 'Começar',
             color: const Color(0xFF6366F1),
@@ -67,10 +66,9 @@ class StopSmokingActionsWidget extends StatelessWidget {
           ),
         );
       case 1:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
             icon: Icons.save_rounded,
             label: isSaving ? 'Salvando...' : 'Salvar',
             color: const Color(0xFF6366F1),
@@ -97,7 +95,7 @@ class StopSmokingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.check_circle_outline,
                   label: 'Check-in diário',
                   color: const Color(0xFF6366F1),
@@ -107,7 +105,7 @@ class StopSmokingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -128,7 +126,7 @@ class StopSmokingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatisticas',
                   color: Colors.teal,
@@ -138,7 +136,7 @@ class StopSmokingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -147,7 +145,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
                       : 'Ativar Módulo',
                   color: gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: gamificationRunning,
                   onTap: onToggleModule,
                 ),
               ),

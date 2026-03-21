@@ -44,18 +44,21 @@ DECLARE
     password_hash TEXT;
     is_compromised BOOLEAN;
 BEGIN
-    -- Calcular hash SHA-256 da senha
-    password_hash := encode(sha256(NEW.encrypted_password::bytea), 'hex');
-    
-    -- Verificar se está na lista de senhas comprometidas/comuns
-    SELECT EXISTS(
-        SELECT 1 FROM common_compromised_passwords ccp 
-        WHERE ccp.password_hash = password_hash
-    ) INTO is_compromised;
-    
-    -- Se for uma senha comprometida/comum, negar
-    IF is_compromised THEN
-        RAISE EXCEPTION 'Senha muito comum ou comprometida. Por favor, escolha uma senha mais forte.';
+    -- Verificar se a senha foi fornecida (não é nula)
+    IF NEW.encrypted_password IS NOT NULL THEN
+        -- Calcular hash SHA-256 da senha
+        password_hash := encode(sha256(NEW.encrypted_password::bytea), 'hex');
+        
+        -- Verificar se está na lista de senhas comprometidas/comuns
+        SELECT EXISTS(
+            SELECT 1 FROM common_compromised_passwords ccp 
+            WHERE ccp.password_hash = password_hash
+        ) INTO is_compromised;
+        
+        -- Se for uma senha comprometida/comum, negar
+        IF is_compromised THEN
+            RAISE EXCEPTION 'Senha muito comum ou comprometida. Por favor, escolha uma senha mais forte.';
+        END IF;
     END IF;
     
     RETURN NEW;
@@ -82,7 +85,7 @@ BEGIN
     -- Verificar na tabela
     SELECT EXISTS(
         SELECT 1 FROM common_compromised_passwords ccp 
-        WHERE ccp.password_hash = is_password_compromised.password_hash
+        WHERE ccp.password_hash = password_hash
     ) INTO is_found;
     
     RETURN is_found;

@@ -17,7 +17,7 @@ import 'package:disciplinum/features/modules/money_saving/presentation/widgets/m
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_actions_widget.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_tab_content.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 class MoneySavingChallengeScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -123,6 +123,10 @@ class _MoneySavingChallengeScreenState
     if (confirmed == true) {
       if (!mounted) return;
 
+      // Para o ciclo da gamificação primeiro
+      final gamification = ref.read(gamificationServiceProvider);
+      await gamification.stopModuleCycle(nicheId: _niche.nicheId);
+
       // Deleta todos os desafios
       await _service.deleteAllChallenges();
 
@@ -137,9 +141,14 @@ class _MoneySavingChallengeScreenState
               curve: Curves.easeOutCubic);
         }
 
-        // Reseta gamificação e notifica
-        final gamification = ref.read(gamificationServiceProvider);
+        // Força atualização do estado da gamificação
+        await ref.read(gamificationServiceProvider).getModuleStatus(_niche.nicheId);
 
+        setState(() {
+          // _challenge será null automaticamente quando _service.activeChallenge for null
+        });
+
+        // Reseta gamificação e notifica
         gamification.resetMedals(
           _niche.nicheId,
           deactivate: true,
@@ -599,43 +608,45 @@ class _MoneySavingChallengeScreenState
                   ],
                 ),
               ),
-              _selectedIndex == 0
-                  ? Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: NicheActionButton(
-                        icon: Icons.rocket_launch_rounded,
-                        label: 'Começar',
-                        color: const Color(0xFF6366F1),
+              Center(
+                child: _selectedIndex == 0
+                    ? Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ModernStartButton(
+                          icon: Icons.rocket_launch_rounded,
+                          label: 'Começar',
+                          color: const Color(0xFF6366F1),
+                          isDark: isDark,
+                          onTap: () {
+                            if (_pageController.hasClients) {
+                              _pageController.animateToPage(1,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic);
+                            } else {
+                              setState(() => _selectedIndex = 1);
+                            }
+                          },
+                        ),
+                      )
+                    : MoneySavingActionsWidget(
+                        challenge: _challenge,
                         isDark: isDark,
-                        onTap: () {
-                          if (_pageController.hasClients) {
-                            _pageController.animateToPage(1,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic);
-                          } else {
-                            setState(() => _selectedIndex = 1);
-                          }
+                        onShowChallengesList: _showChallengesList,
+                        onShowNotifications: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const MoneySavingChallengeNotificationsScreen(),
+                            ),
+                          );
                         },
+                        onShowStatistics: _showStatisticsMenu,
+                        onToggleModule: _challenge?.isActive == true
+                            ? _deactivateChallenge
+                            : _activateChallenge,
                       ),
-                    )
-                  : MoneySavingActionsWidget(
-                      challenge: _challenge,
-                      isDark: isDark,
-                      onShowChallengesList: _showChallengesList,
-                      onShowNotifications: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MoneySavingChallengeNotificationsScreen(),
-                          ),
-                        );
-                      },
-                      onShowStatistics: _showStatisticsMenu,
-                      onToggleModule: _challenge?.isActive == true
-                          ? _deactivateChallenge
-                          : _activateChallenge,
-                    ),
+              ),
             ],
           ),
         ),

@@ -20,7 +20,7 @@ import 'package:disciplinum/features/modules/diet/presentation/screens/diet_sett
 import 'package:disciplinum/features/modules/spending/presentation/screens/spending_screen.dart';
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_screen.dart';
 import 'package:disciplinum/features/modules/adult_content/presentation/screens/avoid_adult_content_screen.dart';
-// import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_screen.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_screen.dart';
 
@@ -115,10 +115,7 @@ class AppRouter {
                 builder: (_) => AvoidAdultContentScreen(heroTag: heroTag));
           case NicheId.moneySavingChallenge:
             return FastMaterialPageRoute(
-                builder: (_) => Scaffold(
-                  appBar: AppBar(title: Text('Money Saving Challenge')),
-                  body: Center(child: Text('Em desenvolvimento')),
-                ));
+                builder: (_) => MoneySavingChallengeScreen(heroTag: heroTag));
           case NicheId.procrastination:
             final initialTabIndex = (args is Map<String, dynamic>)
                 ? (args['initialTabIndex'] as int? ?? 0)

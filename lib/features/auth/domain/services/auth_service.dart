@@ -13,6 +13,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/events/event_bootstrap.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
+import 'package:disciplinum/core/auth/password_validation_service.dart';
 
 class AuthService extends ChangeNotifier {
   final PreferencesService _prefs;
@@ -274,9 +275,21 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    
     try {
+      // 1. Validar força da senha antes de criar conta
+      final passwordValidation = await PasswordValidationService.fullValidation(password);
+      if (!passwordValidation['is_strong']) {
+        _errorMessage = passwordValidation['reason'] ?? 'Senha muito fraca';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      
+      // 2. Criar usuário no Supabase
       final response = await supabase.auth
           .signUp(email: email, password: password, data: {'name': name});
+      
       if (response.session == null) {
         _currentUser = null;
         _userProfile = null;
@@ -285,6 +298,7 @@ class AuthService extends ChangeNotifier {
         notifyListeners();
         return false;
       }
+      
       _currentUser = response.user;
       await _ensureUserProfileExists();
       await loadUserProfile();

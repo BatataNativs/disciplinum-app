@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -8,18 +8,18 @@ import 'package:disciplinum/features/modules/money_saving/domain/services/money_
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class MoneySavingChallengeNotificationsScreen extends StatefulWidget {
+class MoneySavingChallengeNotificationsScreen extends ConsumerStatefulWidget {
   const MoneySavingChallengeNotificationsScreen({super.key});
 
   @override
-  State<MoneySavingChallengeNotificationsScreen> createState() =>
+  ConsumerState<MoneySavingChallengeNotificationsScreen> createState() =>
       _MoneySavingChallengeNotificationsScreenState();
 }
 
 class _MoneySavingChallengeNotificationsScreenState
-    extends State<MoneySavingChallengeNotificationsScreen> {
+    extends ConsumerState<MoneySavingChallengeNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.moneySavingChallenge);
   late final MoneySavingChallengeService _service;
 
@@ -49,7 +49,7 @@ class _MoneySavingChallengeNotificationsScreenState
 
     // Agenda as notificações nativas
     if (mounted) {
-      await context.read<GamificationService>().scheduleChallengeNotification();
+      await ref.read(gamificationServiceProvider).scheduleChallengeNotification();
     }
   }
 

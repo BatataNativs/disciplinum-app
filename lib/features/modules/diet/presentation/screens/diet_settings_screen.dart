@@ -16,7 +16,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 class DietSettingsScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -179,8 +179,10 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   }
 
   void _desativarNichoMonitoramento() async {
-    final confirmed = await DeactivateModuleDialog.show(
+    final gamification = ref.read(gamificationServiceProvider);
+    final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
+      gamificationService: gamification,
       nicheId: NicheId.diet,
       customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
@@ -188,9 +190,10 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification =
-          ref.read(gamificationServiceProvider);
-
+      
+      // Para o ciclo da gamificação primeiro
+      await gamification.stopModuleCycle(nicheId: NicheId.diet);
+      
       // Reset medals and deactivate
       gamification.resetMedals(
         _niche.nicheId,
@@ -200,12 +203,24 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         deactivate: true,
       );
 
+      // Força atualização do estado da gamificação
+      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.diet);
+
+      setState(() {
+        _gamificationRunning = gamificationStatus?.isActive ?? false;
+        _selectedIndex = 0;
+      });
+
       await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id + 100);
       await ref.read(cloudSyncServiceProvider).saveModuleStatus(
           nicheId: _niche.nicheId, isActive: false);
 
       if (mounted) {
         setState(() {
+          EnhancedSnackBarHelper.showError(
+            context,
+            "Módulo desativado",
+          );
           _gamificationRunning = false;
           _selectedIndex = 0;
         });
@@ -632,10 +647,9 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: NicheActionButton(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
             icon: Icons.rocket_launch_rounded,
             label: 'Começar',
             color: const Color(0xFF6366F1),
@@ -653,7 +667,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         return SizedBox(
           width: double.infinity,
           height: 55,
-          child: NicheActionButton(
+          child: ModernStartButton(
             icon: Icons.schedule_rounded,
             label: 'Gerenciar horários',
             color: const Color(0xFF6366F1),
@@ -686,7 +700,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.restaurant_menu_rounded,
                   label: 'Horários',
                   color: const Color(0xFF6366F1),
@@ -698,7 +712,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -719,7 +733,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -729,7 +743,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -738,7 +752,6 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                       : 'Ativar Módulo',
                   color: _gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: _gamificationRunning,
                   onTap: _gamificationRunning
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,

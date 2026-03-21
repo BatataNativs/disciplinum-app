@@ -232,17 +232,33 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     if (_selectedApps.isEmpty) {
       EnhancedSnackBarHelper.showInfo(
         context,
-        "Primeiro, deve-se selecionar apps a monitorar..",
+        "Primeiro, selecione os apps que deseja monitorar.",
       );
       return;
     }
 
+    // NOVO: Verificar permissão de sobreposição primeiro
+    bool overlayGranted = await PermissionService.ensureOverlayPermissionForModule(
+      context,
+      NicheId.bingeEating,
+    );
+    
+    if (!overlayGranted) {
+      // Usuário clicou "Depois" - desativar módulo e mostrar snackbar
+      if (mounted) {
+        EnhancedSnackBarHelper.showInfo(
+          context,
+          'Você precisa conceder a permissão de sobreposição para ativar o módulo de Comer Compulsivamente.',
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
     await PermissionService.ensurePermissions(context, forceUsage: true);
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
-    if (!accessibilityGranted) {
-      return;
-    }
+    if (!accessibilityGranted) return;
 
     if (!mounted) return;
 
@@ -299,8 +315,10 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await DeactivateModuleDialog.show(
+    final gamification = ref.read(gamificationServiceProvider);
+    final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
+      gamificationService: gamification,
       nicheId: NicheId.bingeEating,
       customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
@@ -308,9 +326,10 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification = ref.read(gamificationServiceProvider);
-      gamification.stopMonitoringApps();
-
+      
+      // Para o ciclo da gamificação primeiro
+      await gamification.stopModuleCycle(nicheId: NicheId.bingeEating);
+      
       _resetMedalsForModule(
         notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
@@ -318,8 +337,11 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
         deactivate: true,
       );
 
+      // Força atualização do estado da gamificação
+      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.bingeEating);
+
       setState(() {
-        _gamificationRunning = false;
+        _gamificationRunning = gamificationStatus?.isActive ?? false;
         _selectedIndex = 0;
       });
 

@@ -191,7 +191,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               size: 80,
               color: Colors.red,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 2),
             Text(
               'Regras Importantes',
               style: theme.textTheme.headlineSmall?.copyWith(
@@ -318,9 +318,9 @@ Container(
               child: Column(
                 children: [
                   Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 2),
                   Text(
-                    '⏱️ Janela de 30 Segundos',
+                    'Janela de 30 Segundos',
                     style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
                     textAlign: TextAlign.center,
                   ),
@@ -344,9 +344,9 @@ Container(
               child: Column(
                 children: [
                   Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 2),
                   Text(
-                    '⚠️ Progresso Reiniciado',
+                    'Progresso Reiniciado',
                     style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
                     textAlign: TextAlign.center,
                   ),
@@ -369,15 +369,20 @@ Container(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
               ),
-              child: Row(
+              child: Column(
                 children: [
                   Icon(Icons.lightbulb_rounded, color: const Color(0xFF6366F1), size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Dica: Use a pausa temporária em Configurações quando precisar usar um app monitorado.',
-                      style: textStyle?.copyWith(fontWeight: FontWeight.w500),
-                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Dica:',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Use a pausa temporária em Configurações quando precisar usar um app monitorado.',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

@@ -14,7 +14,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'dart:async';
 
 class ReadingScreen extends ConsumerStatefulWidget {
@@ -294,12 +294,10 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: SizedBox(
-            width: double.infinity,
-            height: 55,
-            child: NicheActionButton(
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ModernStartButton(
               icon: Icons.rocket_launch_rounded,
               label: 'Começar',
               color: const Color(0xFF6366F1),
@@ -329,7 +327,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.add,
                   label: 'Livro',
                   color: const Color(0xFF6366F1),
@@ -341,7 +339,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -363,7 +361,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -373,12 +371,11 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: isActive,
                   onTap: () => _toggleModule(isActive),
                 ),
               ),
@@ -459,15 +456,25 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       if (confirmed == true) {
         if (!mounted) return;
         HapticFeedback.heavyImpact();
-
-        gamification.stopModuleCycle(nicheId: NicheId.reading);
-        gamification.resetMedals(
+        
+        // Para o ciclo da gamificação primeiro
+        await gamification.stopModuleCycle(nicheId: NicheId.reading);
+        
+        await gamification.resetMedals(
           NicheId.reading,
-          deactivate: true,
           notificationTitle: 'Módulo Desativado 🛑',
           notificationBody:
               'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+          deactivate: true,
         );
+
+        // Força atualização do estado da gamificação
+        final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.reading);
+
+        setState(() {
+          isActive = gamificationStatus?.isActive ?? false;
+        });
+        
         _tabController.animateTo(0);
 
         if (mounted) {

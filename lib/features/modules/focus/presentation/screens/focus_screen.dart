@@ -15,8 +15,7 @@ import 'package:disciplinum/features/modules/focus/presentation/screens/focus_no
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
 
@@ -68,12 +67,20 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   Future<void> _onGamificationChanged() async {
     if (!mounted) return;
     
-    final focusService = ref.read(focusServiceProvider);
-    final currentPeriods = await focusService.getRespectedPeriods();
-    
-    // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
-    if (currentPeriods > 0 && (_focusStart != null && _focusEnd != null)) {
-      _removeFocusInterval(showNotification: false);
+    try {
+      final focusService = ref.read(focusServiceProvider);
+      final currentPeriods = await focusService.getRespectedPeriods();
+      
+      // Verificar mounted novamente após operação assíncrona
+      if (!mounted) return;
+      
+      // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
+      if (currentPeriods > 0 && (_focusStart != null && _focusEnd != null)) {
+        _removeFocusInterval(showNotification: false);
+      }
+    } catch (e) {
+      // Ignorar erros silenciosamente para evitar crashes
+      LoggerService.instance.w('Erro em _onGamificationChanged: $e');
     }
   }
 
@@ -174,6 +181,25 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       return;
     }
 
+    // NOVO: Verificar permissão de sobreposição primeiro
+    bool overlayGranted = await PermissionService.ensureOverlayPermissionForModule(
+      context,
+      _niche.nicheId,
+    );
+    
+    if (!overlayGranted) {
+      // Usuário clicou "Depois" - desativar módulo e mostrar snackbar
+      if (mounted) {
+        EnhancedSnackBarHelper.showInfo(
+          context,
+          'Você precisa conceder a permissão de sobreposição para ativar o módulo de Foco.',
+        );
+      }
+      return;
+    }
+
+    // Continuar com as outras permissões
+    if (!mounted) return;
     await PermissionService.ensurePermissions(context);
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
@@ -248,8 +274,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final confirmed = await DeactivateModuleDialog.show(
+    final gamification = ref.read(gamificationServiceProvider);
+    final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
+      gamificationService: gamification,
       nicheId: NicheId.focus,
       customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
     );
@@ -257,10 +285,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      final gamification =
-          ref.read(gamificationServiceProvider);
-      gamification.stopMonitoringApps();
-
+      
+      // Para o ciclo da gamificação primeiro
+      await gamification.stopModuleCycle(nicheId: NicheId.focus);
+      
       _resetMedalsForModule(
         notificationTitle: 'Módulo Desativado 🛑',
         notificationBody:
@@ -268,8 +296,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         deactivate: true,
       );
 
+      // Força atualização do estado da gamificação
+      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.focus);
+
       setState(() {
-        _gamificationRunning = false;
+        _gamificationRunning = gamificationStatus?.isActive ?? false;
         _selectedIndex = 0;
       });
 
@@ -467,70 +498,50 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 title: _niche.name,
               ),
               Expanded(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: _buildSegmentedControl()),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: _buildSegmentedControl()),
 
-                    // --- PAGEVIEW ---
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _selectedIndex = index;
-                          });
-                        },
-                        children: [
-                          // 0: Como Funciona
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(0),
-                                const SizedBox(height: 100),
-                              ],
-                            ),
-                          ),
-                          // 1: Configurações
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              children: [
-                                _buildTabContent(1),
-                                const SizedBox(height: 100),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-                  _selectedIndex == 0
-                      ? Padding(
+                  // --- PAGEVIEW ---
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                      },
+                      children: [
+                        // 0: Como Funciona
+                        Padding(
                           padding: const EdgeInsets.all(16),
-                          child: NicheActionButton(
-                            icon: Icons.rocket_launch_rounded,
-                            label: 'Começar',
-                            color: const Color(0xFF6366F1),
-                            isDark: isDark,
-                            onTap: () {
-                              if (_pageController.hasClients) {
-                                _pageController.animateToPage(1,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOutCubic);
-                              } else {
-                                setState(() => _selectedIndex = 1);
-                              }
-                            },
+                          child: _buildTabContent(0),
+                        ),
+                        
+                        // 1: Configurações
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              _buildTabContent(1),
+                              const SizedBox(height: 100),
+                            ],
                           ),
-                        )
-                      : _buildBottomButtons(isDark),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Botões apenas na aba 1
+                  if (_selectedIndex == 1)
+                    _buildBottomButtons(isDark),
+                ],
+              ),
+            ),
             ],
           ),
         ),
@@ -552,7 +563,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.settings_suggest_rounded,
                   label: 'Configurar',
                   color: const Color(0xFF6366F1),
@@ -562,7 +573,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -583,7 +594,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
@@ -593,7 +604,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: _gamificationRunning
                       ? Icons.power_settings_new
                       : Icons.power_off,
@@ -602,7 +613,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       : 'Ativar módulo',
                   color: _gamificationRunning ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: _gamificationRunning,
                   onTap: _gamificationRunning
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
@@ -640,11 +650,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            ListActionTile(
-              icon: Icons.bar_chart_rounded,
-              label: 'Conquistas',
-              color: Colors.blue,
-              isDark: isDark,
+            ListTile(
+              leading: Icon(Icons.bar_chart_rounded, color: Colors.blue),
+              title: const Text('Conquistas'),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(

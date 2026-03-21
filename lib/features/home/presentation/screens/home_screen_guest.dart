@@ -55,19 +55,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
       if (route != null && route.isCurrent) {
         _permissionsChecked = true;
 
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (!mounted) return;
-
-        await PermissionService.ensurePermissions(context);
-
-        if (mounted) {
-          bool isAccessibilityGranted =
-              await PermissionService.hasAccessibilityPermission();
-          if (isAccessibilityGranted && mounted) {
-            final gamification = ref.read(gamificationServiceProvider);
-            await gamification.restoreMonitoringSession();
-          }
-        }
+        // REMOVIDO: Não pedir permissões automaticamente na home guest
+        // As permissões agora são pedidas apenas na ativação dos módulos
       }
     });
   }
@@ -75,14 +64,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
   Future<void> _handleNicheTap(Niche niche, String heroTag) async {
     HapticFeedback.lightImpact();
 
-    bool isAccessibilityGranted =
-        await PermissionService.hasAccessibilityPermission();
-
-    if (!isAccessibilityGranted && mounted) {
-      await PermissionService.ensurePermissions(context, forceUsage: true);
-      return;
-    }
-
+    // REMOVIDO: Não verificar permissões aqui
+    // As permissões agora são pedidas apenas na ativação dos módulos
     if (!mounted) return;
 
     Navigator.pushNamed(
@@ -94,94 +77,97 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
 
   Widget _buildNicheCard(
       Niche niche, bool isDark, TextTheme textTheme, String heroTag) {
-    return GestureDetector(
-      onTap: () => _handleNicheTap(niche, heroTag),
-      child: Material(
-        color: Colors.transparent,
-        elevation: 20,
-        shadowColor: Colors.black.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      const Color.fromARGB(255, 30, 30, 40),
-                      const Color.fromARGB(255, 15, 15, 20),
-                    ]
-                  : [
-                      Colors.white,
-                      const Color.fromARGB(255, 230, 235, 255),
-                    ],
+    return SizedBox(
+      height: 195,
+      child: GestureDetector(
+        onTap: () => _handleNicheTap(niche, heroTag),
+        child: Material(
+          color: Colors.transparent,
+          elevation: 20,
+          shadowColor: Colors.black.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color.fromARGB(255, 30, 30, 40),
+                        const Color.fromARGB(255, 15, 15, 20),
+                      ]
+                    : [
+                        Colors.white,
+                        const Color.fromARGB(255, 230, 235, 255),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color.fromARGB(164, 255, 255, 255)
+                    : Colors.black,
+                width: 1,
+              ),
             ),
-            border: Border.all(
-              color: isDark
-                  ? const Color.fromARGB(164, 255, 255, 255)
-                  : Colors.black,
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              // Container com altura fixa para garantir que todos os ícones fiquem alinhados
-              // horizontalmente, independente do número de linhas do texto abaixo.
-              SizedBox(
-                height: 110,
-                child: Center(
-                  child: Transform.scale(
-                    scale: niche.scale,
-                    child: Hero(
-                      tag: heroTag,
-                      child: niche.isEmojiIcon
-                          ? Text(
-                              niche.iconPath,
-                              style: const TextStyle(fontSize: 48),
-                            )
-                          : Image.asset(
-                              niche.iconPath,
-                              height: 60, // Aumentado tamanho base
-                              fit: BoxFit.contain,
-                            ),
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              children: [
+                // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+                // horizontalmente, independente do número de linhas do texto abaixo.
+                SizedBox(
+                  height: 110,
+                  child: Center(
+                    child: Transform.scale(
+                      scale: niche.scale,
+                      child: Hero(
+                        tag: heroTag,
+                        child: niche.isEmojiIcon
+                            ? Text(
+                                niche.iconPath,
+                                style: const TextStyle(fontSize: 48),
+                              )
+                            : Image.asset(
+                                niche.iconPath,
+                                height: 60, // Aumentado tamanho base
+                                fit: BoxFit.contain,
+                              ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              // Área de texto com altura flexível mas alinhada
-              Text(
-                niche.name,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.5,
-                  color: isDark ? Colors.white : Colors.black87,
-                  height: 1.1,
+                const SizedBox(height: 8),
+                // Área de texto com altura flexível mas alinhada
+                Text(
+                  niche.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                    color: isDark ? Colors.white : Colors.black87,
+                    height: 1.1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    niche.homePhrase,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: isDark ? Colors.white60 : Colors.black54,
-                      fontSize: 9.5,
-                      height: 1.1,
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      niche.homePhrase,
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        fontSize: 9.5,
+                        height: 1.1,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -192,6 +178,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = NicheCategoryRepository.getCategories();
+    final allCategories = List<NicheCategory>.from(categories);
 
     return Scaffold(
       extendBody: true,
@@ -294,35 +282,26 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final categories =
-                          NicheCategoryRepository.getCategories();
-                      final allCategories =
-                          List<NicheCategory>.from(categories);
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(
+                        top: 10, bottom: 100, left: 16, right: 16),
+                    itemCount: allCategories.length + 1,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 32),
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return Consumer(
+                          builder: (context, ref, child) {
+                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
+                            return _buildActiveModulesSection(
+                                activeModules, isDark, textTheme);
+                          },
+                        );
+                      }
 
-                      return ListView.separated(
-                        padding: const EdgeInsets.only(
-                            top: 10, bottom: 100, left: 16, right: 16),
-                        itemCount: allCategories.length + 1,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 32),
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Consumer(
-                              builder: (context, ref, child) {
-                                final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
-                                return _buildActiveModulesSection(
-                                    activeModules, isDark, textTheme);
-                              },
-                            );
-                          }
-
-                          final category = allCategories[index - 1];
-                          return _buildCategorySection(
-                              category, isDark, textTheme);
-                        },
-                      );
+                      final category = allCategories[index - 1];
+                      return _buildCategorySection(
+                          category, isDark, textTheme);
                     },
                   ),
                 ),
@@ -349,24 +328,24 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 210,
-          child: ListView.separated(
-            clipBehavior: Clip.none,
-            scrollDirection: Axis.horizontal,
-            itemCount: category.nicheIds.length,
-            separatorBuilder: (context, i) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final nicheId = category.nicheIds[i];
-              final niche = NicheRepository.getById(nicheId);
-              final heroTag = 'guest_${category.idPrefix}_${niche.id}';
-
-              return SizedBox(
-                width: 150,
-                child: _buildNicheCard(niche, isDark, textTheme, heroTag),
-              );
-            },
-          ),
+        // Usar Wrap para layout de duas colunas como nos módulos ativos
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: category.nicheIds.map((nicheId) {
+            final niche = NicheRepository.getById(nicheId);
+            final heroTag = 'guest_${category.idPrefix}_${niche.id}';
+            
+            return SizedBox(
+              width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
+              child: _buildNicheCard(
+                niche,
+                isDark,
+                textTheme,
+                heroTag,
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -377,106 +356,103 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const SizedBox(width: 8),
-            Text(
-              '✅ Módulos Ativos',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
+        Text(
+          'Módulos Ativos',
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 210,
-          child: activeNiches.isEmpty
-              ? _buildEmptyStateCard(isDark, textTheme)
-              : ListView.separated(
-                  clipBehavior: Clip.none,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: activeNiches.length,
-                  separatorBuilder: (context, i) => const SizedBox(width: 12),
-                  itemBuilder: (context, i) {
-                    final nicheId = activeNiches[i];
-                    final niche = NicheRepository.getById(nicheId);
-                    final heroTag = 'guest_active_${niche.id}';
-
-                    return SizedBox(
-                      width: 150,
-                      child: _buildNicheCard(niche, isDark, textTheme, heroTag),
-                    );
-                  },
+        if (activeNiches.isEmpty)
+          _buildEmptyStateCard(isDark, textTheme)
+        else
+          // Usar Wrap para layout de duas colunas
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: activeNiches.map((nicheId) {
+              final niche = NicheRepository.getById(nicheId);
+              return SizedBox(
+                width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
+                child: _buildNicheCard(
+                  niche,
+                  isDark,
+                  textTheme,
+                  'guest_active_${niche.id}',
                 ),
-        ),
+              );
+            }).toList(),
+          ),
       ],
     );
   }
 
   Widget _buildEmptyStateCard(bool isDark, TextTheme textTheme) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-        width: 150,
-        height: 195,
-        child: Material(
-          color: Colors.transparent,
-          elevation: 20,
-          shadowColor: Colors.black.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            decoration: BoxDecoration(
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 195,
+            child: Material(
+              color: Colors.transparent,
+              elevation: 20,
+              shadowColor: Colors.black.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? [
-                        const Color.fromARGB(255, 30, 30, 40),
-                        const Color.fromARGB(255, 15, 15, 20),
-                      ]
-                    : [
-                        Colors.white,
-                        const Color.fromARGB(255, 230, 235, 255),
-                      ],
-              ),
-              border: Border.all(
-                color: isDark
-                    ? const Color.fromARGB(164, 255, 255, 255)
-                    : Colors.black,
-                width: 1,
-              ),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: SizedBox.expand(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '🚫',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 40),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            const Color.fromARGB(255, 30, 30, 40),
+                            const Color.fromARGB(255, 15, 15, 20),
+                          ]
+                        : [
+                            Colors.white,
+                            const Color.fromARGB(255, 230, 235, 255),
+                          ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Sem módulos ativos',
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? const Color.fromARGB(85, 255, 255, 255)
-                          : Colors.black45,
-                      fontSize: 12,
-                    ),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color.fromARGB(164, 255, 255, 255)
+                        : Colors.black,
+                    width: 1,
                   ),
-                ],
+                ),
+                padding: const EdgeInsets.all(8),
+                child: SizedBox.expand(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '🚫',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 40),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Sem módulos ativos',
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? const Color.fromARGB(85, 255, 255, 255)
+                              : Colors.black45,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ),
-      ),
+        const Expanded(child: SizedBox()), // Espaço vazio para manter alinhamento
+      ],
     );
   }
 }

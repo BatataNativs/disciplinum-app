@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_stats.dart';
-import 'package:disciplinum/shared/widgets/buttons/niche_action_button.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 
@@ -41,7 +41,7 @@ class MoneySavingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.grid_view_rounded,
                   label: 'Meus Desafios',
                   color: const Color(0xFF6366F1),
@@ -51,7 +51,7 @@ class MoneySavingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
@@ -65,7 +65,7 @@ class MoneySavingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
@@ -75,12 +75,11 @@ class MoneySavingActionsWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NicheActionButton(
+                child: ModernStartButton(
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
                   isDark: isDark,
-                  isDestructive: isActive,
                   onTap: hasChallenge ? onToggleModule : () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Crie um desafio primeiro!')),
