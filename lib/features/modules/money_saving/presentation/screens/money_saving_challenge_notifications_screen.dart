@@ -5,6 +5,8 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 
@@ -19,7 +21,7 @@ class MoneySavingChallengeNotificationsScreen extends StatefulWidget {
 class _MoneySavingChallengeNotificationsScreenState
     extends State<MoneySavingChallengeNotificationsScreen> {
   final Niche _niche = NicheRepository.getById(NicheId.moneySavingChallenge);
-  final MoneySavingChallengeService _service = MoneySavingChallengeService();
+  late final MoneySavingChallengeService _service;
 
   MoneySavingChallengeModel? _challenge;
   bool _isLoading = true;
@@ -27,6 +29,7 @@ class _MoneySavingChallengeNotificationsScreenState
   @override
   void initState() {
     super.initState();
+    _service = MoneySavingChallengeService(IsarPreferencesRepository(IsarService.instance.database));
     _loadData();
   }
 

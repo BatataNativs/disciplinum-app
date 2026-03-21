@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart'
-    as fln;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 class ProcrastinationService extends ChangeNotifier {
   static const String _moduleId = 'procrastination';
@@ -17,7 +17,7 @@ class ProcrastinationService extends ChangeNotifier {
   static const String _listsKey = 'procrastination_lists';
 
   final GamificationService _gamificationService;
-  final SharedPreferences _prefs;
+  final IsarPreferencesRepository _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Armazena todas as tarefas indexadas por listId
@@ -42,7 +42,7 @@ class ProcrastinationService extends ChangeNotifier {
 
   Future<void> _loadData() async {
     // 1. Carrega listas
-    final String? listsData = _prefs.getString(_listsKey);
+    final String? listsData = await _prefs.getString(_listsKey);
     if (listsData != null) {
       try {
         final List<dynamic> decoded = jsonDecode(listsData);
@@ -66,7 +66,7 @@ class ProcrastinationService extends ChangeNotifier {
     }
 
     // 2. Carrega dados locais primeiro (cache imediato)
-    final String? localData = _prefs.getString(_localKey);
+    final String? localData = await _prefs.getString(_localKey);
     if (localData != null) {
       try {
         final Map<String, dynamic> decoded = jsonDecode(localData);
@@ -162,7 +162,7 @@ class ProcrastinationService extends ChangeNotifier {
   Future<void> _checkMidnightReset() async {
     final now = DateTime.now();
     final todayKey = _dateKey(now);
-    final lastCheckStr = _prefs.getString('procrastination_last_check');
+    final lastCheckStr = await _prefs.getString('procrastination_last_check');
 
     if (lastCheckStr == null) {
       await _prefs.setString('procrastination_last_check', todayKey);

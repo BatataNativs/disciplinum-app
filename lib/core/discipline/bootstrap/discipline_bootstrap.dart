@@ -31,12 +31,12 @@ class DisciplineBootstrap {
       );
       
       final adultContentModule = AdultContentDisciplineModule(
-        adultContentService: AdultContentService(ref.read(isarPreferencesRepositoryProvider)),
+        adultContentService: ref.read(adultContentServiceProvider),
         awardEngine: awardEngine,
       );
       
       final dietModule = DietDisciplineModule(
-        dietService: DietService(ref.read(isarPreferencesRepositoryProvider)),
+        dietService: ref.read(dietServiceProvider),
         awardEngine: awardEngine,
       );
       

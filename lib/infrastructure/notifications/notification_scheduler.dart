@@ -7,6 +7,8 @@ import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 class NotificationScheduler {
@@ -153,7 +155,9 @@ class NotificationScheduler {
       GamificationService service, IapService iapService) async {
     try {
       final challenge =
-          await MoneySavingChallengeService().getActiveChallenge();
+          await MoneySavingChallengeService(
+            IsarPreferencesRepository(IsarService.instance.database)
+          ).getActiveChallenge();
       if (challenge == null || challenge.notifFrequency == 'disabled') {
         await NotificationService.cancelNotification(7001);
         return;

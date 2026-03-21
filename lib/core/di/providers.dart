@@ -30,6 +30,8 @@ import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service.dart';
+import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
@@ -178,17 +180,29 @@ final gamificationControllerProvider = ChangeNotifierProvider<GamificationContro
 
 // ============= AUTH SERVICES =============
 
+/// Provider para AdultContentService
+final adultContentServiceProvider = Provider<AdultContentService>((ref) {
+  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  return AdultContentService(repository);
+});
+
+/// Provider para DietService
+final dietServiceProvider = Provider<DietService>((ref) {
+  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  return DietService(repository);
+});
+
 /// Provider para ProcrastinationService
 final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
   final gamification = ref.watch(gamificationServiceProvider);
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ProcrastinationService(gamification, prefs);
+  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  return ProcrastinationService(gamification, repository);
 });
 
 /// Provider para MoneySavingChallengeService
 final moneySavingChallengeServiceProvider = Provider<MoneySavingChallengeService>((ref) {
-  final moneySavingService = MoneySavingChallengeService();
-  return moneySavingService;
+  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  return MoneySavingChallengeService(repository);
 });
 
 /// Provider para StopSmokingController
@@ -204,8 +218,8 @@ final focusServiceProvider = Provider<FocusService>((ref) {
   );
 });
 
-/// Provider para ReadingService (SINGLETON legado em transição para Riverpod)
-final readingServiceProvider = ChangeNotifierProvider<ReadingService>((ref) {
+/// Provider para ReadingService
+final readingServiceProvider = Provider<ReadingService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);
   final gamification = ref.watch(gamificationServiceProvider);
   return ReadingService(prefs, gamification);

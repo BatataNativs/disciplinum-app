@@ -1,25 +1,31 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:uuid/uuid.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 /// Serviço para persistência do Desafio da Poupança
-/// Suporta armazenamento local (SharedPreferences) e cloud (Supabase)
+/// Suporta armazenamento local (IsarPreferencesRepository) e cloud (Supabase)
 /// Agora suporta múltiplos desafios simultâneos.
 class MoneySavingChallengeService extends ChangeNotifier {
   static const String _localKey = 'money_saving_challenge_list_data';
   static const String _oldLocalKey = 'money_saving_challenge_data';
   static const String _moduleId = 'money_saving_challenge';
 
+  final IsarPreferencesRepository _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
   final _uuid = const Uuid();
 
   List<MoneySavingChallengeModel> _challenges = [];
   MoneySavingChallengeModel? _activeChallenge;
   bool _initialized = false;
+
+  MoneySavingChallengeService(this._prefs) {
+    getChallenges();
+  }
 
   List<MoneySavingChallengeModel> get challengesList => _challenges;
   MoneySavingChallengeModel? get activeChallenge => _activeChallenge;
@@ -306,44 +312,30 @@ class MoneySavingChallengeService extends ChangeNotifier {
     return challenge;
   }
 
-  // ============ MÉTODOS LOCAIS (SharedPreferences) ============
+  // ============ MÉTODOS LOCAIS (IsarPreferencesRepository) ============
 
   Future<List<MoneySavingChallengeModel>> _getLocalChallenges() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       // Tenta a chave nova primeiro
-      String? jsonString = prefs.getString(_localKey);
-
-      // Se não tem, tenta a chave antiga (migração)
-      if (jsonString == null) {
-        final oldData = prefs.getString(_oldLocalKey);
-        if (oldData != null) {
-          final decoded = jsonDecode(oldData);
-          final single = MoneySavingChallengeModel.fromJson(decoded);
-          final list = [
-            single.copyWith(id: single.id.isEmpty ? _uuid.v4() : single.id)
-          ];
-          await _saveLocalChallenges(list);
-          // Opcional: remover a chave antiga
-          // await prefs.remove(_oldLocalKey);
-          return list;
-        }
+      String? jsonString = await _prefs.getString(_localKey);
+      jsonString ??= await _prefs.getString(_oldLocalKey);
+      
+      if (jsonString == null || jsonString.isEmpty) {
         return [];
       }
-
-      final decoded = jsonDecode(jsonString);
-      if (decoded is Map<String, dynamic> &&
-          decoded.containsKey('challenges')) {
-        final list = decoded['challenges'] as List;
-        return list.map((e) => MoneySavingChallengeModel.fromJson(e)).toList();
-      } else if (decoded is List) {
-        return decoded
+      
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      
+      // Formato novo: lista de desafios
+      if (data.containsKey('challenges')) {
+        final challengesList = data['challenges'] as List;
+        return challengesList
             .map((e) => MoneySavingChallengeModel.fromJson(e))
             .toList();
       }
-
-      return [];
+      
+      // Formato antigo: único desafio
+      return [MoneySavingChallengeModel.fromJson(data)];
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar desafios locais', error: e);
       return [];
@@ -353,9 +345,8 @@ class MoneySavingChallengeService extends ChangeNotifier {
   Future<void> _saveLocalChallenges(
       List<MoneySavingChallengeModel> challenges) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final data = {'challenges': challenges.map((e) => e.toJson()).toList()};
-      await prefs.setString(_localKey, jsonEncode(data));
+      await _prefs.setString(_localKey, jsonEncode(data));
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar desafios locais', error: e);
     }
@@ -363,11 +354,10 @@ class MoneySavingChallengeService extends ChangeNotifier {
 
   Future<void> removeAllLocal() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_localKey);
-      await prefs.remove(_oldLocalKey);
+      await _prefs.remove(_localKey);
+      await _prefs.remove(_oldLocalKey);
     } catch (e) {
-      LoggerService.instance.e('Erro ao remover desafios locais', error: e);
+      LoggerService.instance.e('Erro ao remover dados locais', error: e);
     }
   }
 }

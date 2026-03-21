@@ -11,7 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-class ReadingService extends ChangeNotifier {
+class ReadingService {
   static const String _moduleId = 'reading';
   static const String _localKey = 'reading_data';
   static const String _streakKey = 'reading_streak_data';
@@ -72,7 +72,7 @@ class ReadingService extends ChangeNotifier {
       }
     }
 
-    notifyListeners();
+    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
     _syncWithCloud();
   }
 
@@ -93,7 +93,7 @@ class ReadingService extends ChangeNotifier {
     if (difference > 1) {
       _currentStreak = 0;
       await _saveStreakData();
-      notifyListeners();
+      // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
     }
   }
 
@@ -188,7 +188,7 @@ class ReadingService extends ChangeNotifier {
         final encoded = jsonEncode(_books.map((b) => b.toJson()).toList());
         await _prefs.setString(_localKey, encoded);
         await _saveStreakData();
-        notifyListeners();
+        // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
       }
     } catch (e) {
       LoggerService.instance.e('Erro ao sincronizar leitura (load)', error: e);
@@ -215,7 +215,7 @@ class ReadingService extends ChangeNotifier {
     );
     _books.add(book);
     await _saveAllLocal();
-    notifyListeners();
+    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
   }
 
   Future<void> updateProgress(String bookId, int newPageCount) async {
@@ -255,13 +255,13 @@ class ReadingService extends ChangeNotifier {
     }
 
     await _saveAllLocal();
-    notifyListeners();
+    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
   }
 
   Future<void> deleteBook(String bookId) async {
     _books.removeWhere((b) => b.id == bookId);
     await _saveAllLocal();
-    notifyListeners();
+    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
   }
 
   Future<void> updateBook({
@@ -280,7 +280,7 @@ class ReadingService extends ChangeNotifier {
         theme: theme,
       );
       await _saveAllLocal();
-      notifyListeners();
+      // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
     }
   }
 
@@ -391,7 +391,7 @@ class ReadingService extends ChangeNotifier {
     await _prefs.remove('reading_notification_hour');
     await _prefs.remove('reading_notification_minute');
     await NotificationService.cancelNotification(9000);
-    notifyListeners();
+    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
   }
   // ===========================================
   // ESTATÍSTICAS
