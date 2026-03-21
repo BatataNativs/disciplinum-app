@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SmokingConsumptionSettings extends StatelessWidget {
+class SmokingConsumptionSettings extends StatefulWidget {
   final bool isDark;
   final TextEditingController priceController;
   final TextEditingController packsController;
@@ -23,6 +23,30 @@ class SmokingConsumptionSettings extends StatelessWidget {
   });
 
   @override
+  State<SmokingConsumptionSettings> createState() => _SmokingConsumptionSettingsState();
+}
+
+class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings> {
+  @override
+  void initState() {
+    super.initState();
+    // Adicionar listeners para atualizar o estado quando o texto mudar
+    widget.priceController.addListener(_onTextChanged);
+    widget.packsController.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.priceController.removeListener(_onTextChanged);
+    widget.packsController.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,12 +67,12 @@ class SmokingConsumptionSettings extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
+            color: widget.isDark
+                ? Colors.white.withAlpha(0x0D)
                 : Colors.grey[100],
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white10 : Colors.grey[300]!,
+              color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
             ),
           ),
           child: Column(
@@ -61,26 +85,28 @@ class SmokingConsumptionSettings extends StatelessWidget {
                     width: 160,
                     height: 40,
                     child: TextField(
-                      controller: priceController,
+                      controller: widget.priceController,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: widget.priceController.text.isNotEmpty && widget.priceController.text != '0,00'
+                            ? (widget.isDark ? Colors.white : Colors.black)
+                            : (widget.isDark ? Colors.white38 : Colors.black38),
+                      ),
                       decoration: InputDecoration(
                         prefixIcon: Container(
                           margin: const EdgeInsets.only(left: 4, right: 4),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
-                              value: selectedCurrency,
+                              value: widget.selectedCurrency,
                               isDense: true,
-                              icon: const Icon(Icons.arrow_drop_down,
-                                  size: 16),
+                              icon: const Icon(Icons.arrow_drop_down, size: 16),
                               alignment: Alignment.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color:
-                                    isDark ? Colors.white : Colors.black87,
+                                color: widget.isDark ? Colors.white : Colors.black87,
                               ),
                               selectedItemBuilder: (BuildContext context) {
                                 return ['R\$', 'US\$', 'EUR', 'ARS\$']
@@ -91,18 +117,15 @@ class SmokingConsumptionSettings extends StatelessWidget {
                                       item,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black87,
+                                        color: widget.isDark ? Colors.white : Colors.black87,
                                       ),
                                     ),
                                   );
                                 }).toList();
                               },
-                              onChanged: onCurrencyChanged,
+                              onChanged: widget.onCurrencyChanged,
                               items: ['R\$', 'US\$', 'EUR', 'ARS\$']
-                                  .map<DropdownMenuItem<String>>(
-                                      (String value) {
+                                  .map<DropdownMenuItem<String>>((String value) {
                                 String currencyName = '';
                                 switch (value) {
                                   case 'R\$':
@@ -126,27 +149,33 @@ class SmokingConsumptionSettings extends StatelessWidget {
                             ),
                           ),
                         ),
-                        prefixIconConstraints: const BoxConstraints(
-                            minWidth: 50, maxWidth: 80),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
+                        prefixIconConstraints: const BoxConstraints(minWidth: 50, maxWidth: 80),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        hintText: '0,00',
+                        hintStyle: TextStyle(
+                          color: widget.isDark ? Colors.white38 : Colors.black38,
+                          fontWeight: FontWeight.normal,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400),
+                          borderSide: BorderSide(color: Colors.grey.shade400),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400),
+                          borderSide: BorderSide(color: Colors.grey.shade400),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                              color: Colors.indigo, width: 2),
+                          borderSide: const BorderSide(color: Colors.indigo, width: 2),
                         ),
                       ),
-                      onChanged: onPriceChanged,
+                      onTap: () {
+                        // Limpa o campo se ainda tiver o valor padrão
+                        if (widget.priceController.text == '0,00') {
+                          widget.priceController.clear();
+                        }
+                      },
+                      onChanged: widget.onPriceChanged,
                     ),
                   ),
                 ],
@@ -160,31 +189,41 @@ class SmokingConsumptionSettings extends StatelessWidget {
                     width: 80,
                     height: 40,
                     child: TextField(
-                      controller: packsController,
+                      controller: widget.packsController,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: widget.packsController.text.isNotEmpty && widget.packsController.text != '0'
+                            ? (widget.isDark ? Colors.white : Colors.black)
+                            : (widget.isDark ? Colors.white38 : Colors.black38),
+                      ),
                       decoration: InputDecoration(
                         hintText: '0',
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
+                        hintStyle: TextStyle(
+                          color: widget.isDark ? Colors.white38 : Colors.black38,
+                          fontWeight: FontWeight.normal,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400),
+                          borderSide: BorderSide(color: Colors.grey.shade400),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400),
+                          borderSide: BorderSide(color: Colors.grey.shade400),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                              color: Colors.indigo, width: 2),
+                          borderSide: const BorderSide(color: Colors.indigo, width: 2),
                         ),
                       ),
+                      onTap: () {
+                        // Limpa o campo se ainda tiver o valor padrão
+                        if (widget.packsController.text == '0') {
+                          widget.packsController.clear();
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -195,7 +234,7 @@ class SmokingConsumptionSettings extends StatelessWidget {
                 children: [
                   const Text("Data de parada:"),
                   InkWell(
-                    onTap: onDateTap,
+                    onTap: widget.onDateTap,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       height: 40,
@@ -206,7 +245,7 @@ class SmokingConsumptionSettings extends StatelessWidget {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                        "${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}",
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

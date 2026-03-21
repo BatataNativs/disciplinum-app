@@ -49,8 +49,8 @@ BEGIN
     
     -- Verificar se está na lista de senhas comprometidas/comuns
     SELECT EXISTS(
-        SELECT 1 FROM common_compromised_passwords 
-        WHERE password_hash = check_password_strength.password_hash
+        SELECT 1 FROM common_compromised_passwords ccp 
+        WHERE ccp.password_hash = password_hash
     ) INTO is_compromised;
     
     -- Se for uma senha comprometida/comum, negar
@@ -81,8 +81,8 @@ BEGIN
     
     -- Verificar na tabela
     SELECT EXISTS(
-        SELECT 1 FROM common_compromised_passwords 
-        WHERE password_hash = is_password_compromised.password_hash
+        SELECT 1 FROM common_compromised_passwords ccp 
+        WHERE ccp.password_hash = is_password_compromised.password_hash
     ) INTO is_found;
     
     RETURN is_found;

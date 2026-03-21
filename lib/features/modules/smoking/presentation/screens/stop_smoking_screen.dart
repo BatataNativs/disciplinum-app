@@ -12,6 +12,7 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'savings_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'daily_checkins_stats.dart';
@@ -47,7 +48,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
   final TextEditingController _priceController =
-      TextEditingController(text: '0,00');
+      TextEditingController(text: '');
   final TextEditingController _packsController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedCurrency = 'R\$';
@@ -132,7 +133,10 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
       if (settings != null) {
         _selectedCurrency = settings!.currency;
-        _formatCurrencyInput(settings!.packPrice.toStringAsFixed(2));
+        // Só formata se o preço for maior que zero
+        if (settings!.packPrice > 0) {
+          _formatCurrencyInput(settings!.packPrice.toStringAsFixed(2));
+        }
         _packsController.text =
             settings!.packsPerDay > 0 ? settings!.packsPerDay.toString() : '';
 
@@ -246,6 +250,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   Future<void> _saveSettings(
       double price, int packs, DateTime date, String currency) async {
+    LoggerService.instance.d('_saveSettings iniciado');
+    LoggerService.instance.d('price=$price, packs=$packs, date=$date, currency=$currency');
+    
     setState(() => isSaving = true);
 
     final newSettings = SmokingSettingsModel(
@@ -256,26 +263,35 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       quitDate: date,
       currency: currency,
     );
+    
+    LoggerService.instance.d('newSettings criado: ${newSettings.toJson()}');
 
     try {
+      LoggerService.instance.d('Salvando configurações...');
       await ref.read(smokingServiceProvider).saveSettings(newSettings);
+      LoggerService.instance.i('Configurações salvas com sucesso');
+      
       if (mounted) {
         setState(() {
           settings = newSettings;
           isSaving = false;
         });
+        LoggerService.instance.d('Estado atualizado');
 
         await _syncCheckInWithGamification(onlySyncSchedules: true);
+        LoggerService.instance.d('Sync com gamificação concluída');
 
         if (mounted) {
           EnhancedSnackBarHelper.showSuccess(
               context, 'Informacoes salvas com sucesso!');
+          LoggerService.instance.d('SnackBar exibido');
         }
       }
     } catch (e) {
+      LoggerService.instance.e('Erro ao salvar', error: e);
       if (mounted) {
         setState(() => isSaving = false);
-        EnhancedSnackBarHelper.showError(context, 'Erro ao salvar: \$e');
+        EnhancedSnackBarHelper.showError(context, 'Erro ao salvar: $e');
       }
     }
   }
@@ -633,25 +649,91 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                         ? _desativarNichoMonitoramento
                         : _ativarNichoMonitoramento,
                     onSaveSettings: () {
-                      if (_priceController.text.isNotEmpty &&
-                          _packsController.text.isNotEmpty) {
-                        String cleanPrice = _priceController.text;
-                        if (_selectedCurrency == 'US\$') {
-                          cleanPrice = cleanPrice.replaceAll(',', '');
-                        } else {
-                          cleanPrice =
-                              cleanPrice.replaceAll('.', '').replaceAll(',', '.');
-                        }
-                        // Fallback caso sobre algo (ex letras)
-                        cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
-
-                        _saveSettings(
-                          double.tryParse(cleanPrice) ?? 0.0,
-                          int.tryParse(_packsController.text) ?? 0,
-                          _selectedDate,
-                          _selectedCurrency,
+                      LoggerService.instance.d('Botão Salvar pressionado');
+                      LoggerService.instance.d('_priceController.text="${_priceController.text}"');
+                      LoggerService.instance.d('_packsController.text="${_packsController.text}"');
+                      
+                      // Verifica se os campos têm valores válidos
+                      String priceText = _priceController.text.trim();
+                      String packsText = _packsController.text.trim();
+                      
+                      // Validação - campos não podem estar vazios
+                      bool hasPrice = priceText.isNotEmpty;
+                      bool hasPacks = packsText.isNotEmpty;
+                      
+                      LoggerService.instance.d('hasPrice=$hasPrice, hasPacks=$hasPacks');
+                      
+                      // Adiciona mensagem de validação se necessário
+                      if (!hasPrice && !hasPacks) {
+                        LoggerService.instance.w('Ambos os campos vazios');
+                        EnhancedSnackBarHelper.showWarning(
+                          context, 
+                          'Por favor, preencha o preço do maço e a quantidade de maços por dia.'
                         );
+                        return;
                       }
+                      
+                      if (!hasPrice) {
+                        LoggerService.instance.w('Preço vazio');
+                        EnhancedSnackBarHelper.showWarning(
+                          context, 
+                          'Por favor, preencha o preço do maço.'
+                        );
+                        return;
+                      }
+                      
+                      if (!hasPacks) {
+                        LoggerService.instance.w('Maços vazio');
+                        EnhancedSnackBarHelper.showWarning(
+                          context, 
+                          'Por favor, preencha a quantidade de maços por dia.'
+                        );
+                        return;
+                      }
+                      
+                      // Validação adicional - não pode ser zero
+                      String cleanPrice = priceText;
+                      if (_selectedCurrency == 'US\$') {
+                        cleanPrice = cleanPrice.replaceAll(',', '');
+                      } else {
+                        cleanPrice =
+                            cleanPrice.replaceAll('.', '').replaceAll(',', '.');
+                      }
+                      // Fallback caso sobre algo (ex letras)
+                      cleanPrice = cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
+
+                      double priceValue = double.tryParse(cleanPrice) ?? 0.0;
+                      int packsValue = int.tryParse(packsText) ?? 0;
+                      
+                      if (priceValue <= 0) {
+                        LoggerService.instance.w('Preço inválido (zero)');
+                        EnhancedSnackBarHelper.showWarning(
+                          context, 
+                          'Por favor, informe um preço válido para o maço.'
+                        );
+                        return;
+                      }
+                      
+                      if (packsValue <= 0) {
+                        LoggerService.instance.w('Maços inválido (zero)');
+                        EnhancedSnackBarHelper.showWarning(
+                          context, 
+                          'Por favor, informe uma quantidade válida de maços por dia.'
+                        );
+                        return;
+                      }
+                      
+                      LoggerService.instance.d('Validação passou, processando salvamento');
+                      LoggerService.instance.d('cleanPrice="$cleanPrice"');
+                      LoggerService.instance.d('Convertendo para double: $priceValue');
+                      LoggerService.instance.d('Convertendo packs: $packsValue');
+
+                      _saveSettings(
+                        priceValue,
+                        packsValue,
+                        _selectedDate,
+                        _selectedCurrency,
+                      );
                     },
                     context: context,
                   ),

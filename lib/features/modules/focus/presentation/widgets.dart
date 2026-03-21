@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 
 class MyProgressFocus extends ConsumerWidget {
   const MyProgressFocus({super.key});
@@ -10,9 +11,10 @@ class MyProgressFocus extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
+    final focusService = ref.watch(focusServiceProvider);
     final authService = ref.watch(authServiceProvider);
-    final periodosRespeitados = gamification.getRespectedFocusPeriods(NicheId.focus); // NOVO: Usar períodos de foco
-    final earnedInsignias = gamification.earnedFocusInsignias;
+    final periodosRespeitados = gamification.periodosFocoRespeitados[NicheId.focus] ?? 0; // CORRIGIDO: Usar getter existente
+    final earnedInsigniasFuture = focusService.getEarnedInsignias(); // CORRIGIDO: Obter do FocusService
 
     // Lógica para obter o primeiro nome
     String fullName = authService.userProfile?['name'] ?? 'Usuário';
@@ -110,22 +112,28 @@ class MyProgressFocus extends ConsumerWidget {
                 color: const Color(0xFF1E1E1E), // Cinza escuro/grafite
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 0.8,
-                children: FocusInsignia.values.map((insignia) {
-                  final isEarned = earnedInsignias.contains(insignia);
-                  return _AwardItem(
-                    asset: insignia.asset,
-                    label: insignia.nameBr.split(' ').last,
-                    isEarned: isEarned,
-                    requirement: _getInsigniaRequirement(insignia),
+              child: FutureBuilder<List<FocusInsignia>>(
+                future: earnedInsigniasFuture,
+                builder: (context, snapshot) {
+                  final earnedInsignias = snapshot.data ?? [];
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 0.8,
+                    children: FocusInsignia.values.map((insignia) {
+                      final isEarned = earnedInsignias.contains(insignia);
+                      return _AwardItem(
+                        asset: insignia.asset,
+                        label: insignia.nameBr.split(' ').last,
+                        isEarned: isEarned,
+                        requirement: _getInsigniaRequirement(insignia),
+                      );
+                    }).toList(),
                   );
-                }).toList(),
+                },
               ),
             ),
           ],
@@ -196,6 +204,7 @@ class _AwardItem extends StatelessWidget {
                       0,
                       0,
                       0,
+                      0,
                       1,
                       0,
                     ]),
@@ -251,6 +260,7 @@ class _AwardItem extends StatelessWidget {
                       0.2126,
                       0.7152,
                       0.0722,
+                      0,
                       0,
                       0,
                       0,

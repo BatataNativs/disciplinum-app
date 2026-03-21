@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:isolate';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/bootstrap.dart';
@@ -10,6 +11,27 @@ import 'package:disciplinum/core/di/providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_BR', null);
+  
+  // Configurar tratamento global de erros
+  FlutterError.onError = (FlutterErrorDetails details) {
+    LoggerService.instance.e(
+      'Flutter Error',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+  
+  // Capturar erros não tratados a nível de plataforma
+  Isolate.current.addErrorListener(RawReceivePort((pair) async {
+    final errorAndStacktrace = pair as List<dynamic>;
+    final error = errorAndStacktrace.first;
+    final stackTrace = errorAndStacktrace.last as StackTrace;
+    LoggerService.instance.e(
+      'Uncaught Error',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }).sendPort);
   
   try {
     final startupData = await AppBootstrap.initialize();

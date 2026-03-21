@@ -357,7 +357,8 @@ class PermissionService {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  "Feedback Visual",
+                  "Permissão de sobreposição",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
