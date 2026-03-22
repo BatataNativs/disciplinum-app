@@ -365,6 +365,37 @@ Container(
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.schedule_rounded, color: Colors.green, size: 32),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Dias de Tolerância',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Para te ajudar a manter a disciplina, o app te dá alguns dias de tolerância quando você não consegue fazer check-in:\n\n'
+                    '• Menos de 7 dias de disciplina: 1 dia de tolerância\n'
+                    '• Entre 7 e 29 dias: 2 dias de tolerância\n'
+                    '• Entre 30 e 99 dias: 3 dias de tolerância\n'
+                    '• 100 dias ou mais: 5 dias de tolerância\n\n'
+                    'Se você ficar sem check-in além desses dias, seu progresso será reiniciado. Use a seu favor!',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
                 color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
