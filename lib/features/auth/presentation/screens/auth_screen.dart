@@ -7,11 +7,17 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final int initialAuthMode;
+  final SupabaseClient? supabaseClient;
 
-  const AuthScreen({super.key, this.initialAuthMode = 0});
+  const AuthScreen({
+    super.key, 
+    this.initialAuthMode = 0,
+    this.supabaseClient,
+  });
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
