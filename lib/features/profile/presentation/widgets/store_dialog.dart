@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/lojinha.dart';
 
 class StoreDialog extends StatelessWidget {
   const StoreDialog({super.key});
@@ -92,8 +91,27 @@ class StoreDialog extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Conteúdo da Lojinha
-              const Flexible(child: Lojinha()),
+              // Conteúdo da Lojinha - Navega para a tela real
+              const Flexible(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.store, size: 48, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text(
+                        'Loja Disponível',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Use o botão "Ver Loja" para acessar',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 16),
             ],

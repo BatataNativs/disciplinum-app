@@ -18,6 +18,7 @@ import 'package:disciplinum/features/modules/money_saving/presentation/widgets/m
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_tab_content.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class MoneySavingChallengeScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -97,27 +98,13 @@ class _MoneySavingChallengeScreenState
   }
 
   Future<void> _deactivateChallenge() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Desativar e Limpar Módulo?'),
-        content: const Text(
-          'Ao desativar o módulo, TODOS os seus desafios criados e o progresso financeiro serão APAGADOS permanentemente.\n\nAlém disso, a contagem de dias (gamificação) será zerada. Deseja continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sim, desativar e excluir tudo'),
-          ),
-        ],
-      ),
+      title: 'Desativar e Limpar Módulo?',
+      content: 'Ao desativar o módulo, TODOS os seus desafios criados e o progresso financeiro serão APAGADOS permanentemente.\n\nAlém disso, a contagem de dias (gamificação) será zerada. Deseja continuar?',
+      confirmText: 'Sim, desativar e excluir tudo',
+      cancelText: 'Cancelar',
+      isDangerous: true,
     );
 
     if (confirmed == true) {
@@ -362,25 +349,13 @@ class _MoneySavingChallengeScreenState
 
   Future<void> _deleteSpecificChallenge(
       MoneySavingChallengeModel challenge) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir Desafio?'),
-        content: Text(
-            'Deseja excluir permanentemente o desafio "${challenge.title}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+      title: 'Excluir Desafio?',
+      content: 'Deseja excluir permanentemente o desafio "${challenge.title}"?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      isDangerous: true,
     );
 
     if (confirmed == true) {

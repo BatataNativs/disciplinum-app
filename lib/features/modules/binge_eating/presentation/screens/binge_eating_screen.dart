@@ -12,8 +12,8 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/my_progress_binge_eating.dart' as binge_eating_progress;
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
@@ -708,7 +708,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const MyProgressBingeEating()),
+                      builder: (_) => const binge_eating_progress.MyProgressBingeEating()),
                 );
               },
             ),

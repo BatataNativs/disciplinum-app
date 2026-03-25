@@ -7,7 +7,6 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
-import 'package:disciplinum/shared/widgets/lojinha.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
@@ -427,10 +426,7 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
                 icon: const Icon(Icons.diamond_outlined, size: 18),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  showDialog(
-                    context: context,
-                    builder: (_) => const Lojinha(),
-                  );
+                  Navigator.pushNamed(context, '/lojinha');
                 },
                 label: const Text('Ir para Lojinha'),
               ),

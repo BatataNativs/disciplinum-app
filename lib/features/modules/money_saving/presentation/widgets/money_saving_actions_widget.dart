@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_stats.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/widgets/my_progress_money_saving_challenge.dart' as money_saving_progress;
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 
 class MoneySavingActionsWidget extends StatelessWidget {
@@ -149,7 +149,7 @@ class MoneySavingStatisticsMenu extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const MyProgressMoneySavingChallenge(),
+                  builder: (_) => const money_saving_progress.MyProgressMoneySavingChallenge(),
                 ),
               );
             },

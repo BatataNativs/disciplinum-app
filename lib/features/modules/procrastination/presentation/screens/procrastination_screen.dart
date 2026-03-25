@@ -5,10 +5,10 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/shared/widgets/dialogs/task_creation_dialog.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_notifications_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_stats_screen.dart';
+import 'package:disciplinum/features/modules/procrastination/presentation/widgets/my_progress_procrastination.dart' as procrastination_progress;
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -20,6 +20,7 @@ import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
 import 'package:disciplinum/shared/widgets/common/task_list_tabs.dart';
 import 'package:disciplinum/shared/widgets/common/task_list_header.dart';
 import 'package:disciplinum/shared/widgets/common/task_list_widget.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class ProcrastinationScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -195,27 +196,19 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     );
   }
 
-  void _showDeleteTaskDialog(ProcrastinationService service, String listId, String taskId) {
-    showDialog(
+  void _showDeleteTaskDialog(ProcrastinationService service, String listId, String taskId) async {
+    final shouldDelete = await AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir tarefa'),
-        content: const Text('Tem certeza que deseja excluir esta tarefa?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await service.removeTaskFromList(listId, taskId);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+      title: 'Excluir tarefa',
+      content: 'Tem certeza que deseja excluir esta tarefa?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      isDangerous: true,
+    ) ?? false;
+
+    if (!shouldDelete) return;
+
+    await service.removeTaskFromList(listId, taskId);
   }
 
   Widget _buildBottomButtons(
@@ -301,45 +294,41 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
   }
 
 
-  void _showCreateListDialog(ProcrastinationService service) {
+  void _showCreateListDialog(ProcrastinationService service) async {
     final controller = TextEditingController();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
+    
+    final result = await AppDialog.showCustom<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-        title: const Text('Nova lista'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Nome da lista',
-            border: OutlineInputBorder(),
-          ),
+      title: 'Nova lista',
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: 'Nome da lista',
+          border: OutlineInputBorder(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (controller.text.trim().isNotEmpty) {
-                await service.createList(controller.text.trim());
-                final lists = service.getAllLists();
-                if (!ctx.mounted) return;
-                setState(() {
-                  _selectedListId = lists.last.id;
-                });
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Criar'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Criar'),
+        ),
+      ],
     );
+
+    if (result == true && controller.text.trim().isNotEmpty) {
+      await service.createList(controller.text.trim());
+      final lists = service.getAllLists();
+      if (mounted) {
+        setState(() {
+          _selectedListId = lists.last.id;
+        });
+      }
+    }
   }
 
 
@@ -347,26 +336,13 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     final gamification = ref.read(gamificationServiceProvider);
 
     if (isActive) {
-      final confirmed = await showDialog<bool>(
+      final confirmed = await AppDialog.showConfirmation(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Desativar modulo?'),
-          content: const Text(
-              'Ao desativar, seu progresso de medalhas será pausado. Deseja continuar?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Sim, desativar'),
-            ),
-          ],
-        ),
+        title: 'Desativar módulo?',
+        content: 'Ao desativar, seu progresso de medalhas será pausado. Deseja continuar?',
+        confirmText: 'Sim, desativar',
+        cancelText: 'Cancelar',
+        isDangerous: true,
       );
 
       if (confirmed == true) {
@@ -479,7 +455,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const MyProgressProcrastination(),
+                    builder: (_) => const procrastination_progress.MyProgressProcrastination(),
                   ),
                 );
               },

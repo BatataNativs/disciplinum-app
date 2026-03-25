@@ -13,18 +13,18 @@ class MyProgressBingeEating extends ConsumerWidget {
     final dias =
         gamification.diasConsecutivosByModule[NicheId.bingeEating] ?? 0;
 
-    return _BaseProgressDetailScreen(
+    return _BingeEatingProgressDetailScreen(
       title: 'Compulsão alimentar',
       dias: dias,
     );
   }
 }
 
-class _BaseProgressDetailScreen extends ConsumerWidget {
+class _BingeEatingProgressDetailScreen extends ConsumerWidget {
   final String title;
   final int dias;
 
-  const _BaseProgressDetailScreen({required this.title, required this.dias});
+  const _BingeEatingProgressDetailScreen({required this.title, required this.dias});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

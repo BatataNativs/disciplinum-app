@@ -3,21 +3,21 @@ import 'package:disciplinum/features/modules/reading/domain/entities/reading_mod
 
 /// Dialog para atualizar progresso de leitura
 /// Widget reutilizável para todos os módulos de leitura
-class UpdateProgressDialog extends StatefulWidget {
+class BookUpdateProgressDialog extends StatefulWidget {
   final ReadingBook? book;
   final Function(ReadingBook) onUpdate;
 
-  const UpdateProgressDialog({
+  const BookUpdateProgressDialog({
     super.key,
     this.book,
     required this.onUpdate,
   });
 
   @override
-  State<UpdateProgressDialog> createState() => _UpdateProgressDialogState();
+  State<BookUpdateProgressDialog> createState() => _BookUpdateProgressDialogState();
 }
 
-class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
+class _BookUpdateProgressDialogState extends State<BookUpdateProgressDialog> {
   late TextEditingController _pagesController;
   late int _currentPage;
 

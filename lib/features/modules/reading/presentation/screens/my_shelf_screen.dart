@@ -2,6 +2,7 @@ import 'package:disciplinum/features/modules/reading/domain/entities/reading_mod
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/shared/widgets/dialogs/app_dialog.dart';
 
 class MyShelfScreen extends ConsumerWidget {
   const MyShelfScreen({super.key});
@@ -11,11 +12,8 @@ class MyShelfScreen extends ConsumerWidget {
     // Usar ReadingService quando estiver disponível
     final readingServiceAdapter = ref.watch(readingServiceAdapterProvider);
     
-    // Tentar obter livros do ReadingService, fallback para mockados
-    final activeBooks = readingServiceAdapter.getActiveBooks();
-    
-    // Se não houver livros, usar dados mockados
-    final booksToShow = activeBooks.isEmpty ? _getMockBooks() : activeBooks;
+    // Obter livros do ReadingService
+    final booksToShow = readingServiceAdapter.getActiveBooks();
     
     if (booksToShow.isEmpty) {
       return Center(
@@ -51,7 +49,7 @@ class MyShelfScreen extends ConsumerWidget {
     return Consumer(
       builder: (context, ref, child) {
         // Implementar quando Isar estiver integrado
-        // Por enquanto, usar booksToShow que já combina ReadingService + mock
+        // Por enquanto, usar booksToShow do ReadingService
         final activeBooks = booksToShow;
         
         if (activeBooks.isEmpty) {
@@ -65,16 +63,6 @@ class MyShelfScreen extends ConsumerWidget {
         
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                "Livros Ativos (${activeBooks.length})",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
             const SizedBox(height: 8),
             Expanded(
               child: ListView.builder(
@@ -88,9 +76,30 @@ class MyShelfScreen extends ConsumerWidget {
                     ),
                     title: Text(book.title),
                     subtitle: Text(book.author ?? 'Autor desconhecido'),
-                    trailing: Text("${book.currentPage}/${book.totalPages}"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("${book.currentPage}/${book.totalPages}"),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _deleteBookWithConfirm(context, ref, book),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     onTap: () {
-                      _navigateToBookDetails(context, book);
+                      _navigateToBookDetails(context, ref, book);
                     },
                   );
                 },
@@ -102,16 +111,40 @@ class MyShelfScreen extends ConsumerWidget {
     );
   }
 
-  void _navigateToBookDetails(BuildContext context, ReadingBook book) {
-    // Implementar navegação para detalhes do livro
-    showDialog(
+  Future<void> _deleteBookWithConfirm(BuildContext context, WidgetRef ref, ReadingBook book) async {
+    final shouldDelete = await AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(book.title),
-        content: Column(
+      title: 'Excluir livro?',
+      content: 'Deseja excluir o livro "${book.title}" da sua estante?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      isDangerous: true,
+    );
+
+    if (shouldDelete == true) {
+      final readingService = ref.read(readingServiceProvider);
+      await readingService.deleteBook(book.id);
+    }
+  }
+
+  void _navigateToBookDetails(BuildContext context, WidgetRef ref, ReadingBook book) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              book.title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
             Text('Autor: ${book.author ?? 'Autor desconhecido'}'),
             const SizedBox(height: 8),
             Text('Progresso: ${book.currentPage}/${book.totalPages} páginas'),
@@ -123,107 +156,140 @@ class MyShelfScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text('Concluído: ${_formatDate(book.completedAt!)}'),
             ],
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Fechar'),
+                  ),
+                ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showReadingProgress(context, ref, book);
+                    },
+                    child: const Text('Atualizar Progresso'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showReadingProgress(context, book);
-            },
-            child: const Text('Atualizar Progresso'),
-          ),
-        ],
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day/$month/${date.year}';
   }
 
-  void _showReadingProgress(BuildContext context, ReadingBook book) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Atualizar Progresso - ${book.title}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Página atual: ${book.currentPage}'),
-          const SizedBox(height: 16),
-          Text('Total: ${book.totalPages} páginas'),
-          const SizedBox(height: 16),
-          LinearProgressIndicator(
-            value: book.currentPage / book.totalPages,
-            backgroundColor: Colors.grey[300],
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+  void _showReadingProgress(BuildContext context, WidgetRef ref, ReadingBook book) {
+    final currentPageController = TextEditingController(); // Campo vazio por padrão
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: false,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Atualizar Progresso - ${book.title}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Página atual: ${book.currentPage}'),
+              const SizedBox(height: 4),
+              Text('Total: ${book.totalPages} páginas'),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: book.currentPage / book.totalPages,
+                backgroundColor: Colors.grey[300],
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+              const SizedBox(height: 4),
+              Text('${((book.currentPage / book.totalPages) * 100).toStringAsFixed(1)}% concluído'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: currentPageController,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Nova página atual',
+                  hintText: 'Última página lida: ${book.currentPage}',
+                  border: const OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _saveBookProgress(context, ref, book, currentPageController);
+                      },
+                      child: const Text('Salvar'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text('${((book.currentPage / book.totalPages) * 100).toStringAsFixed(1)}% concluído'),
-        ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            _saveBookProgress(context, book);
-          },
-          child: const Text('Salvar'),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
-  void _saveBookProgress(BuildContext context, ReadingBook book) {
-    // Implementar salvamento de progresso real usando ReadingServiceAdapter
+  void _saveBookProgress(BuildContext context, WidgetRef ref, ReadingBook book, TextEditingController currentPageController) {
+    final newPage = int.tryParse(currentPageController.text);
+    
+    if (newPage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Digite um número válido')),
+      );
+      return;
+    }
+    
+    if (newPage < 0 || newPage > book.totalPages) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Página deve estar entre 0 e ${book.totalPages}')),
+      );
+      return;
+    }
+    
+    // Salvar usando ReadingService
+    final readingService = ref.read(readingServiceProvider);
+    readingService.updateProgress(book.id, newPage);
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Progresso salvo com sucesso!')),
     );
   }
-
-  /// Dados mockados para fallback quando ReadingService não tiver dados
-  List<ReadingBook> _getMockBooks() {
-    return [
-      ReadingBook(
-        id: '1',
-        title: 'O Poder do Hábito',
-        author: 'Charles Duhigg',
-        totalPages: 300,
-        currentPage: 150,
-        theme: ReadingTheme.autoajuda,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        logs: [],
-      ),
-      ReadingBook(
-        id: '2',
-        title: 'A Tríade do Tempo',
-        author: 'Christian Barbosa',
-        totalPages: 200,
-        currentPage: 80,
-        theme: ReadingTheme.outros,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        logs: [],
-      ),
-      ReadingBook(
-        id: '3',
-        title: 'Dart for Beginners',
-        author: 'John Smith',
-        totalPages: 250,
-        currentPage: 200,
-        theme: ReadingTheme.outros,
-        createdAt: DateTime.now(),
-        logs: [],
-      ),
-    ];
-  }
 }
+

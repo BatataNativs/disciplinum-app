@@ -10,7 +10,7 @@ import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
+import 'package:disciplinum/features/modules/focus/presentation/widgets.dart' as focus_progress;
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
@@ -657,7 +657,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressFocus()),
+                  MaterialPageRoute(builder: (_) => const focus_progress.MyProgressFocus()),
                 );
               },
             ),

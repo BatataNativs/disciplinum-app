@@ -1,7 +1,8 @@
-import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 
 class UpdateProgressDialog extends ConsumerStatefulWidget {
@@ -37,61 +38,55 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
     }
   }
 
-  void _deleteBook() {
-    showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-              title: const Text('Excluir livro?'),
-              content: const Text(
-                  'Tem certeza que deseja remover este livro da sua estante?'),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancelar')),
-                TextButton(
-                  onPressed: () {
-                    ref.read(readingServiceProvider).deleteBook(widget.book.id);
-                    Navigator.pop(ctx); // fecha confirmacao
-                    Navigator.pop(context); // fecha dialogo de update
-                  },
-                  child: const Text('Excluir',
-                      style: TextStyle(color: Colors.red)),
-                )
-              ],
-            ));
+  void _deleteBook() async {
+    final shouldDelete = await AppDialog.showConfirmation(
+      context: context,
+      title: 'Excluir livro?',
+      content: 'Tem certeza que deseja remover este livro da sua estante?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      isDangerous: true,
+    ) ?? false;
+
+    if (!shouldDelete) return;
+
+    ref.read(readingServiceProvider).deleteBook(widget.book.id);
+    if (mounted) Navigator.of(context).pop(); // fecha dialogo de update
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Atualizar: ${widget.book.title}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-              'Página atual: ${widget.book.currentPage} / ${widget.book.totalPages}'),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Li até a página:',
-              border: OutlineInputBorder(),
+    return Dialog(
+      child: AppDialog(
+        title: 'Atualizar: ${widget.book.title}',
+        customContent: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+                'Página atual: ${widget.book.currentPage} / ${widget.book.totalPages}'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Li até a página:',
+                border: OutlineInputBorder(),
+              ),
             ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: _deleteBook,
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Excluir Livro'),
           ),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar')),
+          ElevatedButton(onPressed: _submit, child: const Text('Salvar Leitura')),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _deleteBook,
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
-          child: const Text('Excluir Livro'),
-        ),
-        TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar')),
-        ElevatedButton(onPressed: _submit, child: const Text('Salvar Leitura')),
-      ],
     );
   }
 }

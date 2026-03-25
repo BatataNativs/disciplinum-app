@@ -4,7 +4,7 @@ import 'package:disciplinum/features/modules/spending/presentation/screens/spend
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_expenses_screen.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_bills_stats_screen.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
+import 'package:disciplinum/features/modules/spending/presentation/widgets/my_progress_spending.dart' as spending_progress;
 
 /// Widget de ações da tela Spending
 class SpendingActionsWidget extends StatelessWidget {
@@ -260,7 +260,7 @@ class SpendingActionsWidget extends StatelessWidget {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressSpending()),
+                  MaterialPageRoute(builder: (_) => const spending_progress.MyProgressSpending()),
                 );
               },
             ),

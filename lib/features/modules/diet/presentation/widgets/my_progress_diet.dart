@@ -12,18 +12,18 @@ class MyProgressDiet extends ConsumerWidget {
     final gamification = ref.watch(gamificationServiceProvider);
     final dias = gamification.diasConsecutivosByModule[NicheId.diet] ?? 0;
 
-    return _BaseProgressDetailScreen(
+    return _DietProgressDetailScreen(
       title: 'Manter dieta',
       dias: dias,
     );
   }
 }
 
-class _BaseProgressDetailScreen extends ConsumerWidget {
+class _DietProgressDetailScreen extends ConsumerWidget {
   final String title;
   final int dias;
 
-  const _BaseProgressDetailScreen({required this.title, required this.dias});
+  const _DietProgressDetailScreen({required this.title, required this.dias});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

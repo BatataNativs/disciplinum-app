@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final AuthService authService;
@@ -51,46 +52,43 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final TextEditingController tempBioController =
         TextEditingController(text: _bioController.text);
 
-    return showDialog<String>(
+    return AppDialog.showCustom<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Sua frase'),
-        content: TextField(
-          controller: tempBioController,
-          maxLines: 3,
-          maxLength: 100,
-          decoration: InputDecoration(
-            hintText: 'Escreva algo sobre você...',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.grey),
-              tooltip: 'Limpar texto',
-              onPressed: () {
-                tempBioController.clear();
-                HapticFeedback.lightImpact();
-              },
-            ),
+      title: 'Sua frase',
+      content: TextField(
+        controller: tempBioController,
+        maxLines: 3,
+        maxLength: 100,
+        decoration: InputDecoration(
+          hintText: 'Escreva algo sobre você...',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+            tooltip: 'Limpar texto',
+            onPressed: () {
+              tempBioController.clear();
+              HapticFeedback.lightImpact();
+            },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(ctx, tempBioController.text);
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.pop(context, tempBioController.text);
+          },
+          child: const Text('Confirmar'),
+        ),
+      ],
     );
   }
 

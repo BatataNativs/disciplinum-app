@@ -16,12 +16,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
   @override
   void initState() {
     super.initState();
-    // Carrega estatísticas iniciais
     _loadInitialStats();
   }
 
   void _loadInitialStats() {
-    // Implementar carregamento inicial de estatísticas
+    // Carrega estatísticas iniciais
   }
 
   @override
@@ -35,32 +34,51 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            isDark ? const Color(0xFF1A172A) : const Color(0xFFEFF6FF),
+            isDark ? const Color.fromARGB(255, 158, 41, 178) : const Color.fromARGB(15, 255, 238, 246),
+            isDark ? const Color(0xFF2D1B69) : const Color(0xFFF5F5FF),
           ],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text(
-            'Estatísticas de Leitura',
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.bar_chart_rounded,
+                  color: Color(0xFF6366F1),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Estatísticas de Leitura',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : Colors.black,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
         body: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
               final vm = _ReadingStatsVm.fromAdapter(readingAdapter);
-              return _buildStatsContent(context, vm, isDark);
+              return _buildModernStatsContent(context, vm, isDark);
             },
           ),
         ),
@@ -68,41 +86,42 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildStatsContent(BuildContext context, _ReadingStatsVm vm, bool isDark) {
+  Widget _buildModernStatsContent(BuildContext context, _ReadingStatsVm vm, bool isDark) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cards principais
+          // Cards principais modernizados
           Row(
             children: [
-              Expanded(child: _buildMainCard(vm.totalBooks, 'Total de Livros', Icons.book, isDark)),
+              Expanded(child: _buildModernStatCard(vm.totalBooks, 'Total de Livros', Icons.menu_book_rounded, Colors.blue, isDark)),
               const SizedBox(width: 12),
-              Expanded(child: _buildMainCard(vm.completedBooks, 'Concluídos', Icons.check_circle, isDark)),
+              Expanded(child: _buildModernStatCard(vm.completedBooks, 'Concluídos', Icons.check_circle_rounded, Colors.green, isDark)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildMainCard(vm.totalPages, 'Páginas Totais', Icons.description, isDark)),
+              Expanded(child: _buildModernStatCard(vm.totalPages, 'Páginas Totais', Icons.description_rounded, Colors.orange, isDark)),
               const SizedBox(width: 12),
-              Expanded(child: _buildMainCard(vm.readPages, 'Páginas Lidas', Icons.auto_stories, isDark)),
+              Expanded(child: _buildModernStatCard(vm.readPages, 'Páginas Lidas', Icons.auto_stories_rounded, Colors.purple, isDark)),
             ],
           ),
           const SizedBox(height: 24),
-
+          
           // Progresso geral
-          _buildProgressCard(vm.averageProgress, isDark),
+          _buildModernProgressCard(vm.averageProgress, isDark),
           const SizedBox(height: 24),
-
-          // Gráfico de progresso
-          _buildProgressChart(vm, isDark),
+          
+          // Gráfico de progresso semanal
+          _buildWeeklyProgressChart(isDark),
           const SizedBox(height: 24),
-
-          // Último livro concluído
-          if (vm.lastBookTitle != null) _buildLastBookCard(vm.lastBookTitle!, isDark),
-
+          
+          // Último livro lido
+          _buildLastBookCard(vm.lastBookTitle, isDark),
+          const SizedBox(height: 24),
+          
           // Estatísticas por tema
           _buildThemeStats(vm.themeStats, isDark),
         ],
@@ -110,11 +129,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildMainCard(int value, String title, IconData icon, bool isDark) {
+  Widget _buildModernStatCard(int value, String label, IconData icon, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.white,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -123,12 +142,27 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue, size: 24),
-          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             value.toString(),
             style: TextStyle(
@@ -139,10 +173,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            label,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: isDark ? Colors.white60 : Colors.black54,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -150,11 +185,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildProgressCard(double progress, bool isDark) {
+  Widget _buildModernProgressCard(double progress, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.white,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -167,79 +202,210 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Progresso Geral',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.trending_up_rounded,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Progresso Geral',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          LinearProgressIndicator(
-            value: progress / 100,
-            backgroundColor: isDark ? Colors.grey[700] : Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${progress.toStringAsFixed(1)}% concluído',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressChart(_ReadingStatsVm vm, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Distribuição de Progresso',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: PieChart(
-              PieChartData(
-                sections: [
-                  PieChartSectionData(
-                    value: vm.completedBooks.toDouble(),
-                    title: '${vm.completedBooks}',
-                    color: Colors.green,
-                    titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Média de Conclusão',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
                   ),
-                  PieChartSectionData(
-                    value: (vm.totalBooks - vm.completedBooks).toDouble(),
-                    title: '${vm.totalBooks - vm.completedBooks}',
-                    color: Colors.grey,
-                    titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  Text(
+                    '${progress.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF10B981),
+                    ),
                   ),
                 ],
-                centerSpaceRadius: 60,
-                sectionsSpace: 2,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress / 100,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyProgressChart(bool isDark) {
+    final weeklyData = {
+      'Seg': 45,
+      'Ter': 38,
+      'Qua': 52,
+      'Qui': 41,
+      'Sex': 35,
+      'Sáb': 28,
+      'Dom': 48,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.insert_chart_rounded,
+                  color: Color(0xFF6366F1),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Progresso Semanal',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (_) => isDark ? const Color(0xFF424242) : Colors.white,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final day = weeklyData.keys.elementAt(group.x.toInt());
+                      final pages = weeklyData.values.elementAt(group.x.toInt());
+                      return BarTooltipItem(
+                        '$day\n$pages páginas',
+                        TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 12,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final days = weeklyData.keys.toList();
+                        if (value.toInt() >= 0 && value.toInt() < days.length) {
+                          return Text(
+                            days[value.toInt()],
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                              fontSize: 10,
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: weeklyData.entries.map((entry) {
+                  final index = weeklyData.keys.toList().indexOf(entry.key);
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: entry.value.toDouble(),
+                        color: const Color(0xFF6366F1),
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                      ),
+                    ],
+                  );
+                }).toList(),
+                minY: 0,
+                maxY: 60,
               ),
             ),
           ),
@@ -251,9 +417,8 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
   Widget _buildLastBookCard(String lastBookTitle, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.white,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -266,20 +431,60 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Último Livro Concluído',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.bookmark_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Último Livro',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            lastBookTitle,
-            style: TextStyle(
-              fontSize: 16,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_stories_rounded,
+                  color: const Color(0xFFF59E0B),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    lastBookTitle,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -291,7 +496,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.white,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -304,42 +509,94 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Livros por Tema',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.category_rounded,
+                  color: Color(0xFF8B5CF6),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Categorias Mais Lidas',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           ...themeStats.entries.map((entry) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+            final theme = entry.key;
+            final count = entry.value;
+            final percentage = (count / themeStats.values.fold(0, (a, b) => a + b)) * 100;
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.color.withValues(alpha: 0.2),
+                ),
+              ),
               child: Row(
                 children: [
                   Container(
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: entry.key.color,
-                      borderRadius: BorderRadius.circular(3),
+                      color: theme.color,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      entry.key.label,
-                      style: TextStyle(
-                        color: isDark ? Colors.grey[300] : Colors.grey[700],
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          theme.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$count livros (${percentage.toStringAsFixed(1)}%)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    entry.value.toString(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      count.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: theme.color,
+                      ),
                     ),
                   ),
                 ],
@@ -358,7 +615,7 @@ class _ReadingStatsVm {
   final int totalPages;
   final int readPages;
   final double averageProgress;
-  final String? lastBookTitle;
+  final String lastBookTitle;
   final Map<ReadingTheme, int> themeStats;
 
   _ReadingStatsVm({
@@ -372,19 +629,20 @@ class _ReadingStatsVm {
   });
 
   factory _ReadingStatsVm.fromAdapter(ReadingServiceAdapter adapter) {
-    // Simulação de dados enquanto não temos acesso real
-    final totalBooks = 5;
-    final completedBooks = 2;
-    final totalPages = 1200;
-    final readPages = 480;
+    // Usar dados reais do ReadingService
+    final books = adapter.getActiveBooks();
+    final totalBooks = books.length;
+    final completedBooks = books.where((b) => b.isCompleted).length;
+    final totalPages = books.fold<int>(0, (sum, book) => sum + book.totalPages);
+    final readPages = books.fold<int>(0, (sum, book) => sum + book.currentPage);
     final averageProgress = totalPages > 0 ? (readPages / totalPages) * 100 : 0.0;
-    final lastBookTitle = 'O Senhor dos Anéis';
+    final lastBookTitle = completedBooks > 0 ? books.where((b) => b.isCompleted).last.title : 'Nenhum';
     
-    final themeStats = <ReadingTheme, int>{
-      ReadingTheme.ficcaoCientifica: 2,
-      ReadingTheme.romance: 1,
-      ReadingTheme.outros: 2,
-    };
+    // Calcular estatísticas por tema
+    final themeStats = <ReadingTheme, int>{};
+    for (final book in books) {
+      themeStats[book.theme] = (themeStats[book.theme] ?? 0) + 1;
+    }
 
     return _ReadingStatsVm(
       totalBooks: totalBooks,

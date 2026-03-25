@@ -49,7 +49,7 @@ extension ReadingThemeExtension on ReadingTheme {
   Color get color {
     switch (this) {
       case ReadingTheme.ficcaoCientifica:
-        return const Color(0xFF00BCD4);
+        return const Color.fromARGB(255, 9, 119, 179);
       case ReadingTheme.terrorMisterio:
         return const Color(0xFF212121);
       case ReadingTheme.romance:
@@ -63,13 +63,13 @@ extension ReadingThemeExtension on ReadingTheme {
       case ReadingTheme.fantasia:
         return const Color(0xFF9C27B0);
       case ReadingTheme.aventura:
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF2E7D32);
       case ReadingTheme.guerraMilitar:
         return const Color(0xFF33691E);
       case ReadingTheme.biografiaAutobiografia:
         return const Color(0xFF795548);
       case ReadingTheme.autoajuda:
-        return const Color(0xFFFF9800);
+        return const Color(0xFFE65100);
       case ReadingTheme.outros:
         return const Color(0xFF9E9E9E);
     }

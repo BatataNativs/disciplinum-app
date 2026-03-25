@@ -1,13 +1,13 @@
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/book_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class FinishedBooksScreen extends StatelessWidget {
+class FinishedBooksScreen extends ConsumerWidget {
   const FinishedBooksScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -30,8 +30,9 @@ class FinishedBooksScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Consumer<ReadingService>(
-            builder: (context, service, child) {
+          child: Consumer(
+            builder: (context, ref, child) {
+              final service = ref.watch(readingServiceProvider);
               final completedBooks = service.completedBooks;
 
               if (completedBooks.isEmpty) {

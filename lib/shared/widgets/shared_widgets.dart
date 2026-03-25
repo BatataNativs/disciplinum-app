@@ -11,6 +11,7 @@ export 'buttons/neon_button.dart';
 export 'buttons/neon_floating_action_button.dart';
 export 'dialogs/confirmation_dialog.dart';
 export 'dialogs/neon_dialog.dart';
+export 'dialogs/app_dialog.dart';
 export 'loading/neon_loading_indicator.dart';
 export 'indicators/neon_progress_indicator.dart';
 export 'indicators/neon_badge.dart';

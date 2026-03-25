@@ -9,6 +9,7 @@ import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/app/startup_data.dart';
+import 'package:disciplinum/core/network/network_health_service.dart';
 
 // Import para notificações
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart'
@@ -128,6 +129,9 @@ class AppBootstrap {
       
       // Inicializar serviços em ordem de dependência
       await PrivacyService.initAtStartup();
+
+      // Inicializar monitoramento de rede
+      NetworkHealthService().startHealthCheck();
 
       // GamificationService usa Provider, então inicializar depois
       // Ele será criado via Provider no runApp

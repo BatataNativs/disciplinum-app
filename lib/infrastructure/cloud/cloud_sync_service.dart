@@ -6,10 +6,13 @@ import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/network/network_health_service.dart';
+import 'package:disciplinum/core/network/connectivity_fallback.dart';
 
 class CloudSyncService {
   final SupabaseClient supabase;
   final IsarPreferencesRepository? prefsRepo;
+  final ConnectivityFallback _fallback = ConnectivityFallback();
 
   CloudSyncService({
     required this.supabase,
@@ -30,16 +33,40 @@ class CloudSyncService {
     Future<T> Function() operation, {
     int maxRetries = 3,
   }) async {
+    // Verificar saúde da rede antes de tentar
+    final networkHealth = NetworkHealthService();
+    final canAttempt = await networkHealth.shouldAttemptNetworkOperation();
+    if (!canAttempt) {
+      LoggerService.instance.w('Rede não está saudável, pulando operação de sincronização');
+      return null;
+    }
+
     for (int i = 0; i < maxRetries; i++) {
       try {
         return await operation();
       } catch (e) {
-        if (i == maxRetries - 1) {
-          LoggerService.instance.e('Operação falhou após $maxRetries tentativas', error: e);
-          return null;
+        final isNetworkError = e.toString().contains('SocketException') ||
+                              e.toString().contains('ClientException') ||
+                              e.toString().contains('Failed host lookup') ||
+                              e.toString().contains('No address associated with hostname');
+        
+        if (isNetworkError) {
+          LoggerService.instance.w('Erro de DNS/rede detectado na tentativa ${i + 1}: ${e.toString().substring(0, 100)}...');
+          
+          // Para erros de DNS, esperar mais tempo e tentar apenas 2 vezes
+          if (i >= 1) {
+            LoggerService.instance.e('DNS falhou após 2 tentativas, desistindo da operação');
+            return null;
+          }
+          
+          await Future.delayed(Duration(seconds: (i + 1) * 3));
+          
+          // Tentar verificar conectividade novamente
+          await networkHealth.checkConnectivity();
+        } else {
+          LoggerService.instance.w('Tentativa ${i + 1} falhou, tentando novamente...');
+          await Future.delayed(Duration(seconds: i + 1));
         }
-        LoggerService.instance.w('Tentativa ${i + 1} falhou, tentando novamente...');
-        await Future.delayed(Duration(seconds: i + 1));
       }
     }
     return null;
@@ -158,19 +185,32 @@ class CloudSyncService {
   Future<List<UserNicheTime>> loadUserNicheTimes({
     required int nicheId,
   }) async {
-    return await _retryOperation(() async {
+    final operationKey = 'user_niche_times_$nicheId';
+    
+    return await _fallback.executeWithFallback<List<UserNicheTime>>(
+      operationKey,
+      () async {
+        // Operação na nuvem
+        final result = await _retryOperation<List<UserNicheTime>>(() async {
           final userId = await _getUserId();
           if (userId == null) return <UserNicheTime>[];
-          final result = await supabase
+          final data = await supabase
               .from('user_niche_times')
               .select('user_id, niche_id, hour, minute, phrase')
               .eq('user_id', userId)
               .eq('niche_id', nicheId);
-          return (result as List)
+          return (data as List)
               .map((row) => UserNicheTime.fromJson(row))
               .toList();
-        }) ??
-        [];
+        });
+        return result ?? [];
+      },
+      () {
+        // Fallback local (ler do Isar/SharedPreferences se disponível)
+        // Por enquanto, retorna lista vazia
+        return <UserNicheTime>[];
+      },
+    ) ?? [];
   }
 
   Future<void> removeAllTimesForNiche({

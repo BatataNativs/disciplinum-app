@@ -4,7 +4,6 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/widgets/lojinha.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
@@ -134,10 +133,7 @@ class NotificationMessageEditor extends ConsumerWidget {
                 icon: const Icon(Icons.diamond_outlined, size: 18),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  showDialog(
-                    context: context,
-                    builder: (_) => const Lojinha(),
-                  );
+                  Navigator.pushNamed(context, '/lojinha');
                 },
                 label: const Text('Ir para Lojinha'),
               ),

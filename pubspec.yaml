@@ -105,16 +105,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
-    - assets/medal_bronze.png
-    - assets/medal_silver.png
-    - assets/medal_gold.png
-    - assets/medal_diamond.png
-    - assets/icons/
     - assets/disciplinado.png
     - assets/warning1.png
     - assets/warning2.png
     - assets/screenshots/
-    - assets/insignias/
+    - assets/gamification/insignias
     - assets/Auth/
     - assets/secret_menu/
 

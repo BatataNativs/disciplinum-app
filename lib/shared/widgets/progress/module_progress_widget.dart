@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
 /// Widget de progresso genérico para módulos
 /// Reutilizável por todos os módulos do app
-class ModuleProgressWidget extends StatelessWidget {
+class ModuleProgressWidget extends ConsumerWidget {
   final NicheId nicheId;
   final String? customTitle;
   final Widget? customContent;
@@ -23,11 +23,11 @@ class ModuleProgressWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<GamificationService>(
-      builder: (context, gamification, child) {
-        // Implementar getModuleStatus quando disponível
-        return FutureBuilder<UserModuleStatus?>(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gamification = ref.watch(gamificationServiceProvider);
+    
+    // Implementar getModuleStatus quando disponível
+    return FutureBuilder<UserModuleStatus?>(
           future: gamification.getModuleStatus(nicheId),
           builder: (context, snapshot) {
             final moduleStatus = snapshot.data;
@@ -116,8 +116,6 @@ class ModuleProgressWidget extends StatelessWidget {
             );
           },
         );
-      },
-    );
   }
 
   List<Widget> _buildDefaultActions(BuildContext context, NicheId nicheId) {

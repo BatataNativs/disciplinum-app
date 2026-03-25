@@ -139,7 +139,6 @@ class GamificationAwardEngine {
       service.setMaxMedal(nicheId, newMedal);
       await awardMedal(nicheId, newMedal, service);
     }
-    // REMOVIDO: Insígnias de foco agora são verificadas separadamente
   }
 
   /// Método para concessão silenciosa (sem notificação) - usado em reconciliação

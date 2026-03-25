@@ -13,18 +13,18 @@ class MyProgressProcrastination extends ConsumerWidget {
     final dias =
         gamification.diasConsecutivosByModule[NicheId.procrastination] ?? 0;
 
-    return _BaseProgressDetailScreen(
+    return _ProcrastinationProgressDetailScreen(
       title: 'Evitar procrastinação',
       dias: dias,
     );
   }
 }
 
-class _BaseProgressDetailScreen extends ConsumerWidget {
+class _ProcrastinationProgressDetailScreen extends ConsumerWidget {
   final String title;
   final int dias;
 
-  const _BaseProgressDetailScreen({required this.title, required this.dias});
+  const _ProcrastinationProgressDetailScreen({required this.title, required this.dias});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

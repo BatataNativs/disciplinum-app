@@ -7,14 +7,15 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/my_shelf_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_settings_screen.dart';
-import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart';
-import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
+import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart' as stats;
+import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart' as reading_progress;
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 import 'dart:async';
 
 class ReadingScreen extends ConsumerStatefulWidget {
@@ -129,23 +130,62 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Header com título
+              // Header com título e stats
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(Icons.arrow_back, 
+                        color: isDark ? Colors.white : Colors.black),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Leitura',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Leitura',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final readingService = ref.watch(readingServiceProvider);
+                              final totalBooks = readingService.books.length;
+                              final completedBooks = readingService.completedBooks.length;
+                              final currentStreak = readingService.currentStreak;
+                              
+                              return Row(
+                                children: [
+                                  _buildStatChip(
+                                    '$totalBooks livros',
+                                    isDark ? Colors.white24 : Colors.black12,
+                                    isDark ? Colors.white : Colors.black,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildStatChip(
+                                    '$completedBooks concluídos',
+                                    const Color(0xFF10B981).withValues(alpha: 0.2),
+                                    const Color(0xFF10B981),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildStatChip(
+                                    '$currentStreak dias 🔥',
+                                    const Color(0xFF6366F1).withValues(alpha: 0.2),
+                                    const Color(0xFF6366F1),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -162,8 +202,9 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   children: [
                     _buildHowItWorks(context),
                     // Aba da Estante + Botões
-                    Column(
-                      children: [
+                    Expanded(
+                      child: Column(
+                        children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
@@ -195,6 +236,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                         _buildReminderSection(isDark),
                         _buildBottomButtons(isDark, isActive),
                       ],
+                    ),
                     ),
                   ],
                 ),
@@ -417,7 +459,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ReadingStatsScreen()),
+                  MaterialPageRoute(builder: (_) => const stats.ReadingStatsScreen()),
                 );
               },
             ),
@@ -430,7 +472,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressReading()),
+                  MaterialPageRoute(builder: (_) => const reading_progress.MyProgressReading()),
                 );
               },
             ),
@@ -590,49 +632,49 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 
   Future<void> _showDeleteTimeDialog() async {
-    final confirmed = await showDialog<bool>(
+    final formatted = "${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}";
+
+    final confirmed = await AppDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Excluir horário?"),
-        content: Text(
-          "Deseja excluir o horário ${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')} do seu lembrete diário?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
-            onPressed: () async {
-              // Remove o horário específico
-              await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
-                nicheId: _niche.nicheId.id + 200,
-                hour: _reminderTime!.hour,
-                minute: _reminderTime!.minute,
-              );
+      title: 'Excluir horário?',
+      content: 'Deseja excluir o horário $formatted do seu lembrete diário?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      isDangerous: true,
+    ) ?? false;
 
-              // Atualiza a variável de estado
-              if (mounted) {
-                setState(() {
-                  _reminderTime = null;
-                });
-              }
+    if (!confirmed) return;
 
-              // Força atualização do lembrete ao voltar da tela de notificações
-              _loadReminderData();
-            },
-            child: const Text('Sim, excluir'),
-          ),
-        ],
-      ),
+    // Remove o horário específico
+    await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
+      nicheId: _niche.nicheId.id + 200,
+      hour: _reminderTime!.hour,
+      minute: _reminderTime!.minute,
     );
 
-    if (confirmed == true) {
-      if (!mounted) return;
-      HapticFeedback.heavyImpact();
+    // Atualiza a variável de estado
+    if (mounted) {
+      setState(() {
+        _reminderTime = null;
+      });
     }
+  }
+
+  Widget _buildStatChip(String label, Color backgroundColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
   }
 }

@@ -219,7 +219,7 @@ final focusServiceProvider = Provider<FocusService>((ref) {
 });
 
 /// Provider para ReadingService
-final readingServiceProvider = Provider<ReadingService>((ref) {
+final readingServiceProvider = ChangeNotifierProvider<ReadingService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);
   final gamification = ref.watch(gamificationServiceProvider);
   return ReadingService(prefs, gamification);

@@ -226,7 +226,8 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               'Cada módulo tem suas próprias configurações, gatilhos de funcionamento e particularidades, permitindo que você gerencie diferentes aspectos da sua vida de forma independente.\n\n'
               'O tal monitoramento de abertura de apps selecionados é apenas uma das funcionalidades do app. Também tem gestão de gastos fixos (contas, aluguel, etc.) que você registrar no app (valores e vencimentos) e receber lembretes para pagamento.\n\n'
               'Ainda sobre finanças, tem também um módulo de "Desafio da Poupança", que é para criação e acompanhamento de metas, onde você pode registrar metas de valores a juntar e acompanhar seu progresso.\n\n'
-              'Tem módulo para você registrar livros que está lendo, quantas páginas leu por dia, quanto falta, ver estatísticas sobre seus hábitos de leitura e acompanhar seu progresso. ',
+              'Tem módulo para você registrar livros que está lendo, quantas páginas leu por dia, quanto falta, ver estatísticas sobre seus hábitos de leitura e acompanhar seu progresso.\n\n'
+              'Há módulo pra te ajudar a parar de fumar também. Neste módulo, você insere o quanto gasta com cigarro, data pra começar a ficar sem fumar, e cria estatísticas do quanto você pode economizar e quanto melhorou - ou pode melhorar - sua saúde geral.',
             ),
             const SizedBox(height: 16),
             Text(
@@ -234,15 +235,15 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               style: textStyle?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _buildModuleItem('🚭 Parar de Fumar', 'Alertas em horários críticos', textStyle),
-            _buildModuleItem('💰 Controle de Gastos', 'Monitore apps de compras', textStyle),
-            _buildModuleItem('🎯 Foco e Produtividade', 'Evite distrações', textStyle),
-            _buildModuleItem('🍎 Manter Dieta', 'Lembretes para refeições', textStyle),
-            _buildModuleItem('🔒 Evitar Conteúdo Adulto', 'Ajuda a evitar consumo de conteúdo adulto', textStyle),
-            _buildModuleItem('⏰ Evitar Procrastinação', 'Organização e gestão de tempo', textStyle),
-            _buildModuleItem('📚 Leitura', 'Estimular o hábito da leitura e organização', textStyle),
-            _buildModuleItem('🍔 Compulsão Alimentar', 'Ajuda a evitar fastfoods e deliveries por impulso', textStyle),
-            _buildModuleItem('🐖 Desafio da Poupança', 'Forma divertida de aprender a economizar dinheiro', textStyle),
+            _buildModuleItem('🚭 Parar de Fumar', 'Alertas e incentivo em horários críticos. Além de estatísticas de economia financeira gerada e saúde', textStyle),
+            _buildModuleItem('💰 Controle de Gastos', 'Monitore apps de compras e seja orientado a sair se os abrir', textStyle),
+            _buildModuleItem('🎯 Foco e Produtividade', 'Evite distrações, não abrindo apps selecionados durante período de foco definido', textStyle),
+            _buildModuleItem('🍎 Manter Dieta', 'Lembretes para refeições (30 minutos antes, pra você ter tempo de aprontar ou esquentar sua refeição)', textStyle),
+            _buildModuleItem('🔒 Evitar Conteúdo Adulto', 'Ajuda a evitar consumo de conteúdo adulto, **bloqueando acesso** a conteúdo adulto', textStyle),
+            _buildModuleItem('⏰ Evitar Procrastinação', 'Organização e gestão de tempo. Te ajudando a se organizar com lembretes, notas e alarmes', textStyle),
+            _buildModuleItem('📚 Leitura', 'Estimular o hábito da leitura e organização de livros. O módulo tem uma "estante" pra você ir alimentando com os livros que está lendo (nome, autor, quantidade de páginas..), e vai vendo o quanto já leu, o quanto falta, estatísticas sobre sues gostos e preferências, etc.', textStyle),
+            _buildModuleItem('🍔 Compulsão Alimentar', 'Ajuda a evitar fastfoods e deliveries por impulso, monitorando apps de delivery e te orientando a sair se os abrir', textStyle),
+            _buildModuleItem('🐖 Desafio da Poupança', 'Forma divertida de aprender a economizar dinheiro. Você cria meta de valor que quer juntar, e um prazo. Aí você vai inserindo no app informações sobre seus aportes em alguma conta ou "cofrinho" de algum app de banco e vê, num sistema de quadradinhos em linhas e colunas de fácil visualização, e vai acompanhando o quanto já juntou, o quanto falta, e projeções de tempo necessário para você atingir a meta ', textStyle),
           ],
         );
       case 1:
@@ -359,41 +360,8 @@ Container(
                 ],
               ),
             ),
-            
-            const SizedBox(height: 8),
-                        
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.schedule_rounded, color: Colors.green, size: 32),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Dias de Tolerância',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Para te ajudar a manter a disciplina, o app te dá alguns dias de tolerância quando você não consegue fazer check-in:\n\n'
-                    '• Menos de 7 dias de disciplina: 1 dia de tolerância\n'
-                    '• Entre 7 e 29 dias: 2 dias de tolerância\n'
-                    '• Entre 30 e 99 dias: 3 dias de tolerância\n'
-                    '• 100 dias ou mais: 5 dias de tolerância\n\n'
-                    'Se você ficar sem check-in além desses dias, seu progresso será reiniciado. Use a seu favor!',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.w500),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            
-            Container(
+
+                        Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color(0xFF6366F1).withValues(alpha: 0.1),
@@ -411,13 +379,49 @@ Container(
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Use a pausa temporária em Configurações quando precisar usar um app monitorado.',
+                    'Use a pausa temporária de notificações, ("Pausar notificações" em Configurações, quando precisar usar um app monitorado sem interromper seu progresso (sem desativar o módulo).'
+                    'Lembre-se de usar isso somente quando extremamente necessário e raramente. Pois, usar o app com isso ligado permanentemente foge do propósito do aplicativo, e é uma forma de atrasar sua autorregulação e disciplina.',
                     style: textStyle?.copyWith(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
+            
+            const SizedBox(height: 8),
+                        
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.schedule_rounded, color: Colors.green, size: 32),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Dias de Tolerância (sobre check-in diário)',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Para te ajudar a manter a disciplina, o app te dá alguns dias de tolerância quando você não consegue fazer o check-in diário (via notificação de algum módulo):\n\n'
+                    '• Menos de 7 dias de disciplina: 1 dia de tolerância\n'
+                    '• Entre 7 e 29 dias: 2 dias de tolerância\n'
+                    '• Entre 30 e 99 dias: 3 dias de tolerância\n'
+                    '• 100 dias ou mais: 5 dias de tolerância\n\n'
+                    'Se você ficar sem fazer o check-in diário além desses dias, seu progresso na gamificação e nas estatísticas daquele módulo será reiniciado. Use a seu favor!',
+                    style: textStyle?.copyWith(fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            
+
           ],
         );
       default:

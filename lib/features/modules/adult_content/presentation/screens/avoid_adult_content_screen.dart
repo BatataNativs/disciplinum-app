@@ -10,7 +10,7 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/features/modules/adult_content/presentation/widgets/my_progress_adult_content.dart';
+import 'package:disciplinum/features/modules/adult_content/presentation/widgets/my_progress_adult_content.dart' as adult_content_progress;
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
@@ -776,7 +776,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const MyProgressAdultContent()),
+                      builder: (_) => const adult_content_progress.MyProgressAdultContent()),
                 );
               },
             ),

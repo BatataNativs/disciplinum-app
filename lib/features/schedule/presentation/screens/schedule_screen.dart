@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class ScheduleScreenArgs {
   final int maxSlots;
@@ -165,27 +166,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   Future<void> _removeTimeWithConfirm(int index) async {
     final formatted = _formatTime(_times[index]);
 
-    final shouldRemove = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Remover horário'),
-            content: Text('Deseja remover o horário $formatted?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Remover',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    final shouldRemove = await AppDialog.showConfirmation(
+      context: context,
+      title: 'Remover Horário',
+      content: 'Deseja remover o horário $formatted?',
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+      isDangerous: true,
+    ) ?? false;
 
     if (!shouldRemove) return;
 
@@ -217,120 +205,186 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     return '$hour:$minute';
   }
 
+  String _getTimeDescription(TimeOfDay time) {
+    final hour = time.hour;
+    if (hour < 6) return 'Madrugada';
+    if (hour < 12) return 'Manhã';
+    if (hour < 18) return 'Tarde';
+    return 'Noite';
+  }
+
+  Widget _buildEmptyState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.schedule,
+            size: 64,
+            color: isDark ? Colors.white54 : Colors.black54,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Nenhum horário configurado',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Toque no botão + para adicionar seu primeiro horário',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeList(bool isDark) {
+    return ListView.builder(
+      itemCount: _times.length,
+      itemBuilder: (context, index) {
+        final time = _times[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[900] : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            ),
+          ),
+          child: ListTile(
+            onTap: () => _pickTime(index),
+            leading: Icon(
+              Icons.access_time,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            title: Text(
+              _formatTime(time),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              _getTimeDescription(time),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 12,
+              ),
+            ),
+            trailing: IconButton(
+              icon: Icon(
+                Icons.delete_outline,
+                color: Colors.red,
+              ),
+              onPressed: () => _removeTimeWithConfirm(index),
+              tooltip: 'Remover horário',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFloatingActions(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          FloatingActionButton(
+            onPressed: () => Navigator.pop(context),
+            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+            child: Icon(
+              Icons.arrow_back,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          if (_times.length < widget.args.maxSlots)
+            FloatingActionButton(
+              onPressed: _addTime,
+              backgroundColor: isDark ? const Color(0xFF6366F1) : const Color(0xFF6366F1),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          else
+            const SizedBox(width: 56),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Scaffold(
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      appBar: AppBar(
+        title: Text(
+          widget.args.title ?? 'Horários',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(
+          color: isDark ? Colors.white : Colors.black,
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Configure seus horários',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${_times.length} de ${widget.args.maxSlots} horários configurados',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: _times.isEmpty
+                  ? _buildEmptyState(isDark)
+                  : _buildTimeList(isDark),
+            ),
           ],
         ),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(widget.args.title ?? 'Horários',
-              style: TextStyle(color: textColor)),
-          iconTheme: IconThemeData(color: textColor),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Text(
-                'Defina seus horários',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _times.length,
-                  itemBuilder: (context, index) {
-                    final time = _times[index];
-                    return GestureDetector(
-                      onLongPress: () => _removeTimeWithConfirm(index),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        // Alterei para garantir contraste, mas mantendo seu estilo
-                        color: isDark ? Colors.grey[900] : Colors.black,
-                        child: ListTile(
-                          onTap: () => _pickTime(index),
-                          title: Text(
-                            _formatTime(time),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 18, // Aumentei um pouco a fonte
-                            ),
-                          ),
-                          // --- AQUI ESTÁ A MUDANÇA ---
-                          trailing: IconButton(
-                            tooltip: 'Excluir horário',
-                            // Ícone de lixeira mais evidente e VERMELHO
-                            icon: const Icon(
-                              Icons.delete_forever_rounded,
-                              color: Colors.redAccent,
-                              size: 28,
-                            ),
-                            onPressed: () => _removeTimeWithConfirm(index),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              FloatingActionButton(
-                heroTag: 'back_btn',
-                onPressed: () => Navigator.pop(context),
-                backgroundColor: isDark
-                    ? Colors.grey[800]
-                    : const Color.fromARGB(255, 164, 176, 244),
-                child: Icon(Icons.arrow_back,
-                    color: isDark ? Colors.white : Colors.black),
-              ),
-              if (_times.length < widget.args.maxSlots)
-                FloatingActionButton(
-                  heroTag: 'add_btn',
-                  onPressed: _addTime,
-                  backgroundColor: const Color.fromARGB(255, 20, 49, 181),
-                  child: const Icon(Icons.add, color: Colors.white),
-                )
-              else
-                const SizedBox(width: 56),
-            ],
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        bottomNavigationBar: const SizedBox(height: 40),
-      ),
+      floatingActionButton: _buildFloatingActions(isDark),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

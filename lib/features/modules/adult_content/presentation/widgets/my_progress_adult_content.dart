@@ -13,18 +13,18 @@ class MyProgressAdultContent extends ConsumerWidget {
     final dias =
         gamification.diasConsecutivosByModule[NicheId.adultContent] ?? 0;
 
-    return _BaseProgressDetailScreen(
+    return _AdultContentProgressDetailScreen(
       title: 'Evitar conteúdo adulto',
       dias: dias,
     );
   }
 }
 
-class _BaseProgressDetailScreen extends ConsumerWidget {
+class _AdultContentProgressDetailScreen extends ConsumerWidget {
   final String title;
   final int dias;
 
-  const _BaseProgressDetailScreen({required this.title, required this.dias});
+  const _AdultContentProgressDetailScreen({required this.title, required this.dias});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

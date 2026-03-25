@@ -8,11 +8,11 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/diet_notifications_screen.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/meal_streak_screen.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/features/modules/diet/presentation/widgets/my_progress_diet.dart' as diet_progress;
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -813,7 +813,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressDiet()),
+                  MaterialPageRoute(builder: (_) => const diet_progress.MyProgressDiet()),
                 );
               },
             ),

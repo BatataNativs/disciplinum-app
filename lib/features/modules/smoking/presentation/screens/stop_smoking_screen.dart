@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import 'health_detail_screen.dart';
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -24,6 +23,8 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_s
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_segmented_control.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_tab_content.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_actions_widget.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart' as smoking_progress;
+import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -810,45 +811,32 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
 
 
-  void _showDeleteTimeDialog() {
-    showDialog(
+  void _showDeleteTimeDialog() async {
+    final formatted = "${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}";
+    
+    final shouldDelete = await AppDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Excluir horário?"),
-        content: Text(
-          "Deseja excluir o horário ${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')} do seu check-in diário?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Não"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
+      title: 'Excluir horário?',
+      content: 'Deseja excluir o horário $formatted do seu check-in diário?',
+      confirmText: 'Sim',
+      cancelText: 'Não',
+      isDangerous: true,
+    ) ?? false;
 
-              await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
-                nicheId: NicheId.smoking.id,
-                hour: _checkinTime!.hour,
-                minute: _checkinTime!.minute,
-              );
+    if (!shouldDelete) return;
 
-              if (mounted) {
-                setState(() {
-                  _checkinTime = null;
-                });
-                await _syncCheckInWithGamification(onlySyncSchedules: true);
-              }
-            },
-            child: const Text("Sim"),
-          ),
-        ],
-      ),
+    await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
+      nicheId: NicheId.smoking.id,
+      hour: _checkinTime!.hour,
+      minute: _checkinTime!.minute,
     );
+
+    if (mounted) {
+      setState(() {
+        _checkinTime = null;
+      });
+      await _syncCheckInWithGamification(onlySyncSchedules: true);
+    }
   }
 
 
@@ -1078,7 +1066,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const MyProgressSmoking()),
+                  MaterialPageRoute(builder: (_) => const smoking_progress.MyProgressSmoking()),
                 );
               },
               isDark: isDark,

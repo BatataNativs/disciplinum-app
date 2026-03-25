@@ -168,7 +168,7 @@ class BookDetailsDialog extends StatelessWidget {
                         Navigator.of(context).pop();
                         showDialog(
                           context: context,
-                          builder: (context) => UpdateProgressDialog(
+                          builder: (context) => BookUpdateProgressDialog(
                             book: book,
                             onUpdate: onUpdate,
                           ),
