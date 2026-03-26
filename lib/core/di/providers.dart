@@ -32,6 +32,15 @@ import 'package:disciplinum/features/modules/focus/domain/services/focus_service
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service.dart';
 import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_notification_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_celebration_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
@@ -85,8 +94,6 @@ final isarPreferencesRepositoryProvider = Provider<IsarPreferencesRepository>((r
   final isarService = ref.watch(isarServiceProvider);
   return IsarPreferencesRepository(isarService.database);
 });
-
-// Removido FutureProvider duplicado
 
 /// Provider para LocalStorageService
 final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
@@ -239,6 +246,54 @@ final readingServiceAdapterProvider = Provider<ReadingServiceAdapter>((ref) {
 
 /// Provider para o estado de Onboarding (injetado no main.dart)
 final seenOnboardingProvider = Provider<bool>((ref) => throw UnimplementedError());
+
+// ==================== GAMIFICATION PROVIDERS ====================
+
+/// Provider para SmokingInsigniaService
+final smokingInsigniaServiceProvider = Provider<SmokingInsigniaService>((ref) {
+  return SmokingInsigniaService();
+});
+
+/// Provider para SmokingMedalhaService
+final smokingMedalhaServiceProvider = Provider<SmokingMedalhaService>((ref) {
+  return SmokingMedalhaService();
+});
+
+/// Provider para SmokingSpecialNotificationsService
+final smokingSpecialNotificationsServiceProvider = Provider<SmokingSpecialNotificationsService>((ref) {
+  return SmokingSpecialNotificationsService.instance;
+});
+
+/// Provider para SmokingCelebrationService
+final smokingCelebrationServiceProvider = Provider<SmokingCelebrationService>((ref) {
+  return SmokingCelebrationService.instance;
+});
+
+/// Provider para FocusInsigniaService
+final focusInsigniaServiceProvider = Provider<FocusInsigniaService>((ref) {
+  final focusService = ref.watch(focusServiceProvider);
+  return FocusInsigniaService(focusService);
+});
+
+/// Provider para FocusMedalhaService
+final focusMedalhaServiceProvider = Provider<FocusMedalhaService>((ref) {
+  return FocusMedalhaService();
+});
+
+/// Provider para FocusNotificationService
+final focusNotificationServiceProvider = Provider<FocusNotificationService>((ref) {
+  return FocusNotificationService();
+});
+
+/// Provider para FocusCelebrationService
+final focusCelebrationServiceProvider = Provider<FocusCelebrationService>((ref) {
+  return FocusCelebrationService.instance;
+});
+
+/// Provider para SmokingGamificationRepository
+final smokingGamificationRepositoryProvider = Provider<SmokingGamificationRepository>((ref) {
+  return SmokingGamificationRepository.instance;
+});
 
 final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);

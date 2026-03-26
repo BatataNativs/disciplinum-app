@@ -35,30 +35,30 @@ extension FocusInsigniaExtension on FocusInsignia {
   }
 
   String get asset {
-    const prefix = 'assets/insignias/';
+    const prefix = 'assets/gamification/insignias/focus/';
     switch (this) {
       case FocusInsignia.madeira:
-        return '${prefix}escudo_madeira.png';
+        return '${prefix}madeira.png';
       case FocusInsignia.ferro:
-        return '${prefix}escudo_ferro.png';
+        return '${prefix}ferro.png';
       case FocusInsignia.aluminio:
-        return '${prefix}escudo_aluminio.png';
+        return '${prefix}aluminio.png';
       case FocusInsignia.latao:
-        return '${prefix}escudo_latao.png';
+        return '${prefix}latao.png';
       case FocusInsignia.bronze:
-        return '${prefix}escudo_bronze.png';
+        return '${prefix}bronze.png';
       case FocusInsignia.prata:
-        return '${prefix}escudo_prata.png';
+        return '${prefix}prata.png';
       case FocusInsignia.ouro:
-        return '${prefix}escudo_ouro.png';
+        return '${prefix}ouro.png';
       case FocusInsignia.diamante:
-        return '${prefix}escudo_diamante.png';
+        return '${prefix}diamante.png';
       case FocusInsignia.disciplinum:
-        return '${prefix}escudo_disciplinum.png';
+        return '${prefix}disciplinum.png';
     }
   }
 
-  int get requiredDays {
+  int get requiredPeriods {
     switch (this) {
       case FocusInsignia.madeira:
         return 0; // Ganha ao configurar e ativar o módulo
@@ -73,11 +73,34 @@ extension FocusInsigniaExtension on FocusInsignia {
       case FocusInsignia.prata:
         return 5;
       case FocusInsignia.ouro:
-        return 9;
+        return 6;
       case FocusInsignia.diamante:
-        return 10;
+        return 9;
       case FocusInsignia.disciplinum:
-        return 11;
+        return 10;
+    }
+  }
+
+  String get requirementDescription {
+    switch (this) {
+      case FocusInsignia.madeira:
+        return 'Ative o módulo de Foco';
+      case FocusInsignia.ferro:
+        return '1 período de foco respeitado';
+      case FocusInsignia.aluminio:
+        return '2 períodos de foco respeitados';
+      case FocusInsignia.latao:
+        return '3 períodos de foco respeitados';
+      case FocusInsignia.bronze:
+        return '4 períodos de foco respeitados';
+      case FocusInsignia.prata:
+        return '5 períodos de foco respeitados';
+      case FocusInsignia.ouro:
+        return '6 períodos de foco respeitados';
+      case FocusInsignia.diamante:
+        return '9 períodos de foco respeitados';
+      case FocusInsignia.disciplinum:
+        return '10 períodos de foco respeitados';
     }
   }
 }

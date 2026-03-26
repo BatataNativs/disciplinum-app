@@ -157,7 +157,7 @@ class MyProgressFocus extends ConsumerWidget {
 
   String _getInsigniaRequirement(FocusInsignia insignia) {
     if (insignia == FocusInsignia.madeira) return 'Ative o módulo de Foco'; // CORRIGIDO: madeira em vez de ferro
-    return '${insignia.requiredDays} períodos de foco respeitados';
+    return '${insignia.requiredPeriods} períodos de foco respeitados';
   }
 }
 

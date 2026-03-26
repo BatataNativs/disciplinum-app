@@ -108,9 +108,9 @@ flutter:
     - assets/disciplinado.png
     - assets/warning1.png
     - assets/warning2.png
-    - assets/screenshots/
-    - assets/gamification/insignias
-    - assets/Auth/
+    - assets/images/
+    - assets/gamification/insignias/
+    - assets/gamification/medals/
     - assets/secret_menu/
 
 # --- Configuração do Ícone do App ---

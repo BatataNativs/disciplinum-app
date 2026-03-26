@@ -10,6 +10,8 @@ import 'package:disciplinum/features/modules/spending/domain/entities/expense_en
 import 'package:disciplinum/core/database/entities/app_preference.dart';
 import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
 import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -39,6 +41,8 @@ class IsarService {
           AppPreferenceSchema,
           DailyCheckinSchema,
           FocusStatusEntitySchema,
+          SmokingGamificationEntitySchema,
+          FocusGamificationEntitySchema,
         ],
         directory: dbPath,
       );
