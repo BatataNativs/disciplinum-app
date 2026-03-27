@@ -19,6 +19,7 @@ import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
 
 class AppMonitoringService {
   GamificationService? _gamificationService;
@@ -673,36 +674,229 @@ class AppMonitoringService {
 
     _lastSeenMonitoredApp[packageName] = now;
 
-    // Preparar mensagem para o Overlay
+    // Preparar mensagem para o App Lock
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
       isUnlocked: (_iapService?.isCustomNotifUnlocked ?? false) ||
           (_gamificationService?.isNotificationUnlocked(currentNicheId!) ?? false),
       customMessages: _gamificationService?.customMessages ?? {},
     );
-    _currentOverlayMessage =
-        '$baseMessage\nSaia em 30s para manter seu progresso no Disciplinum!';
 
+    // 🚀 INTEGRAÇÃO COM APP LOCK - Substituir overlay por App Lock
     if (!_violationStartByApp.containsKey(packageName)) {
-      // Se não há violação ativa para este app, iniciamos uma nova
+      // Se não há violação ativa para este app, iniciamos uma nova com App Lock
       _warnedApps[packageName] = now;
       _violationStartByApp[packageName] = now;
 
-      // MOSTRAR NO OVERLAY (e não via notificação do sistema)
-      await _showOverlay(_violationTimeoutSeconds,
-          message: _currentOverlayMessage);
+      // 🎯 MOSTRAR APP LOCK em vez de overlay
+      await _showAppLockScreen(packageName, baseMessage);
     } else {
       final start = _violationStartByApp[packageName]!;
       final duration = now.difference(start).inSeconds;
 
       if (duration >= _violationTimeoutSeconds) {
         await _triggerViolationReset(packageName);
-      } else {
-        await _updateOverlay(
-            secondsRemaining: _violationTimeoutSeconds - duration,
-            message: _currentOverlayMessage);
       }
+      // Nota: Não atualizamos App Lock como fazíamos com overlay
+      // App Lock é uma decisão única, não um countdown
     }
+  }
+
+  /// Mostra a tela de App Lock para um app monitorado
+  Future<void> _showAppLockScreen(String packageName, String alertMessage) async {
+    try {
+      final niche = currentNicheId!;
+      final appName = _getAppName(packageName);
+      final appIcon = _getAppIcon(packageName);
+      
+      await AppLockService.instance.showAppLockScreen(
+        packageName: packageName,
+        appName: appName,
+        appIcon: appIcon,
+        nicheId: niche,
+        onExitApp: () async {
+          LoggerService.instance.gamification('Usuário escolheu sair do app: $appName');
+          await _cancelViolationForApp(packageName);
+        },
+        onOpenApp: () async {
+          LoggerService.instance.gamification('Usuário escolheu abrir app: $appName');
+          await _triggerViolationReset(packageName);
+        },
+      );
+      
+      LoggerService.instance.gamification('App Lock exibido para: $appName');
+      
+    } catch (e) {
+      LoggerService.instance.e('Erro ao mostrar App Lock', error: e);
+      // Fallback para overlay se App Lock falhar
+      await _showOverlay(_violationTimeoutSeconds, message: alertMessage);
+    }
+  }
+
+  /// Obtém o nome do app a partir do package name
+  String _getAppName(String packageName) {
+    // Mapeamento básico de apps conhecidos
+    final appNames = {
+      'com.whatsapp': 'WhatsApp',
+      'com.instagram.android': 'Instagram',
+      'com.facebook.katana': 'Facebook',
+      'com.twitter.android': 'Twitter',
+      'com.tiktok': 'TikTok',
+      'com.snapchat.android': 'Snapchat',
+      'com.spotify.music': 'Spotify',
+      'com.netflix.mediaclient': 'Netflix',
+      'com.youtube.android': 'YouTube',
+      'com.discord': 'Discord',
+      'com.telegram.messenger': 'Telegram',
+      'com.google.android.youtube': 'YouTube',
+      'com.google.android.gm': 'Gmail',
+      'com.google.android.apps.photos': 'Google Photos',
+    };
+    
+    return appNames[packageName] ?? packageName.split('.').last;
+  }
+
+  /// Obtém o ícone do app a partir do package name
+  String _getAppIcon(String packageName) {
+    // Mapeamento de ícones para apps conhecidos
+    final appIcons = {
+      'com.whatsapp': '💬',
+      'com.instagram.android': '📷',
+      'com.facebook.katana': '📘',
+      'com.twitter.android': '🐦',
+      'com.tiktok': '🎵',
+      'com.snapchat.android': '👻',
+      'com.spotify.music': '🎶',
+      'com.netflix.mediaclient': '🎬',
+      'com.youtube.android': '📺',
+      'com.discord': '🎮',
+      'com.telegram.messenger': '✈️',
+      'com.google.android.youtube': '📺',
+      'com.google.android.gm': '📧',
+      'com.google.android.apps.photos': '📸',
+      'com.reddit.frontpage': '🤖',
+      'com.pinterest': '📌',
+      'com.linkedin.android': '💼',
+      'com.tinder': '🔥',
+      'com.badoo.mobile': '💕',
+      'com.zello': '📡',
+      'com.skype.raider': '📞',
+      'com.viber.voip': '💜',
+      'com.kik.mobile': '👽',
+      'com.linecorp.linethree': '💚',
+      'com.tencent.mm': '💬',
+      'com.whatsapp.w4b': '💼',
+      'com.instagram.boomerang': '🎬',
+      'com.instagram.layout': '📋',
+      'com.facebook.orca': '📱',
+      'com.facebook.work': '💼',
+      'com.facebook.workchat': '💼',
+      'com.twitter.android.lite': '🐦',
+      'com.twitter.android.tv': '📺',
+      'com.tiktok.lite': '🎵',
+      'com.snapchat.kit': '👻',
+      'com.spotify.lite': '🎶',
+      'com.netflix.lite': '🎬',
+      'com.amazon.avod.thirdpartyclient': '📺',
+      'com.amazon.mp3': '🎵',
+      'com.apple.android.music': '🎵',
+      'com.apple.android.podcasts': '🎧',
+      'com.soundcloud.android': '🎵',
+      'com.pandora.android': '🎵',
+      'com.deezer.android.app': '🎵',
+      'com.shazam.encore.android': '🎵',
+      'com.google.android.apps.youtube.music': '🎵',
+      'com.google.android.play.music': '🎵',
+      'com.microsoft.office.word': '📄',
+      'com.microsoft.office.excel': '📊',
+      'com.microsoft.office.powerpoint': '📽️',
+      'com.microsoft.office.outlook': '📧',
+      'com.microsoft.office.onenote': '📝',
+      'com.microsoft.teams': '👥',
+      'com.slack': '💬',
+      'com.zoom.us': '🎥',
+      'us.zoom.videomeetings': '🎥',
+      'com.google.android.apps.meetings': '🎥',
+      'com.google.android.apps.docs.editors.docs': '📄',
+      'com.google.android.apps.docs.editors.sheets': '📊',
+      'com.google.android.apps.docs.editors.slides': '📽️',
+      'com.adobe.reader': '📄',
+      'com.duolingo': '🦉',
+      'com.khanacademy': '📚',
+      'com.coursera': '🎓',
+      'com.udemy.android': '📖',
+      'com.lyft': '🚗',
+      'com.ubercab': '🚕',
+      'com.waze': '🗺️',
+      'com.google.android.apps.maps': '🗺️',
+      'com.google.android.apps.mapslite': '🗺️',
+      'com.mapswithme.maps.pro': '🗺️',
+      'com.yandex.yandexmaps': '🗺️',
+      'com.here.app.maps': '🗺️',
+      'com.bbm': '💬',
+      'com.kakao.talk': '💬',
+      'com.joypac.joypac': '🎮',
+      'com.riotgames.leagueoflegendswildrift': '🎮',
+      'com.epicgames.fortnite': '🎮',
+      'com.king.candycrushsaga': '🍬',
+      'com.supercell.clashofclans': '⚔️',
+      'com.supercell.clashroyale': '👑',
+      'com.gramgames.ww2': '⚔️',
+      'com.miniclip.8ballpool': '🎱',
+      'com.ea.game.fifa14': '⚽',
+      'com.firsttouchgames.dreamleaguesoccer': '⚽',
+      'com.gameloft.android.ANMP.GloftA8HM': '🏁',
+      'com.nianticlabs.pokemongo': '🎮',
+      'com.ubisoft.hungrydragon': '🐲',
+      'com.king.candycrushsodasaga': '🥤',
+      'com.playrix.gardenscapes': '🌳',
+      'com.playrix.homescapes': '🏠',
+      'com.playrix.township': '🏘️',
+      'com.king.candycrushfriends': '👥',
+      'com.king.candycrushjellysaga': '🍯',
+      'com.king.farmscapes': '🌾',
+      'com.king.bubblewitch3saga': '🧙',
+      'com.king.diamonddiaries': '💎',
+      'com.king.petrescuesaga': '🐾',
+      'com.king.pepperpanicepisodes': '🌶️',
+      'com.king.pyramidsolitairesaga': '🔺',
+      'com.king.tripledash': '🎯',
+      'com.king.valentines': '💝',
+      'com.king.candycrushknights': '🛡️',
+      'com.king.candycrushdreamsaga': '💭',
+      'com.king.candycrushsagamod': '🔧',
+      'com.king.candycrushsagafree': '🆓',
+      'com.king.candycrushsagapremium': '💎',
+      'com.king.candycrushsagapro': '👑',
+      'com.king.candycrushsagaunlimited': '♾️',
+      'com.king.candycrushsagaworld': '🌍',
+      'com.king.candycrushsagax': '❌',
+      'com.king.candycrushsagay': '🎯',
+      'com.king.candycrushsagaz': '🎲',
+      'com.king.candycrushsagaw': '🎯',
+      'com.king.candycrushsagav': '🎯',
+      'com.king.candycrushsagau': '🎯',
+      'com.king.candycrushsagat': '🎯',
+      'com.king.candycrushsagags': '🎯',
+      'com.king.candycrushsagagr': '🎯',
+      'com.king.candycrushsagagf': '🎯',
+      'com.king.candycrushsagagd': '🎯',
+      'com.king.candycrushsagagc': '🎯',
+      'com.king.candycrushsagagb': '🎯',
+      'com.king.candycrushsagaga': '🎯',
+      'com.king.candycrushsagag9': '🎯',
+      'com.king.candycrushsagag8': '🎯',
+      'com.king.candycrushsagag7': '🎯',
+      'com.king.candycrushsagag6': '🎯',
+      'com.king.candycrushsagag5': '🎯',
+      'com.king.candycrushsagag4': '🎯',
+      'com.king.candycrushsagag3': '🎯',
+      'com.king.candycrushsagag2': '🎯',
+      'com.king.candycrushsagag1': '🎯',
+      'com.king.candycrushsagag0': '🎯',
+    };
+    
+    return appIcons[packageName] ?? '📱';
   }
 
   /// Trigger violation reset

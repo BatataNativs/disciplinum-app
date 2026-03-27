@@ -12,6 +12,7 @@ import 'package:disciplinum/features/profile/presentation/widgets/profile_avatar
 import 'package:disciplinum/features/profile/presentation/widgets/profile_info_section.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/theme_button.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/profile_action_button.dart';
+import 'package:disciplinum/features/app_lock/presentation/widgets/app_lock_button.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -160,6 +161,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   onPressed: () => _showLojinhaDialog(context, iap),
                                   isDark: isDark,
                                 ),
+                                const SizedBox(height: 8),
+
+                                // BOTÃO DE TESTE DO APP LOCK
+                                AppLockButton(),
+                                
+                                // TEMA DO APP
+                                ThemeButton(),
                               ],
                             ),
                           ),
