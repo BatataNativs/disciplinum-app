@@ -41,6 +41,8 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/services/
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_notification_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_celebration_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
@@ -51,6 +53,16 @@ final isarServiceProvider = Provider<IsarService>((ref) {
 /// Assumindo que já foi inicializado no bootstrap
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences deve ser sobrescrito no ProviderScope');
+});
+
+/// Provider para BingeEatingGamificationRepository
+final bingeEatingGamificationRepositoryProvider = Provider<BingeEatingGamificationRepository>((ref) {
+  return BingeEatingGamificationRepository.instance;
+});
+
+/// Provider para DietGamificationRepository
+final dietGamificationRepositoryProvider = Provider<DietGamificationRepository>((ref) {
+  return DietGamificationRepository.instance;
 });
 
 /// Provider para SessionPersistenceService

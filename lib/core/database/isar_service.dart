@@ -12,6 +12,7 @@ import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
 import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -43,6 +44,7 @@ class IsarService {
           FocusStatusEntitySchema,
           SmokingGamificationEntitySchema,
           FocusGamificationEntitySchema,
+          DietGamificationEntitySchema,
         ],
         directory: dbPath,
       );
@@ -80,6 +82,9 @@ class IsarService {
 
   /// Getter para FocusStatus
   IsarCollection<FocusStatusEntity> get focusStatus => database.focusStatusEntitys;
+
+  /// Getter para DietGamificationEntity
+  IsarCollection<DietGamificationEntity> get dietGamificationStates => database.dietGamificationEntitys;
 
   /// Limpa todo o banco (apenas para desenvolvimento)
   Future<void> clearAll() async {
