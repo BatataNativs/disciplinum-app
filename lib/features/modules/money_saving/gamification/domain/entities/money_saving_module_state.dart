@@ -1,3 +1,5 @@
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_insignia.dart';
+
 /// Estado de gamificação do módulo Money Saving Challenge
 /// Armazena progresso, conquistas e estatísticas
 class MoneySavingModuleState {
@@ -12,6 +14,34 @@ class MoneySavingModuleState {
   
   /// Contador de insignias Disciplinum
   final int disciplinumCount;
+  
+  /// Reseta apenas as insígnias (preserva a inicial)
+  MoneySavingModuleState resetInsignias() {
+    // Preserva apenas a insígnia inicial (Economista Inicial)
+    final initialInsignia = MoneySavingInsignia.economistaInicial.name;
+    final hasInitialInsignia = earnedInsignias.contains(initialInsignia);
+    
+    final newInsignias = <String>[];
+    final newDisciplinumCount = 0;
+    
+    // Restaura a inicial se o usuário já tinha
+    if (hasInitialInsignia) {
+      newInsignias.add(initialInsignia);
+    }
+    
+    return MoneySavingModuleState(
+      earnedInsignias: newInsignias,
+      earnedMedalhas: [], // Reseta medalhas também
+      consecutiveDays: 0, // Reset dias
+      disciplinumCount: newDisciplinumCount,
+      totalSavedAmount: totalSavedAmount,
+      bestStreak: bestStreak,
+      lastSavingDate: lastSavingDate,
+      startDate: startDate,
+      lastUpdated: DateTime.now(),
+      isActive: isActive,
+    );
+  }
   
   /// Valor total acumulado
   final double totalSavedAmount;

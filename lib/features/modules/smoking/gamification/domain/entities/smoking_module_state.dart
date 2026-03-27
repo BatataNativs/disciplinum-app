@@ -164,6 +164,7 @@ class SmokingModuleState {
     final hasMadeira = _earnedInsignias.contains(madeiraInsignia);
     
     _earnedInsignias.clear();
+    _earnedMedalhas.clear(); // Reseta medalhas também
     disciplinumCount = 0;
     
     // Restaura a madeira se o usuário já tinha
