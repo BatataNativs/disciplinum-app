@@ -6,7 +6,8 @@ import 'package:disciplinum/features/modules/focus/gamification/presentation/con
 /// Provider para o serviço de gamificação do Focus
 final focusGamificationServiceProvider = Provider<FocusGamificationService>((ref) {
   final focusService = ref.watch(focusServiceProvider);
-  return FocusGamificationService(focusService);
+  final repository = ref.watch(focusGamificationRepositoryProvider);
+  return FocusGamificationService(repository, focusService);
 });
 
 /// Provider para o controller de gamificação do Focus

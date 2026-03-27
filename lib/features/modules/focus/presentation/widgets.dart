@@ -80,8 +80,8 @@ class MyProgressFocus extends ConsumerWidget {
                 children: GamificationMedal.values.map((medal) {
                   final isEarned =
                       (medal == GamificationMedal.bronze && periodosRespeitados >= 3) ||
-                          (medal == GamificationMedal.prata && periodosRespeitados >= 5) ||
-                          (medal == GamificationMedal.ouro && periodosRespeitados >= 7) ||
+                          (medal == GamificationMedal.prata && periodosRespeitados >= 6) ||
+                          (medal == GamificationMedal.ouro && periodosRespeitados >= 9) ||
                           (medal == GamificationMedal.diamante && periodosRespeitados >= 10);
 
                   return _AwardItem(
@@ -145,11 +145,11 @@ class MyProgressFocus extends ConsumerWidget {
   String _getMedalRequirement(GamificationMedal medal) {
     switch (medal) {
       case GamificationMedal.bronze:
-        return '3 períodos de foco'; // CORRIGIDO: períodos em vez de dias
+        return '3 períodos de foco';
       case GamificationMedal.prata:
-        return '5 períodos de foco';
+        return '6 períodos de foco';
       case GamificationMedal.ouro:
-        return '7 períodos de foco';
+        return '9 períodos de foco';
       case GamificationMedal.diamante:
         return '10 períodos de foco';
     }

@@ -18,6 +18,8 @@ import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/features/gamification/presentation/controllers/gamification_controller.dart';
 import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service_wrapper.dart';
@@ -40,7 +42,6 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/services/
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_notification_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_celebration_service.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
@@ -306,6 +307,11 @@ final focusNotificationServiceProvider = Provider<FocusNotificationService>((ref
 /// Provider para FocusCelebrationService
 final focusCelebrationServiceProvider = Provider<FocusCelebrationService>((ref) {
   return FocusCelebrationService.instance;
+});
+
+/// Provider para FocusGamificationRepository
+final focusGamificationRepositoryProvider = Provider<FocusGamificationRepository>((ref) {
+  return FocusGamificationRepository.instance;
 });
 
 /// Provider para SmokingGamificationRepository

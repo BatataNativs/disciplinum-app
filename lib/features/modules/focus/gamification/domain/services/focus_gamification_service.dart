@@ -1,231 +1,315 @@
-import 'package:disciplinum/core/gamification/base/base_module_gamification_service.dart';
+import 'package:disciplinum/core/gamification/interfaces/module_gamification_interface.dart';
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_notification_service.dart';
 
 /// Service principal de gamificação do módulo Focus
 /// Orquestra todos os serviços de gamificação do módulo
-class FocusGamificationService extends BaseModuleGamificationService {
+class FocusGamificationService implements ModuleGamificationInterface {
+  final FocusGamificationRepository _repository;
   final FocusService _focusService;
   late final FocusInsigniaService _insigniaService;
   late final FocusMedalhaService _medalhaService;
-  late final FocusNotificationService _notificationService;
+  
   FocusModuleState? _currentState;
+  bool _isInitialized = false;
 
-  FocusGamificationService(this._focusService) {
+  FocusGamificationService(this._repository, this._focusService) {
     _insigniaService = FocusInsigniaService(_focusService);
     _medalhaService = FocusMedalhaService();
-    _notificationService = FocusNotificationService();
   }
 
-  @override
-  String get moduleId => 'focus';
-
-  @override
-  String get moduleName => 'Foco e Produtividade';
-
-  @override
-  ModuleInsigniaInterface get insigniaService => _insigniaService;
-
-  @override
-  ModuleMedalhaInterface get medalhaService => _medalhaService;
-
-  @override
-  Future<void> initializeModuleSpecific() async {
-    await _insigniaService.initialize();
-    await _medalhaService.initialize();
-    
-    // Carrega estado atual
-    _currentState = await _insigniaService.getCurrentState();
-    
-    // Sincroniza medalha service com estado atual
-    _medalhaService.updateFromModuleState(_currentState!);
-    
-    LoggerService.instance.gamification('FocusGamificationService inicializado');
-  }
-
+  /// Inicializa o serviço de gamificação
   @override
   Future<void> initialize() async {
-    await initializeModuleSpecific();
-  }
+    if (_isInitialized) return;
 
-  Future<void> updateFromModuleState(FocusModuleState state) async {
-    _currentState = state;
-    _medalhaService.updateFromModuleState(state);
-  }
+    try {
+      await _repository.initialize();
+      await _insigniaService.initialize();
+      await _medalhaService.initialize();
+      
+      _currentState = await _repository.getFocusState();
+      
+      if (_currentState == null) {
+        _currentState = FocusModuleState.initial();
+        await _repository.saveFocusState(_currentState!);
+      }
 
-  @override
-  Future<void> processModuleSpecificEvent(Map<String, dynamic> eventData) async {
-    final eventType = eventData['type'] as String?;
-    
-    switch (eventType) {
-      case 'period_respected':
-        await _handlePeriodRespected();
-        break;
-      case 'period_failed':
-        await _handlePeriodFailed();
-        break;
-      case 'module_activated':
-        await _handleModuleActivated();
-        break;
-      case 'module_deactivated':
-        await _handleModuleDeactivated();
-        break;
-      default:
-        LoggerService.instance.gamification('Evento desconhecido no Focus: $eventType');
+      _isInitialized = true;
+      LoggerService.instance.gamification('FocusGamificationService inicializado');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao inicializar FocusGamificationService', error: e);
+      rethrow;
     }
   }
 
+  /// Processa eventos do módulo (períodos respeitados, etc.)
   @override
-  Future<void> resetModuleSpecificProgress() async {
-    await _insigniaService.resetInsignias();
-    await _medalhaService.resetMedalhas();
-    
-    // Reset no FocusService principal
-    await _focusService.resetProgress();
-    
-    _currentState = await _insigniaService.getCurrentState();
+  Future<void> processModuleEvent(Map<String, dynamic> eventData) async {
+    if (!_isInitialized || _currentState == null) {
+      LoggerService.instance.w('FocusGamificationService não inicializado');
+      return;
+    }
+
+    try {
+      final eventType = eventData['type'] as String?;
+      
+      switch (eventType) {
+        case 'focus_period_completed':
+          await _processFocusPeriodCompleted(eventData);
+          break;
+        case 'focus_session_completed':
+          await _processFocusSessionCompleted(eventData);
+          break;
+        case 'streak_update':
+          await _processStreakUpdate(eventData);
+          break;
+        case 'focus_break':
+          await _processFocusBreak(eventData);
+          break;
+        default:
+          LoggerService.instance.w('Tipo de evento não reconhecido: $eventType');
+      }
+      
+      await checkForNewAchievements();
+    } catch (e) {
+      LoggerService.instance.e('Erro ao processar evento do módulo Focus', error: e);
+    }
   }
 
+  /// Processa período de foco completado
+  Future<void> _processFocusPeriodCompleted(Map<String, dynamic> eventData) async {
+    final respectedPeriods = (eventData['respectedPeriods'] ?? 0) as int;
+    final sessionDuration = (eventData['sessionDuration'] ?? 0) as int;
+    
+    final updatedState = FocusModuleState(
+      earnedInsignias: _currentState!.earnedInsignias,
+      earnedMedalhas: _currentState!.earnedMedalhas,
+      respectedPeriods: respectedPeriods,
+      lastUpdated: DateTime.now(),
+      isActive: _currentState!.isActive,
+    );
+    
+    await _updateState(updatedState);
+    
+    // Verifica novas insignias baseadas em períodos respeitados
+    final moduleData = {'respectedPeriods': respectedPeriods, 'sessionDuration': sessionDuration};
+    await _insigniaService.checkForNewInsignias(moduleData);
+  }
+
+  /// Processa sessão de foco completada
+  Future<void> _processFocusSessionCompleted(Map<String, dynamic> eventData) async {
+    final sessionDuration = (eventData['sessionDuration'] ?? 0) as int;
+    final productivityScore = (eventData['productivityScore'] ?? 0) as int;
+    
+    LoggerService.instance.gamification('Sessão de foco completada: ${sessionDuration}min, score: $productivityScore');
+    
+    // Pode adicionar lógica específica para sessões aqui
+    await checkForNewAchievements();
+  }
+
+  /// Processa atualização de streak
+  Future<void> _processStreakUpdate(Map<String, dynamic> eventData) async {
+    final respectedPeriods = (eventData['respectedPeriods'] ?? 0) as int;
+    final currentStreak = (eventData['currentStreak'] ?? 0) as int;
+    
+    final updatedState = FocusModuleState(
+      earnedInsignias: _currentState!.earnedInsignias,
+      earnedMedalhas: _currentState!.earnedMedalhas,
+      respectedPeriods: respectedPeriods,
+      lastUpdated: DateTime.now(),
+      isActive: _currentState!.isActive,
+    );
+    
+    await _updateState(updatedState);
+    
+    final moduleData = {'respectedPeriods': respectedPeriods, 'currentStreak': currentStreak};
+    await _insigniaService.checkForNewInsignias(moduleData);
+  }
+
+  /// Processa pausa no foco
+  Future<void> _processFocusBreak(Map<String, dynamic> eventData) async {
+    final breakDuration = (eventData['breakDuration'] ?? 0) as int;
+    final wasProductive = (eventData['wasProductive'] ?? false) as bool;
+    
+    LoggerService.instance.gamification('Pausa de foco: ${breakDuration}min, produtiva: $wasProductive');
+  }
+
+  /// Reseta o progresso do módulo
+  @override
+  Future<void> resetProgress() async {
+    if (!_isInitialized || _currentState == null) {
+      LoggerService.instance.w('FocusGamificationService não inicializado');
+      return;
+    }
+
+    try {
+      final resetState = FocusModuleState.reset();
+      
+      await _updateState(resetState);
+      await _insigniaService.resetInsignias();
+      await _medalhaService.resetMedalhas();
+      
+      LoggerService.instance.gamification('Progresso do Focus resetado');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar progresso Focus', error: e);
+    }
+  }
+
+  /// Obtém o estado atual
   @override
   Future<Map<String, dynamic>> getCurrentState() async {
-    final state = await _insigniaService.getCurrentState();
+    if (!_isInitialized || _currentState == null) {
+      return FocusModuleState.initial().toJson();
+    }
+    return _currentState!.toJson();
+  }
+
+  /// Verifica por novas conquistas
+  @override
+  Future<void> checkForNewAchievements() async {
+    if (!_isInitialized || _currentState == null) return;
+
+    try {
+      // Verifica medalhas baseadas em períodos respeitados
+      final moduleData = {'respectedPeriods': _currentState!.respectedPeriods};
+      await _medalhaService.checkForNewMedalhas(moduleData);
+      
+      // Sincroniza com Supabase
+      await _repository.syncWithSupabase(_currentState!);
+      
+      LoggerService.instance.gamification('Verificação de conquistas concluída');
+    } catch (e) {
+      LoggerService.instance.e('Erro na verificação de conquistas', error: e);
+    }
+  }
+
+  /// Envia notificações especiais
+  @override
+  Future<void> sendSpecialNotifications() async {
+    if (!_isInitialized || _currentState == null) return;
+
+    try {
+      // Notificações de milestones
+      if (_currentState!.respectedPeriods == 1) {
+        LoggerService.instance.gamification('🎯 Primeiro período de foco concluído! Continue assim!');
+      }
+      
+      if (_currentState!.respectedPeriods == 7) {
+        LoggerService.instance.gamification('🏆 7 períodos de foco! Sua disciplina está incrível!');
+      }
+      
+      if (_currentState!.respectedPeriods == 30) {
+        LoggerService.instance.gamification('💪 30 períodos! Você é um mestre do foco!');
+      }
+      
+      if (_currentState!.respectedPeriods == 100) {
+        LoggerService.instance.gamification('👑 100 períodos! Lenda do foco e produtividade!');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao enviar notificações especiais', error: e);
+    }
+  }
+
+  /// Atualiza o estado
+  Future<void> _updateState(FocusModuleState newState) async {
+    _currentState = newState;
+    await _repository.saveFocusState(newState);
+  }
+
+  /// Getters para acesso rápido
+  @override
+  ModuleInsigniaInterface get insigniaService => _insigniaService;
+  
+  @override
+  ModuleMedalhaInterface get medalhaService => _medalhaService;
+  
+  @override
+  String get moduleId => 'focus';
+  
+  @override
+  String get moduleName => 'Foco e Produtividade';
+  
+  int get respectedPeriods => _currentState?.respectedPeriods ?? 0;
+  int get disciplinumCount => _currentState?.respectedPeriods ?? 0;
+  bool get isActive => _currentState?.isActive ?? false;
+  bool get isInStreak => (_currentState?.respectedPeriods ?? 0) > 0;
+
+  /// Obtém progresso para próxima insignia
+  double getProgressToNextInsignia() {
+    return 0.0; // Implementar se necessário
+  }
+
+  /// Obtém progresso para próxima medalha
+  double getProgressToNextMedalha() {
+    return 0.0; // Implementar se necessário
+  }
+
+  /// Obtém progresso percentual geral (compatibilidade com controller)
+  double getProgressPercentage() {
+    return getProgressToNextInsignia();
+  }
+
+  /// Obtém próxima insignia (compatibilidade com controller)
+  String? getNextInsignia() {
+    // Implementar lógica para encontrar próxima insignia
+    return null;
+  }
+
+  /// Tenta conceder insignia Disciplinum (compatibilidade com controller)
+  Future<bool> tryAwardDisciplinum() async {
+    if (!_isInitialized || _currentState == null) return false;
     
+    try {
+      final moduleData = {'respectedPeriods': _currentState!.respectedPeriods};
+      final newInsignias = await _insigniaService.checkForNewInsignias(moduleData);
+      
+      return newInsignias.contains('disciplinum');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao tentar conceder Disciplinum', error: e);
+      return false;
+    }
+  }
+
+  /// Verifica se pode conceder novo Disciplinum (compatibilidade com controller)
+  bool canAwardNewDisciplinum() {
+    if (!_isInitialized || _currentState == null) return false;
+    
+    // Implementar lógica para verificar se pode conceder novo Disciplinum
+    return _currentState!.respectedPeriods >= 30; // Exemplo: 30 períodos para Disciplinum
+  }
+
+  /// Obtém estatísticas detalhadas
+  Future<Map<String, dynamic>> getStatistics() async {
+    if (!_isInitialized || _currentState == null) {
+      return {
+        'moduleId': moduleId,
+        'moduleName': moduleName,
+        'respectedPeriods': 0,
+        'disciplinumCount': 0,
+        'earnedInsignias': <String>[],
+        'earnedMedalhas': <String>[],
+        'isActive': false,
+        'isInStreak': false,
+      };
+    }
+
     return {
       'moduleId': moduleId,
       'moduleName': moduleName,
-      'earnedInsignias': state.earnedInsignias,
-      'earnedMedalhas': await _medalhaService.getEarnedMedalhas(),
-      'respectedPeriods': state.respectedPeriods,
-      'lastUpdated': state.lastUpdated.toIso8601String(),
-      'isActive': state.isActive,
-      'disciplinumCount': state.disciplinumCount,
+      'respectedPeriods': _currentState!.respectedPeriods,
+      'disciplinumCount': disciplinumCount,
+      'earnedInsignias': _currentState!.earnedInsignias,
+      'earnedMedalhas': _currentState!.earnedMedalhas,
+      'isActive': _currentState!.isActive,
+      'isInStreak': isInStreak,
+      'lastUpdated': _currentState!.lastUpdated.toIso8601String(),
     };
-  }
-
-  @override
-  Future<void> sendSpecialNotifications() async {
-    // Focus não tem notificações especiais como saúde/economia
-    // Mas poderia ter notificações de milestones, motivação, etc.
-    await _checkForMilestoneNotifications();
-  }
-
-  /// Processa um período de foco respeitado
-  Future<void> _handlePeriodRespected() async {
-    try {
-      // Adiciona período respeitado no FocusService
-      await _focusService.addRespectedPeriod();
-      
-      // Atualiza estado local
-      _currentState = await _insigniaService.getCurrentState();
-      
-      LoggerService.instance.gamification('Período de foco respeitado processado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao processar período respeitado', error: e);
-    }
-  }
-
-  /// Processa uma falha no período de foco
-  Future<void> _handlePeriodFailed() async {
-    try {
-      // Reset do progresso (regra de negócio)
-      await resetProgress();
-      
-      LoggerService.instance.gamification('Falha no período de foco - progresso resetado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao processar falha no período', error: e);
-    }
-  }
-
-  /// Processa ativação do módulo
-  Future<void> _handleModuleActivated() async {
-    try {
-      // Garante que a insígnia Madeira foi concedida
-      await _insigniaService.awardInsignia('madeira');
-      
-      LoggerService.instance.gamification('Módulo Focus ativado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao ativar módulo Focus', error: e);
-    }
-  }
-
-  /// Processa desativação do módulo
-  Future<void> _handleModuleDeactivated() async {
-    try {
-      await resetProgress();
-      LoggerService.instance.gamification('Módulo Focus desativado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao desativar módulo Focus', error: e);
-    }
-  }
-
-  /// Verifica por notificações de milestones
-  Future<void> _checkForMilestoneNotifications() async {
-    final state = _currentState!;
-    
-    // Exemplo: Notificar quando alcançar 50% do progresso
-    if (state.respectedPeriods == 5 && !state.hasInsignia('prata')) {
-      await _notificationService.sendMilestoneNotification(5, 'Prata');
-      LoggerService.instance.gamification('Milestone alcançado: 5 períodos de foco');
-    }
-    
-    // Exemplo: Notificar quando estiver perto do Disciplinum
-    if (state.respectedPeriods == 8 && !state.hasInsignia('diamante')) {
-      await _notificationService.sendMotivationalNotification(8, 'Diamante');
-      LoggerService.instance.gamification('Próximo do Disciplinum: 8 períodos');
-    }
-  }
-
-  /// Obtém o progresso percentual geral
-  double getProgressPercentage() {
-    if (_currentState == null) return 0.0;
-    
-    final maxPeriods = 10; // Disciplinum
-    final currentPeriods = _currentState!.respectedPeriods;
-    
-    return (currentPeriods / maxPeriods).clamp(0.0, 1.0);
-  }
-
-  /// Obtém a próxima insígnia a ser conquistada
-  String? getNextInsignia() {
-    if (_currentState == null) return null;
-    return _currentState!.nextInsignia;
-  }
-
-  /// Verifica se o usuário pode conceder nova insígnia Disciplinum
-  bool canAwardNewDisciplinum() {
-    if (_currentState == null) return false;
-    
-    // Se já tem 4 disciplinums, não pode mais
-    if (_currentState!.disciplinumCount >= 4) return false;
-    
-    // Se completou 10 períodos, pode conceder
-    return _currentState!.respectedPeriods >= 10;
-  }
-
-  /// Concede nova insígnia Disciplinum se possível
-  Future<bool> tryAwardDisciplinum() async {
-    if (!canAwardNewDisciplinum()) return false;
-    
-    try {
-      await _insigniaService.awardInsignia('disciplinum');
-      
-      // Atualiza estado
-      _currentState = await _insigniaService.getCurrentState();
-      
-      // Verifica medalhas
-      _medalhaService.checkDisciplinumMedalhas(_currentState!.disciplinumCount);
-      
-      LoggerService.instance.gamification('Nova insígnia Disciplinum concedida!');
-      return true;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao conceder insígnia Disciplinum', error: e);
-      return false;
-    }
   }
 }
