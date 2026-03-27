@@ -1,5 +1,5 @@
-/// Entidade de estado do módulo Smoking para gamificação
-/// Contém informações sobre conquistas e progresso
+/// Entidade de estado do módulo Smoking para gamificação.
+/// Contém informações sobre conquistas e progresso do usuário.
 class SmokingModuleState {
   /// Lista de insígnias conquistadas
   final List<String> _earnedInsignias = [];
@@ -25,8 +25,11 @@ class SmokingModuleState {
   /// Valor de um maço de cigarros (configurado pelo usuário)
   double packCost = 0.0;
 
-  /// Construtor padrão
-  SmokingModuleState();
+  /// Construtor padrão - CONCEDE MADEIRA AUTOMATICAMENTE
+  SmokingModuleState() {
+    // Concede insígnia madeira automaticamente ao ativar o módulo
+    _earnedInsignias.add('madeira');
+  }
 
   /// Construtor a partir de JSON
   SmokingModuleState.fromJson(Map<String, dynamic> json)
@@ -42,6 +45,11 @@ class SmokingModuleState {
             : null {
     _earnedInsignias.addAll(List<String>.from(json['earnedInsignias'] ?? []));
     _earnedMedalhas.addAll(List<String>.from(json['earnedMedalhas'] ?? []));
+    
+    // Garante que sempre tenha a insígnia madeira
+    if (!_earnedInsignias.contains('madeira')) {
+      _earnedInsignias.add('madeira');
+    }
   }
 
   /// Converte para JSON
@@ -131,20 +139,37 @@ class SmokingModuleState {
     _earnedMedalhas.remove(medalhaId);
   }
 
-  /// Reseta todo o progresso
+  /// Reseta todo o progresso (preserva a madeira)
   void reset() {
+    // Preserva apenas a insígnia de madeira (inicial)
+    final hasMadeira = _earnedInsignias.contains('madeira');
+    
     _earnedInsignias.clear();
     _earnedMedalhas.clear();
     consecutivePositiveDays = 0;
     disciplinumCount = 0;
     lastPositiveCheckIn = null;
     startDate = null;
+    
+    // Restaura a madeira se o usuário já tinha
+    if (hasMadeira) {
+      _earnedInsignias.add('madeira');
+    }
   }
 
-  /// Reseta apenas as insígnias
+  /// Reseta apenas as insígnias (preserva a madeira)
   void resetInsignias() {
+    // Preserva apenas a insígnia de madeira (inicial)
+    final madeiraInsignia = 'madeira';
+    final hasMadeira = _earnedInsignias.contains(madeiraInsignia);
+    
     _earnedInsignias.clear();
     disciplinumCount = 0;
+    
+    // Restaura a madeira se o usuário já tinha
+    if (hasMadeira) {
+      _earnedInsignias.add(madeiraInsignia);
+    }
   }
 
   /// Reseta apenas as medalhas

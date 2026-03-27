@@ -158,10 +158,20 @@ class DietInsigniaService implements ModuleInsigniaInterface {
 
   @override
   Future<void> resetInsignias() async {
+    // Preserva apenas a insígnia de madeira (inicial)
+    final madeiraInsignia = DietInsignia.madeira.name;
+    final hasMadeira = _earnedInsignias.contains(madeiraInsignia);
+    
     _earnedInsignias.clear();
     _consecutiveDays = 0;
+    
+    // Restaura a madeira se o usuário já tinha
+    if (hasMadeira) {
+      _earnedInsignias.add(madeiraInsignia);
+    }
+    
     await _saveState();
-    LoggerService.instance.gamification('Insignias da Dieta resetadas');
+    LoggerService.instance.gamification('🗑️ Insignias da Dieta resetadas (preservando madeira)');
   }
 
   /// Atualiza o contador de dias consecutivos

@@ -157,10 +157,20 @@ class BingeEatingInsigniaService implements ModuleInsigniaInterface {
 
   @override
   Future<void> resetInsignias() async {
+    // Preserva apenas a insígnia de madeira (inicial)
+    final madeiraInsignia = BingeEatingInsignia.madeira.name;
+    final hasMadeira = _earnedInsignias.contains(madeiraInsignia);
+    
     _earnedInsignias.clear();
     _consecutivePositiveDays = 0;
+    
+    // Restaura a madeira se o usuário já tinha
+    if (hasMadeira) {
+      _earnedInsignias.add(madeiraInsignia);
+    }
+    
     await _saveState();
-    LoggerService.instance.gamification('Insignias do Binge Eating resetadas');
+    LoggerService.instance.gamification('🗑️ Insignias do Binge Eating resetadas (preservando madeira)');
   }
 
   /// Atualiza o contador de dias positivos consecutivos

@@ -1,15 +1,15 @@
 /// Entidade de insígnias específicas do módulo Smoking
-/// Baseada em dias sem fumar e benefícios alcançados
+/// Baseada em check-ins diários positivos consecutivos
 enum SmokingInsigniaEntity {
-  madeira,
-  ferro,
-  aluminio,
-  latao,
-  bronze,
-  prata,
-  ouro,
-  diamante,
-  disciplinum
+  madeira,    // Apenas por configurar e ativar o módulo
+  ferro,      // 1 dia com check-in positivo
+  aluminio,   // 2 dias com check-in positivo
+  latao,      // 3 dias com check-in positivo
+  bronze,     // 5 dias com check-in positivo
+  prata,      // 10 dias com check-in positivo
+  ouro,       // 15 dias com check-in positivo
+  diamante,   // 20 dias com check-in positivo
+  disciplinum; // 30 dias com check-in positivo
 }
 
 extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
@@ -95,23 +95,23 @@ extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
   String get healthBenefit {
     switch (this) {
       case SmokingInsigniaEntity.madeira:
-        return 'Você deu o primeiro passo para uma vida mais saudável!';
+        return 'Módulo configurado e ativado';
       case SmokingInsigniaEntity.ferro:
-        return 'Após 1 dia sem fumar: Níveis de monóxido de carbono já começam a normalizar.';
+        return '1 dia com check-in positivo';
       case SmokingInsigniaEntity.aluminio:
-        return 'Após 3 dias: Sua respiração melhora e o pulmão começa a limpar.';
+        return '2 dias com check-in positivo';
       case SmokingInsigniaEntity.latao:
-        return 'Após 7 dias: Seu olfato e paladar melhoram significativamente.';
+        return '3 dias com check-in positivo';
       case SmokingInsigniaEntity.bronze:
-        return 'Após 14 dias: Risco de infarto diminui e sua circulação melhora.';
+        return '5 dias com check-in positivo';
       case SmokingInsigniaEntity.prata:
-        return 'Após 30 dias: Função pulmonar aumenta até 30% e tosse diminui.';
+        return '10 dias com check-in positivo';
       case SmokingInsigniaEntity.ouro:
-        return 'Após 60 dias: Risco de câncer diminui drasticamente.';
+        return '15 dias com check-in positivo';
       case SmokingInsigniaEntity.diamante:
-        return 'Após 90 dias: Coração e vasos sanguíneos mais saudáveis.';
+        return '20 dias com check-in positivo';
       case SmokingInsigniaEntity.disciplinum:
-        return 'Após 120 dias: Seu corpo está praticamente livre dos danos do fumo!';
+        return '30 dias com check-in positivo';
     }
   }
 
@@ -143,23 +143,23 @@ extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
   String get nameBr {
     switch (this) {
       case SmokingInsigniaEntity.madeira:
-        return 'Sem Fumo Madeira';
+        return 'Madeira';
       case SmokingInsigniaEntity.ferro:
-        return 'Sem Fumo Ferro';
+        return 'Ferro';
       case SmokingInsigniaEntity.aluminio:
-        return 'Sem Fumo Alumínio';
+        return 'Alumínio';
       case SmokingInsigniaEntity.latao:
-        return 'Sem Fumo Latão';
+        return 'Latão';
       case SmokingInsigniaEntity.bronze:
-        return 'Sem Fumo Bronze';
+        return 'Bronze';
       case SmokingInsigniaEntity.prata:
-        return 'Sem Fumo Prata';
+        return 'Prata';
       case SmokingInsigniaEntity.ouro:
-        return 'Sem Fumo Ouro';
+        return 'Ouro';
       case SmokingInsigniaEntity.diamante:
-        return 'Sem Fumo Diamante';
+        return 'Diamante';
       case SmokingInsigniaEntity.disciplinum:
-        return 'Sem Fumo Disciplinum';
+        return 'Disciplinum';
     }
   }
 
