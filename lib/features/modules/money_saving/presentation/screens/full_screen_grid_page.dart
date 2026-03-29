@@ -37,6 +37,23 @@ class _FullScreenGridPageState extends ConsumerState<FullScreenGridPage> {
     super.dispose();
   }
 
+  Future<void> _loadChallengeData() async {
+    try {
+      final service = ref.read(moneySavingChallengeServiceProvider);
+      final updatedChallenge = service.getActiveChallenge();
+      
+      if (updatedChallenge != null && mounted) {
+        setState(() {
+          _currentChallenge = updatedChallenge;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Erro ao carregar dados: $e');
+      }
+    }
+  }
+
   Future<void> _toggleCell(int index) async {
     if (_isProcessing) return;
     if (!_currentChallenge.isActive) {
@@ -49,22 +66,24 @@ class _FullScreenGridPageState extends ConsumerState<FullScreenGridPage> {
 
     try {
       final service = ref.read(moneySavingChallengeServiceProvider);
-      final updated = await service.toggleCell(index);
-
-      if (mounted && updated != null) {
-        setState(() {
-          _currentChallenge = updated;
-          _isProcessing = false;
-        });
-
-        if (updated.isComplete) {
-          HapticFeedback.heavyImpact();
-          _confettiController.play();
-          SnackBarHelper.showSuccess(context, '🎉 Parabéns! Você completou o desafio!');
-        }
+      await service.toggleCell(_currentChallenge.id, index);
+      
+      // Recarrega os dados para obter o desafio atualizado
+      await _loadChallengeData();
+      
+      // Verifica se o desafio foi completado após a atualização
+      if (_currentChallenge.isComplete && mounted) {
+        HapticFeedback.heavyImpact();
+        _confettiController.play();
+        SnackBarHelper.showSuccess(context, '🎉 Parabéns! Você completou o desafio!');
       }
+      
+      setState(() => _isProcessing = false);
     } catch (e) {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        SnackBarHelper.showError(context, 'Erro ao marcar célula: $e');
+      }
     }
   }
 

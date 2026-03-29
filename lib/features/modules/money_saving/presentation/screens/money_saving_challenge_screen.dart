@@ -9,6 +9,7 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/full_screen_grid_page.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/notifiers/money_saving_gamification_notifier.dart';
 
 // Widgets importados
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_header_widget.dart';
@@ -65,7 +66,7 @@ class _MoneySavingChallengeScreenState
     setState(() => _isLoading = true);
     try {
       await _service.getChallenges();
-      await _service.getActiveChallenge(); // Retrieve active challenge here
+      _service.getActiveChallenge(); // Retrieve active challenge here
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -82,18 +83,20 @@ class _MoneySavingChallengeScreenState
   Future<void> _activateChallenge() async {
     if (_challenge == null) return;
 
-    // Atualiza status local e notifica gamification
+    // Atualiza status local e notifica gamificação
     final updated = _challenge!.copyWith(isActive: true);
     await _service.saveChallenge(updated);
 
     if (mounted) {
-      // Inicia ciclo de gamificação
-      final gamification = ref.read(gamificationServiceProvider);
-      gamification.startModuleCycle(nicheId: _niche.nicheId);
+      // Ativa módulo usando provider local
+      final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
+      await notifier.activateModule();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Desafio ativado! Boa sorte! 🚀')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Desafio ativado! Boa sorte! 🚀')),
+        );
+      }
     }
   }
 
@@ -110,12 +113,15 @@ class _MoneySavingChallengeScreenState
     if (confirmed == true) {
       if (!mounted) return;
 
-      // Para o ciclo da gamificação primeiro
-      final gamification = ref.read(gamificationServiceProvider);
-      await gamification.stopModuleCycle(nicheId: _niche.nicheId);
+      // Desativa módulo usando provider local
+      final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
+      await notifier.deactivateModule();
 
       // Deleta todos os desafios
       await _service.deleteAllChallenges();
+
+      // Cancela notificações específicas
+      await NotificationService.cancelNotification(7001);
 
       if (mounted) {
         setState(() {
@@ -128,30 +134,13 @@ class _MoneySavingChallengeScreenState
               curve: Curves.easeOutCubic);
         }
 
-        // Força atualização do estado da gamificação
-        await ref.read(gamificationServiceProvider).getModuleStatus(_niche.nicheId);
-
         setState(() {
           // _challenge será null automaticamente quando _service.activeChallenge for null
         });
 
-        // Reseta gamificação e notifica
-        gamification.resetMedals(
-          _niche.nicheId,
-          deactivate: true,
-          notificationTitle: 'Módulo Desativado 🛑',
-          notificationBody:
-              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Módulo desativado')),
         );
-
-        // Cancela notificações específicas
-        await NotificationService.cancelNotification(7001);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Módulo desativado')),
-          );
-        }
       }
     }
   }
@@ -363,14 +352,8 @@ class _MoneySavingChallengeScreenState
       await _loadChallenge();
 
       if (_service.challengesList.isEmpty && mounted) {
-        final gamification = ref.read(gamificationServiceProvider);
-        gamification.resetMedals(
-          _niche.nicheId,
-          deactivate: true,
-          notificationTitle: 'Módulo Desativado 🛑',
-          notificationBody:
-              'O último desafio foi excluído e o módulo foi desativado automaticamente.',
-        );
+        final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
+        await notifier.resetProgress();
       }
 
       if (mounted) {
@@ -392,15 +375,14 @@ class _MoneySavingChallengeScreenState
         onSave: (challenge) async {
           try {
             await _service.createChallenge(
-              id: challenge.id,
               title: challenge.title,
               targetAmount: challenge.targetAmount,
               periodValue: challenge.periodValue,
               periodType: challenge.periodType,
+              gridSize: challenge.gridSize,
               minValue: challenge.minValue,
               maxValue: challenge.maxValue,
               currency: challenge.currency,
-              isActive: challenge.isActive,
             );
 
             if (mounted) {
@@ -412,8 +394,8 @@ class _MoneySavingChallengeScreenState
 
               // --- ATIVAÇÃO DE GAMIFICAÇÃO NOVO DESAFIO ---
               if (editId == null) {
-                final gamification = ref.read(gamificationServiceProvider);
-                gamification.startModuleCycle(nicheId: _niche.nicheId);
+                final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
+                await notifier.activateModule();
               }
 
               // Vai para a aba do grid (agora via botão, mas podemos mudar para tab 1 se preferir)

@@ -5,6 +5,7 @@ import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
 import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FocusService {
@@ -133,10 +134,4 @@ class FocusService {
 
     await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
   }
-}
-
-class TimeOfDayRange {
-  final TimeOfDay start;
-  final TimeOfDay end;
-  TimeOfDayRange({required this.start, required this.end});
 }

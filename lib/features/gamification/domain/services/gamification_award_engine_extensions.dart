@@ -73,21 +73,7 @@ extension GamificationAwardEngineExtensions on GamificationAwardEngine {
     }
   }
   
-  /// Processa eventos do módulo BingeEating
-  Future<void> processBingeEatingEvent(String eventType, dynamic service) async {
-    switch (eventType) {
-      case 'resisted_craving':
-        LoggerService.instance.gamification('Desejo resistido com sucesso');
-        await _updateBingeEatingStats(service, 'resisted');
-        break;
-      case 'recovery_milestone':
-        LoggerService.instance.gamification('Marco de recuperação alcançado');
-        await _checkBingeEatingMilestones(service);
-        break;
-      default:
-        LoggerService.instance.gamification('Evento binge eating desconhecido: $eventType');
-    }
-  }
+  // Método processBingeEatingEvent movido para binge_eating_gamification_events.dart
 
   /// Processa eventos do módulo Spending
   Future<void> processSpendingEvent(String eventType, dynamic service) async {

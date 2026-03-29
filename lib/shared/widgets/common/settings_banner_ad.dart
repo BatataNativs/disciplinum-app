@@ -20,8 +20,8 @@ class _SettingsBannerAdState extends ConsumerState<SettingsBannerAd> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Carrega o anúncio se ainda não estiver carregado e o usuário não for AdFree
-    final iap = ref.read(iapServiceProvider);
-    if (!iap.isAdFree && _bannerAd == null) {
+    final iapNotifier = ref.read(iapServiceProvider.notifier);
+    if (!iapNotifier.isAdFree && _bannerAd == null) {
       _loadAd();
     }
   }
@@ -60,9 +60,9 @@ class _SettingsBannerAdState extends ConsumerState<SettingsBannerAd> {
 
   @override
   Widget build(BuildContext context) {
-    final iap = ref.watch(iapServiceProvider);
+    final iapNotifier = ref.watch(iapServiceProvider.notifier);
 
-    if (iap.isAdFree) {
+    if (iapNotifier.isAdFree) {
       return const SizedBox.shrink();
     }
 

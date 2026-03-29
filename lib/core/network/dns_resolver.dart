@@ -1,7 +1,8 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 
 /// Serviço para resolver problemas de DNS com múltiplas estratégias
 class DnsResolver {
@@ -19,11 +20,11 @@ class DnsResolver {
   final Map<String, List<InternetAddress>> _dnsCache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
 
-  /// Carrega cache persistente do SharedPreferences
+  /// Carrega cache persistente do IsarPreferencesRepository
   Future<void> _loadPersistedCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cacheJson = prefs.getString(_cacheKey);
+      final prefs = IsarPreferencesRepository(IsarService.instance.database);
+      final cacheJson = await prefs.getString(_cacheKey);
       if (cacheJson != null) {
         final cacheData = jsonDecode(cacheJson) as Map<String, dynamic>;
         for (final entry in cacheData.entries) {
@@ -44,10 +45,10 @@ class DnsResolver {
     }
   }
 
-  /// Salva cache persistente no SharedPreferences
+  /// Salva cache persistente no IsarPreferencesRepository
   Future<void> _savePersistedCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = IsarPreferencesRepository(IsarService.instance.database);
       final cacheData = <String, dynamic>{};
       
       for (final entry in _dnsCache.entries) {

@@ -72,12 +72,8 @@ class DeactivateModuleDialog extends ConsumerWidget {
         ElevatedButton(
           onPressed: () async {
             Navigator.of(context).pop();
-            await ref.read(gamificationServiceProvider).resetMedals(
-              nicheId,
-              notificationTitle: '${niche.name}: Módulo Desativado',
-              notificationBody: 'Seu progresso foi reiniciado.',
-              iconPath: niche.iconPath,
-              deactivate: true,
+            ref.read(gamificationServiceProvider.notifier).resetMedals(
+              nicheId.id,
             );
             onDeactivated?.call();
           },
@@ -191,12 +187,8 @@ class _DeactivateModuleDialogWithService extends StatelessWidget {
         ElevatedButton(
           onPressed: () async {
             Navigator.of(context).pop();
-            await gamificationService.resetMedals(
-              nicheId,
-              notificationTitle: '${niche.name}: Módulo Desativado',
-              notificationBody: 'Seu progresso foi reiniciado.',
-              iconPath: niche.iconPath,
-              deactivate: true,
+            gamificationService.resetMedals(
+              nicheId.id,
             );
           },
           style: ElevatedButton.styleFrom(

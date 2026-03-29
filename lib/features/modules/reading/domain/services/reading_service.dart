@@ -1,400 +1,38 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
-import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
-import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
+import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
+import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
+import 'package:disciplinum/features/modules/reading/gamification/data/repositories/reading_gamification_repository.dart';
+import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 
-class ReadingService extends ChangeNotifier {
-  static const String _moduleId = 'reading';
-  static const String _localKey = 'reading_data';
-  static const String _streakKey = 'reading_streak_data';
+/// Serviço principal para gerenciamento de leitura - VERSÃO RIVERPOD
+class ReadingService {
+  final ReadingRepository _repository;
+  final ReadingGamificationRepository _gamificationRepository;
+  final dynamic _gamificationService; // Tipo dinâmico para evitar dependência circular
+  late final IsarPreferencesRepository _prefs;
 
-  final IsarPreferencesRepository _prefs;
-  final GamificationService _gamificationService;
-  final SupabaseClient _supabase = Supabase.instance.client;
+  List<ReadingBook> _books = [];
+  int _currentStreak = 0;
+  DateTime? _lastReadingDate;
+  ReadingGamificationEntity? _gamificationEntity;
 
-  ReadingService(this._prefs, this._gamificationService) {
+  ReadingService(this._repository, this._gamificationRepository, [this._gamificationService]) {
+    _prefs = IsarPreferencesRepository(IsarService.instance.database);
     _loadData();
   }
 
-  // Lista de livros
-  List<ReadingBook> _books = [];
+  // GETTERS
   List<ReadingBook> get books => List.unmodifiable(_books);
-
-  // Gamificação Específica do Módulo
-  int _currentStreak = 0;
-  DateTime? _lastReadingDate;
   int get currentStreak => _currentStreak;
-
-  // Medalhas conquistadas (apenas para exibição local ou envio para GamificationService)
-  bool hasBronze = false;
-  bool hasSilver = false;
-  bool hasGold = false;
-  bool hasDiamond = false;
-
-  Future<void> _loadData() async {
-    // 1. Carregar Livros
-    final String? data = await _prefs.getString(_localKey);
-    if (data != null) {
-      try {
-        final List<dynamic> decoded = jsonDecode(data);
-        _books = decoded.map((e) => ReadingBook.fromJson(e)).toList();
-      } catch (e) {
-        LoggerService.instance.e('Erro ao carregar livros', error: e);
-      }
-    }
-
-    // 2. Carregar Gamificação (Streak)
-    final String? streakData = await _prefs.getString(_streakKey);
-    if (streakData != null) {
-      try {
-        final Map<String, dynamic> decoded = jsonDecode(streakData);
-        _currentStreak = decoded['streak'] ?? 0;
-        _lastReadingDate = decoded['last_reading_date'] != null
-            ? DateTime.parse(decoded['last_reading_date'])
-            : null;
-        hasBronze = decoded['has_bronze'] ?? false;
-        hasSilver = decoded['has_silver'] ?? false;
-        hasGold = decoded['has_gold'] ?? false;
-        hasDiamond = decoded['has_diamond'] ?? false;
-
-        // Verifica se quebrou o streak ao carregar
-        _validateStreakOnLoad();
-      } catch (e) {
-        LoggerService.instance.e('Erro ao carregar streak de leitura', error: e);
-      }
-    }
-
-    // notifyListeners(); // Removido - ReadingService não estende ChangeNotifier
-    _syncWithCloud();
-  }
-
-  Future<void> _validateStreakOnLoad() async {
-    if (_lastReadingDate == null) return;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final last = DateTime(
-        _lastReadingDate!.year, _lastReadingDate!.month, _lastReadingDate!.day);
-
-    final difference = today.difference(last).inDays;
-
-    // Se a diferença for maior que 1 (ontem), perdeu o streak
-    // Ex: Leu dia 1, hoje é dia 3. Diferença = 2. Perdeu.
-    // Ex: Leu dia 1, hoje é dia 2. Diferença = 1. Mantém (ainda não leu hoje).
-    // Ex: Leu dia 1, hoje é dia 1. Diferença = 0. Mantém.
-    if (difference > 1) {
-      _currentStreak = 0;
-      await _saveStreakData();
-      notifyListeners();
-    }
-  }
-
-  Future<void> _saveAllLocal() async {
-    // Livros
-    final encoded = jsonEncode(_books.map((b) => b.toJson()).toList());
-    await _prefs.setString(_localKey, encoded);
-
-    // Streak
-    await _saveStreakData();
-
-    // Cloud Sync (fire and forget)
-    _syncToCloud();
-  }
-
-  Future<void> _saveStreakData() async {
-    final data = {
-      'streak': _currentStreak,
-      'last_reading_date': _lastReadingDate?.toIso8601String(),
-      'has_bronze': hasBronze,
-      'has_silver': hasSilver,
-      'has_gold': hasGold,
-      'has_diamond': hasDiamond,
-    };
-    await _prefs.setString(_streakKey, jsonEncode(data));
-  }
-
-  Future<void> _syncToCloud() async {
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final cloudData = {
-        'books': _books.map((b) => b.toJson()).toList(),
-        'streak_data': {
-          'streak': _currentStreak,
-          'last_reading_date': _lastReadingDate?.toIso8601String(),
-          'has_bronze': hasBronze,
-          'has_silver': hasSilver,
-          'has_gold': hasGold,
-          'has_diamond': hasDiamond,
-        }
-      };
-
-      await _supabase.from('user_module_settings').upsert({
-        'user_id': userId,
-        'module_id': _moduleId,
-        'module_data': cloudData,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id, module_id');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar leitura na nuvem', error: e);
-    }
-  }
-
-  Future<void> _syncWithCloud() async {
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final response = await _supabase
-          .from('user_module_settings')
-          .select()
-          .eq('user_id', userId)
-          .eq('module_id', _moduleId)
-          .maybeSingle();
-
-      if (response != null && response['module_data'] != null) {
-        final cloudJson = response['module_data'];
-        final Map<String, dynamic> decoded =
-            cloudJson is String ? jsonDecode(cloudJson) : cloudJson;
-
-        if (decoded['books'] != null) {
-          _books = (decoded['books'] as List)
-              .map((e) => ReadingBook.fromJson(e))
-              .toList();
-        }
-
-        if (decoded['streak_data'] != null) {
-          final s = decoded['streak_data'];
-          _currentStreak = s['streak'] ?? 0;
-          _lastReadingDate = s['last_reading_date'] != null
-              ? DateTime.parse(s['last_reading_date'])
-              : null;
-          hasBronze = s['has_bronze'] ?? false;
-          hasSilver = s['has_silver'] ?? false;
-          hasGold = s['has_gold'] ?? false;
-          hasDiamond = s['has_diamond'] ?? false;
-        }
-
-        // Salvar localmente para manter sincronia
-        final encoded = jsonEncode(_books.map((b) => b.toJson()).toList());
-        await _prefs.setString(_localKey, encoded);
-        await _saveStreakData();
-        notifyListeners();
-      }
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar leitura (load)', error: e);
-    }
-  }
-
-  // ===========================================
-  // MÉTODOS DE AÇÃO
-  // ===========================================
-
-  Future<void> addBook({
-    required String title,
-    required int totalPages,
-    required ReadingTheme theme,
-    String? author,
-  }) async {
-    final book = ReadingBook(
-      id: const Uuid().v4(),
-      title: title,
-      totalPages: totalPages,
-      theme: theme,
-      author: author,
-      createdAt: DateTime.now(),
-    );
-    _books.add(book);
-    await _saveAllLocal();
-    notifyListeners();
-  }
-
-  Future<void> updateProgress(String bookId, int newPageCount) async {
-    final index = _books.indexWhere((b) => b.id == bookId);
-    if (index == -1) return;
-
-    final book = _books[index];
-    if (newPageCount < 0) return;
-    // Permite "corrigir" para menos, mas o log registrará a posição absoluta.
-
-    final newLog = ReadingLog(
-      date: DateTime.now(),
-      pageNumber: newPageCount,
-    );
-
-    final updatedLogs = List<ReadingLog>.from(book.logs)..add(newLog);
-
-    // Verifica conclusão
-    DateTime? completedAt = book.completedAt;
-    if (newPageCount >= book.totalPages && !book.isCompleted) {
-      completedAt = DateTime.now();
-    } else if (newPageCount < book.totalPages) {
-      completedAt = null; // Reabriu o livro
-    }
-
-    _books[index] = book.copyWith(
-      currentPage: newPageCount,
-      logs: updatedLogs,
-      completedAt: completedAt,
-    );
-
-    // Atualiza Streak se houve progresso positivo (simulação simples: qualquer update conta como atividade se for no dia)
-    // Para ser rigoroso: só conta se newPageCount > anterior.
-    if (newPageCount > book.currentPage || newPageCount <= book.totalPages) {
-      // Assume que interagiu com o livro
-      await _updateStreak();
-    }
-
-    await _saveAllLocal();
-    notifyListeners();
-  }
-
-  Future<void> deleteBook(String bookId) async {
-    _books.removeWhere((b) => b.id == bookId);
-    await _saveAllLocal();
-    notifyListeners();
-  }
-
-  Future<void> updateBook({
-    required String bookId,
-    required String title,
-    String? author,
-    required int totalPages,
-    required ReadingTheme theme,
-  }) async {
-    final index = _books.indexWhere((b) => b.id == bookId);
-    if (index != -1) {
-      _books[index] = _books[index].copyWith(
-        title: title,
-        author: author,
-        totalPages: totalPages,
-        theme: theme,
-      );
-      await _saveAllLocal();
-      notifyListeners();
-    }
-  }
-
-  Future<void> _updateStreak() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    if (_lastReadingDate == null) {
-      // Primeira vez
-      _currentStreak = 1;
-      _lastReadingDate = now;
-    } else {
-      final last = DateTime(_lastReadingDate!.year, _lastReadingDate!.month,
-          _lastReadingDate!.day);
-
-      final diff = today.difference(last).inDays;
-
-      if (diff == 0) {
-        // Já leu hoje, não muda o streak
-        _lastReadingDate = now; // Atualiza timestamp para log
-      } else if (diff == 1) {
-        // Leu ontem, incrementa!
-        _currentStreak++;
-        _lastReadingDate = now;
-        await _checkMedals();
-      } else {
-        // Quebrou o streak (maior que 1 dia)
-        _currentStreak = 1; // Reinicia hoje
-        _lastReadingDate = now;
-      }
-    }
-
-    await _saveStreakData();
-    notifyListeners();
-  }
-
-  Future<void> _checkMedals() async {
-    // 3, 5, 7, 10
-    if (_currentStreak >= 3 && !hasBronze) {
-      hasBronze = true;
-      _gamificationService
-          .awardMedal(NicheId.reading, GamificationMedal.bronze);
-    }
-    if (_currentStreak >= 5 && !hasSilver) {
-      hasSilver = true;
-      _gamificationService
-          .awardMedal(NicheId.reading, GamificationMedal.prata);
-    }
-    if (_currentStreak >= 7 && !hasGold) {
-      hasGold = true;
-      _gamificationService
-          .awardMedal(NicheId.reading, GamificationMedal.ouro);
-    }
-    if (_currentStreak >= 10 && !hasDiamond) {
-      hasDiamond = true;
-      _gamificationService
-          .awardMedal(NicheId.reading, GamificationMedal.diamante);
-    }
-    await _saveStreakData();
-    notifyListeners();
-  }
-
-  // ===========================================
-  // NOTIFICAÇÕES
-  // ===========================================
-
-  Future<TimeOfDay?> getSavedNotificationTime() async {
-    final h = await _prefs.getInt('reading_notification_hour');
-    final m = await _prefs.getInt('reading_notification_minute');
-    if (h != null && m != null) {
-      return TimeOfDay(hour: h, minute: m);
-    }
-    return null;
-  }
-
-  Future<void> scheduleDailyReminder(TimeOfDay time) async {
-    // Salvar preferência
-    await _prefs.setInt('reading_notification_hour', time.hour);
-    await _prefs.setInt('reading_notification_minute', time.minute);
-
-    // ID base para leitura: 9000
-
-    await NotificationService.scheduleDailyNotification(
-      id: 9000,
-      time: time,
-      title: 'Hora da leitura diária! 📚',
-      body: 'Vamos viajar mais um pouco no mundo dos livros?',
-      payload: 'reading',
-      actions: [
-        const AndroidNotificationAction(
-          'reading_log',
-          'Inserir progresso',
-          showsUserInterface: true,
-          cancelNotification: true,
-        ),
-        const AndroidNotificationAction(
-          'reading_skip',
-          'Não vou ler hoje',
-          showsUserInterface: true,
-          cancelNotification: true,
-        ),
-      ],
-    );
-  }
-
-  Future<void> cancelDailyReminder() async {
-    await _prefs.remove('reading_notification_hour');
-    await _prefs.remove('reading_notification_minute');
-    await NotificationService.cancelNotification(9000);
-    notifyListeners();
-  }
-  // ===========================================
-  // ESTATÍSTICAS
-  // ===========================================
+  DateTime? get lastReadingDate => _lastReadingDate;
 
   List<ReadingBook> get completedBooks =>
       _books.where((b) => b.isCompleted).toList();
@@ -403,7 +41,6 @@ class ReadingService extends ChangeNotifier {
     final completed = completedBooks;
     if (completed.isEmpty) return null;
     completed.sort((a, b) {
-      // Ordena decrescente por data de conclusão
       final dateA = a.completedAt ?? a.createdAt;
       final dateB = b.completedAt ?? b.createdAt;
       return dateB.compareTo(dateA);
@@ -411,83 +48,228 @@ class ReadingService extends ChangeNotifier {
     return completed.first;
   }
 
-  /// Retorna um Map com os últimos 7 dias e a quantidade de páginas lidas em cada um.
-  /// Chave: DateTime (apenas data, sem hora)
-  /// Valor: Total de páginas lidas naquele dia (somando todos os livros)
-  Map<DateTime, int> getWeeklyReadPages() {
-    final Map<DateTime, int> dailyPages = {};
+  // MÉTODOS DE AÇÃO
+  Future<void> addBook({
+    required String title,
+    required int totalPages,
+    required ReadingTheme theme,
+    String? author,
+  }) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+    final entity = ReadingBookEntity.create(
+      userId: userId,
+      title: title,
+      author: author ?? '',
+      totalPages: totalPages,
+      theme: theme,
+    );
+    
+    await _repository.saveBook(entity);
+    await _loadBooks();
+  }
+
+  Future<void> updateProgress(String bookId, int newPageCount) async {
+    final id = int.tryParse(bookId);
+    if (id == null) return;
+
+    final entity = await _repository.getBook(id);
+    if (entity == null) return;
+
+    final updatedEntity = entity.updateProgress(newPageCount);
+    
+    // Atualiza logs no additionalData
+    final List<dynamic> currentLogs = entity.additionalData != null 
+        ? jsonDecode(entity.additionalData!)['logs'] ?? []
+        : [];
+    
+    currentLogs.add({
+      'timestamp': DateTime.now().toIso8601String(),
+      'pageNumber': newPageCount,
+    });
+
+    final finalEntity = updatedEntity.copyWith(
+      additionalData: jsonEncode({'logs': currentLogs}),
+      isCompleted: newPageCount >= entity.totalPages,
+      completedDate: (newPageCount >= entity.totalPages && !entity.isCompleted) 
+          ? DateTime.now() 
+          : (newPageCount < entity.totalPages ? null : entity.completedDate),
+    );
+
+    await _repository.saveBook(finalEntity);
+    
+    // Atualiza Streak se houve progresso positivo
+    await _updateStreak();
+
+    await _loadBooks();
+  }
+
+  Future<void> updateBook({
+    required String bookId,
+    required String title,
+    String? author,
+    int? currentPage,
+    int? totalPages,
+    ReadingTheme? theme,
+  }) async {
+    final id = int.tryParse(bookId);
+    if (id == null) return;
+
+    final entity = await _repository.getBook(id);
+    if (entity == null) return;
+
+    final updatedEntity = entity.copyWith(
+      title: title,
+      author: author ?? entity.author,
+      currentPage: currentPage ?? entity.currentPage,
+      totalPages: totalPages ?? entity.totalPages,
+      theme: theme ?? entity.theme,
+      updatedAt: DateTime.now(),
+    );
+
+    await _repository.saveBook(updatedEntity);
+    await _loadBooks();
+  }
+
+  Future<void> deleteBook(String bookId) async {
+    final id = int.tryParse(bookId);
+    if (id == null) return;
+    
+    await _repository.deleteBook(id);
+    await _loadBooks();
+  }
+
+  // MÉTODOS PRIVADOS
+  Future<void> _loadData() async {
+    await _loadBooks();
+    await _loadStreak();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      final entities = await _repository.getBooks(userId);
+      _books = entities.map((e) {
+        final List<ReadingLog> logs = [];
+        if (e.additionalData != null) {
+          try {
+            final data = jsonDecode(e.additionalData!);
+            final List<dynamic> logData = data['logs'] ?? [];
+            logs.addAll(logData.map((l) => ReadingLog.fromJson(l)).toList());
+          } catch (_) {}
+        }
+
+        return ReadingBook(
+          id: e.id.toString(),
+          title: e.title,
+          author: e.author,
+          totalPages: e.totalPages,
+          currentPage: e.currentPage,
+          theme: e.theme,
+          createdAt: e.createdAt,
+          completedAt: e.completedDate,
+          logs: logs,
+        );
+      }).toList();
+    } catch (e) {
+      LoggerService.instance.e('Erro ao carregar livros: $e');
+    }
+  }
+
+  Future<void> _loadStreak() async {
+    try {
+      final entity = await _gamificationRepository.getReadingState();
+      if (entity != null) {
+        _gamificationEntity = entity;
+        _currentStreak = entity.consecutiveDays;
+        _lastReadingDate = entity.lastReadingDate;
+      } else {
+        _gamificationEntity = ReadingGamificationEntity();
+        _currentStreak = 0;
+        _lastReadingDate = null;
+      }
+      
+      // Sincroniza com o GamificationService global para exibição em medalhas etc
+      _syncToGlobalGamification();
+    } catch (e) {
+      LoggerService.instance.e('Erro ao carregar streak de leitura: $e');
+    }
+  }
+
+  Future<void> _updateStreak() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // Inicializa os últimos 7 dias com 0
-    for (int i = 6; i >= 0; i--) {
-      final date = today.subtract(Duration(days: i));
-      dailyPages[date] = 0;
-    }
+    _gamificationEntity ??= ReadingGamificationEntity()..startDate = today;
 
-    for (final book in _books) {
-      // Ordena logs por data
-      final sortedLogs = List<ReadingLog>.from(book.logs)
-        ..sort((a, b) => a.date.compareTo(b.date));
+    if (_lastReadingDate == null) {
+      _currentStreak = 1;
+      _lastReadingDate = today;
+    } else {
+      final lastDate = DateTime(
+        _lastReadingDate!.year,
+        _lastReadingDate!.month,
+        _lastReadingDate!.day,
+      );
 
-      if (sortedLogs.isEmpty) continue;
+      final difference = today.difference(lastDate).inDays;
 
-      // Para cada dia do gráfico, calcula o progresso
-      // Progresso no dia D = (Páginas no final de D) - (Páginas no final de D-1)
-      for (final date in dailyPages.keys) {
-        final logsUntilToday = sortedLogs.where((l) {
-          final lDate = DateTime(l.date.year, l.date.month, l.date.day);
-          return lDate.isAtSameMomentAs(date) || lDate.isBefore(date);
-        }).toList();
-
-        final logsBeforeToday = sortedLogs.where((l) {
-          final lDate = DateTime(l.date.year, l.date.month, l.date.day);
-          return lDate.isBefore(date);
-        }).toList();
-
-        int pagesToday = 0;
-        if (logsUntilToday.isNotEmpty) {
-          pagesToday = logsUntilToday.last.pageNumber;
-        }
-
-        int pagesBefore = 0;
-        if (logsBeforeToday.isNotEmpty) {
-          pagesBefore = logsBeforeToday.last.pageNumber;
-        }
-
-        final delta = pagesToday - pagesBefore;
-        if (delta > 0) {
-          dailyPages[date] = (dailyPages[date] ?? 0) + delta;
-        }
+      if (difference == 0) {
+        return;
+      } else if (difference == 1) {
+        _currentStreak++;
+      } else {
+        _currentStreak = 1;
       }
+
+      _lastReadingDate = today;
     }
 
-    return dailyPages;
+    _gamificationEntity!.consecutiveDays = _currentStreak;
+    _gamificationEntity!.lastReadingDate = _lastReadingDate;
+    _gamificationEntity!.touch();
+
+    await _gamificationRepository.saveReadingState(_gamificationEntity!);
+    
+    _syncToGlobalGamification();
   }
 
-  /// Retorna estatísticas de temas.
-  /// Lista de Maps: {'theme': ReadingTheme, 'count': int, 'percent': double}
-  List<Map<String, dynamic>> getThemeStats() {
-    if (_books.isEmpty) return [];
-
-    final total = _books.length;
-    final Map<ReadingTheme, int> counts = {};
-
-    for (final book in _books) {
-      counts[book.theme] = (counts[book.theme] ?? 0) + 1;
+  void _syncToGlobalGamification() {
+    if (_gamificationService != null) {
+      _gamificationService.updateConsecutiveDaysSync(NicheId.reading.id, _currentStreak);
     }
+  }
 
-    final stats = counts.entries.map((e) {
-      return {
-        'theme': e.key,
-        'count': e.value,
-        'percent': e.value / total,
-      };
-    }).toList();
+  /// Obtém o horário de notificação salvo
+  Future<TimeOfDay> getSavedNotificationTime() async {
+    // Implementado usando IsarPreferencesRepository
+    final hour = await _prefs.getInt('reading_notification_hour') ?? 20;
+    final minute = await _prefs.getInt('reading_notification_minute') ?? 0;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
 
-    // Ordena do mais frequente para o menos frequente
-    stats.sort((a, b) => (b['count'] as int).compareTo(a['count'] as int));
+  /// Agenda lembrete diário
+  Future<void> scheduleDailyReminder(TimeOfDay time) async {
+    // Implementado usando NotificationService
+    await NotificationService.scheduleDailyNotification(
+      id: 3001, // ID único para reading
+      time: time,
+      body: 'Hora da sua leitura diária! 📚',
+      title: 'Lembrete de Leitura',
+      payload: 'reading_reminder',
+    );
+    
+    // Salva o horário configurado
+    await _prefs.setInt('reading_notification_hour', time.hour);
+    await _prefs.setInt('reading_notification_minute', time.minute);
+    
+    final timeString = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    LoggerService.instance.i('Daily reminder scheduled for $timeString');
+  }
 
-    return stats;
+  /// Cancela lembrete diário
+  Future<void> cancelDailyReminder() async {
+    // Implementado usando NotificationService
+    await NotificationService.cancelNotification(3001);
+    LoggerService.instance.i('Daily reminder cancelled');
   }
 }

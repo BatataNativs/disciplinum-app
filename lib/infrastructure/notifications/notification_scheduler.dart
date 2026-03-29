@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 class NotificationScheduler {
@@ -23,10 +22,15 @@ class NotificationScheduler {
     LoggerService.instance.d('📅 Configurando alarmes nativos para: ${nicheId.name}');
 
     // 1. Agendar Check-ins
-    final checkIns = service.scheduleByModule[nicheId];
+    final checkIns = service.scheduleByModule[nicheId.id];
     if (checkIns != null) {
       for (int i = 0; i < checkIns.length; i++) {
-        final time = checkIns[i];
+        final timeStr = checkIns[i];
+        final timeParts = timeStr.split(':');
+        final time = TimeOfDay(
+          hour: int.parse(timeParts[0]),
+          minute: int.parse(timeParts[1]),
+        );
         final notifId = (nicheId.id * 1000) + 100 + i;
         final niche = NicheRepository.getById(nicheId);
 
@@ -80,8 +84,6 @@ class NotificationScheduler {
 
         TimeOfDay finalTime = time;
         if (nicheId == NicheId.diet) {
-          final timeStr =
-              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
           payload = 'diet_meal_$timeStr';
           actions = [
             const AndroidNotificationAction('DIET_SIM', 'Fiz/Farei refeição',
@@ -101,8 +103,6 @@ class NotificationScheduler {
         }
 
         if (nicheId == NicheId.reading) {
-          final timeStr =
-              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
           payload = 'reading_reminder_$timeStr';
           body =
               '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?';
@@ -120,17 +120,22 @@ class NotificationScheduler {
     }
 
     // 2. Agendar Motivações (Frases)
-    final motivations = service.motivationSchedulesByModule[nicheId];
+    final motivations = service.motivationSchedulesByModule[nicheId.id];
     if (motivations != null && motivations.isNotEmpty) {
       for (int i = 0; i < motivations.length; i++) {
-        final time = motivations[i];
+        final motTimeStr = motivations[i];
+        final motParts = motTimeStr.split(':');
+        final motTime = TimeOfDay(
+          hour: int.parse(motParts[0]),
+          minute: int.parse(motParts[1]),
+        );
         final notifId = (nicheId.id * 1000) + 500 + i;
         final niche = NicheRepository.getById(nicheId);
         final phrase = GamificationMessages.getMotivationalPhrase(
-          nicheId,
-          time,
+          nicheId.id,
+          timeStr: motTimeStr,
           isUnlocked: iapService.isMotivationPhrasesUnlocked ||
-              service.isMotivationUnlocked(nicheId),
+              service.isMotivationUnlocked(nicheId.id),
           motivationSchedules: service.motivationSchedulesByModule,
           customPhrases: service.customPhrases,
           customMessages: service.customMessages,
@@ -138,7 +143,7 @@ class NotificationScheduler {
 
         await NotificationService.scheduleDailyNotification(
           id: notifId,
-          time: time,
+          time: motTime,
           title: 'Disciplinum: ${niche.name}',
           body: phrase,
         );
@@ -154,10 +159,14 @@ class NotificationScheduler {
   Future<void> scheduleChallengeNotification(
       GamificationService service, IapService iapService) async {
     try {
-      final challenge =
-          await MoneySavingChallengeService(
-            IsarPreferencesRepository(IsarService.instance.database)
-          ).getActiveChallenge();
+      // Dependency injection via ProviderContainer
+      // Note: Since NotificationScheduler is a singleton, we need to create a container
+      final container = ProviderContainer();
+      final challengeService = container.read(moneySavingChallengeServiceProvider);
+      
+      await challengeService.getChallenges();
+      final challenge = challengeService.activeChallenge;
+      
       if (challenge == null || challenge.notifFrequency == 'disabled') {
         await NotificationService.cancelNotification(7001);
         return;

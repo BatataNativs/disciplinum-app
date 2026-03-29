@@ -1,5 +1,5 @@
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
-import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
+import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +26,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final readingAdapter = ref.watch(readingServiceAdapterProvider);
+    final readingService = ref.watch(readingServiceProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -77,7 +77,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
         body: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
-              final vm = _ReadingStatsVm.fromAdapter(readingAdapter);
+              final vm = _ReadingStatsVm.fromService(readingService);
               return _buildModernStatsContent(context, vm, isDark);
             },
           ),
@@ -628,9 +628,9 @@ class _ReadingStatsVm {
     required this.themeStats,
   });
 
-  factory _ReadingStatsVm.fromAdapter(ReadingServiceAdapter adapter) {
+  factory _ReadingStatsVm.fromService(ReadingService service) {
     // Usar dados reais do ReadingService
-    final books = adapter.getActiveBooks();
+    final books = service.books;
     final totalBooks = books.length;
     final completedBooks = books.where((b) => b.isCompleted).length;
     final totalPages = books.fold<int>(0, (sum, book) => sum + book.totalPages);

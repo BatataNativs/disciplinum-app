@@ -11,7 +11,7 @@ class MyProgressBingeEating extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
     final dias =
-        gamification.diasConsecutivosByModule[NicheId.bingeEating] ?? 0;
+        gamification.diasConsecutivosByModule[NicheId.bingeEating.id] ?? 0;
 
     return _BingeEatingProgressDetailScreen(
       title: 'Compulsão alimentar',

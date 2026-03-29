@@ -1,8 +1,5 @@
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
-
-/// Entidade de insígnias específicas do módulo Focus
-/// Extende o enum base com funcionalidades específicas do módulo
-enum FocusInsigniaEntity {
+/// Insígnias do módulo Focus - 100% independente
+enum FocusInsignia {
   madeira,
   ferro,
   aluminio,
@@ -14,58 +11,109 @@ enum FocusInsigniaEntity {
   disciplinum
 }
 
-extension FocusInsigniaEntityExtension on FocusInsigniaEntity {
-  /// Converte para o enum base do sistema
-  FocusInsignia toBaseInsignia() {
+extension FocusInsigniaExtension on FocusInsignia {
+  String get nameBr {
     switch (this) {
-      case FocusInsigniaEntity.madeira:
-        return FocusInsignia.madeira;
-      case FocusInsigniaEntity.ferro:
-        return FocusInsignia.ferro;
-      case FocusInsigniaEntity.aluminio:
-        return FocusInsignia.aluminio;
-      case FocusInsigniaEntity.latao:
-        return FocusInsignia.latao;
-      case FocusInsigniaEntity.bronze:
-        return FocusInsignia.bronze;
-      case FocusInsigniaEntity.prata:
-        return FocusInsignia.prata;
-      case FocusInsigniaEntity.ouro:
-        return FocusInsignia.ouro;
-      case FocusInsigniaEntity.diamante:
-        return FocusInsignia.diamante;
-      case FocusInsigniaEntity.disciplinum:
-        return FocusInsignia.disciplinum;
+      case FocusInsignia.madeira:
+        return 'Focado Madeira';
+      case FocusInsignia.ferro:
+        return 'Focado Ferro';
+      case FocusInsignia.aluminio:
+        return 'Focado Alumínio';
+      case FocusInsignia.latao:
+        return 'Focado Latão';
+      case FocusInsignia.bronze:
+        return 'Focado Bronze';
+      case FocusInsignia.prata:
+        return 'Focado Prata';
+      case FocusInsignia.ouro:
+        return 'Focado Ouro';
+      case FocusInsignia.diamante:
+        return 'Focado Diamante';
+      case FocusInsignia.disciplinum:
+        return 'Focado Disciplinum';
     }
   }
 
-  /// Verifica se esta é a insígnia Disciplinum
-  bool get isDisciplinum => this == FocusInsigniaEntity.disciplinum;
-
-  /// Verifica se esta é a insígnia inicial (Madeira)
-  bool get isInitial => this == FocusInsigniaEntity.madeira;
-
-  /// Obtém o progresso percentual até esta insígnia
-  double get progressPercentage {
+  String get asset {
+    const prefix = 'assets/gamification/insignias/focus/';
     switch (this) {
-      case FocusInsigniaEntity.madeira:
-        return 0.0;
-      case FocusInsigniaEntity.ferro:
-        return 10.0;
-      case FocusInsigniaEntity.aluminio:
-        return 20.0;
-      case FocusInsigniaEntity.latao:
-        return 30.0;
-      case FocusInsigniaEntity.bronze:
-        return 40.0;
-      case FocusInsigniaEntity.prata:
-        return 50.0;
-      case FocusInsigniaEntity.ouro:
-        return 60.0;
-      case FocusInsigniaEntity.diamante:
-        return 90.0;
-      case FocusInsigniaEntity.disciplinum:
-        return 100.0;
+      case FocusInsignia.madeira:
+        return '${prefix}madeira.png';
+      case FocusInsignia.ferro:
+        return '${prefix}ferro.png';
+      case FocusInsignia.aluminio:
+        return '${prefix}aluminio.png';
+      case FocusInsignia.latao:
+        return '${prefix}latao.png';
+      case FocusInsignia.bronze:
+        return '${prefix}bronze.png';
+      case FocusInsignia.prata:
+        return '${prefix}prata.png';
+      case FocusInsignia.ouro:
+        return '${prefix}ouro.png';
+      case FocusInsignia.diamante:
+        return '${prefix}diamante.png';
+      case FocusInsignia.disciplinum:
+        return '${prefix}disciplinum.png';
     }
+  }
+
+  int get requiredPeriods {
+    switch (this) {
+      case FocusInsignia.madeira:
+        return 0; // Ganha ao configurar e ativar o módulo
+      case FocusInsignia.ferro:
+        return 1;
+      case FocusInsignia.aluminio:
+        return 2;
+      case FocusInsignia.latao:
+        return 3;
+      case FocusInsignia.bronze:
+        return 4;
+      case FocusInsignia.prata:
+        return 5;
+      case FocusInsignia.ouro:
+        return 6;
+      case FocusInsignia.diamante:
+        return 9;
+      case FocusInsignia.disciplinum:
+        return 10;
+    }
+  }
+
+  String get requirementDescription {
+    switch (this) {
+      case FocusInsignia.madeira:
+        return 'Ative o módulo de Foco';
+      case FocusInsignia.ferro:
+        return '1 período de foco respeitado';
+      case FocusInsignia.aluminio:
+        return '2 períodos de foco respeitados';
+      case FocusInsignia.latao:
+        return '3 períodos de foco respeitados';
+      case FocusInsignia.bronze:
+        return '4 períodos de foco respeitados';
+      case FocusInsignia.prata:
+        return '5 períodos de foco respeitados';
+      case FocusInsignia.ouro:
+        return '6 períodos de foco respeitados';
+      case FocusInsignia.diamante:
+        return '9 períodos de foco respeitados';
+      case FocusInsignia.disciplinum:
+        return '10 períodos de foco respeitados';
+    }
+  }
+
+  String get name => nameBr;
+  String get description => requirementDescription;
+  String get icon => asset;
+
+  /// Calcula o progresso percentual (0.0 a 1.0) para esta insígnia
+  /// baseada nos períodos respeitados
+  double calculateProgress(int respected) {
+    if (respected <= 0 && this == FocusInsignia.madeira) return 1.0;
+    if (requiredPeriods == 0) return 1.0;
+    return (respected / requiredPeriods).clamp(0.0, 1.0);
   }
 }

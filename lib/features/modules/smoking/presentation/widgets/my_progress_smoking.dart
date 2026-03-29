@@ -11,7 +11,7 @@ class MyProgressSmoking extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
     final authService = ref.watch(authServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.smoking] ?? 0;
+    final dias = gamification.diasConsecutivosByModule[NicheId.smoking.id] ?? 0;
 
     // Lógica para obter o primeiro nome
     String fullName = authService.userProfile?['name'] ?? 'Usuário';

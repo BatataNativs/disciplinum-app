@@ -41,32 +41,42 @@ final moneySavingMedalhasProvider = FutureProvider<List<String>>((ref) async {
 
 /// Provider para o streak do Money Saving
 final moneySavingStreakProvider = Provider<int>((ref) {
-  final service = ref.read(moneySavingGamificationProvider);
-  return service.consecutiveDays;
+  final currentState = ref.watch(moneySavingGamificationStateProvider);
+  return currentState.maybeWhen(
+    data: (state) => (state['currentStreak'] as int? ?? 0),
+    orElse: () => 0,
+  );
 });
 
 /// Provider para o valor total acumulado
 final moneySavingTotalProvider = Provider<double>((ref) {
-  final service = ref.read(moneySavingGamificationProvider);
-  return service.totalSavedAmount;
+  final currentState = ref.watch(moneySavingGamificationStateProvider);
+  return currentState.maybeWhen(
+    data: (state) => (state['totalSaved'] as double? ?? 0.0),
+    orElse: () => 0.0,
+  );
 });
 
 /// Provider para verificar se o módulo está ativo
 final moneySavingActiveProvider = Provider<bool>((ref) {
-  final service = ref.read(moneySavingGamificationProvider);
-  return service.isActive;
+  final currentState = ref.watch(moneySavingGamificationStateProvider);
+  return currentState.maybeWhen(
+    data: (state) => (state['isActive'] as bool? ?? false),
+    orElse: () => false,
+  );
 });
 
 /// Provider para o progresso até a próxima insignia
 final moneySavingProgressProvider = Provider<double>((ref) {
   final service = ref.read(moneySavingGamificationProvider);
-  return service.getProgressToNextInsignia();
+  final progress = service.getProgressToNextInsignia();
+  return (progress['progress'] as double? ?? 0.0);
 });
 
 /// Provider para estatísticas detalhadas
 final moneySavingStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final service = ref.read(moneySavingGamificationProvider);
-  return await service.getStatistics();
+  return service.getStatistics();
 });
 
 /// Provider para verificar se está em streak

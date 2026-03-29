@@ -1,5 +1,5 @@
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:flutter/material.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 // Mensagens padrão por módulo
 final Map<NicheId, String> defaultModuleMessages = {
@@ -8,63 +8,90 @@ final Map<NicheId, String> defaultModuleMessages = {
   NicheId.bingeEating:
       '🥑 Seja forte! Resista hoje e terá mais saúde amanhã (além de economizar dinheiro!).',
   NicheId.diet:
-      '🍎 Seja forte! A regularidade é a chave. Mantenha sua dieta e verá os resultados!',
+      '🥗 Hoje é um ótimo dia para nutrir seu corpo com sabedoria! Foco no seu objetivo!',
   NicheId.spending:
-      '💲 Uma comprinha agora é realmente necessária? Pense bem antes de gastar!',
+      '💰 Cada centavo conta! Pense no seu futuro e evite gastos desnecessários hoje.',
   NicheId.focus:
-      '⏳ Atenção aos objetivos. Mantenha o foco e a disciplina para alcançar seu objetivo!',
+      '🎯 Concentração total! Elimine as distrações e foque no que realmente importa.',
   NicheId.adultContent:
-      '🔞 Vai fazer isso mesmo? Cuidado com os efeitos negativos a longo prazo!',
+      '🛡️ Mantenha sua mente limpa e seu propósito firme. Você é capaz!',
   NicheId.moneySavingChallenge:
-      '💰 Hoje é dia de se aproximar mais da sua meta! Que tal marcar mais um quadradinho hoje?',
+      '🚀 Desafio da Poupança! Não esqueça de registrar seu progresso e ficar focado na meta!',
   NicheId.procrastination:
-      '🗓️ Não esqueça dos seus compromissos agendados. Verifique suas tarefas e compromissos para hoje!',
+      '⌛ O melhor momento para começar é agora. Não deixe para depois o que transforma seu futuro!',
   NicheId.reading:
-      '📚 Hora da leitura diária! Vamos viajar mais um pouco no mundo dos livros?',
+      '📚 Que tal ler algumas páginas agora? O conhecimento é o seu maior poder!',
 };
 
 class GamificationMessages {
-  static String getModuleMessage(
-    NicheId nicheId, {
-    required bool isUnlocked,
-    required Map<NicheId, String> customMessages,
+  /// Retorna a frase motivacional baseada no nicho e opcionalmente em um horário específico.
+  static String getMotivationalPhrase(
+    dynamic nicheId, {
+    String? timeStr,
+    bool isUnlocked = false,
+    Map<int, List<String>>? customPhrases,
+    Map<int, List<String>>? motivationSchedules, // Reservado para uso futuro
+    Map<NicheId, String>? customMessages,
   }) {
-    if (isUnlocked) {
-      final custom = customMessages[nicheId];
-      if (custom != null && custom.isNotEmpty) return custom;
+    final int id = (nicheId is NicheId) ? nicheId.id : (nicheId as int);
+
+    // 1. Tentar buscar frase customizada do usuário para este nicho se estiver desbloqueado
+    if (isUnlocked &&
+        customPhrases != null &&
+        customPhrases.containsKey(id) &&
+        customPhrases[id]!.isNotEmpty) {
+      return customPhrases[id]!.first;
     }
-    return defaultModuleMessages[nicheId] ?? 'Conquista em progresso!';
+
+    // 2. Tentar Mensagem Customizada (se desbloqueado)
+    if (isUnlocked && customMessages != null) {
+      final nid = (nicheId is NicheId) ? nicheId : NicheId.tryFromInt(id);
+      if (nid != null && customMessages.containsKey(nid)) {
+        return customMessages[nid]!;
+      }
+    }
+
+    // 3. Fallback para mensagem padrão do sistema
+    final niche = (nicheId is NicheId) ? nicheId : NicheId.tryFromInt(id);
+    if (niche != null) {
+      return defaultModuleMessages[niche] ?? 'Continue firme no seu propósito!';
+    }
+
+    return 'Continue firme no seu propósito!';
   }
 
-  static String getMotivationalPhrase(
-    NicheId nicheId,
-    TimeOfDay time, {
-    required bool isUnlocked,
-    required Map<NicheId, List<TimeOfDay>> motivationSchedules,
-    required Map<NicheId, List<String>> customPhrases,
-    required Map<NicheId, String> customMessages,
+  /// Retorna a mensagem personalizada do módulo ou a padrão.
+  static String getModuleMessage(
+    NicheId nicheId, {
+    bool isUnlocked = false,
+    Map<NicheId, String>? customMessages,
   }) {
-    // 1. Tenta pegar a lista de horários
-    final schedules = motivationSchedules[nicheId];
-
-    // 2. Se estiver desbloqueado (IAP ou Ad), tenta pegar a frase customizada correspondente ao índice
-    if (isUnlocked) {
-      final phrases = customPhrases[nicheId];
-      if (phrases != null && schedules != null && phrases.isNotEmpty) {
-        // Encontra qual "slot" é esse horário
-        final index = schedules.indexOf(time);
-        if (index >= 0 && index < phrases.length) {
-          final customPhrase = phrases[index];
-          if (customPhrase.isNotEmpty) return customPhrase;
-        }
-      }
-
-      // Fallback para mensagem única customizada (legado)
-      final customSingle = customMessages[nicheId];
-      if (customSingle != null && customSingle.isNotEmpty) return customSingle;
+    if (isUnlocked &&
+        customMessages != null &&
+        customMessages.containsKey(nicheId)) {
+      return customMessages[nicheId]!;
     }
+    return defaultModuleMessages[nicheId] ?? 'Continue firme no seu propósito!';
+  }
 
-    // 3. Fallback Padrão (Free ou se não tiver custom)
-    return defaultModuleMessages[nicheId] ?? 'Mantenha o foco e a disciplina!';
+  /// Retorna sugestões de horários padrão para notificações de motivação por nicho.
+  static List<TimeOfDay> getDefaultMotivationTimes(NicheId nicheId) {
+    switch (nicheId) {
+      case NicheId.smoking:
+      case NicheId.bingeEating:
+      case NicheId.diet:
+        return [
+          const TimeOfDay(hour: 9, minute: 0),
+          const TimeOfDay(hour: 14, minute: 30),
+          const TimeOfDay(hour: 19, minute: 0),
+        ];
+      case NicheId.focus:
+        return [
+          const TimeOfDay(hour: 8, minute: 30),
+          const TimeOfDay(hour: 14, minute: 0),
+        ];
+      default:
+        return [const TimeOfDay(hour: 10, minute: 0)];
+    }
   }
 }

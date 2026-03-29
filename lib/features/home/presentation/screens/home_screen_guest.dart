@@ -292,7 +292,7 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
+                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.map((id) => NicheId.tryFromInt(id)).whereType<NicheId>().toList()));
                             return _buildActiveModulesSection(
                                 activeModules, isDark, textTheme);
                           },

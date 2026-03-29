@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:disciplinum/app/router/app_router.dart';
-
 import 'package:flutter/gestures.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/features/settings/presentation/screens/how_it_works_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -48,8 +48,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 32,
-          width: 32,
+          height: 48,
+          width: 48,
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -81,9 +81,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
           ),
         ),
       ],
@@ -98,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     // Fluxo normal: salva preferência e navega
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = IsarPreferencesRepository(IsarService.instance.database);
     await prefs.setBool('seen_onboarding', true);
 
     if (!mounted) return;
@@ -241,7 +241,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               height: 160,
                               alignment: Alignment.topCenter,
                               child: Image.asset(
-                                'assets/warning1.png',
+                                'assets/opening/warning1.png',
                                 height: 140,
                                 width: 140,
                                 fit: BoxFit.contain,
@@ -256,7 +256,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: Builder(builder: (context) {
                                   if (index == 0) {
                                     return Image.asset(
-                                      'assets/disciplinado.png',
+                                      'assets/opening/disciplinado.png',
                                       height: 210,
                                       width: 210,
                                       fit: BoxFit.contain,
@@ -283,12 +283,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                               crossAxisCount: 4,
                                               mainAxisSpacing: 12,
                                               crossAxisSpacing: 12,
-                                              childAspectRatio: 1,
+                                              childAspectRatio: 1.2,
                                               children: [
-                                                _buildMedal('assets/medal_bronze.png', 'Bronze'),
-                                                _buildMedal('assets/medal_silver.png', 'Prata'),
-                                                _buildMedal('assets/medal_gold.png', 'Ouro'),
-                                                _buildMedal('assets/medal_diamond.png', 'Diamante'),
+                                                _buildMedal('assets/gamification/medals/smoking/bronze.png', 'Bronze'),
+                                                _buildMedal('assets/gamification/medals/smoking/silver.png', 'Prata'),
+                                                _buildMedal('assets/gamification/medals/smoking/gold.png', 'Ouro'),
+                                                _buildMedal('assets/gamification/medals/smoking/diamond.png', 'Diamante'),
                                               ],
                                             ),
                                             const SizedBox(height: 1),

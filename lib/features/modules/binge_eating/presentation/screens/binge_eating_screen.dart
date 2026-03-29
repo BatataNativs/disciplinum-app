@@ -5,7 +5,6 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/screens/binge_eating_notifications_screen.dart';
-import 'package:disciplinum/features/modules/binge_eating/presentation/screens/days_without_food_delivery.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -15,7 +14,6 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/my_progress_binge_eating.dart' as binge_eating_progress;
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
-import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/binge_eating_header_widget.dart';
@@ -40,9 +38,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   bool _loadingData = true;
   bool _isLoadingData = false;
 
-  // Cache dos horários como no módulo Focus
-  TimeOfDay? _checkinTime;
-
   late PageController _pageController;
   int _selectedIndex = 0;
 
@@ -63,98 +58,14 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Força atualização quando a app volta para o primeiro plano
-      if (mounted) {
-        _reloadCheckinData();
-      }
-    }
   }
 
   @override
   void didUpdateWidget(BingeEatingScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Força atualização quando o widget é reconstruído (volta de outras telas)
-    if (mounted) {
-      _reloadCheckinData();
-    }
   }
 
-  Future<void> _reloadCheckinData() async {
-    try {
-      final prefs = ref.read(preferencesServiceProvider);
-      final isGuest = await prefs.isGuestMode();
-      final List<UserNicheTime> checkinTimes;
 
-      if (isGuest) {
-        checkinTimes = await prefs.loadUserNicheTimes(
-            nicheId: _niche.id + 200);
-      } else {
-        checkinTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
-            nicheId: _niche.id + 200);
-      }
-
-      TimeOfDay? newCheckinTime;
-      if (checkinTimes.isNotEmpty) {
-        newCheckinTime = TimeOfDay(
-            hour: checkinTimes[0].hour, minute: checkinTimes[0].minute);
-      }
-
-      // Só atualiza se realmente mudou
-      if (_checkinTime != newCheckinTime) {
-        if (mounted) {
-          setState(() {
-            _checkinTime = newCheckinTime;
-          });
-        }
-      }
-    } catch (e) {
-      // Silenciosamente ignora erros de carregamento
-    }
-  }
-
-  Future<void> _syncCheckInWithGamification(
-      {bool onlySyncSchedules = false}) async {
-    final prefs = ref.read(preferencesServiceProvider);
-    final isGuest = await prefs.isGuestMode();
-    final List<UserNicheTime> times;
-
-    if (isGuest) {
-      times = await prefs.loadUserNicheTimes(
-          nicheId: _niche.id + 200);
-    } else {
-      times = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
-          nicheId: _niche.id + 200);
-    }
-    if (!mounted) return;
-
-    final gamification = ref.read(gamificationServiceProvider);
-
-    gamification.scheduleByModule[_niche.nicheId] =
-        times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
-
-    if (onlySyncSchedules) {
-      if (_gamificationRunning) {
-        await gamification.restoreMonitoringSession();
-      }
-      // Força atualização da UI quando apenas sincroniza horários
-      if (mounted) {
-        setState(() {});
-      }
-      return;
-    }
-
-    if (times.isNotEmpty && _gamificationRunning) {
-      await PermissionService.ensurePermissions(context);
-      gamification.startModuleCycle(nicheId: _niche.nicheId);
-
-      if (!gamification.isGeneralMonitoringActive) {
-        gamification.startMonitoringApps(
-            nicheId: _niche.nicheId,
-            horarios: gamification.scheduleByModule[_niche.nicheId]!);
-      }
-    }
-  }
 
   
   Future<void> _loadAllPersistentData() async {
@@ -177,15 +88,17 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
         });
 
         if (_gamificationRunning) {
-          final gamification = ref.read(gamificationServiceProvider);
-          gamification.monitoredApps = Set<String>.from(_selectedApps);
+          final gamification = ref.read(gamificationServiceProvider.notifier);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
           if (!mounted) return;
 
           if (accessibilityGranted) {
-            gamification.startMonitoringApps(nicheId: nicheId, horarios: []);
+            gamification.startMonitoringApps(
+              nicheId: _niche.nicheId.id,
+              apps: _selectedApps,
+            );
           } else {
             setState(() => _gamificationRunning = false);
           }
@@ -202,11 +115,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       _isLoadingData = false;
     }
 
-    // Sincroniza check-in com gamification como no módulo de Parar de Fumar
-    _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
-
-    // Carrega horários de check-in como no módulo Focus
-    await _reloadCheckinData();
   }
 
   void _removeSelectedApp(String packageName) async {
@@ -262,9 +170,11 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
     if (!mounted) return;
 
-    final gamification = ref.read(gamificationServiceProvider);
-    gamification.monitoredApps = Set<String>.from(_selectedApps);
-    gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
+    gamification.startMonitoringApps(
+      nicheId: _niche.nicheId.id,
+      apps: _selectedApps,
+    );
 
     final granted = await NotificationService.requestPermission();
     if (!mounted) return;
@@ -282,7 +192,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       _gamificationRunning = true;
     });
     ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: _niche.nicheId, isActive: true);
-    ref.read(gamificationServiceProvider).startModuleCycle(nicheId: _niche.nicheId);
+    ref.read(gamificationServiceProvider.notifier).startModuleCycle(_niche.nicheId.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -315,7 +225,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
       gamificationService: gamification,
@@ -328,20 +238,15 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       HapticFeedback.heavyImpact();
       
       // Para o ciclo da gamificação primeiro
-      await gamification.stopModuleCycle(nicheId: NicheId.bingeEating);
+      gamification.stopModuleCycle(NicheId.bingeEating.id);
       
-      _resetMedalsForModule(
-        notificationTitle: 'Módulo Desativado 🛑',
-        notificationBody:
-            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-        deactivate: true,
-      );
+      _resetMedalsForModule();
 
       // Força atualização do estado da gamificação
-      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.bingeEating);
+      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.bingeEating.id);
 
       setState(() {
-        _gamificationRunning = gamificationStatus?.isActive ?? false;
+        _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
 
@@ -357,19 +262,10 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     }
   }
 
-  void _resetMedalsForModule({
-    String? notificationTitle,
-    String? notificationBody,
-    bool sendNotification = true,
-    bool deactivate = false,
-  }) {
-    final gamification = ref.read(gamificationServiceProvider);
+  void _resetMedalsForModule() {
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     gamification.resetMedals(
-      _niche.nicheId,
-      notificationTitle: notificationTitle,
-      notificationBody: notificationBody,
-      sendNotification: sendNotification,
-      deactivate: deactivate,
+      _niche.nicheId.id,
     );
   }
 
@@ -514,8 +410,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                                 BingeEatingTabContent(
                                   tabIndex: 0,
                                   selectedApps: _selectedApps,
-                                  checkinTime: _checkinTime,
-                                  onDeleteTime: _showDeleteTimeDialog,
                                   onGetAppInfo: gatherAppDisplayInfo,
                                   onRemoveApp: _removeSelectedApp,
                                 ),
@@ -530,8 +424,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                                 BingeEatingTabContent(
                                   tabIndex: 1,
                                   selectedApps: _selectedApps,
-                                  checkinTime: _checkinTime,
-                                  onDeleteTime: _showDeleteTimeDialog,
                                   onGetAppInfo: gatherAppDisplayInfo,
                                   onRemoveApp: _removeSelectedApp,
                                 ),
@@ -561,7 +453,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                                   const BingeEatingNotificationsScreen(),
                             ),
                           ).then((_) {
-                            _reloadCheckinData();
+                            // Reload não necessário mais - sem check-in
                           });
                         },
                         onStatistics: _showStatisticsMenu,
@@ -584,7 +476,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                                 const BingeEatingNotificationsScreen(),
                           ),
                         ).then((_) {
-                          _reloadCheckinData();
+                            // Reload não necessário mais - sem check-in
                         });
                       },
                       onStatistics: _showStatisticsMenu,
@@ -604,59 +496,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
 
 
-  void _showDeleteTimeDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Excluir horário?"),
-        content: Text(
-          "Deseja excluir o horário ${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')} do seu check-in diário?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Não"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-
-              final prefs = ref.read(preferencesServiceProvider);
-              final isGuest = await prefs.isGuestMode();
-
-              // Remove o horário específico
-              if (isGuest) {
-                await prefs.removeUserNicheTime(
-                  nicheId: _niche.id + 200,
-                  hour: _checkinTime!.hour,
-                  minute: _checkinTime!.minute,
-                );
-              } else {
-                await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
-                  nicheId: _niche.id + 200,
-                  hour: _checkinTime!.hour,
-                  minute: _checkinTime!.minute,
-                );
-              }
-
-              // Atualiza a variável de estado
-              if (mounted) {
-                setState(() {
-                  _checkinTime = null;
-                });
-              }
-            },
-            child: const Text("Sim"),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
 
 
 
@@ -684,20 +524,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
               ),
             ),
             const SizedBox(height: 20),
-            ListActionTile(
-              icon: Icons.no_food_rounded,
-              label: "Dias sem pedir delivery",
-              color: Colors.green,
-              isDark: isDark,
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const DaysWithoutFoodDelivery()),
-                );
-              },
-            ),
             ListActionTile(
               icon: Icons.bar_chart_rounded,
               label: "Conquistas",

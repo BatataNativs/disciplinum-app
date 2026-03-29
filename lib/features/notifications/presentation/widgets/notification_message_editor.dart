@@ -15,18 +15,19 @@ class NotificationMessageEditor extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final iap = ref.watch(iapServiceProvider);
-    final gamification = ref.watch(gamificationServiceProvider);
-    final adService = ref.read(adServiceProvider);
+    final gamificationState = ref.watch(gamificationServiceProvider);
+    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
+    final adService = ref.read(adServiceProvider.notifier);
     final currentMsg = GamificationMessages.getModuleMessage(
       nicheId,
       isUnlocked: iap.isCustomNotifUnlocked ||
-          gamification.isNotificationUnlocked(nicheId),
-      customMessages: gamification.customMessages,
+          gamificationNotifier.isNotificationUnlocked(nicheId),
+      customMessages: gamificationState.customMessages,
     );
 
     // Verifica se tem iap global OU se liberou esse módulo nas prefs locais
     final bool hasAccess = iap.isCustomNotifUnlocked ||
-        gamification.isNotificationUnlocked(nicheId);
+        gamificationNotifier.isNotificationUnlocked(nicheId);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -71,9 +72,9 @@ class NotificationMessageEditor extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 if (hasAccess) {
-                  _openEditMessageDialog(context, ref, gamification);
+                  _openEditMessageDialog(context, ref, gamificationState, gamificationNotifier);
                 } else {
-                  _showPremiumFeatureDialog(context, gamification, adService);
+                  _showPremiumFeatureDialog(context, gamificationNotifier, adService);
                 }
               },
               label: Text(
@@ -165,14 +166,14 @@ class NotificationMessageEditor extends ConsumerWidget {
   }
 
   void _openEditMessageDialog(
-      BuildContext context, WidgetRef ref, GamificationService gamification) {
+      BuildContext context, WidgetRef ref, GamificationState gamificationState, GamificationService gamificationNotifier) {
     final iap = ref.read(iapServiceProvider);
     final controller = TextEditingController(
         text: GamificationMessages.getModuleMessage(
       nicheId,
       isUnlocked: iap.isCustomNotifUnlocked ||
-          gamification.isNotificationUnlocked(nicheId),
-      customMessages: gamification.customMessages,
+          gamificationNotifier.isNotificationUnlocked(nicheId),
+      customMessages: gamificationState.customMessages,
     ));
     showDialog(
       context: context,
@@ -194,7 +195,7 @@ class NotificationMessageEditor extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               if (controller.text.isNotEmpty) {
-                await gamification.setCustomMessage(nicheId, controller.text);
+                gamificationNotifier.setCustomMessage(nicheId, controller.text);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   EnhancedSnackBarHelper.showSuccess(context, 'Mensagem atualizada!');

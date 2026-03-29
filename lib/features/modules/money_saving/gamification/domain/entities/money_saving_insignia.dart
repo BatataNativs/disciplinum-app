@@ -1,86 +1,86 @@
 /// Insignias do módulo Money Saving Challenge
-/// Baseadas em dias consecutivos de economia e metas alcançadas
+/// Baseadas em percentual da grid de desafio preenchida
 enum MoneySavingInsignia {
-  // Nível 1: Iniciante
-  economistaInicial(
-    'Economista Inicial',
-    'Primeiro dia de economia! Começo de uma jornada financeira sólida.',
-    1,
+  // Nível 1: Inicial
+  madeira(
+    'Madeira',
+    'Início da Jornada. Ativou o módulo Desafio da Poupança!',
+    0,
   ),
   
-  // Nível 2: Consistente
-  poupadorSemanal(
-    'Poupador Semanal',
-    '7 dias consecutivos economizando. Hábito financeiro se formando!',
-    7,
+  // Nível 2: Básico
+  ferro(
+    'Ferro',
+    '5% da grid de um desafio preenchida. Primeiros passos!',
+    5,
   ),
   
-  // Nível 3: Determinado
-  guardiaoFinanceiro(
-    'Guardião Financeiro',
-    '15 dias consecutivos. Sua disciplina financeira é impressionante!',
+  // Nível 3: Intermediário
+  aluminio(
+    'Alumínio',
+    '10% da grid de um desafio preenchida. Bom progresso!',
+    10,
+  ),
+  
+  // Nível 4: Comprometido
+  latao(
+    'Latão',
+    '15% da grid de um desafio preenchida. Continue assim!',
     15,
   ),
   
-  // Nível 4: Focado
-  mestreDaEconomia(
-    'Mestre da Economia',
-    '30 dias consecutivos. Você domina a arte de poupar!',
-    30,
+  // Nível 5: Bronze
+  bronze(
+    'Bronze',
+    '20% da grid de um desafio preenchida. Metade do caminho!',
+    20,
   ),
   
-  // Nível 5: Comprometido
-  investidorDedicado(
-    'Investidor Dedicado',
-    '60 dias consecutivos. Seu futuro financeiro está garantido!',
+  // Nível 6: Prata
+  prata(
+    'Prata',
+    '40% da grid de um desafio preenchida. Quase lá!',
+    40,
+  ),
+  
+  // Nível 7: Ouro
+  ouro(
+    'Ouro',
+    '60% da grid de um desafio preenchida. Excelente!',
     60,
   ),
   
-  // Nível 6: Especialista
-    acumuladorExpert(
-    'Acumulador Expert',
-    '90 dias consecutivos. Você é referência em economia!',
-    90,
-  ),
-  
-  // Nível 7: Mestre
-    financeiroMaster(
-    'Financeiro Master',
-    '180 dias consecutivos. Lenda da disciplina financeira!',
-    180,
-  ),
-  
-  // Nível 8: Lenda
-    lendaDaPoupanca(
-    'Lenda da Poupança',
-    '365 dias consecutivos. Imortal na arte de economizar!',
-    365,
+  // Nível 8: Diamante
+  diamante(
+    'Diamante',
+    '80% da grid de um desafio preenchida. Quase completo!',
+    80,
   ),
   
   // Nível 9: Disciplinum
-    disciplinumFinanceiro(
-    'Disciplinum Financeiro',
-    'Conquista máxima. Você transcendeu a economia!',
-    1000,
+  disciplinum(
+    'Disciplinum',
+    '100% da grid de um desafio preenchida. Desafio completo!',
+    100,
   );
 
   const MoneySavingInsignia(
     this.name,
     this.description,
-    this.requiredConsecutiveDays,
+    this.requiredGridPercentage,
   );
 
   final String name;
   final String description;
-  final int requiredConsecutiveDays;
+  final int requiredGridPercentage;
 
-  /// Verifica se esta insignia pode ser concedida baseada nos dias consecutivos
-  bool canBeAwarded(int consecutiveDays, List<String> earnedInsignias) {
+  /// Verifica se esta insignia pode ser concedida baseada no percentual da grid
+  bool canBeAwarded(int gridPercentage, List<String> earnedInsignias) {
     // Se já conquistou, não pode conquistar novamente
     if (earnedInsignias.contains(name)) return false;
     
-    // Verifica se tem dias consecutivos suficientes
-    if (consecutiveDays < requiredConsecutiveDays) return false;
+    // Verifica se tem percentual suficiente
+    if (gridPercentage < requiredGridPercentage) return false;
     
     // Verifica se conquistou todas as insignias anteriores
     final allInsignias = MoneySavingInsignia.values;
@@ -110,7 +110,7 @@ enum MoneySavingInsignia {
   }
 
   /// Calcula o progresso para a próxima insignia
-  static double calculateProgress(int consecutiveDays, List<String> earnedInsignias) {
+  static double calculateProgress(int gridPercentage, List<String> earnedInsignias) {
     final nextInsignia = getNextInsignia(earnedInsignias);
     if (nextInsignia == null) return 1.0; // 100% completo
     
@@ -119,14 +119,14 @@ enum MoneySavingInsignia {
         .toList();
     
     if (previousInsignias.isEmpty) {
-      return consecutiveDays / nextInsignia.requiredConsecutiveDays;
+      return gridPercentage / nextInsignia.requiredGridPercentage;
     }
     
     final lastInsignia = previousInsignias.last;
-    final daysSinceLastInsignia = consecutiveDays - lastInsignia.requiredConsecutiveDays;
-    final daysToNextInsignia = nextInsignia.requiredConsecutiveDays - lastInsignia.requiredConsecutiveDays;
+    final percentageSinceLastInsignia = gridPercentage - lastInsignia.requiredGridPercentage;
+    final percentageToNextInsignia = nextInsignia.requiredGridPercentage - lastInsignia.requiredGridPercentage;
     
-    return (daysSinceLastInsignia / daysToNextInsignia).clamp(0.0, 1.0);
+    return (percentageSinceLastInsignia / percentageToNextInsignia).clamp(0.0, 1.0);
   }
 
   /// Obtém todas as insignias disponíveis
@@ -143,11 +143,11 @@ enum MoneySavingInsignia {
 
   /// Verifica se conquistou insignia Disciplinum
   static bool hasDisciplinum(List<String> earnedInsignias) {
-    return earnedInsignias.contains(disciplinumFinanceiro.name);
+    return earnedInsignias.contains(disciplinum.name);
   }
 
   /// Conta quantas insignias Disciplinum foram conquistadas
   static int countDisciplinumInsignias(List<String> earnedInsignias) {
-    return earnedInsignias.where((name) => name == disciplinumFinanceiro.name).length;
+    return earnedInsignias.where((name) => name == disciplinum.name).length;
   }
 }

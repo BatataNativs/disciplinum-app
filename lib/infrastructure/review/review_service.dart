@@ -1,5 +1,6 @@
 import 'package:in_app_review/in_app_review.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 
 class ReviewService {
   static const String _kPrefsDaysKey = 'review_days_count';
@@ -11,14 +12,14 @@ class ReviewService {
     final InAppReview inAppReview = InAppReview.instance;
 
     if (await inAppReview.isAvailable()) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = IsarPreferencesRepository(IsarService.instance.database);
 
       // Se já mostrou, não incomoda mais (ou implemente lógica para pedir novamente meses depois)
-      final bool alreadyShown = prefs.getBool(_kPrefsReviewDoneKey) ?? false;
+      final bool alreadyShown = await prefs.getBool(_kPrefsReviewDoneKey) ?? false;
       if (alreadyShown) return;
 
-      int daysCount = prefs.getInt(_kPrefsDaysKey) ?? 0;
-      final String? lastDayString = prefs.getString(_kPrefsLastDayKey);
+      int daysCount = await prefs.getInt(_kPrefsDaysKey) ?? 0;
+      final String? lastDayString = await prefs.getString(_kPrefsLastDayKey);
 
       final now = DateTime.now();
       final todayString = "${now.year}-${now.month}-${now.day}";

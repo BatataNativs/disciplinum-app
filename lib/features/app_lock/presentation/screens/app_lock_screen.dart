@@ -87,6 +87,20 @@ class AppLockScreen extends StatelessWidget {
                           width: 1,
                         ),
                       ),
+                      child:Colum(
+                                            // Nome do app
+                          Text(
+                            lockEvent.appName,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          
+                          const SizedBox(height: 48),
+                      )
                       child: Column(
                         children: [
                           Text(
@@ -117,19 +131,6 @@ class AppLockScreen extends StatelessWidget {
                     ),
                     
                     const SizedBox(height: 40),
-                    
-                    // Nome do app
-                    Text(
-                      lockEvent.appName,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
-                    const SizedBox(height: 48),
                     
                     // Botões de decisão
                     Row(

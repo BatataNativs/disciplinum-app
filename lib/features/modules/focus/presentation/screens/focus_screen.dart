@@ -6,9 +6,10 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
+
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/features/modules/focus/presentation/widgets.dart' as focus_progress;
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
@@ -49,8 +50,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     // NOVO: Escutar mudanças na gamificação para remover intervalo quando período for cumprido
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final gamification = ref.read(gamificationServiceProvider);
-        gamification.addListener(_onGamificationChanged);
+        // focusService já lida com o estado, verificar se precisamos de gamificationListener
+        // final gamification = ref.read(gamificationServiceProvider.notifier);
+        // gamification.addListener(_onGamificationChanged);
       }
     });
   }
@@ -58,31 +60,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    final gamification = ref.read(gamificationServiceProvider);
-    gamification.removeListener(_onGamificationChanged);
+
     super.dispose();
   }
 
-  // NOVO: Método chamado quando gamificação muda (período de foco cumprido)
-  Future<void> _onGamificationChanged() async {
-    if (!mounted) return;
-    
-    try {
-      final focusService = ref.read(focusServiceProvider);
-      final currentPeriods = await focusService.getRespectedPeriods();
-      
-      // Verificar mounted novamente após operação assíncrona
-      if (!mounted) return;
-      
-      // Se teve períodos respeitados e ainda tem intervalo definido, remover o intervalo sem notificação
-      if (currentPeriods > 0 && (_focusStart != null && _focusEnd != null)) {
-        _removeFocusInterval(showNotification: false);
-      }
-    } catch (e) {
-      // Ignorar erros silenciosamente para evitar crashes
-      LoggerService.instance.w('Erro em _onGamificationChanged: $e');
-    }
-  }
+
 
   // --- HARDCODED TEXTS FOR FOCUS ---
 
@@ -120,8 +102,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
         if (_gamificationRunning) {
           final gamification =
-              ref.read(gamificationServiceProvider);
-          gamification.monitoredApps = Set<String>.from(_selectedApps);
+              ref.read(gamificationServiceProvider.notifier);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -129,12 +110,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           if (!mounted) return;
 
           if (accessibilityGranted) {
-            TimeOfDayRange? range;
-            if (_focusStart != null && _focusEnd != null) {
-              range = TimeOfDayRange(start: _focusStart!, end: _focusEnd!);
-            }
+            final interval = (_focusStart != null && _focusEnd != null)
+                ? TimeOfDayRange(start: _focusStart!, end: _focusEnd!)
+                : null;
             gamification.startMonitoringApps(
-                nicheId: nicheId, horarios: [], intervaloFoco: range);
+              nicheId: _niche.nicheId.id,
+              apps: _selectedApps,
+              focusInterval: interval,
+            );
           } else {
             setState(() => _gamificationRunning = false);
           }
@@ -210,16 +193,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     if (!mounted) return;
 
     final gamification =
-        ref.read(gamificationServiceProvider);
-    gamification.monitoredApps = Set<String>.from(_selectedApps);
+        ref.read(gamificationServiceProvider.notifier);
 
-    TimeOfDayRange? range;
-    if (_focusStart != null && _focusEnd != null) {
-      range = TimeOfDayRange(start: _focusStart!, end: _focusEnd!);
-    }
-
+    final interval = (_focusStart != null && _focusEnd != null)
+        ? TimeOfDayRange(start: _focusStart!, end: _focusEnd!)
+        : null;
     gamification.startMonitoringApps(
-        nicheId: _niche.nicheId, horarios: [], intervaloFoco: range);
+      nicheId: _niche.nicheId.id,
+      apps: _selectedApps,
+      focusInterval: interval,
+    );
 
     if (!mounted) return;
 
@@ -240,8 +223,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider)
-        .startModuleCycle(nicheId: _niche.nicheId);
+    ref.read(gamificationServiceProvider.notifier)
+        .startModuleCycle(_niche.nicheId.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -274,7 +257,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
       gamificationService: gamification,
@@ -287,7 +270,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       HapticFeedback.heavyImpact();
       
       // Para o ciclo da gamificação primeiro
-      await gamification.stopModuleCycle(nicheId: NicheId.focus);
+      gamification.stopModuleCycle(NicheId.focus.id);
       
       _resetMedalsForModule(
         notificationTitle: 'Módulo Desativado 🛑',
@@ -297,10 +280,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       );
 
       // Força atualização do estado da gamificação
-      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.focus);
+      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.focus.id);
 
       setState(() {
-        _gamificationRunning = gamificationStatus?.isActive ?? false;
+        _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
 
@@ -327,9 +310,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     bool deactivate = false,
   }) {
     final gamification =
-        ref.read(gamificationServiceProvider);
+        ref.read(gamificationServiceProvider.notifier);
     gamification.resetMedals(
-      _niche.nicheId,
+      _niche.nicheId.id,
       notificationTitle: notificationTitle,
       notificationBody: notificationBody,
       sendNotification: sendNotification,

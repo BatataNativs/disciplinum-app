@@ -26,44 +26,37 @@ class StreakService {
       return currentStreak;
     }
     
-    // Calcular dias de tolerância baseado no streak atual
+    // Calcular dias desde último check-in (sem grace period)
     final daysSinceLastCheckIn = todayDate.difference(lastCheckInDate).inDays;
-    final gracePeriod = getGracePeriodDays(currentStreak);
     
-    // Se passou mais dias que o permitido, streak quebra
-    if (daysSinceLastCheckIn > gracePeriod) {
-      // LoggerService.instance.d('Streak broken: $daysSinceLastCheckIn days since last check-in (tolerance: $gracePeriod days)');
+    // Se passou mais de 1 dia, streak quebra (sem tolerância)
+    if (daysSinceLastCheckIn > 1) {
+      LoggerService.instance.d('Streak broken: $daysSinceLastCheckIn days since last check-in (no grace period)');
       return 0;
     }
     
-    // Se está dentro do período de tolerância, manter streak
+    // Se está dentro do período permitido (1 dia), incrementar streak
     return currentStreak;
   }
 
   /// Verifica se streak deve ser incrementado
   static bool shouldIncrementStreak({
     required DateTime? lastCheckIn,
-    required DateTime? lastRelapse,
-    DateTime? today, // Parâmetro opcional para testes
+    required DateTime today,
   }) {
     if (lastCheckIn == null) return true;
     
-    final now = today ?? DateTime.now();
-    final todayDate = DateTime(now.year, now.month, now.day);
-    final lastCheckInDate = DateTime(
-      lastCheckIn.year,
-      lastCheckIn.month,
-      lastCheckIn.day,
-    );
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final lastCheckInDate = DateTime(lastCheckIn.year, lastCheckIn.month, lastCheckIn.day);
     
     // Se já fez check-in hoje, não incrementar
     if (lastCheckInDate.isAtSameMomentAs(todayDate)) {
       return false;
     }
     
-    // Se ontem fez check-in, pode incrementar
-    final yesterday = todayDate.subtract(const Duration(days: 1));
-    return lastCheckInDate.isAtSameMomentAs(yesterday);
+    // Se passou exatamente 1 dia, pode incrementar
+    final daysSinceLastCheckIn = todayDate.difference(lastCheckInDate).inDays;
+    return daysSinceLastCheckIn == 1;
   }
 
   /// Processa recaída e reseta streak se necessário
@@ -128,15 +121,7 @@ class StreakService {
     return milestones.contains(currentStreak) || (currentStreak > 100 && currentStreak % 100 == 0);
   }
 
-  /// Calcula dias para perder streak (grace period)
-  static int getGracePeriodDays(int streakLength) {
-    if (streakLength < 7) return 1; // 1 dia de grace period
-    if (streakLength < 30) return 2; // 2 dias de grace period
-    if (streakLength < 100) return 3; // 3 dias de grace period
-    return 5; // 5 dias de grace period para streaks longas
-  }
-
-  /// Verifica se está em grace period
+  /// Verifica se está dentro do período permitido (1 dia)
   static bool isInGracePeriod({
     required DateTime? lastCheckIn,
     required int streakLength,
@@ -153,9 +138,9 @@ class StreakService {
     );
     
     final daysSinceLastCheckIn = todayDate.difference(lastCheckInDate).inDays;
-    final gracePeriod = getGracePeriodDays(streakLength);
     
-    return daysSinceLastCheckIn <= gracePeriod;
+    // Sem grace period - apenas 1 dia permitido
+    return daysSinceLastCheckIn <= 1;
   }
 
   /// Calcula streak freeze disponível
@@ -221,8 +206,7 @@ class StreakService {
       // Processar check-in
       if (shouldIncrementStreak(
         lastCheckIn: newLastCheckIn,
-        lastRelapse: newLastRelapse,
-        today: today,
+        today: today ?? DateTime.now(),
       )) {
         newStreak++;
         LoggerService.instance.i('Streak incremented to $newStreak for module ${currentState.nicheId}');

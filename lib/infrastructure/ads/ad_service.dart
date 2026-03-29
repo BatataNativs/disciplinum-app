@@ -1,20 +1,43 @@
 // import 'dart:io'; // Comentado para uso futuro
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:flutter/material.dart';
-// Se você usa shared_preferences para consentimento em outros lugares, mantenha o import.
-// Caso contrário, pode remover se não for usar aqui.
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:disciplinum/config/app_config.dart';
 
-class AdService with ChangeNotifier {
-  RewardedAd? _rewardedAd;
-  bool _isRewardedAdLoading = false;
+/// Estado do serviço de anúncios
+class AdState {
+  final RewardedAd? rewardedAd;
+  final bool isRewardedAdLoading;
+  final String? errorMessage;
 
-  // Se você tiver Intersticiais ou Anúncios Premiados globais, eles ficariam aqui.
-  // Como movemos o banner de configurações para ser gerenciado localmente pelo widget,
-  // não precisamos mais manter variáveis de banner aqui para evitar conflitos de árvore de widgets.
+  const AdState({
+    this.rewardedAd,
+    this.isRewardedAdLoading = false,
+    this.errorMessage,
+  });
+
+  AdState copyWith({
+    RewardedAd? rewardedAd,
+    bool? isRewardedAdLoading,
+    String? errorMessage,
+  }) {
+    return AdState(
+      rewardedAd: rewardedAd ?? this.rewardedAd,
+      isRewardedAdLoading: isRewardedAdLoading ?? this.isRewardedAdLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+/// Serviço de anúncios - VERSÃO RIVERPOD
+/// Service puro sem ChangeNotifier - estado gerenciado pelo controller
+class AdService extends StateNotifier<AdState> {
+  AdService() : super(const AdState());
+
+  // Getters para compatibilidade
+  RewardedAd? get rewardedAd => state.rewardedAd;
+  bool get isRewardedAdLoading => state.isRewardedAdLoading;
+  String? get errorMessage => state.errorMessage;
 
   /// Inicializa o SDK de anúncios (opcional, se quiser centralizar a inicialização aqui)
   /// Pode ser chamado no main.dart
@@ -28,98 +51,114 @@ class AdService with ChangeNotifier {
 
   /// Helper para obter o ID do banner (se quiser centralizar a lógica de ID)
   String get bannerAdUnitId {
-    return AppConfig.admobBannerUnitId;
-  }
-
-  /// Helper para obter o ID do rewarded ad
-  String get rewardedAdUnitId {
-    return AppConfig.admobRewardedUnitId;
-  }
-
-  // --- Rewarded Ads ---
-
-  /// Pré-carrega um anúncio premiado
-  void loadRewardedAd() {
-    if (_rewardedAd != null || _isRewardedAdLoading) return;
-
-    _isRewardedAdLoading = true;
-    RewardedAd.load(
-      adUnitId: rewardedAdUnitId,
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          LoggerService.instance.d('RewardedAd carregado com sucesso.');
-          _rewardedAd = ad;
-          _isRewardedAdLoading = false;
-
-          _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _rewardedAd = null;
-              loadRewardedAd(); // Já pré-carrega o próximo
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              LoggerService.instance.e('Falha ao exibir RewardedAd', error: error);
-              ad.dispose();
-              _rewardedAd = null;
-              loadRewardedAd();
-            },
-          );
-        },
-        onAdFailedToLoad: (error) {
-          LoggerService.instance.e('Falha ao carregar RewardedAd', error: error);
-          _rewardedAd = null;
-          _isRewardedAdLoading = false;
-        },
-      ),
-    );
-  }
-
-  /// Exibe um anúncio premiado e chama o callback de sucesso
-  void showRewardedAd({
-    required VoidCallback onUserEarnedReward,
-    required VoidCallback onAdDismissed,
-  }) {
-    if (_rewardedAd == null) {
-      LoggerService.instance.w('Tentou exibir, mas o anúncio ainda não carregou.');
-      // Opcional: tentar carregar aqui e mostrar um loading na UI
-      onAdDismissed();
-      return;
+    if (kDebugMode) {
+      // ID de teste para banners
+      return 'ca-app-pub-3940256099942544/6300978111';
     }
-
-    _rewardedAd!.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        LoggerService.instance.d(
-            'Usuário ganhou recompensa: ${reward.amount} ${reward.type}');
-        onUserEarnedReward();
-      },
-    );
-
-    // Substitui o callback de fechar só para essa exibição
-    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        _rewardedAd = null;
-        onAdDismissed(); // Avisa a UI que fechou
-        loadRewardedAd(); // Pré-carrega o próximo
-      },
-      onAdFailedToShowFullScreenContent: (ad, error) {
-        LoggerService.instance.e('Falha ao exibir RewardedAd', error: error);
-        ad.dispose();
-        _rewardedAd = null;
-        onAdDismissed();
-        loadRewardedAd();
-      },
-    );
+    // ID real para banners (hardcoded por enquanto)
+    return 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
   }
 
-  /// Helper para verificar consentimento (se quiser reutilizar lógica)
-  Future<bool> getConsentStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('user_consent_given') ?? false;
+  /// Helper para obter o ID do anúncio premiado
+  String get rewardedAdUnitId {
+    if (kDebugMode) {
+      // ID de teste para anúncios premiados
+      return 'ca-app-pub-3940256099942544/5224355225';
+    }
+    // ID real para anúncios premiados (hardcoded por enquanto)
+    return 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
   }
 
-  // NENHUM banner sendo segurado aqui como variável global/singleton.
-  // Isso previne 100% o erro "AdWidget is already in the Widget tree"
-  // para banners de navegação (como Settings).
+  /// Carrega um anúncio premiado
+  Future<void> loadRewardedAd() async {
+    try {
+      state = state.copyWith(isRewardedAdLoading: true, errorMessage: null);
+
+      await RewardedAd.load(
+        adUnitId: rewardedAdUnitId,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            state = state.copyWith(rewardedAd: ad, isRewardedAdLoading: false);
+            LoggerService.instance.i('Anúncio premiado carregado com sucesso');
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            state = state.copyWith(
+              isRewardedAdLoading: false,
+              errorMessage: 'Falha ao carregar anúncio: ${error.message}',
+            );
+            LoggerService.instance.e('Falha ao carregar anúncio premiado', error: error);
+          },
+        ),
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isRewardedAdLoading: false,
+        errorMessage: 'Erro inesperado ao carregar anúncio',
+      );
+      LoggerService.instance.e('Erro inesperado ao carregar anúncio premiado', error: e);
+    }
+  }
+
+  /// Mostra um anúncio premiado
+  Future<bool> showRewardedAd({
+    required Function() onUserEarnedReward,
+    required Function() onAdDismissed,
+  }) async {
+    try {
+      if (state.rewardedAd == null) {
+        LoggerService.instance.w('Tentando mostrar anúncio premiado, mas não há anúncio carregado');
+        await loadRewardedAd();
+        return false;
+      }
+
+      state.rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdShowedFullScreenContent: (ad) {
+          LoggerService.instance.i('Anúncio premiado mostrado');
+        },
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          state = state.copyWith(rewardedAd: null);
+          onAdDismissed();
+          LoggerService.instance.i('Anúncio premiado fechado');
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          state = state.copyWith(rewardedAd: null, errorMessage: 'Falha ao mostrar anúncio');
+          LoggerService.instance.e('Falha ao mostrar anúncio premiado', error: error);
+        },
+      );
+
+      await state.rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          onUserEarnedReward();
+          LoggerService.instance.i('Recompensa concedida: ${reward.amount} ${reward.type}');
+        },
+      );
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        rewardedAd: null,
+        errorMessage: 'Erro ao mostrar anúncio premiado',
+      );
+      LoggerService.instance.e('Erro ao mostrar anúncio premiado', error: e);
+      return false;
+    }
+  }
+
+  /// Verifica se há um anúncio premiado disponível
+  bool get hasRewardedAd => state.rewardedAd != null;
+
+  /// Limpa erro
+  void clearError() {
+    state = state.copyWith(errorMessage: null);
+  }
+
+  /// Descarta recursos
+  @override
+  void dispose() {
+    state.rewardedAd?.dispose();
+    super.dispose();
+  }
 }

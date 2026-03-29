@@ -254,8 +254,8 @@ class _BingeEatingNotificationsScreenState
                     );
                   }
                   // Reagendar notificações
-                  final gamification = ref.read(gamificationServiceProvider);
-                  await gamification.restoreMonitoringSession();
+                  final gamification = ref.read(gamificationServiceProvider.notifier);
+                  gamification.restoreMonitoringSession();
                   // Atualiza o contador
                   _loadCounts();
                 },

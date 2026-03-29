@@ -186,7 +186,7 @@ class AppLockService {
       // Implementar reset real para módulo Diet usando Riverpod
       if (_container != null) {
         final dietService = _container!.read(dietServiceProvider);
-        await dietService.clearAllData();
+        await dietService.resetDailyProgress();
         LoggerService.instance.gamification('Diet gamification resetada com sucesso');
       } else {
         LoggerService.instance.w('Container Riverpod não disponível para DietService');

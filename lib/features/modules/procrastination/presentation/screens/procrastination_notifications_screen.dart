@@ -386,7 +386,7 @@ class _ProcrastinationNotificationsScreenState
             onChanged: (times) {
               _loadCount();
               // Notifica o GamificationService para recarregar e reagendar
-              ref.read(gamificationServiceProvider)
+              ref.read(gamificationServiceProvider.notifier)
                   .restoreMonitoringSession();
             },
           ),

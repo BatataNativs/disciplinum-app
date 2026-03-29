@@ -76,15 +76,17 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
         if (_gamificationRunning) {
           final gamification =
-              ref.read(gamificationServiceProvider);
-          gamification.monitoredApps = Set<String>.from(_selectedApps);
+              ref.read(gamificationServiceProvider.notifier);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
           if (!mounted) return;
 
           if (accessibilityGranted) {
-            gamification.startMonitoringApps(nicheId: nicheId, horarios: []);
+            gamification.startMonitoringApps(
+              nicheId: NicheId.adultContent.id,
+              apps: _selectedApps,
+            );
           } else {
             setState(() => _gamificationRunning = false);
           }
@@ -156,9 +158,11 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     if (!mounted) return;
 
     final gamification =
-        ref.read(gamificationServiceProvider);
-    gamification.monitoredApps = Set<String>.from(_selectedApps);
-    gamification.startMonitoringApps(nicheId: _niche.nicheId, horarios: []);
+        ref.read(gamificationServiceProvider.notifier);
+    gamification.startMonitoringApps(
+      nicheId: NicheId.adultContent.id,
+      apps: _selectedApps,
+    );
 
     final granted = await NotificationService.requestPermission();
     if (!mounted) return;
@@ -179,8 +183,8 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider)
-        .startModuleCycle(nicheId: _niche.nicheId);
+    ref.read(gamificationServiceProvider.notifier)
+        .startModuleCycle(_niche.nicheId.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -213,7 +217,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
       gamificationService: gamification,
@@ -226,20 +230,15 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       HapticFeedback.heavyImpact();
       
       // Para o ciclo da gamificação primeiro
-      await gamification.stopModuleCycle(nicheId: NicheId.adultContent);
+      gamification.stopModuleCycle(NicheId.adultContent.id);
       
-      _resetMedalsForModule(
-        notificationTitle: 'Módulo Desativado 🛑',
-        notificationBody:
-            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-        deactivate: true,
-      );
+      _resetMedalsForModule();
 
       // Força atualização do estado da gamificação
-      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.adultContent);
+      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.adultContent.id);
 
       setState(() {
-        _gamificationRunning = gamificationStatus?.isActive ?? false;
+        _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
 
@@ -255,20 +254,11 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     }
   }
 
-  void _resetMedalsForModule({
-    String? notificationTitle,
-    String? notificationBody,
-    bool sendNotification = true,
-    bool deactivate = false,
-  }) {
+  void _resetMedalsForModule() {
     final gamification =
-        ref.read(gamificationServiceProvider);
+        ref.read(gamificationServiceProvider.notifier);
     gamification.resetMedals(
-      _niche.nicheId,
-      notificationTitle: notificationTitle,
-      notificationBody: notificationBody,
-      sendNotification: sendNotification,
-      deactivate: deactivate,
+      _niche.nicheId.id,
     );
   }
 

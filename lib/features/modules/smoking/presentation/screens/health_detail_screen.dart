@@ -13,8 +13,8 @@ class HealthDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamification = ref.watch(gamificationServiceProvider);
-    final isActive = gamification.isModuleActive(NicheId.smoking);
+    final gamificationState = ref.watch(gamificationServiceProvider);
+    final isActive = gamificationState.moduleStatus[NicheId.smoking.id] ?? false;
     final effectiveDuration = isActive ? settings.timeSmokeFree : Duration.zero;
 
     return Scaffold(

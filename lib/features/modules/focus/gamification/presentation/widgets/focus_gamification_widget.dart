@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
 import 'package:disciplinum/features/modules/focus/gamification/presentation/controllers/focus_gamification_controller.dart';
 import 'package:disciplinum/features/modules/focus/gamification/presentation/providers/focus_gamification_provider.dart';
 
@@ -9,15 +11,16 @@ class FocusGamificationWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(focusGamificationControllerProvider);
-    final gamificationState = ref.watch(focusGamificationStateProvider);
+    final focusState = ref.watch(focusGamificationControllerProvider);
+    final controller = ref.watch(focusGamificationControllerProvider.notifier);
+    final initializationState = ref.watch(focusGamificationStateProvider);
 
-    return gamificationState.when(
+    return initializationState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
         child: Text('Erro: $error', style: TextStyle(color: Colors.red)),
       ),
-      data: (state) => _buildGamificationContent(context, ref, controller, state),
+      data: (state) => _buildGamificationContent(context, ref, controller, focusState),
     );
   }
 
@@ -25,7 +28,7 @@ class FocusGamificationWidget extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     FocusGamificationController controller,
-    Map<String, dynamic> state,
+    FocusGamificationState state,
   ) {
     return Column(
       children: [
@@ -85,7 +88,7 @@ class FocusGamificationWidget extends ConsumerWidget {
             if (controller.nextInsignia != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Próxima: ${controller.getInsigniaInfo(controller.nextInsignia!)['name']}',
+                'Próxima: ${controller.getInsigniaInfo(controller.nextInsignia!)?.name ?? 'Desconhecida'}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey[600],
                 ),
@@ -121,7 +124,13 @@ class FocusGamificationWidget extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: controller.earnedInsignias.map((insigniaId) {
-                  final info = controller.getInsigniaInfo(insigniaId);
+                  final insigniaEntity = controller.getInsigniaInfo(insigniaId);
+                  final info = insigniaEntity != null ? {
+                    'name': insigniaEntity.name,
+                    'description': insigniaEntity.description,
+                    'icon': insigniaEntity.icon,
+                    'requirement': insigniaEntity.description,
+                  } : <String, String>{};
                   return _buildInsigniaChip(context, info);
                 }).toList(),
               ),
@@ -170,7 +179,13 @@ class FocusGamificationWidget extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: controller.earnedMedalhas.map((medalhaId) {
-                  final info = controller.getMedalhaInfo(medalhaId);
+                  final medalhaEntity = controller.getMedalhaInfo(medalhaId);
+                  final info = medalhaEntity != null ? {
+                    'name': medalhaEntity.name,
+                    'description': medalhaEntity.description,
+                    'icon': medalhaEntity.icon,
+                    'requirement': medalhaEntity.description,
+                  } : <String, String>{};
                   return _buildMedalhaChip(context, info);
                 }).toList(),
               ),
@@ -237,8 +252,8 @@ class FocusGamificationWidget extends ConsumerWidget {
                   label: const Text('Período Respeitado'),
                 ),
                 ElevatedButton.icon(
-                  onPressed: controller.isLoading ? null : () async {
-                    await controller.failPeriod();
+                  onPressed: controller.isLoading ? null : () {
+                    controller.failPeriod();
                   },
                   icon: const Icon(Icons.close),
                   label: const Text('Falhar Período'),
@@ -250,8 +265,8 @@ class FocusGamificationWidget extends ConsumerWidget {
                 if (controller.canAwardDisciplinum)
                   ElevatedButton.icon(
                     onPressed: controller.isLoading ? null : () async {
-                      final awarded = await controller.tryAwardDisciplinum();
-                      if (awarded && context.mounted) {
+                      await controller.tryAwardDisciplinum();
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('🎉 Nova insígnia Disciplinum concedida!'),

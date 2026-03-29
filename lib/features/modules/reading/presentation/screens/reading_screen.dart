@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/features/modules/reading/presentation/notifiers/reading_gamification_notifier.dart';
+import 'package:disciplinum/features/modules/reading/data/repositories/reading_config_repository.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -10,8 +12,6 @@ import 'package:disciplinum/features/modules/reading/presentation/screens/readin
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart' as stats;
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart' as reading_progress;
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
-import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
@@ -111,8 +111,8 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamification = ref.watch(gamificationServiceProvider);
-    final isActive = gamification.isModuleActive(NicheId.reading);
+    final gamificationState = ref.watch(readingGamificationStateProvider);
+    final isActive = gamificationState.gamification != null;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -482,16 +482,23 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     );
   }
 
-
   Future<void> _toggleModule(bool isActive) async {
-    final gamification = ref.read(gamificationServiceProvider);
-
     if (isActive) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (context) => DeactivateModuleDialog(
-          nicheId: NicheId.reading,
-          customMessage: 'Ao desativar, seu progresso de medalhas será pausado.\n\nDeseja continuar?',
+        builder: (context) => AlertDialog(
+          title: const Text('Desativar Módulo'),
+          content: const Text('Ao desativar, seu progresso será mantido mas pausado.\n\nDeseja continuar?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Desativar'),
+            ),
+          ],
         ),
       );
 
@@ -499,35 +506,30 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         if (!mounted) return;
         HapticFeedback.heavyImpact();
         
-        // Para o ciclo da gamificação primeiro
-        await gamification.stopModuleCycle(nicheId: NicheId.reading);
+        // Implementando lógica de desativação local
+        final notifier = ref.read(readingGamificationNotifierProvider(ref.read(currentUserIdProvider)).notifier);
+        notifier.clearError();
         
-        await gamification.resetMedals(
-          NicheId.reading,
-          notificationTitle: 'Módulo Desativado 🛑',
-          notificationBody:
-              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-          deactivate: true,
-        );
-
-        // Força atualização do estado da gamificação
-        final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.reading);
-
+        // Salvar estado desativado em configuração local
+        await ReadingConfigRepository.instance.setModuleActive(ref.read(currentUserIdProvider), false);
+        
         setState(() {
-          isActive = gamificationStatus?.isActive ?? false;
+          isActive = false;
         });
-        
-        _tabController.animateTo(0);
-
-        if (mounted) {
-          EnhancedSnackBarHelper.showError(
-            context,
-            'Módulo desativado',
-          );
-        }
       }
     } else {
-      gamification.startModuleCycle(nicheId: NicheId.reading);
+      HapticFeedback.lightImpact();
+      
+      // Implementando lógica de ativação local
+      final notifier = ref.read(readingGamificationNotifierProvider(ref.read(currentUserIdProvider)).notifier);
+      await notifier.loadGamification();
+      
+      // Salvar estado ativado em configuração local
+      await ReadingConfigRepository.instance.setModuleActive(ref.read(currentUserIdProvider), true);
+      
+      setState(() {
+        isActive = true;
+      });
     }
   }
 

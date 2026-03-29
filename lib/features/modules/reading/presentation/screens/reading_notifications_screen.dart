@@ -245,7 +245,7 @@ class _ReadingNotificationsScreenState
                     );
                   }
                   // Reagendar notificações
-                  ref.read(gamificationServiceProvider)
+                  ref.read(gamificationServiceProvider.notifier)
                       .restoreMonitoringSession();
                   // Atualiza o contador
                   _loadCount();

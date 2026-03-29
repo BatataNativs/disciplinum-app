@@ -30,8 +30,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Configura o feedback visual para as compras nesta tela
-      _iapService = ref.read(iapServiceProvider);
-      _iapService!.onPurchaseResult = (success) {
+      _iapService = ref.read(iapServiceProvider.notifier);
+      _iapService!.onPurchaseResult = (productId, success) {
         if (!mounted) return;
         
         if (success) {
@@ -76,8 +76,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = ref.watch(authServiceProvider);
-    final iap = ref.watch(iapServiceProvider);
+    final authService = ref.watch(authServiceProvider.notifier);
+    final iapState = ref.watch(iapServiceProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -158,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ProfileActionButton(
                                   label: 'Loja do app',
                                   icon: Icons.storefront,
-                                  onPressed: () => _showLojinhaDialog(context, iap),
+                                  onPressed: () => _showLojinhaDialog(context, iapState),
                                   isDark: isDark,
                                 ),
                                 const SizedBox(height: 8),

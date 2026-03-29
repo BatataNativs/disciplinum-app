@@ -7,6 +7,8 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/repositor
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
+import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
 
 /// Service principal de gamificação do módulo Focus
 /// Orquestra todos os serviços de gamificação do módulo
@@ -241,6 +243,53 @@ class FocusGamificationService implements ModuleGamificationInterface {
   bool get isActive => _currentState?.isActive ?? false;
   bool get isInStreak => (_currentState?.respectedPeriods ?? 0) > 0;
 
+  FocusInsignia? get currentInsignia {
+    final nextId = _currentState?.nextInsignia;
+    if (nextId == null) return null;
+    return FocusInsignia.values.firstWhere(
+      (i) => i.name == nextId,
+      orElse: () => FocusInsignia.madeira,
+    );
+  }
+
+  List<FocusInsignia> get earnedInsignias {
+    return _currentState?.earnedInsignias.map((id) {
+          return FocusInsignia.values.firstWhere(
+            (i) => i.name == id,
+            orElse: () => FocusInsignia.madeira,
+          );
+        }).toList() ??
+        [];
+  }
+
+  FocusMedalha? get currentMedal {
+    // Retorna a primeira medalha não conquistada
+    for (final medalha in FocusMedalha.values) {
+      if (!_currentState!.hasMedalha(medalha.name)) {
+        return medalha;
+      }
+    }
+    return null;
+  }
+
+  List<FocusMedalha> get earnedMedals {
+    return _currentState?.earnedMedalhas.map((id) {
+          return FocusMedalha.values.firstWhere(
+            (m) => m.name == id,
+            orElse: () => FocusMedalha.bronze,
+          );
+        }).toList() ??
+        [];
+  }
+
+  Future<void> checkInsigniaProgress() async {
+    await checkForNewAchievements();
+  }
+
+  Future<void> checkMedalProgress() async {
+    await checkForNewAchievements();
+  }
+
   /// Obtém progresso para próxima insignia
   double getProgressToNextInsignia() {
     return 0.0; // Implementar se necessário
@@ -251,15 +300,36 @@ class FocusGamificationService implements ModuleGamificationInterface {
     return 0.0; // Implementar se necessário
   }
 
-  /// Obtém progresso percentual geral (compatibilidade com controller)
-  double getProgressPercentage() {
+  /// Métodos de compatibilidade para FocusGamificationController (VERSÃO NOVA)
+
+  Future<List<String>> getEarnedInsignias() async {
+    if (!_isInitialized) await initialize();
+    return _currentState?.earnedInsignias ?? [];
+  }
+
+  Future<List<String>> getEarnedMedalhas() async {
+    if (!_isInitialized) await initialize();
+    return _currentState?.earnedMedalhas ?? [];
+  }
+
+  Future<int> getRespectedPeriods() async {
+    if (!_isInitialized) await initialize();
+    return _currentState?.respectedPeriods ?? 0;
+  }
+
+  Future<void> processRespectedPeriod() async {
+    await processModuleEvent({'type': 'focus_period_completed', 'respectedPeriods': (respectedPeriods + 1)});
+  }
+
+  /// Obtém progresso percentual geral
+  Future<double> getProgressPercentage() async {
     return getProgressToNextInsignia();
   }
 
-  /// Obtém próxima insignia (compatibilidade com controller)
-  String? getNextInsignia() {
-    // Implementar lógica para encontrar próxima insignia
-    return null;
+  /// Obtém próxima insignia
+  Future<String?> getNextInsignia() async {
+    final next = _currentState?.nextInsignia;
+    return next;
   }
 
   /// Tenta conceder insignia Disciplinum (compatibilidade com controller)

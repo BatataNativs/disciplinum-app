@@ -105,12 +105,15 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
-    - assets/disciplinado.png
-    - assets/warning1.png
-    - assets/warning2.png
+    - assets/opening/disciplinado.png
+    - assets/opening/warning1.png
+    - assets/opening/warning2.png
     - assets/images/
     - assets/gamification/insignias/
     - assets/gamification/medals/
+    - assets/gamification/medals/smoking/
+    - assets/gamification/trofeus/
+    - assets/gamification/others/
     - assets/secret_menu/
 
 # --- Configuração do Ícone do App ---

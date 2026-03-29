@@ -62,6 +62,10 @@ extension FocusMedalhaExtension on FocusMedalha {
     }
   }
 
+  String get name => nameBr;
+  String get description => requirementDescription;
+  String get icon => asset;
+
   /// Obtém a insígnia necessária para esta medalha
   String get requiredInsignia {
     switch (this) {

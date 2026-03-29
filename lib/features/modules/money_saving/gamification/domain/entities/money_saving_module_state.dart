@@ -15,10 +15,31 @@ class MoneySavingModuleState {
   /// Contador de insignias Disciplinum
   final int disciplinumCount;
   
+  /// Valor total acumulado (alias para totalSavedAmount)
+  double get totalSaved => totalSavedAmount;
+  
+  /// Streak atual (alias para consecutiveDays)
+  int get currentStreak => consecutiveDays;
+  
+  /// Maior streak alcançado (alias para bestStreak)
+  int get longestStreak => bestStreak;
+  
+  /// Desafios completos
+  final int completedChallenges;
+  
+  /// Porcentagem da grade preenchida
+  final int gridPercentage;
+  
+  /// Nome da insígnia atual
+  final String currentInsignia;
+  
+  /// Total de desafios
+  final int totalChallenges;
+  
   /// Reseta apenas as insígnias (preserva a inicial)
   MoneySavingModuleState resetInsignias() {
-    // Preserva apenas a insígnia inicial (Economista Inicial)
-    final initialInsignia = MoneySavingInsignia.economistaInicial.name;
+    // Preserva apenas a insígnia inicial (Madeira)
+    final initialInsignia = MoneySavingInsignia.madeira.name;
     final hasInitialInsignia = earnedInsignias.contains(initialInsignia);
     
     final newInsignias = <String>[];
@@ -32,8 +53,12 @@ class MoneySavingModuleState {
     return MoneySavingModuleState(
       earnedInsignias: newInsignias,
       earnedMedalhas: [], // Reseta medalhas também
-      consecutiveDays: 0, // Reset dias
+      consecutiveDays: 0, // Reset consecutive days
       disciplinumCount: newDisciplinumCount,
+      completedChallenges: 0,
+      gridPercentage: 0,
+      currentInsignia: initialInsignia,
+      totalChallenges: totalChallenges,
       totalSavedAmount: totalSavedAmount,
       bestStreak: bestStreak,
       lastSavingDate: lastSavingDate,
@@ -41,6 +66,19 @@ class MoneySavingModuleState {
       lastUpdated: DateTime.now(),
       isActive: isActive,
     );
+  }
+
+  /// Revoga uma medalha específica
+  MoneySavingModuleState revokeMedalha(String medalhaId) {
+    final newMedalhas = List<String>.from(earnedMedalhas);
+    newMedalhas.remove(medalhaId);
+    
+    return copyWith(earnedMedalhas: newMedalhas);
+  }
+
+  /// Reseta apenas as medalhas
+  MoneySavingModuleState resetMedalhas() {
+    return copyWith(earnedMedalhas: []);
   }
   
   /// Valor total acumulado
@@ -66,6 +104,10 @@ class MoneySavingModuleState {
     this.earnedMedalhas = const [],
     this.consecutiveDays = 0,
     this.disciplinumCount = 0,
+    this.completedChallenges = 0,
+    this.gridPercentage = 0,
+    this.currentInsignia = 'Madeira',
+    this.totalChallenges = 0,
     this.totalSavedAmount = 0.0,
     this.bestStreak = 0,
     this.lastSavingDate,
@@ -88,6 +130,10 @@ class MoneySavingModuleState {
       earnedMedalhas: List<String>.from(json['earnedMedalhas'] ?? []),
       consecutiveDays: json['consecutiveDays'] ?? 0,
       disciplinumCount: json['disciplinumCount'] ?? 0,
+      completedChallenges: json['completedChallenges'] ?? 0,
+      gridPercentage: json['gridPercentage'] ?? 0,
+      currentInsignia: json['currentInsignia'] ?? 'Madeira',
+      totalChallenges: json['totalChallenges'] ?? 0,
       totalSavedAmount: (json['totalSavedAmount'] ?? 0.0).toDouble(),
       bestStreak: json['bestStreak'] ?? 0,
       lastSavingDate: json['lastSavingDate'] != null 
@@ -108,6 +154,10 @@ class MoneySavingModuleState {
       'earnedMedalhas': earnedMedalhas,
       'consecutiveDays': consecutiveDays,
       'disciplinumCount': disciplinumCount,
+      'completedChallenges': completedChallenges,
+      'gridPercentage': gridPercentage,
+      'currentInsignia': currentInsignia,
+      'totalChallenges': totalChallenges,
       'totalSavedAmount': totalSavedAmount,
       'bestStreak': bestStreak,
       'lastSavingDate': lastSavingDate?.toIso8601String(),
@@ -123,6 +173,10 @@ class MoneySavingModuleState {
     List<String>? earnedMedalhas,
     int? consecutiveDays,
     int? disciplinumCount,
+    int? completedChallenges,
+    int? gridPercentage,
+    String? currentInsignia,
+    int? totalChallenges,
     double? totalSavedAmount,
     int? bestStreak,
     DateTime? lastSavingDate,
@@ -135,6 +189,10 @@ class MoneySavingModuleState {
       earnedMedalhas: earnedMedalhas ?? this.earnedMedalhas,
       consecutiveDays: consecutiveDays ?? this.consecutiveDays,
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
+      completedChallenges: completedChallenges ?? this.completedChallenges,
+      gridPercentage: gridPercentage ?? this.gridPercentage,
+      currentInsignia: currentInsignia ?? this.currentInsignia,
+      totalChallenges: totalChallenges ?? this.totalChallenges,
       totalSavedAmount: totalSavedAmount ?? this.totalSavedAmount,
       bestStreak: bestStreak ?? this.bestStreak,
       lastSavingDate: lastSavingDate ?? this.lastSavingDate,

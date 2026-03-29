@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 class PermissionService {
@@ -44,9 +44,9 @@ class PermissionService {
 
       // 3. Acessibilidade (Fase 6) - Apenas para módulos que monitoram apps
       if (nicheId != null && _moduleNeedsAccessibilityPermission(nicheId)) {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = IsarPreferencesRepository(IsarService.instance.database);
         bool alreadyAsked =
-            prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
+            await prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
 
         bool accessibilityGranted = await hasAccessibilityPermission();
 
@@ -85,7 +85,7 @@ class PermissionService {
     if (!effectiveContext.mounted) return;
 
     if (granted) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = IsarPreferencesRepository(IsarService.instance.database);
       await prefs.setBool('asked_accessibility_permission_onboarding', true);
 
       if (effectiveContext.mounted) {

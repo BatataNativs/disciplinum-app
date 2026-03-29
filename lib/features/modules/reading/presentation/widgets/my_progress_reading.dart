@@ -10,7 +10,7 @@ class MyProgressReading extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.reading] ?? 0;
+    final dias = gamification.diasConsecutivosByModule[NicheId.reading.id] ?? 0;
 
     return _ReadingProgressDetailScreen(
       title: 'Leitura',

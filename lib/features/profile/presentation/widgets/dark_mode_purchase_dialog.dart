@@ -196,7 +196,7 @@ class _DarkModePurchaseDialogState
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      final iapService = ref.read(iapServiceProvider);
+                      final iapService = ref.read(iapServiceProvider.notifier);
                       
                       // Mostra snackbar de início da compra
                       EnhancedSnackBarHelper.showInfo(context, 'Iniciando compra de Dark Mode...');

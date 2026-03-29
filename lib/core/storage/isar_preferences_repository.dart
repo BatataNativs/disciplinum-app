@@ -80,4 +80,9 @@ class IsarPreferencesRepository {
       await _collection.clear();
     });
   }
+
+  Future<Set<String>> getKeys() async {
+    final preferences = await _collection.where().findAll();
+    return preferences.map((p) => p.key).toSet();
+  }
 }

@@ -51,7 +51,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void _submit() async {
     HapticFeedback.vibrate();
-    final authService = ref.read(authServiceProvider);
+    final authService = ref.read(authServiceProvider.notifier);
 
     if (_authMode == 1 && _nameController.text.isEmpty) {
       _showSnack('Digite seu nome');
@@ -119,7 +119,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void _googleAuth() async {
     HapticFeedback.vibrate();
-    final authService = ref.read(authServiceProvider);
+    final authService = ref.read(authServiceProvider.notifier);
     final started = await authService.loginWithGoogle();
 
     if (!started && mounted) {
@@ -203,7 +203,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final authService = ref.read(authServiceProvider);
+              final authService = ref.read(authServiceProvider.notifier);
               final success = await authService
                   .resetPassword(emailResetController.text.trim());
               if (mounted) {

@@ -5,10 +5,10 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class MoneySavingChallengeNotificationsScreen extends ConsumerStatefulWidget {
   const MoneySavingChallengeNotificationsScreen({super.key});
@@ -29,12 +29,12 @@ class _MoneySavingChallengeNotificationsScreenState
   @override
   void initState() {
     super.initState();
-    _service = MoneySavingChallengeService(IsarPreferencesRepository(IsarService.instance.database));
+    _service = ref.read(moneySavingChallengeServiceProvider);
     _loadData();
   }
 
   Future<void> _loadData() async {
-    final challenge = await _service.getActiveChallenge();
+    final challenge = _service.getActiveChallenge();
     if (mounted) {
       setState(() {
         _challenge = challenge;
@@ -49,7 +49,7 @@ class _MoneySavingChallengeNotificationsScreenState
 
     // Agenda as notificações nativas
     if (mounted) {
-      await ref.read(gamificationServiceProvider).scheduleChallengeNotification();
+      await _scheduleChallengeNotification();
     }
   }
 
@@ -387,6 +387,55 @@ class _MoneySavingChallengeNotificationsScreenState
       final newTime =
           '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       _updateSettings(_challenge!.copyWith(notifTime: newTime));
+    }
+  }
+
+  Future<void> _scheduleChallengeNotification() async {
+    try {
+      final challenge = _challenge;
+      
+      if (challenge == null || challenge.notifFrequency == 'disabled') {
+        await NotificationService.cancelNotification(7001);
+        return;
+      }
+
+      final timeParts = challenge.notifTime.split(':');
+      final time = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+
+      final title = 'Desafio da Poupança 💰';
+      final body = 'Lembre-se de economizar hoje! Seu progresso está incrível! 💪';
+      const int notifId = 7001;
+
+      await NotificationService.cancelNotification(notifId);
+
+      switch (challenge.notifFrequency) {
+        case 'diario':
+          await NotificationService.scheduleDailyNotification(
+            id: notifId,
+            time: time,
+            title: title,
+            body: body,
+          );
+          break;
+        case 'semanal':
+          await NotificationService.scheduleWeeklyNotification(
+            id: notifId,
+            dayOfWeek: challenge.notifDayOfWeek,
+            time: time,
+            title: title,
+            body: body,
+          );
+          break;
+        default:
+          // Frequência não reconhecida, cancela notificação
+          await NotificationService.cancelNotification(notifId);
+      }
+    } catch (e) {
+      // Silenciosamente ignora erros de notificação para não quebrar a UI
+      LoggerService.instance.w('Erro ao agendar notificação: $e');
     }
   }
 }

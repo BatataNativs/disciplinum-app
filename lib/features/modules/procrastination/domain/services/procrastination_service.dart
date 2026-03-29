@@ -191,7 +191,7 @@ class ProcrastinationService extends ChangeNotifier {
 
         if (!resetTriggered) {
           _gamificationService.resetMedals(
-            NicheId.procrastination,
+            NicheId.procrastination.id,
             notificationTitle: "Dia Incompleto 📉",
             notificationBody:
                 "Você deixou tarefas pendentes em dias anteriores. Seu streak foi reiniciado.",

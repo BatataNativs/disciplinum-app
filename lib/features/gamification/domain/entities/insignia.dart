@@ -103,4 +103,16 @@ extension FocusInsigniaExtension on FocusInsignia {
         return '10 períodos de foco respeitados';
     }
   }
+
+  String get name => nameBr;
+  String get description => requirementDescription;
+  String get icon => asset;
+
+  /// Calcula o progresso percentual (0.0 a 1.0) para esta insígnia
+  /// baseada nos períodos respeitados
+  double calculateProgress(int respected) {
+    if (respected <= 0 && this == FocusInsignia.madeira) return 1.0;
+    if (requiredPeriods == 0) return 1.0;
+    return (respected / requiredPeriods).clamp(0.0, 1.0);
+  }
 }

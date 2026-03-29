@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
@@ -13,6 +14,8 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
 import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
+
+// TODO: Remover estas classes após migração completa - estão sendo movidas para módulos específicos
 class AdultContentEvent {
   static const String blocked = 'adult_content_blocked';
   static const String accessed = 'adult_content_accessed';
@@ -20,7 +23,6 @@ class AdultContentEvent {
   static const String streakExtended = 'adult_content_streak_extended';
 }
 
-/// Eventos de gamificação para Diet
 class DietEvent {
   static const String goalCompleted = 'diet_goal_completed';
   static const String mealCompleted = 'diet_meal_completed';
@@ -87,7 +89,7 @@ class GamificationAwardEngine {
       'medal_asset': medal.asset,
       'awarded_at': DateTime.now().toIso8601String(),
     };
-    service.addPendingMedal(medalData);
+    service.addPendingMedal(jsonEncode(medalData));
     await _sendMedalNotificationWithActions(nicheId, medal);
   }
 
@@ -97,7 +99,7 @@ class GamificationAwardEngine {
       GamificationService service,
       FocusService focusService,
   ) async {
-    final startDate = service.getModuleStartDate(nicheId);
+    final startDate = service.getModuleStartDate(nicheId.id);
     if (startDate == null) return;
 
     // Para módulo Foco, usar períodos de foco respeitados em vez de dias
@@ -110,8 +112,8 @@ class GamificationAwardEngine {
     // Para outros módulos, manter lógica de dias corridos
     final daysActive = DateTime.now().difference(startDate).inDays;
 
-    if (daysActive != service.diasConsecutivosByModule[nicheId]) {
-      service.updateConsecutiveDaysSync(nicheId, daysActive);
+    if (daysActive != service.diasConsecutivosByModule[nicheId.id]) {
+      service.updateConsecutiveDaysSync(nicheId.id, daysActive);
       await _verificaMedalhaDias(nicheId, daysActive, service);
     }
   }
@@ -133,10 +135,9 @@ class GamificationAwardEngine {
       newMedal = GamificationMedal.bronze;
     }
 
-    final current = service.maxMedalForModule(nicheId);
-    if (newMedal != null &&
-        (current == null || newMedal.index > current.index)) {
-      service.setMaxMedal(nicheId, newMedal);
+    final current = service.maxMedalForModule(nicheId.id);
+    if (newMedal != null && newMedal.index > current) {
+      service.setMaxMedal(nicheId.id, newMedal.index);
       await awardMedal(nicheId, newMedal, service);
     }
   }
@@ -234,94 +235,8 @@ class GamificationAwardEngine {
     }
   }
 
-  /// Processa eventos do Adult Content Service
-  Future<void> processAdultContentEvent(
-      String eventType,
-      AdultContentService service,
-  ) async {
-    switch (eventType) {
-      case AdultContentEvent.blocked:
-        LoggerService.instance.i('Adult Content bloqueado');
-        await _updateAdultContentStats(service, 'blocked');
-        break;
-      case AdultContentEvent.accessed:
-        LoggerService.instance.i('Adult Content acessado');
-        await _updateAdultContentStats(service, 'accessed');
-        break;
-      case AdultContentEvent.limitReached:
-        LoggerService.instance.i('Limite diário atingido');
-        await _updateAdultContentStats(service, 'limit_reached');
-        break;
-      case AdultContentEvent.streakExtended:
-        LoggerService.instance.i('Streak extendido');
-        await _updateAdultContentStats(service, 'streak_extended');
-        break;
-    }
-  }
-
-  /// Atualiza estatísticas do Adult Content
-  Future<void> _updateAdultContentStats(
-      AdultContentService service,
-      String action,
-  ) async {
-    final currentStats = service.stats;
-    
-    // Criar novas estatísticas baseadas na ação
-    final newStats = AdultContentStats(
-      totalBlockedAttempts: currentStats.totalBlockedAttempts + 1,
-      totalAccessAttempts: currentStats.totalAccessAttempts + 1,
-      lastAccessAttempt: DateTime.now(),
-      totalBlockedTime: currentStats.totalBlockedTime,
-      totalAccessTime: currentStats.totalAccessTime,
-    );
-
-    LoggerService.instance.i('Adult Content estatísticas atualizadas para ação: $action');
-    
-    // Atualizar estatísticas no serviço
-    await service.updateStats(newStats);
-    
-    // Usar a variável para evitar warning
-    LoggerService.instance.d('Estatísticas atualizadas: ${newStats.totalBlockedAttempts} bloqueios, ${newStats.totalAccessAttempts} acessos');
-  }
-
-  /// Processa eventos do Diet Service
-  Future<void> processDietEvent(
-      String eventType,
-      DietService service,
-  ) async {
-    switch (eventType) {
-      case DietEvent.goalCompleted:
-        LoggerService.instance.i('Meta de dieta completada');
-        await _updateDietStats(service, 'goal_completed');
-        break;
-      case DietEvent.mealCompleted:
-        LoggerService.instance.i('Refeição completada');
-        await _updateDietStats(service, 'meal_completed');
-        break;
-      case DietEvent.streakExtended:
-        LoggerService.instance.i('Streak de dieta extendido');
-        await _updateDietStats(service, 'streak_extended');
-        break;
-      case DietEvent.nutritionGoal:
-        LoggerService.instance.i('Meta nutricional atingida');
-        await _updateDietStats(service, 'nutrition_goal');
-        break;
-    }
-  }
-
-  /// Atualiza estatísticas do Diet Service
-  Future<void> _updateDietStats(
-      DietService service,
-      String action,
-  ) async {
-    final summary = service.todaySummary;
-    if (summary != null) {
-      LoggerService.instance.i('Diet estatísticas atualizadas para ação: $action');
-      
-      // Log do completion rate para analytics
-      LoggerService.instance.d('Completion rate: ${summary.goalCompletionRate}');
-    }
-  }
+  // Métodos processAdultContentEvent e processDietEvent movidos para módulos específicos
+  // Verificar: adult_content_gamification_events.dart e diet_gamification_events.dart
 
   Future<void> _sendInsigniaNotification(
       FocusInsignia insignia,

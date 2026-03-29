@@ -27,7 +27,7 @@ class AuthWrapperWithoutHomeValues extends ConsumerWidget {
     }
 
     // Prioridade 3: Lógica de Autenticação
-    if (authService.isAuthenticated) {
+    if (authService.currentUser != null) {
       // Logado -> Home
       return const HomeScreen();
     } else {

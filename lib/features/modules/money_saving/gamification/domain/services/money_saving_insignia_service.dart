@@ -40,8 +40,8 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     await _repository.saveMoneySavingState(newState);
   }
 
-  /// Verifica e concede novas insignias baseadas nos dias consecutivos
-  Future<List<MoneySavingInsignia>> checkAndAwardInsignias(int consecutiveDays) async {
+  /// Verifica e concede novas insignias baseadas no percentual da grid preenchida
+  Future<List<MoneySavingInsignia>> checkAndAwardInsignias(int gridPercentage) async {
     if (!_isInitialized || _currentState == null) {
       LoggerService.instance.w('MoneySavingInsigniaService não inicializado');
       return [];
@@ -51,7 +51,7 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     final updatedInsignias = List<String>.from(_currentState!.earnedInsignias);
 
     for (final insignia in MoneySavingInsignia.values) {
-      if (insignia.canBeAwarded(consecutiveDays, updatedInsignias)) {
+      if (insignia.canBeAwarded(gridPercentage, updatedInsignias)) {
         updatedInsignias.add(insignia.name);
         awardedInsignias.add(insignia);
         
@@ -142,7 +142,18 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
       return 0.0;
     }
     return MoneySavingInsignia.calculateProgress(
-      _currentState!.consecutiveDays,
+      _currentState!.consecutiveDays, // Progress based on consecutive days of saving
+      _currentState!.earnedInsignias,
+    );
+  }
+
+  /// Calcula o progresso para a próxima insignia baseado no percentual da grid
+  double getProgressByGrid(int gridPercentage) {
+    if (!_isInitialized || _currentState == null) {
+      return 0.0;
+    }
+    return MoneySavingInsignia.calculateProgress(
+      gridPercentage,
       _currentState!.earnedInsignias,
     );
   }
@@ -172,8 +183,8 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     }
 
     try {
-      // Preserva apenas a insígnia inicial (Economista Inicial)
-      final initialInsignia = MoneySavingInsignia.economistaInicial.name;
+      // Preserva apenas a insígnia inicial (Madeira)
+      final initialInsignia = MoneySavingInsignia.madeira.name;
       final hasInitialInsignia = _currentState!.earnedInsignias.contains(initialInsignia);
       
       final updatedInsignias = <String>[];
@@ -226,7 +237,7 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     
     if (insignia == null) return 'Requisito não disponível';
     
-    return '${insignia.requiredConsecutiveDays} dias consecutivos economizando';
+    return '${insignia.requiredGridPercentage}% da grid preenchida';
   }
 
   @override

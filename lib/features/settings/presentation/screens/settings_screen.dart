@@ -85,8 +85,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _sincronizarAgora() async {
     setState(() => _isSyncing = true);
 
-    final auth = ref.read(authServiceProvider);
-    if (!auth.isAuthenticated) {
+    final authState = ref.read(authServiceProvider);
+    if (!authState.isAuthenticated) {
       if (mounted) {
         setState(() => _isSyncing = false);
         EnhancedSnackBarHelper.showWarning(
@@ -211,7 +211,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gamification = ref.watch(gamificationServiceProvider);
+    final gamificationState = ref.watch(gamificationServiceProvider);
+    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -300,9 +301,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: const Text('Silenciar alertas temporariamente'),
                   secondary: Icon(Icons.notifications_paused_outlined,
                       color: isDark ? Colors.white70 : Colors.black54),
-                  value: gamification.notificationsPaused,
+                  value: gamificationState.notificationsPaused,
                   onChanged: (val) =>
-                      gamification.setNotificationsPaused(val),
+                      gamificationNotifier.setNotificationsPaused(val),
                 ),
                 Divider(
                     height: 1,

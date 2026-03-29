@@ -65,8 +65,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
       // Carrega status da gamificação
       LoggerService.instance.i('SpendingScreen: Carregando status da gamificação');
-      final gamification = ref.read(gamificationServiceProvider);
-      final isRunning = gamification.isModuleActive(NicheId.spending);
+      final gamificationState = ref.read(gamificationServiceProvider);
+      final isRunning = gamificationState.moduleStatus[NicheId.spending.id] ?? false;
       LoggerService.instance.i('SpendingScreen: Gamificação ativa: $isRunning');
       
       if (mounted) {
@@ -125,13 +125,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
     if (!mounted) return;
 
-    final gamification = ref.read(gamificationServiceProvider);
-    gamification.monitoredApps = Set<String>.from(_selectedApps);
 
-    gamification.startMonitoringApps(
-      nicheId: NicheId.spending,
-      horarios: [],
-    );
 
     final granted = await NotificationService.requestPermission();
 
@@ -153,8 +147,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       nicheId: NicheId.spending,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider)
-        .startModuleCycle(nicheId: NicheId.spending);
+    ref.read(gamificationServiceProvider.notifier)
+        .startModuleCycle(NicheId.spending.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -187,13 +181,13 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
-    final confirmed = await DeactivateModuleDialog.showWithService(
+    final confirmed = await showDialog<bool>(
       context: context,
-      gamificationService: gamification,
-      nicheId: NicheId.spending,
-      customMessage:
-          'Ao desativar o módulo, seu progresso e estatísticas serão reiniciados.\n\nDeseja continuar?',
+      builder: (context) => DeactivateModuleDialog(
+        nicheId: NicheId.spending,
+        customMessage:
+            'Ao desativar o módulo, seu progresso e estatísticas serão reiniciados.\n\nDeseja continuar?',
+      ),
     );
 
     if (confirmed != true) return;
@@ -202,9 +196,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     HapticFeedback.heavyImpact();
     
     // Para o ciclo da gamificação primeiro
-    await gamification.stopModuleCycle(nicheId: NicheId.spending);
-    
-    gamification.stopMonitoringApps();
+    ref.read(gamificationServiceProvider.notifier).stopModuleCycle(NicheId.spending.id);
 
     _resetMedalsForModule(
       notificationTitle: 'Módulo Desativado 🛑',
@@ -214,10 +206,10 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     );
 
     // Força atualização do estado da gamificação
-    final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.spending);
+    ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.spending.id);
 
     setState(() {
-      _gamificationRunning = gamificationStatus?.isActive ?? false;
+      _gamificationRunning = false;
       _selectedIndex = 0;
     });
 
@@ -241,16 +233,11 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   void _resetMedalsForModule({
     String? notificationTitle,
     String? notificationBody,
-    bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     gamification.resetMedals(
-      NicheId.spending,
-      notificationTitle: notificationTitle,
-      notificationBody: notificationBody,
-      sendNotification: sendNotification,
-      deactivate: deactivate,
+      NicheId.spending.id,
     );
   }
 
@@ -308,10 +295,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       nicheId: NicheId.spending,
       package: package,
     );
-    // Se o módulo estiver rodando, atualizar o serviço de monitoramento
+    // Se o módulo estiver rodando, as permissões/monitoramento são atualizadas via banco Isar
     if (_gamificationRunning) {
       if (!mounted) return;
-      ref.read(gamificationServiceProvider);
     }
   }
 

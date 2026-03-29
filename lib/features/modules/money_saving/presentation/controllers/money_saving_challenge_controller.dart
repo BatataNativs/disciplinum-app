@@ -42,7 +42,7 @@ class MoneySavingChallengeController extends StateNotifier<MoneySavingChallengeS
     state = state.copyWith(isLoading: true);
     
     try {
-      final challengeData = await _moneySavingService.getActiveChallenge();
+      final challengeData = _moneySavingService.getActiveChallenge();
       state = state.copyWith(
         isLoading: false,
         challengeData: challengeData,
@@ -73,10 +73,10 @@ class MoneySavingChallengeController extends StateNotifier<MoneySavingChallengeS
         targetAmount: challenge.targetAmount,
         periodValue: challenge.periodValue,
         periodType: challenge.periodType,
+        gridSize: challenge.gridSize,
         minValue: challenge.minValue,
         maxValue: challenge.maxValue,
-        isActive: challenge.isActive,
-        id: challenge.id,
+        currency: challenge.currency,
       );
       
       // Atualiza estado local

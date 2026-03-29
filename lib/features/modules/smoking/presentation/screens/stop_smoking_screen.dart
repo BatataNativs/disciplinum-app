@@ -235,27 +235,16 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     }
     if (!mounted) return;
 
-    final gamification = ref.read(gamificationServiceProvider);
-
-    gamification.scheduleByModule[NicheId.smoking] =
-        times.map((t) => TimeOfDay(hour: t.hour, minute: t.minute)).toList();
+    final gamification = ref.read(gamificationServiceProvider.notifier);
 
     if (onlySyncSchedules) {
-      if (_gamificationRunning) {
-        await gamification.restoreMonitoringSession();
-      }
+      // Sincronização e agendamentos agora são responsabilidade do NotificationScheduler e CloudSyncService
       return;
     }
 
     if (times.isNotEmpty && _gamificationRunning) {
-      await PermissionService.ensurePermissions(context);
-      gamification.startModuleCycle(nicheId: NicheId.smoking);
-
-      if (!gamification.isGeneralMonitoringActive) {
-        gamification.startMonitoringApps(
-            nicheId: NicheId.smoking,
-            horarios: gamification.scheduleByModule[NicheId.smoking]!);
-      }
+      await PermissionService.ensurePermissions(context, nicheId: NicheId.smoking);
+      gamification.startModuleCycle(NicheId.smoking.id);
     }
   }
 
@@ -399,16 +388,17 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     HapticFeedback.heavyImpact();
     setState(() => _gamificationRunning = true);
     ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isActive: true);
-    ref.read(gamificationServiceProvider).startModuleCycle(nicheId: NicheId.smoking);
+    ref.read(gamificationServiceProvider.notifier).startModuleCycle(NicheId.smoking.id);
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
-    final confirmed = await DeactivateModuleDialog.showWithService(
+    final gamification = ref.read(gamificationServiceProvider.notifier);
+    final confirmed = await showDialog<bool>(
       context: context,
-      gamificationService: gamification,
-      nicheId: NicheId.smoking,
-      customMessage: "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
+      builder: (context) => DeactivateModuleDialog(
+        nicheId: NicheId.smoking,
+        customMessage: "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
+      ),
     );
 
     if (confirmed == true) {
@@ -424,26 +414,22 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             nicheId: NicheId.smoking.id + 100);
 
         // Para o ciclo da gamificação primeiro
-        await gamification.stopModuleCycle(nicheId: NicheId.smoking);
+        gamification.stopModuleCycle(NicheId.smoking.id);
         
         // Depois reseta as medalhas
         gamification.resetMedals(
-          NicheId.smoking,
-          notificationTitle: 'Módulo Desativado 🛑',
-          notificationBody:
-              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-          deactivate: true,
+          NicheId.smoking.id,
         );
 
         if (mounted) {
           final data = await ref.read(smokingServiceProvider).getSettings();
           
           // Força atualização do estado da gamificação
-          final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.smoking);
+          ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.smoking.id);
           
           setState(() {
             settings = data;
-            _gamificationRunning = gamificationStatus?.isActive ?? false;
+            _gamificationRunning = false;
             isLoading = false;
             _selectedIndex = 0;
           });

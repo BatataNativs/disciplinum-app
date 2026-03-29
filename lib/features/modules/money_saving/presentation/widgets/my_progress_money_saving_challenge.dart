@@ -11,7 +11,7 @@ class MyProgressMoneySavingChallenge extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
     final dias =
-        gamification.diasConsecutivosByModule[NicheId.moneySavingChallenge] ??
+        gamification.diasConsecutivosByModule[NicheId.moneySavingChallenge.id] ??
             0;
 
     return _MoneySavingProgressDetailScreen(

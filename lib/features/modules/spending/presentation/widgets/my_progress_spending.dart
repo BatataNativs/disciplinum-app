@@ -10,7 +10,7 @@ class MyProgressSpending extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.spending] ?? 0;
+    final dias = gamification.diasConsecutivosByModule[NicheId.spending.id] ?? 0;
 
     return _SpendingProgressDetailScreen(
       title: 'Controlar gastos',

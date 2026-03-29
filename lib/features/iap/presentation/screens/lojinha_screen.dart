@@ -24,8 +24,8 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
     // Configura o callback para mostrar snackbars de resultado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _iapService = ref.read(iapServiceProvider);
-      _iapService?.onPurchaseResult = (success) {
+      _iapService = ref.read(iapServiceProvider.notifier);
+      _iapService?.onPurchaseResult = (productId, success) {
         if (!mounted) return;
 
         // Cancela o timeout de erro se receber resposta
@@ -73,7 +73,8 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iap = ref.watch(iapServiceProvider);
+    final iapState = ref.watch(iapServiceProvider);
+    final iapNotifier = ref.read(iapServiceProvider.notifier);
 
     // Cores do gradiente (Mantive o fundo escuro no dark mode)
     final gradientColors = isDark
@@ -122,7 +123,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                 ),
                 InkWell(
                   onTap: () {
-                    iap.restorePurchases();
+                    iapNotifier.restorePurchases();
                     SnackBarHelper.showInfo(
                         context, 'Buscando compras anteriores...');
                   },
@@ -158,12 +159,12 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
               context,
               title: "AdFree (Vitalício)",
               description: "Remova anúncios do app permanentemente.",
-              price: iap.isAdFreePermanent ? "Adquirido" : "R\$ 19,99",
+              price: iapNotifier.isAdFreePermanent ? "Adquirido" : "R\$ 19,99",
               icon: Icons.block_flipped,
               color: Colors.redAccent,
-              isAcquired: iap.isAdFreePermanent,
+              isAcquired: iapNotifier.isAdFreePermanent,
               onTap: () =>
-                  _handleBuyAction(iap.buyAdFree, "AdFree (Vitalício)"),
+                  _handleBuyAction(() => iapNotifier.buyAdFree(), "AdFree (Vitalício)"),
             ),
             const SizedBox(height: 12),
 
@@ -171,15 +172,15 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
             _buildProductItem(
               context,
               title: "AdFree Lite (7 dias)",
-              description: iap.isAdFreeLiteActive
-                  ? "Ativo até: ${_formatDate(iap.adFreeLiteExpiration)}"
+              description: iapNotifier.isAdFreeLiteActive
+                  ? "Ativo até: ${_formatDate(iapNotifier.adFreeLiteExpiration)}"
                   : "Sem anúncios por uma semana.",
-              price: iap.isAdFreeLiteActive ? "Ativo" : "R\$ 2,99",
+              price: iapNotifier.isAdFreeLiteActive ? "Ativo" : "R\$ 2,99",
               icon: Icons.hourglass_top_rounded,
               color: Colors.orangeAccent,
-              isAcquired: iap.isAdFreeLiteActive,
-              onTap: () => _handleBuyAction(iap.buyAdFreeLite, "AdFree Lite"),
-              isDisabled: iap.isAdFreePermanent,
+              isAcquired: iapNotifier.isAdFreeLiteActive,
+              onTap: () => _handleBuyAction(() => iapNotifier.buyAdFreeLite(), "AdFree Lite"),
+              isDisabled: iapNotifier.isAdFreePermanent,
             ),
             const SizedBox(height: 12),
 
@@ -188,11 +189,11 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
               context,
               title: "Dark Mode 🌙",
               description: "Desbloqueie o tema escuro.",
-              price: iap.isDarkModeUnlocked ? "Adquirido" : "R\$ 4,99",
+              price: iapState.isDarkModeUnlocked ? "Adquirido" : "R\$ 4,99",
               icon: Icons.dark_mode_rounded,
               color: Colors.indigoAccent,
-              isAcquired: iap.isDarkModeUnlocked,
-              onTap: () => _handleBuyAction(iap.buyDarkMode, "Dark Mode"),
+              isAcquired: iapState.isDarkModeUnlocked,
+              onTap: () => _handleBuyAction(() => iapNotifier.buyDarkMode(), "Dark Mode"),
               onPreviewTap: () => _showPreview(context),
             ),
             const SizedBox(height: 12),
@@ -232,11 +233,11 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
               context,
               title: "Notificações Personalizáveis",
               description: "Personalize os textos das notificações.",
-              price: iap.isCustomNotifUnlocked ? "Adquirido" : "R\$ 2,99",
+              price: iapState.isCustomNotifUnlocked ? "Adquirido" : "R\$ 2,99",
               icon: Icons.notifications_active_rounded,
               color: Colors.teal,
-              isAcquired: iap.isCustomNotifUnlocked,
-              onTap: () => _handleBuyAction(iap.buyCustomNotif, "Notificações"),
+              isAcquired: iapState.isCustomNotifUnlocked,
+              onTap: () => _handleBuyAction(() => iapNotifier.buyCustomNotif(), "Notificações"),
             ),
           ],
         ),

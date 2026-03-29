@@ -14,6 +14,16 @@ import 'package:disciplinum/features/modules/smoking/gamification/domain/entitie
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
+import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_config_entity.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_interval_entity.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_config_entity.dart';
+import 'package:disciplinum/features/modules/reading/domain/entities/reading_config_entity.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_entity.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_config_entity.dart';
+import 'package:disciplinum/infrastructure/iap/domain/entities/iap_entitlement.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
 class IsarService {
@@ -47,6 +57,17 @@ class IsarService {
           FocusGamificationEntitySchema,
           DietGamificationEntitySchema,
           MoneySavingGamificationEntitySchema,
+          ReadingGamificationEntitySchema,
+          AdultContentConfigEntitySchema,
+          BingeEatingConfigEntitySchema,
+          DietConfigEntitySchema,
+          FocusIntervalEntitySchema,
+          FocusConfigEntitySchema,
+          ReadingConfigEntitySchema,
+          MoneySavingChallengeEntitySchema,
+          MoneySavingGridCellEntitySchema,
+          ProcrastinationConfigEntitySchema,
+          IapEntitlementSchema,
         ],
         directory: dbPath,
       );
@@ -75,6 +96,9 @@ class IsarService {
 
   /// Getter para MonitoringStates  
   IsarCollection<MonitoringState> get monitoringStates => database.monitoringStates; // ✅ DESCOMENTAR
+  
+  /// Getter para IapEntitlements
+  IsarCollection<IapEntitlement> get iapEntitlements => database.iapEntitlements; // ✅ ADICIONADO
 
   /// Getter para Expenses
   IsarCollection<ExpenseEntity> get expenses => database.expenseEntitys;
@@ -91,7 +115,37 @@ class IsarService {
   /// Getter para MoneySavingGamificationEntity
   IsarCollection<MoneySavingGamificationEntity> get moneySavingGamificationStates => database.moneySavingGamificationEntitys;
 
-  /// Limpa todo o banco (apenas para desenvolvimento)
+  /// Getter para ReadingGamificationEntity
+  IsarCollection<ReadingGamificationEntity> get readingGamificationStates => database.readingGamificationEntitys;
+
+  /// Getter para AdultContentConfigEntity
+  IsarCollection<AdultContentConfigEntity> get adultContentConfigs => database.adultContentConfigEntitys;
+
+  /// Getter para BingeEatingConfigEntity
+  IsarCollection<BingeEatingConfigEntity> get bingeEatingConfigs => database.bingeEatingConfigEntitys;
+
+  /// Getter para DietConfigEntity
+  IsarCollection<DietConfigEntity> get dietConfigs => database.dietConfigEntitys;
+
+  /// Getter para FocusIntervalEntity
+  IsarCollection<FocusIntervalEntity> get focusIntervals => database.focusIntervalEntitys;
+
+  /// Getter para FocusConfigEntity
+  IsarCollection<FocusConfigEntity> get focusConfigs => database.focusConfigEntitys;
+
+  /// Getter para ReadingConfigEntity
+  IsarCollection<ReadingConfigEntity> get readingConfigs => database.readingConfigEntitys;
+
+  /// Getter para MoneySavingChallengeEntity
+  IsarCollection<MoneySavingChallengeEntity> get moneySavingChallenges => database.moneySavingChallengeEntitys;
+
+  /// Getter para MoneySavingGridCellEntity
+  IsarCollection<MoneySavingGridCellEntity> get moneySavingGridCells => database.moneySavingGridCellEntitys;
+
+  /// Getter para ProcrastinationConfigEntity
+  IsarCollection<ProcrastinationConfigEntity> get procrastinationConfigs => database.procrastinationConfigEntitys;
+
+  /// Fecha o banco de dados banco (apenas para desenvolvimento)
   Future<void> clearAll() async {
     if (!_isInitialized) return;
 

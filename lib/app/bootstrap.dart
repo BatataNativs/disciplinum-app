@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:disciplinum/core/storage/local_storage_service.dart';
@@ -27,23 +26,27 @@ class AppBootstrap {
     }
 
     try {
-      // Inicialização paralela para melhor performance
+      // Inicialização paralela dos serviços independentes
       await Future.wait([
-        _initStorage(),
         _initSupabase(),
-        _initNotifications(),
         _initAds(),
-        _initServices(),
         _initTheme(),
       ]);
 
-      final prefs = await SharedPreferences.getInstance();
-      final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+      // Inicializar serviços que dependem de outros (sequencial)
+      await _initServices();  // Inicializa Isar
+      
+      // Inicializar serviços que dependem do Isar
+      await _initNotifications();
+      await _initStorage();
+
+      // Usar LocalStorageService em vez de SharedPreferences diretos
+      final storageService = LocalStorageService.instance;
+      final seenOnboarding = await storageService.get<bool>('seen_onboarding') ?? false;
 
       _isInitialized = true;
 
       return AppStartupData(
-        prefs: prefs,
         seenOnboarding: seenOnboarding,
       );
     } catch (e) {

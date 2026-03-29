@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
 
 class MyProgressFocus extends ConsumerWidget {
   const MyProgressFocus({super.key});
@@ -13,7 +13,7 @@ class MyProgressFocus extends ConsumerWidget {
     final gamification = ref.watch(gamificationServiceProvider);
     final focusService = ref.watch(focusServiceProvider);
     final authService = ref.watch(authServiceProvider);
-    final periodosRespeitados = gamification.periodosFocoRespeitados[NicheId.focus] ?? 0; // CORRIGIDO: Usar getter existente
+    final periodosRespeitados = gamification.periodosFocoRespeitados[NicheId.focus.id] ?? 0; // CORRIGIDO: Usar id do enum
     final earnedInsigniasFuture = focusService.getEarnedInsignias(); // CORRIGIDO: Obter do FocusService
 
     // Lógica para obter o primeiro nome
@@ -77,12 +77,10 @@ class MyProgressFocus extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
-                  final isEarned =
-                      (medal == GamificationMedal.bronze && periodosRespeitados >= 3) ||
-                          (medal == GamificationMedal.prata && periodosRespeitados >= 6) ||
-                          (medal == GamificationMedal.ouro && periodosRespeitados >= 9) ||
-                          (medal == GamificationMedal.diamante && periodosRespeitados >= 10);
+                children: FocusMedalha.values.map((medal) {
+                  final isEarned = medal.canBeAwarded(
+                    earnedInsignias.map((e) => e.toString().split('.').last).toList()
+                  );
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -142,17 +140,8 @@ class MyProgressFocus extends ConsumerWidget {
     );
   }
 
-  String _getMedalRequirement(GamificationMedal medal) {
-    switch (medal) {
-      case GamificationMedal.bronze:
-        return '3 períodos de foco';
-      case GamificationMedal.prata:
-        return '6 períodos de foco';
-      case GamificationMedal.ouro:
-        return '9 períodos de foco';
-      case GamificationMedal.diamante:
-        return '10 períodos de foco';
-    }
+  String _getMedalRequirement(FocusMedalha medal) {
+    return medal.requirementDescription;
   }
 
   String _getInsigniaRequirement(FocusInsignia insignia) {

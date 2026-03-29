@@ -40,7 +40,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       return;
     }
 
-    final authService = ref.read(authServiceProvider);
+    final authService = ref.read(authServiceProvider.notifier);
     final success = await authService.updatePassword(newPass);
 
     if (!mounted) return;
@@ -81,7 +81,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         if (didPop) return;
 
         final navigator = Navigator.of(context);
-        final auth = ref.read(authServiceProvider);
+        final auth = ref.read(authServiceProvider.notifier);
 
         if (!auth.isPasswordRecovery) {
           navigator.pop();

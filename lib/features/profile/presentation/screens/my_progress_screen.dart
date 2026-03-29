@@ -15,12 +15,13 @@ class MyProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final authService = ref.watch(authServiceProvider);
-    final gamification = ref.watch(gamificationServiceProvider);
+    final authState = ref.watch(authServiceProvider);
+    final gamificationState = ref.watch(gamificationServiceProvider);
+    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
     final niches = NicheRepository.getAll();
 
     // Lógica para obter o primeiro nome
-    String fullName = authService.userProfile?['name'] ?? 'Usuário';
+    String fullName = authState.userProfile?['name'] ?? 'Usuário';
     String firstName = fullName.split(' ').first;
     if (firstName.isEmpty) firstName = 'Usuário';
 
@@ -75,8 +76,8 @@ class MyProgressScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final niche = niches[index];
                       final dias =
-                          gamification.diasConsecutivosByModule[niche.nicheId] ?? 0;
-                      final isActive = gamification.isModuleActive(niche.nicheId);
+                          gamificationState.diasConsecutivosByModule[niche.nicheId.id] ?? 0;
+                      final isActive = gamificationNotifier.isModuleActive(niche.nicheId.id);
 
                       return _buildProgressCard(
                         context: context,

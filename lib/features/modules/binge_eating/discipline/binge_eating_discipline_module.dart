@@ -1,19 +1,18 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine_extensions.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Binge Eating
 class BingeEatingDisciplineModule extends ModuleDisciplineInterface {
   final BingeEatingService _bingeEatingService;
-  final GamificationAwardEngine _awardEngine;
+  final BingeEatingGamificationEvents _gamificationEvents;
   
   BingeEatingDisciplineModule({
     required BingeEatingService bingeEatingService,
-    required GamificationAwardEngine awardEngine,
+    required BingeEatingGamificationEvents gamificationEvents,
   }) : _bingeEatingService = bingeEatingService,
-       _awardEngine = awardEngine;
+       _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'binge_eating';
@@ -82,15 +81,15 @@ class BingeEatingStreakRule extends ModuleRule {
         );
       }
 
-      // Implementar processBingeEatingEvent no GamificationAwardEngine
-      await _awardEngine.processBingeEatingEvent(eventType, _bingeEatingService);
+      // Usar serviço de gamificação local do módulo
+      await _gamificationEvents.processBingeEatingEvent(eventType, _bingeEatingService);
       
       // Por enquanto, apenas logamos o evento
       LoggerService.instance.d('Evento binge eating recebido: $eventType');
       
       // Simula uso dos serviços para evitar warnings
       _bingeEatingService;
-      _awardEngine;
+      _gamificationEvents;
       
       return ModuleDisciplineResult.success(
         message: 'Evento de binge eating processado: $eventType',
@@ -144,7 +143,7 @@ class BingeEatingRecoveryRule extends ModuleRule {
       
       if (daysRecovery > 0 && daysRecovery % 7 == 0) {
         // Marco a cada 7 dias de recuperação
-        await _awardEngine.processBingeEatingEvent('recovery_milestone', _bingeEatingService);
+        await _gamificationEvents.processBingeEatingEvent('recovery_milestone', _bingeEatingService);
         
         LoggerService.instance.d('Marco de recuperação: $daysRecovery dias');
         

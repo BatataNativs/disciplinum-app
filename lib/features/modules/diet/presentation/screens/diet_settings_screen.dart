@@ -75,17 +75,8 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              ref.read(gamificationServiceProvider);
-          gamification.scheduleByModule[nId] = List.from(_times);
-
           final granted = await NotificationService.requestPermission();
-          if (granted == true) {
-            gamification.startMonitoringApps(
-              nicheId: nId,
-              horarios: _times,
-            );
-          } else {
+          if (granted != true) {
             setState(() => _gamificationRunning = false);
           }
         }
@@ -117,13 +108,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     // Diet module is mostly notification based (schedule), but logic check permission too
     // For consistency we check notification perms.
 
-    final gamification =
-        ref.read(gamificationServiceProvider);
 
-    gamification.startMonitoringApps(
-      nicheId: _niche.nicheId,
-      horarios: _times,
-    );
 
     final granted = await NotificationService.requestPermission();
 
@@ -145,8 +130,8 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider)
-        .startModuleCycle(nicheId: _niche.nicheId);
+    ref.read(gamificationServiceProvider.notifier)
+        .startModuleCycle(_niche.nicheId.id);
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -179,7 +164,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   }
 
   void _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
     final confirmed = await DeactivateModuleDialog.showWithService(
       context: context,
       gamificationService: gamification,
@@ -192,22 +177,22 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       HapticFeedback.heavyImpact();
       
       // Para o ciclo da gamificação primeiro
-      await gamification.stopModuleCycle(nicheId: NicheId.diet);
+      gamification.stopModuleCycle(NicheId.diet.id);
       
       // Reset medals and deactivate
       gamification.resetMedals(
-        _niche.nicheId,
-        notificationTitle: 'Módulo Desativado 🛑',
-        notificationBody:
-            'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-        deactivate: true,
+        _niche.nicheId.id,
+        // notificationTitle: 'Módulo Desativado 🛑',
+        // notificationBody:
+        //     'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+        // deactivate: true,
       );
 
       // Força atualização do estado da gamificação
-      final gamificationStatus = await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.diet);
+      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.diet.id);
 
       setState(() {
-        _gamificationRunning = gamificationStatus?.isActive ?? false;
+        _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
 
@@ -271,13 +256,9 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               // Update gamification if module active
               if (mounted) {
                 final gamification =
-                    ref.read(gamificationServiceProvider);
-                if (gamification.isModuleActive(_niche.nicheId)) {
-                  gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
-                  gamification.startMonitoringApps(
-                    nicheId: _niche.nicheId,
-                    horarios: _times,
-                  );
+                    ref.read(gamificationServiceProvider.notifier);
+                if (gamification.getModuleStatus(_niche.nicheId.id)) {
+                  // Not used directly anymore but triggers change
                 }
               }
             },
@@ -302,13 +283,9 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
     if (mounted) {
       final gamification =
-          ref.read(gamificationServiceProvider);
-      if (gamification.isModuleActive(_niche.nicheId)) {
-        gamification.scheduleByModule[_niche.nicheId] = List.from(_times);
-        gamification.startMonitoringApps(
-          nicheId: _niche.nicheId,
-          horarios: _times,
-        );
+          ref.read(gamificationServiceProvider.notifier);
+      if (gamification.getModuleStatus(_niche.nicheId.id)) {
+        // Not used directly anymore but triggers change
       }
 
       EnhancedSnackBarHelper.showInfo(

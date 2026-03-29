@@ -61,8 +61,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final service = ref.watch(procrastinationServiceProvider);
-    final gamification = ref.watch(gamificationServiceProvider);
-    final isActive = gamification.isModuleActive(NicheId.procrastination);
+    final gamificationState = ref.watch(gamificationServiceProvider);
+    final isActive = gamificationState.moduleStatus[NicheId.procrastination.id] ?? false;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -333,7 +333,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
 
   Future<void> _toggleModule(bool isActive) async {
-    final gamification = ref.read(gamificationServiceProvider);
+    final gamification = ref.read(gamificationServiceProvider.notifier);
 
     if (isActive) {
       final confirmed = await AppDialog.showConfirmation(
@@ -350,18 +350,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         HapticFeedback.heavyImpact();
 
         // Para o ciclo da gamificação primeiro
-        await gamification.stopModuleCycle(nicheId: NicheId.procrastination);
+        gamification.stopModuleCycle(NicheId.procrastination.id);
         
         gamification.resetMedals(
-          NicheId.procrastination,
-          deactivate: true,
-          notificationTitle: 'Módulo Desativado 🛑',
-          notificationBody:
-              'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+          NicheId.procrastination.id,
         );
 
         // Força atualização do estado da gamificação
-        await ref.read(gamificationServiceProvider).getModuleStatus(NicheId.procrastination);
+        ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.procrastination.id);
 
         setState(() {
           // O estado será atualizado automaticamente pelo gamification.isModuleActive() no build
@@ -398,7 +394,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         nicheId: NicheId.procrastination,
         isActive: true,
       );
-      gamification.startModuleCycle(nicheId: NicheId.procrastination);
+      gamification.startModuleCycle(NicheId.procrastination.id);
 
       if (mounted) {
         SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');

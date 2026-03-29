@@ -9,11 +9,11 @@ class MyShelfScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Usar ReadingService quando estiver disponível
-    final readingServiceAdapter = ref.watch(readingServiceAdapterProvider);
+    // Usar ReadingService diretamente (Riverpod)
+    final readingService = ref.watch(readingServiceProvider);
     
     // Obter livros do ReadingService
-    final booksToShow = readingServiceAdapter.getActiveBooks();
+    final booksToShow = readingService.books;
     
     if (booksToShow.isEmpty) {
       return Center(

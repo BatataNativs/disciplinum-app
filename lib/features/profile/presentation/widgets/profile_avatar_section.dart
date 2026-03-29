@@ -28,7 +28,7 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
       final ok = await AvatarService.uploadAvatar(userId: userId, file: file);
 
       if (!mounted) return;
-      await ref.read(authServiceProvider).loadUserProfile();
+      await ref.read(authServiceProvider.notifier).loadUserProfile();
 
       if (!mounted) return;
       setState(() {

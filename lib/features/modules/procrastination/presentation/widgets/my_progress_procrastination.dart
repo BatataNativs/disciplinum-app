@@ -11,7 +11,7 @@ class MyProgressProcrastination extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gamification = ref.watch(gamificationServiceProvider);
     final dias =
-        gamification.diasConsecutivosByModule[NicheId.procrastination] ?? 0;
+        gamification.diasConsecutivosByModule[NicheId.procrastination.id] ?? 0;
 
     return _ProcrastinationProgressDetailScreen(
       title: 'Evitar procrastinação',

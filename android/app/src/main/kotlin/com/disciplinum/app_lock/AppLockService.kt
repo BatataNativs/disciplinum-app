@@ -12,14 +12,12 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-/// Serviço nativo Android para App Lock
-/// Gerencia o bloqueio de apps e integração com Flutter
 class AppLockService : MethodCallHandler {
     companion object {
-        private const CHANNEL_NAME = "disciplinum/app_lock"
-        private const METHOD_SHOW_LOCK = "showAppLockScreen"
-        private const METHOD_CLOSE_APP = "closeBlockedApp"
-        private const METHOD_IS_AVAILABLE = "isAvailable"
+        private const val CHANNEL_NAME = "disciplinum/app_lock"
+        private const val METHOD_SHOW_LOCK = "showAppLockScreen"
+        private const val METHOD_CLOSE_APP = "closeBlockedApp"
+        private const val METHOD_IS_AVAILABLE = "isAvailable"
         
         private var instance: AppLockService? = null
         
@@ -30,7 +28,6 @@ class AppLockService : MethodCallHandler {
             return instance!!
         }
         
-        /// Configura o MethodChannel
         fun setupChannel(flutterEngine: FlutterEngine, context: Context) {
             val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
             channel.setMethodCallHandler(getInstance())
@@ -44,7 +41,8 @@ class AppLockService : MethodCallHandler {
         when (call.method) {
             METHOD_SHOW_LOCK -> {
                 try {
-                    showAppLockScreen(call.arguments as? Map<String, Any>)
+                    val arguments = call.arguments as? Map<String, Any> ?: emptyMap()
+                    showAppLockScreen(arguments)
                     result.success(true)
                 } catch (e: Exception) {
                     result.error("ERROR", e.message, null)
@@ -106,7 +104,7 @@ class AppLockService : MethodCallHandler {
     }
     
     /// Define a activity atual (chamado pelo FlutterActivity)
-    fun setCurrentActivity(activity: FlutterActivity) {
+    fun setCurrentActivity(activity: FlutterActivity?) {
         currentActivity = activity
     }
     

@@ -331,7 +331,7 @@ class AppMonitoringService {
 
     final gamification = _gamificationService;
 
-    final focusInterval = gamification?.focusIntervalByModule[activeNicheId];
+    final focusInterval = gamification?.focusIntervalByModule[activeNicheId.id];
 
     if (focusInterval == null) return;
 
@@ -678,7 +678,7 @@ class AppMonitoringService {
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
       isUnlocked: (_iapService?.isCustomNotifUnlocked ?? false) ||
-          (_gamificationService?.isNotificationUnlocked(currentNicheId!) ?? false),
+          (_gamificationService?.isNotificationUnlocked(currentNicheId as dynamic) ?? false),
       customMessages: _gamificationService?.customMessages ?? {},
     );
 
@@ -929,7 +929,7 @@ class AppMonitoringService {
     // Apenas reseta gamificação (medalhas, streak) e mantém o monitoramento ativo.
     // EXCEÇÃO: Para Compulsão Alimentar, desativar o módulo completamente.
     await _gamificationService?.resetMedals(
-      currentNicheId!,
+      currentNicheId!.id,
       notificationTitle: shouldDeactivate 
           ? '${niche.name} Desativado 🔴'  // Emoji vermelho para compulsão alimentar
           : '${niche.name}: Progresso Reiniciado',

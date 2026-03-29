@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
-import 'package:disciplinum/shared/widgets/sections/niche_checkin_section.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 
 /// Widget de conteúdo das abas
 class BingeEatingTabContent extends StatelessWidget {
   final int tabIndex;
   final List<String> selectedApps;
-  final TimeOfDay? checkinTime;
-  final VoidCallback onDeleteTime;
   final Future<List<AppDisplayInfo>> Function(List<String>) onGetAppInfo;
   final Function(String) onRemoveApp;
 
@@ -16,8 +13,6 @@ class BingeEatingTabContent extends StatelessWidget {
     super.key,
     required this.tabIndex,
     required this.selectedApps,
-    required this.checkinTime,
-    required this.onDeleteTime,
     required this.onGetAppInfo,
     required this.onRemoveApp,
   });
@@ -136,12 +131,6 @@ class BingeEatingTabContent extends StatelessWidget {
               );
             },
           ),
-        const SizedBox(height: 24),
-        NicheCheckinSection(
-          checkinTime: checkinTime,
-          isDark: isDark,
-          onDeleteTime: onDeleteTime,
-        ),
       ],
     );
   }

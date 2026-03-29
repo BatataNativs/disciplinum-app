@@ -1,20 +1,20 @@
 /// Insignias do módulo Dieta
-/// Progressão baseada em dias consecutivos de acompanhamento nutricional
+/// Progressão baseada em dias consecutivos de check-ins positivos (refeições nos horários)
 enum DietInsignia {
   // Insignia inicial - concedida ao ativar o módulo
-  madeira('Madeira', 'Início da Jornada', 'Começou a acompanhar sua alimentação', 0),
+  madeira('Madeira', 'Início da Jornada', 'Ativou o módulo Dieta', 0),
   
-  // Insignias baseadas em dias consecutivos
-  ferro('Ferro', 'Determinação Inicial', '1 dia seguido de plano', 1),
-  aluminio('Alumínio', 'Consistência Semanal', '7 dias seguidos de plano', 7),
-  latao('Latão', 'Compromisso Quinzenal', '15 dias seguidos de plano', 15),
-  bronze('Bronze', 'Hábito Estabelecido', '30 dias seguidos de plano', 30),
-  prata('Prata', 'Maestria Nutricional', '60 dias seguidos de plano', 60),
-  ouro('Ouro', 'Disciplina Plena', '90 dias seguidos de plano', 90),
-  diamante('Diamante', 'Lenda Nutricional', '180 dias seguidos de plano', 180),
+  // Insignias baseadas em dias consecutivos de check-ins positivos
+  ferro('Ferro', 'Primeiro Dia', '1 dia com check-in positivo', 1),
+  aluminio('Alumínio', 'Dois Dias', '2 dias com check-in positivo', 2),
+  latao('Latão', 'Quatro Dias', '4 dias com check-in positivo', 4),
+  bronze('Bronze', 'Oito Dias', '8 dias com check-in positivo', 8),
+  prata('Prata', 'Doze Dias', '12 dias com check-in positivo', 12),
+  ouro('Ouro', 'Dezoito Dias', '18 dias com check-in positivo', 18),
+  diamante('Diamante', 'Vinte e Seis Dias', '26 dias com check-in positivo', 26),
   
-  // Insignia especial por metas completas
-  disciplinum('Disciplinum', 'Mestre Nutricional', '365 dias seguidos + todas as metas mensais', 365);
+  // Insignia especial
+  disciplinum('Disciplinum', 'Trinta Dias', '30 dias com check-in positivo', 30);
 
   const DietInsignia(this.name, this.nameBr, this.description, this.requiredDays);
 

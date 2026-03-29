@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:flutter/material.dart';
 // Mantive o alias 'fln' para segurança
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
@@ -142,9 +143,9 @@ Future<void> initNotifications() async {
     },
   );
 
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = IsarPreferencesRepository(IsarService.instance.database);
   NotificationService.soundEnabled =
-      prefs.getBool('settings_sound_enabled') ?? true;
+      await prefs.getBool('settings_sound_enabled') ?? true;
 }
 
 Future<bool> requestNotificationPermissionIfNeeded() async {
@@ -213,6 +214,19 @@ class NotificationService {
   static void Function(String?)? onBingeRelapseDetected;
   static void Function(String?)? onBingeCheckInSim;
 
+  static Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    await sendModuleNotification(body, title: title, id: id, payload: payload);
+  }
+
+  static Future<void> cancelAll() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
+  }
+
   static Future<void> init() async => initNotifications();
 
   static Future<bool> requestPermission() async =>
@@ -220,7 +234,7 @@ class NotificationService {
 
   static Future<void> setSoundEnabled(bool value) async {
     soundEnabled = value;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = IsarPreferencesRepository(IsarService.instance.database);
     await prefs.setBool('settings_sound_enabled', value);
   }
 

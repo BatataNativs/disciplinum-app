@@ -100,12 +100,12 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
 
     final navigator = Navigator.of(context);
 
-    final success = await widget.authService.updateProfile(
-      name: _nameController.text,
-      showEmail: _showEmail,
-      showAvatar: _showAvatar,
-      bio: _bioController.text,
-    );
+    final success = await widget.authService.updateProfile({
+      'name': _nameController.text,
+      'show_email': _showEmail,
+      'show_avatar': _showAvatar,
+      'bio': _bioController.text,
+    });
 
     if (mounted) {
       setState(() => _isLoading = false);

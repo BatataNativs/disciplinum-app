@@ -81,7 +81,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     }
   }
 
-  void _showMedalDialog(Map<String, dynamic> medalData) {
+  void _showMedalDialog(String medalName) {
     showDialog(
       context: context,
       barrierDismissible: false, // Força clicar no OK
@@ -96,12 +96,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Image.asset(
-                medalData['medal_asset'], // Ex: assets/medal_gold.png
+                'assets/logo.png', // Exibe o logo como fallback já que medalData agora é apenas string
                 height: 100,
               ),
               const SizedBox(height: 16),
               Text(
-                'Você ganhou a medalha de ${medalData['medal_name']}!',
+                'Você ganhou a medalha de $medalName!',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 16),
               ),
@@ -124,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   ),
                   onPressed: () {
                     // Consome e tenta mostrar próxima se houver
-                    ref.read(gamificationServiceProvider).consumePendingMedal(medalData);
+                    ref.read(gamificationServiceProvider.notifier).consumePendingMedal(medalName);
                     Navigator.of(ctx).pop();
 
                     // Pequeno delay para animação de fechar e abrir a próxima
@@ -371,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.toList()));
+                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.map((id) => NicheId.tryFromInt(id)).whereType<NicheId>().toList()));
                             return _buildActiveModulesSection(
                               activeModules, isDark, textTheme);
                           },

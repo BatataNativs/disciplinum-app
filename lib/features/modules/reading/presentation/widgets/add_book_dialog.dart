@@ -68,7 +68,6 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
       
       // Força reload da UI
       ref.invalidate(readingServiceProvider);
-      ref.invalidate(readingServiceAdapterProvider);
       Navigator.of(context).pop();
     }
   }

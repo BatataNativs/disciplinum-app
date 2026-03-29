@@ -1,39 +1,54 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_isar.dart';
+import 'package:disciplinum/features/modules/procrastination/presentation/controllers/procrastination_controller_isar.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
+import 'package:disciplinum/infrastructure/ads/ad_service.dart';
+import 'package:disciplinum/core/database/repositories/user_module_repository.dart';
+import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/infrastructure/iap/iap_service.dart' as iap;
+import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitlement_repository.dart';
+import 'package:disciplinum/features/auth/domain/services/auth_service.dart' as auth;
+import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/features/gamification/presentation/controllers/gamification_controller.dart';
 import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
+import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
+import 'package:disciplinum/features/modules/reading/gamification/data/repositories/reading_gamification_repository.dart';
+
+
+
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
+import 'package:disciplinum/features/modules/reading/domain/services/reading_service_isar.dart';
+import 'package:disciplinum/features/modules/reading/presentation/controllers/reading_controller_isar.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service_wrapper.dart';
-import 'package:disciplinum/core/di/adapters/reading_service_adapter.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/controllers/stop_smoking_controller.dart';
-import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_checkin_service.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_isar.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service_isar.dart';
+import 'package:disciplinum/features/modules/focus/presentation/controllers/focus_controller_isar.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_isar.dart';
+import 'package:disciplinum/features/modules/adult_content/presentation/controllers/adult_content_controller_isar.dart';
 import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
+import 'package:disciplinum/features/modules/diet/domain/services/diet_service_isar.dart';
+import 'package:disciplinum/features/modules/diet/presentation/controllers/diet_controller_isar.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
@@ -45,16 +60,12 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/services/
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_gamification_service.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
   return IsarService.instance;
-});
-
-/// Provider para SharedPreferences
-/// Assumindo que já foi inicializado no bootstrap
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('SharedPreferences deve ser sobrescrito no ProviderScope');
 });
 
 /// Provider para BingeEatingGamificationRepository
@@ -80,21 +91,17 @@ final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((r
 
 /// Provider para SmokingCheckinService
 final smokingCheckinServiceProvider = Provider<SmokingCheckinService>((ref) {
-  final isarService = ref.watch(isarServiceProvider);
-  final cloudSync = ref.watch(cloudSyncServiceProvider);
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return SmokingCheckinService(isarService, cloudSync, prefs);
+  // SmokingCheckinService ainda usa SharedPreferences e precisa de migração futura
+  // Por enquanto, desabilitado para evitar erros de compilação
+  throw UnimplementedError('SmokingCheckinService temporariamente desabilitado - migração pendente');
 });
 
-/// Provider para BingeEatingCheckinService
-final bingeEatingCheckinServiceProvider = Provider<BingeEatingCheckinService>((ref) {
-  final isarService = ref.watch(isarServiceProvider);
-  final cloudSync = ref.watch(cloudSyncServiceProvider);
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return BingeEatingCheckinService(isarService, cloudSync, prefs);
+/// Provider para BingeEatingServiceIsar
+final bingeEatingServiceIsarProvider = Provider<BingeEatingServiceIsar>((ref) {
+  return BingeEatingServiceIsar.instance;
 });
 
-/// Provider para BingeEatingService
+/// Provider para BingeEatingService (legado)
 final bingeEatingServiceProvider = Provider<BingeEatingService>((ref) {
   final repository = ref.watch(isarPreferencesRepositoryProvider);
   return BingeEatingService(repository);
@@ -137,17 +144,17 @@ final smokingServiceProvider = Provider<SmokingService>((ref) {
 });
 
 /// Provider para IapService
-final iapServiceProvider = ChangeNotifierProvider<IapService>((ref) {
-  final cloudSync = ref.watch(cloudSyncServiceProvider);
-  final prefsRepo = ref.watch(isarPreferencesRepositoryProvider);
-  return IapService(cloudSync, prefsRepo)..initialize();
+final iapServiceProvider = StateNotifierProvider<iap.IapService, iap.IapState>((ref) {
+  final isar = ref.watch(isarServiceProvider);
+  final repository = IapEntitlementRepository(isar.database);
+  return iap.IapService(repository);
 });
 
 /// Provider para AuthService
-final authServiceProvider = ChangeNotifierProvider<AuthService>((ref) {
+final authServiceProvider = StateNotifierProvider<auth.AuthService, auth.AuthState>((ref) {
   final prefs = ref.watch(preferencesServiceProvider);
   final cloudSync = ref.watch(cloudSyncServiceProvider);
-  return AuthService(prefs, cloudSync);
+  return auth.AuthService(prefs, cloudSync);
 });
 
 final themeControllerProvider = ChangeNotifierProvider<ThemeController>((ref) {
@@ -158,8 +165,9 @@ final themeControllerProvider = ChangeNotifierProvider<ThemeController>((ref) {
 final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
   final prefs = ref.watch(isarPreferencesRepositoryProvider);
   final sessionPersistence = ref.watch(sessionPersistenceServiceProvider);
-  final iapService = ref.watch(iapServiceProvider);
   final focusService = ref.watch(focusServiceProvider);
+  final iapService = ref.watch(iapServiceProvider.notifier);
+  
   return AppMonitoringService(
     prefs,
     sessionPersistence,
@@ -175,53 +183,74 @@ final gamificationAwardEngineProvider = Provider<GamificationAwardEngine>((ref) 
 });
 
 /// Provider para GamificationService
-final gamificationServiceProvider = ChangeNotifierProvider<GamificationService>((ref) {
-  final appMonitoring = ref.watch(appMonitoringServiceProvider);
+final gamificationServiceProvider = StateNotifierProvider<GamificationService, GamificationState>((ref) {
   final cloudSync = ref.watch(cloudSyncServiceProvider);
+  final appMonitoring = ref.watch(appMonitoringServiceProvider);
   final awardEngine = ref.watch(gamificationAwardEngineProvider);
-  final iapService = ref.watch(iapServiceProvider);
-  final smokingCheckin = ref.watch(smokingCheckinServiceProvider);
-  final bingeEatingCheckin = ref.watch(bingeEatingCheckinServiceProvider);
-  final focusService = ref.watch(focusServiceProvider);
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return GamificationService(
-    cloudSync,
-    appMonitoring,
-    awardEngine,
-    iapService,
-    smokingCheckin,
-    bingeEatingCheckin,
-    focusService,
-    prefs,
-  );
+  final iapService = ref.watch(iapServiceProvider.notifier);
+  final repository = ref.watch(userModuleRepositoryProvider);
+  
+  return GamificationService(cloudSync, appMonitoring, awardEngine, iapService, repository);
 });
 
 final gamificationControllerProvider = ChangeNotifierProvider<GamificationController>((ref) {
-  final authService = ref.watch(authServiceProvider);
   return GamificationController(
     moduleRepository: ref.watch(moduleRepositoryProvider),
-    authService: authService,
+    authService: ref.read(authServiceProvider.notifier),
   );
 });
 
 // ============= AUTH SERVICES =============
 
-/// Provider para AdultContentService
+/// Provider para AdultContentServiceIsar
+final adultContentServiceIsarProvider = Provider<AdultContentServiceIsar>((ref) {
+  return AdultContentServiceIsar.instance;
+});
+
+/// Provider para AdultContentControllerIsar
+final adultContentControllerIsarProvider = StateNotifierProvider<AdultContentControllerIsar, AdultContentState>((ref) {
+  final service = ref.watch(adultContentServiceIsarProvider);
+  return AdultContentControllerIsar(service);
+});
+
+/// Provider para AdultContentService (legado)
 final adultContentServiceProvider = Provider<AdultContentService>((ref) {
   final repository = ref.watch(isarPreferencesRepositoryProvider);
   return AdultContentService(repository);
 });
 
-/// Provider para DietService
+/// Provider para DietServiceIsar
+final dietServiceIsarProvider = Provider<DietServiceIsar>((ref) {
+  return DietServiceIsar.instance;
+});
+
+/// Provider para DietControllerIsar
+final dietControllerIsarProvider = StateNotifierProvider<DietControllerIsar, DietState>((ref) {
+  final service = ref.watch(dietServiceIsarProvider);
+  return DietControllerIsar(service);
+});
+
+/// Provider para DietService (legado)
 final dietServiceProvider = Provider<DietService>((ref) {
   final repository = ref.watch(isarPreferencesRepositoryProvider);
   return DietService(repository);
 });
 
-/// Provider para ProcrastinationService
+/// Provider para ProcrastinationServiceIsar
+final procrastinationServiceIsarProvider = Provider<ProcrastinationServiceIsar>((ref) {
+  return ProcrastinationServiceIsar.instance;
+});
+
+/// Provider para ProcrastinationControllerIsar
+final procrastinationControllerIsarProvider = StateNotifierProvider<ProcrastinationControllerIsar, ProcrastinationState>((ref) {
+  final service = ref.watch(procrastinationServiceIsarProvider);
+  return ProcrastinationControllerIsar(service);
+});
+
+/// Provider para ProcrastinationService (legado)
 final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
-  final gamification = ref.watch(gamificationServiceProvider);
   final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final gamification = ref.watch(gamificationServiceProvider.notifier);
   return ProcrastinationService(gamification, repository);
 });
 
@@ -244,24 +273,43 @@ final focusServiceProvider = Provider<FocusService>((ref) {
   );
 });
 
-/// Provider para ReadingService
-final readingServiceProvider = ChangeNotifierProvider<ReadingService>((ref) {
-  final prefs = ref.watch(isarPreferencesRepositoryProvider);
-  final gamification = ref.watch(gamificationServiceProvider);
-  return ReadingService(prefs, gamification);
+/// Provider para FocusServiceIsar
+final focusServiceIsarProvider = Provider<FocusServiceIsar>((ref) {
+  return FocusServiceIsar.instance;
 });
+
+/// Provider para FocusControllerIsar
+final focusControllerIsarProvider = StateNotifierProvider<FocusControllerIsar, FocusState>((ref) {
+  final service = ref.watch(focusServiceIsarProvider);
+  return FocusControllerIsar(service);
+});
+
+/// Provider para ReadingServiceIsar
+final readingServiceIsarProvider = Provider<ReadingServiceIsar>((ref) {
+  return ReadingServiceIsar.instance;
+});
+
+/// Provider para ReadingControllerIsar
+final readingControllerIsarProvider = StateNotifierProvider<ReadingControllerIsar, ReadingState>((ref) {
+  final service = ref.watch(readingServiceIsarProvider);
+  return ReadingControllerIsar(service);
+});
+
+/// Provider para ReadingService (Riverpod)
+final readingServiceProvider = Provider<ReadingService>((ref) {
+  final repository = ref.watch(readingRepositoryProvider);
+  final gamificationRepository = ref.watch(readingGamificationRepositoryProvider);
+  final gamification = ref.watch(gamificationServiceProvider.notifier);
+  return ReadingService(repository, gamificationRepository, gamification);
+});
+
 
 /// Provider para SpendingService
 final spendingServiceProvider = Provider<SpendingService>((ref) {
   return SpendingService(ref);
 });
 
-/// Provider para ReadingServiceAdapter
-final readingServiceAdapterProvider = Provider<ReadingServiceAdapter>((ref) {
-  final localStorage = ref.watch(localStorageServiceProvider);
-  final readingService = ref.watch(readingServiceProvider);
-  return ReadingServiceAdapter(localStorage, readingService);
-});
+
 
 /// Provider para o estado de Onboarding (injetado no main.dart)
 final seenOnboardingProvider = Provider<bool>((ref) => throw UnimplementedError());
@@ -328,6 +376,38 @@ final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
 });
 
 /// Provider para AdService
-final adServiceProvider = ChangeNotifierProvider<AdService>((ref) {
+final adServiceProvider = StateNotifierProvider<AdService, AdState>((ref) {
   return AdService();
 });
+
+/// Provider para UserModuleRepository
+final userModuleRepositoryProvider = Provider<UserModuleRepository>((ref) {
+  return UserModuleRepository.instance;
+});
+
+/// Provider para ReadingRepository
+final readingRepositoryProvider = Provider<ReadingRepository>((ref) {
+  return ReadingRepository();
+});
+
+/// Provider para ReadingGamificationRepository
+final readingGamificationRepositoryProvider = Provider<ReadingGamificationRepository>((ref) {
+  return ReadingGamificationRepository.instance;
+});
+
+/// Provider para MoneySavingGamificationRepository
+final moneySavingOperationRepositoryProvider = Provider<MoneySavingGamificationRepository>((ref) {
+  return MoneySavingGamificationRepository.instance;
+});
+
+/// Provider para MoneySavingGamificationService
+final moneySavingGamificationServiceProvider = StateNotifierProvider<MoneySavingGamificationService, MoneySavingModuleState?>((ref) {
+  final repository = ref.watch(moneySavingOperationRepositoryProvider);
+  return MoneySavingGamificationService(repository);
+});
+
+
+
+
+
+
