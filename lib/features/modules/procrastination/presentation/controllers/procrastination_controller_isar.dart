@@ -167,6 +167,11 @@ class ProcrastinationControllerIsar extends StateNotifier<ProcrastinationState> 
     state = state.copyWith(error: null);
   }
 
+  /// Limpa o estado da gamificação (usado ao desativar módulo)
+  void clearGamification() {
+    state = const ProcrastinationState();
+  }
+
   /// Getters para facilitar acesso ao config
   bool get isEnabled => state.config?.isEnabled ?? false;
   int get dailyFocusMinutes => state.config?.dailyFocusMinutes ?? 120;

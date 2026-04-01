@@ -178,8 +178,6 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
       } else {
         _selected.add(packageName);
       }
-      // Removido _applyFiltersAndSort() para evitar que a lista pule
-      // e para economizar processamento durante interações rápidas.
     });
   }
 

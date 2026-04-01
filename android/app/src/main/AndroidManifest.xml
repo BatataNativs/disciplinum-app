@@ -79,6 +79,17 @@
 
         </activity>
 
+        <!-- Activity de Bloqueio de Apps (AppLock) -->
+        <activity
+            android:name="com.disciplinum.app_lock.AppLockActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance">
+        </activity>
+
         <!-- Receivers de notificação (Plugin flutter_local_notifications) -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"

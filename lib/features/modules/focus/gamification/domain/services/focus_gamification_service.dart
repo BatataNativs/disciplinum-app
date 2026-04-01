@@ -2,13 +2,13 @@ import 'package:disciplinum/core/gamification/interfaces/module_gamification_int
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart' hide FocusInsignia;
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
 
 /// Service principal de gamificação do módulo Focus
 /// Orquestra todos os serviços de gamificação do módulo
@@ -292,12 +292,34 @@ class FocusGamificationService implements ModuleGamificationInterface {
 
   /// Obtém progresso para próxima insignia
   double getProgressToNextInsignia() {
-    return 0.0; // Implementar se necessário
+    if (!_isInitialized || _currentState == null) return 0.0;
+    
+    final respectedPeriods = _currentState!.respectedPeriods;
+    final earnedInsignias = _currentState!.earnedInsignias;
+    
+    // Encontrar próxima insignia não conquistada
+    for (final insignia in FocusInsignia.values) {
+      final insigniaName = insignia.name;
+      if (!earnedInsignias.contains(insigniaName)) {
+        // Calcular progresso para esta insignia
+        return insignia.calculateProgress(respectedPeriods);
+      }
+    }
+    
+    // Todas as insignias conquistadas
+    return 1.0;
   }
 
   /// Obtém progresso para próxima medalha
   double getProgressToNextMedalha() {
-    return 0.0; // Implementar se necessário
+    if (!_isInitialized || _currentState == null) return 0.0;
+    
+    final earnedInsigniasCount = _currentState!.earnedInsignias.length;
+    final totalInsignias = FocusInsignia.values.length;
+    
+    // Progresso baseado em quantas insignias foram conquistadas
+    // Medalhas são concedidas baseadas em conquistas específicas
+    return (earnedInsigniasCount / totalInsignias).clamp(0.0, 1.0);
   }
 
   /// Métodos de compatibilidade para FocusGamificationController (VERSÃO NOVA)

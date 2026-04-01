@@ -1,48 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/meal_tracking_service.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/meal_entry_entity.dart';
+import 'package:disciplinum/features/modules/diet/presentation/providers/meal_tracking_provider.dart';
 
-class MealStreakScreen extends StatefulWidget {
+class MealStreakScreen extends ConsumerStatefulWidget {
   final List<TimeOfDay> scheduledTimes;
   const MealStreakScreen({super.key, required this.scheduledTimes});
 
   @override
-  State<MealStreakScreen> createState() => _MealStreakScreenState();
+  ConsumerState<MealStreakScreen> createState() => _MealStreakScreenState();
 }
 
-class _MealStreakScreenState extends State<MealStreakScreen> {
-  List<MealRecord> _todayMeals = [];
-  List<DaySummary> _history = [];
-  int _streak = 0;
-  bool _loading = true;
-
+class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initializeData();
   }
 
-  Future<void> _loadData() async {
-    final service = MealTrackingService.instance;
-    final meals = await service.getTodayMeals(widget.scheduledTimes);
-    final history = await service.getHistory(days: 7);
-    final streak = await service.getCurrentStreak();
-
-    if (mounted) {
-      setState(() {
-        _todayMeals = meals;
-        _history = history;
-        _streak = streak;
-        _loading = false;
-      });
-    }
+  Future<void> _initializeData() async {
+    final notifier = ref.read(mealTrackingProvider.notifier);
+    final names = ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Jantar', 'Ceia'];
+    final mealNames = names.sublist(0, widget.scheduledTimes.length.clamp(1, names.length));
+    await notifier.createDefaultMealsForDay(widget.scheduledTimes, mealNames);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final state = ref.watch(mealTrackingProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,21 +53,21 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
             ],
           ),
         ),
-        child: _loading
+        child: state.isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-                onRefresh: _loadData,
+                onRefresh: () => ref.read(mealTrackingProvider.notifier).loadData(),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStreakCard(isDark),
+                      _buildStreakCard(isDark, state.streak),
                       const SizedBox(height: 20),
-                      _buildTodaySection(isDark),
+                      _buildTodaySection(isDark, state.todayMeals),
                       const SizedBox(height: 20),
-                      _buildHistorySection(isDark),
+                      _buildHistorySection(isDark, state.history),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -88,20 +77,20 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
     );
   }
 
-  Widget _buildStreakCard(bool isDark) {
+  Widget _buildStreakCard(bool isDark, int streak) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: _streak > 0
+          colors: streak > 0
               ? [const Color(0xFF6366F1), const Color(0xFF818CF8)]
               : [Colors.grey.shade600, Colors.grey.shade500],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (_streak > 0 ? const Color(0xFF6366F1) : Colors.grey)
+            color: (streak > 0 ? const Color(0xFF6366F1) : Colors.grey)
                 .withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
@@ -111,13 +100,13 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
       child: Column(
         children: [
           Icon(
-            _streak > 0 ? Icons.local_fire_department : Icons.restaurant,
+            streak > 0 ? Icons.local_fire_department : Icons.restaurant,
             size: 48,
             color: Colors.white,
           ),
           const SizedBox(height: 12),
           Text(
-            '$_streak',
+            '$streak',
             style: const TextStyle(
               fontSize: 48,
               fontWeight: FontWeight.bold,
@@ -125,13 +114,13 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
             ),
           ),
           Text(
-            _streak == 1 ? 'dia mantendo sua dieta' : 'dias mantendo sua dieta',
+            streak == 1 ? 'dia mantendo sua dieta' : 'dias mantendo sua dieta',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
-          if (_streak == 0)
+          if (streak == 0)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
@@ -147,7 +136,7 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
     );
   }
 
-  Widget _buildTodaySection(bool isDark) {
+  Widget _buildTodaySection(bool isDark, List<MealEntryEntity> meals) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -160,36 +149,42 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        if (_todayMeals.isEmpty)
+        if (meals.isEmpty)
           _buildEmptyState(isDark, 'Nenhum horário configurado')
         else
-          ...(_todayMeals.map((meal) => _buildMealTile(meal, isDark))),
+          ...(meals.map((meal) => _buildMealTile(meal, isDark))),
       ],
     );
   }
 
-  Widget _buildMealTile(MealRecord meal, bool isDark) {
+  Widget _buildMealTile(MealEntryEntity meal, bool isDark) {
+    final bool isPending = !meal.wasCompleted;
+    final bool isDone = meal.wasCompleted && meal.wasOnTime;
+    final bool isMissed = meal.wasCompleted && !meal.wasOnTime;
+    
     Color dotColor;
     IconData statusIcon;
     String statusText;
 
-    switch (meal.status) {
-      case MealStatus.done:
-        dotColor = const Color(0xFF22C55E);
-        statusIcon = Icons.check_circle;
-        statusText = 'Feita';
-        break;
-      case MealStatus.missed:
-        dotColor = const Color(0xFFEF4444);
-        statusIcon = Icons.cancel;
-        statusText = 'Não feita';
-        break;
-      case MealStatus.pending:
-        dotColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
-        statusIcon = Icons.radio_button_unchecked;
-        statusText = 'Pendente';
-        break;
+    if (isDone) {
+      dotColor = const Color(0xFF22C55E);
+      statusIcon = Icons.check_circle;
+      statusText = 'Feita no horário';
+    } else if (isMissed) {
+      dotColor = const Color(0xFFF59E0B);
+      statusIcon = Icons.access_time;
+      statusText = 'Feita fora do horário';
+    } else if (!meal.wasCompleted) {
+      dotColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
+      statusIcon = Icons.radio_button_unchecked;
+      statusText = 'Pendente';
+    } else {
+      dotColor = const Color(0xFFEF4444);
+      statusIcon = Icons.cancel;
+      statusText = 'Não feita';
     }
+
+    final timeStr = '${meal.plannedTime.hour.toString().padLeft(2, '0')}:${meal.plannedTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -220,11 +215,18 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Refeição das ${meal.time}',
+                  meal.mealName,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Text(
+                  'Horário: $timeStr',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -239,7 +241,7 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
               ],
             ),
           ),
-          if (meal.status == MealStatus.pending)
+          if (isPending)
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -248,9 +250,10 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
                   color: const Color(0xFF22C55E),
                   onTap: () async {
                     HapticFeedback.mediumImpact();
-                    await MealTrackingService.instance
-                        .recordMeal(meal.time, done: true);
-                    _loadData();
+                    await ref.read(mealTrackingProvider.notifier).recordMeal(
+                      TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
+                      done: true,
+                    );
                   },
                 ),
                 const SizedBox(width: 8),
@@ -259,9 +262,10 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
                   color: const Color(0xFFEF4444),
                   onTap: () async {
                     HapticFeedback.mediumImpact();
-                    await MealTrackingService.instance
-                        .recordMeal(meal.time, done: false);
-                    _loadData();
+                    await ref.read(mealTrackingProvider.notifier).recordMeal(
+                      TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
+                      done: false,
+                    );
                   },
                 ),
               ],
@@ -290,7 +294,7 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
     );
   }
 
-  Widget _buildHistorySection(bool isDark) {
+  Widget _buildHistorySection(bool isDark, List<DaySummary> history) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -303,10 +307,10 @@ class _MealStreakScreenState extends State<MealStreakScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        if (_history.isEmpty)
+        if (history.isEmpty)
           _buildEmptyState(isDark, 'Nenhum registro encontrado')
         else
-          ...(_history.reversed.map((day) => _buildDayTile(day, isDark))),
+          ...(history.reversed.map((day) => _buildDayTile(day, isDark))),
       ],
     );
   }

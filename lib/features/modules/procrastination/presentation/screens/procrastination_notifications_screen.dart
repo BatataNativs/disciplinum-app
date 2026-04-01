@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -385,9 +386,13 @@ class _ProcrastinationNotificationsScreenState
             initialTimes: initialTimes,
             onChanged: (times) {
               _loadCount();
-              // Notifica o GamificationService para recarregar e reagendar
-              ref.read(gamificationServiceProvider.notifier)
-                  .restoreMonitoringSession();
+              // Reagendar notificações localmente
+              NotificationService.scheduleNotification(
+                id: NicheId.procrastination.id + 3000,
+                title: '⚡ Evite procrastinar!',
+                body: 'Mantenha o foco e seja produtivo hoje!',
+                scheduledDate: DateTime.now().add(const Duration(minutes: 1)),
+              );
             },
           ),
         ),

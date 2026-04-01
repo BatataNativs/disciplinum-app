@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
+import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
 import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';

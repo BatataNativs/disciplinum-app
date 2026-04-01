@@ -1,6 +1,8 @@
 import 'package:isar/isar.dart';
 import 'binge_eating_module_state.dart';
 
+part 'binge_eating_gamification_entity.g.dart';
+
 /// Entidade Isar para persistência do estado de gamificação do Binge Eating
 @Collection()
 class BingeEatingGamificationEntity {
@@ -52,6 +54,11 @@ class BingeEatingGamificationEntity {
       lastUpdated: lastUpdated,
       isActive: isActive,
     );
+  }
+
+  /// Converte para Map (para persistência)
+  Map<String, dynamic> toModuleStateMap() {
+    return toModuleState().toJson();
   }
 
   /// Converte para JSON (para Supabase)

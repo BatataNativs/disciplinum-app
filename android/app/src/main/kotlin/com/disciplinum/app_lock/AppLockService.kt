@@ -20,6 +20,7 @@ class AppLockService : MethodCallHandler {
         private const val METHOD_IS_AVAILABLE = "isAvailable"
         
         private var instance: AppLockService? = null
+        private var flutterEngineRef: FlutterEngine? = null
         
         fun getInstance(): AppLockService {
             if (instance == null) {
@@ -29,6 +30,7 @@ class AppLockService : MethodCallHandler {
         }
         
         fun setupChannel(flutterEngine: FlutterEngine, context: Context) {
+            flutterEngineRef = flutterEngine
             val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
             channel.setMethodCallHandler(getInstance())
         }
@@ -74,11 +76,18 @@ class AppLockService : MethodCallHandler {
     private fun showAppLockScreen(eventData: Map<String, Any>) {
         currentLockEvent = eventData
         
-        // Salva o evento atual para processamento posterior
-        // TODO: Implementar lógica de mostrar Activity de bloqueio
+        // Inicia a Activity de bloqueio
+        currentActivity?.let { activity ->
+            val intent = Intent(activity, AppLockActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("appName", eventData["appName"] as? String ?: "")
+                putExtra("packageName", eventData["packageName"] as? String ?: "")
+                putExtra("nicheId", eventData["nicheId"] as? String ?: "")
+            }
+            activity.startActivity(intent)
+        }
         
-        // Por enquanto, apenas loga o evento
-        android.util.Log.d("AppLock", "Tentando bloquear app: ${eventData["appName"]}")
+        android.util.Log.d("AppLock", "Tela de bloqueio iniciada para: ${eventData["appName"]}")
     }
     
     /// Fecha o app bloqueado via sistema
@@ -120,7 +129,16 @@ class AppLockService : MethodCallHandler {
             "open" -> {
                 // Usuário escolheu abrir o app (com reset de gamificação)
                 android.util.Log.d("AppLock", "Usuário escolheu abrir app - reset de gamificação")
-                // TODO: Implementar reset de gamificação via MethodChannel
+                
+                // Envia evento de reset de gamificação via MethodChannel
+                flutterEngineRef?.let { engine ->
+                    val channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL_NAME)
+                    currentLockEvent?.let { event ->
+                        val nicheId = event["nicheId"] as? String ?: ""
+                        channel.invokeMethod("resetGamification", mapOf("nicheId" to nicheId))
+                        android.util.Log.d("AppLock", "Reset de gamificação enviado para nicheId: $nicheId")
+                    }
+                }
             }
         }
         

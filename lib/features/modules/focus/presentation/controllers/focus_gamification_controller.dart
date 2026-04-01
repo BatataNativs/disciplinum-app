@@ -17,10 +17,10 @@ class FocusGamificationController extends StateNotifier<FocusGamificationState> 
     state = state.copyWith(isLoading: true);
     try {
       final currentInsignia = _service.currentInsignia != null 
-          ? FocusInsigniaEntity.values.firstWhere((e) => e.name == _service.currentInsignia!.name)
+          ? FocusInsignia.values.firstWhere((e) => e.name == _service.currentInsignia!.name)
           : null;
       final earnedInsignias = _service.earnedInsignias.map((i) => 
-          FocusInsigniaEntity.values.firstWhere((e) => e.name == i.name)).toList();
+          FocusInsignia.values.firstWhere((e) => e.name == i.name)).toList();
       final currentMedal = _service.currentMedal;
       final earnedMedals = _service.earnedMedals;
       final respectedPeriods = _service.respectedPeriods;
@@ -75,8 +75,8 @@ class FocusGamificationController extends StateNotifier<FocusGamificationState> 
 
 /// Estado do FocusGamificationController
 class FocusGamificationState {
-  final FocusInsigniaEntity? currentInsignia;
-  final List<FocusInsigniaEntity> earnedInsignias;
+  final FocusInsignia? currentInsignia;
+  final List<FocusInsignia> earnedInsignias;
   final FocusMedalha? currentMedal;
   final List<FocusMedalha> earnedMedals;
   final int respectedPeriods;
@@ -94,8 +94,8 @@ class FocusGamificationState {
   });
 
   FocusGamificationState copyWith({
-    FocusInsigniaEntity? currentInsignia,
-    List<FocusInsigniaEntity>? earnedInsignias,
+    FocusInsignia? currentInsignia,
+    List<FocusInsignia>? earnedInsignias,
     FocusMedalha? currentMedal,
     List<FocusMedalha>? earnedMedals,
     int? respectedPeriods,
@@ -122,7 +122,7 @@ class FocusGamificationState {
     return currentInsignia?.progressPercentage ?? 0.0;
   }
 
-  bool hasInsignia(FocusInsigniaEntity insignia) {
+  bool hasInsignia(FocusInsignia insignia) {
     return earnedInsignias.contains(insignia);
   }
 

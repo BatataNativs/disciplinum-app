@@ -2,11 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+// Temporário - classe substituta
+class FocusInsignia {
+  final String name;
+  
+  const FocusInsignia({required this.name});
+  
+  // Assets corrigidos - organizados por módulo
+  static const madeira = FocusInsignia(name: 'madeira');
+  static const bronze = FocusInsignia(name: 'bronze');
+  static const prata = FocusInsignia(name: 'prata');
+  static const ouro = FocusInsignia(name: 'ouro');
+  
+  static const List<FocusInsignia> values = [madeira, bronze, prata, ouro];
+  
+  // Método para obter o asset path
+  String get asset => 'assets/gamification/insignias/focus/$name.png';
+}
 
 class FocusService {
   final IsarService _isarService;

@@ -26,31 +26,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildListItem(String text, TextStyle? style) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.check_circle_rounded,
-            size: 14,
-            color: isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color(0xFF6366F1).withValues(alpha: 0.3),
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                      ]
+                    : [
+                        const Color(0xFFDBEAFE).withValues(alpha: 0.9),
+                        const Color(0xFFF0F9FF).withValues(alpha: 0.6),
+                      ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isDark
+                          ? const Color(0xFF6366F1)
+                          : const Color(0xFF3B82F6))
+                      .withValues(alpha: isDark ? 0.3 : 0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.check_circle_rounded,
+              size: 16,
+              color: isDark ? const Color(0xFF818CF8) : const Color(0xFF2563EB),
+            ),
           ),
-          const SizedBox(width: 10),
-          Text(text, style: style),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: style?.copyWith(
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMedal(String assetPath, String label) {
+  Widget _buildMedalLarge(String assetPath, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 48,
-          width: 48,
-          padding: const EdgeInsets.all(6),
+          height: 50,
+          width: 50,
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -64,8 +99,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               BoxShadow(
                 color: (isDark ? Colors.black : Colors.blueGrey)
                     .withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               )
             ],
             border: Border.all(
@@ -77,11 +112,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           child: Image.asset(assetPath, fit: BoxFit.contain),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 3),
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMedal(String assetPath, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 32,
+          width: 32,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark ? Colors.black : Colors.blueGrey)
+                    .withValues(alpha: 0.15),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              )
+            ],
+            border: Border.all(
+              color:
+                  (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981))
+                      .withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Image.asset(assetPath, fit: BoxFit.contain),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
             fontWeight: FontWeight.bold,
             color: (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
           ),
@@ -250,77 +333,194 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           } else {
                             // Páginas 0 e 1 - Expanded normal
                             return Expanded(
-                              flex: 5,
+                              flex: 8,
                               child: Align(
                                 alignment: Alignment.topCenter,
                                 child: Builder(builder: (context) {
                                   if (index == 0) {
                                     return Image.asset(
                                       'assets/opening/disciplinado.png',
-                                      height: 210,
-                                      width: 210,
+                                      height: 380,
+                                      width: 380,
                                       fit: BoxFit.contain,
                                     );
                                   } else {
                                     return Center(
                                       child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            // Medalhas
-                                            const Text(
-                                              'Medalhas',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF6366F1),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(12),
+                                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: isDark
+                                                  ? [
+                                                      const Color(0xFF1E293B).withValues(alpha: 0.8),
+                                                      const Color(0xFF0F172A).withValues(alpha: 0.9),
+                                                    ]
+                                                  : [
+                                                      const Color(0xFFFFFFFF),
+                                                      const Color(0xFFF8FAFC),
+                                                    ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(16),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: (isDark
+                                                        ? Colors.black
+                                                        : const Color(0xFF64748B))
+                                                    .withValues(alpha: isDark ? 0.4 : 0.12),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 6),
+                                                spreadRadius: 2,
                                               ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            GridView.count(
-                                              shrinkWrap: true,
-                                              physics: const NeverScrollableScrollPhysics(),
-                                              crossAxisCount: 4,
-                                              mainAxisSpacing: 12,
-                                              crossAxisSpacing: 12,
-                                              childAspectRatio: 1.2,
-                                              children: [
-                                                _buildMedal('assets/gamification/medals/smoking/bronze.png', 'Bronze'),
-                                                _buildMedal('assets/gamification/medals/smoking/silver.png', 'Prata'),
-                                                _buildMedal('assets/gamification/medals/smoking/gold.png', 'Ouro'),
-                                                _buildMedal('assets/gamification/medals/smoking/diamond.png', 'Diamante'),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 1),
-                                            // Insígnias
-                                            const Text(
-                                              'Insígnias',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF6366F1),
+                                              BoxShadow(
+                                                color: (isDark
+                                                        ? const Color(0xFF6366F1)
+                                                        : const Color(0xFF3B82F6))
+                                                    .withValues(alpha: isDark ? 0.1 : 0.06),
+                                                blurRadius: 30,
+                                                offset: const Offset(0, 4),
+                                                spreadRadius: -4,
                                               ),
+                                            ],
+                                            border: Border.all(
+                                              color: (isDark
+                                                      ? const Color(0xFF334155)
+                                                      : const Color(0xFFE2E8F0))
+                                                  .withValues(alpha: isDark ? 0.5 : 0.8),
+                                              width: 1.5,
                                             ),
-                                            const SizedBox(height: 12),
-                                            GridView.count(
-                                              shrinkWrap: true,
-                                              physics: const NeverScrollableScrollPhysics(),
-                                              crossAxisCount: 4,
-                                              mainAxisSpacing: 12,
-                                              crossAxisSpacing: 12,
-                                              childAspectRatio: 1,
-                                              children: [
-                                                _buildMedal('assets/insignias/escudo_madeira.png', 'Madeira'),
-                                                _buildMedal('assets/insignias/escudo_ferro.png', 'Ferro'),
-                                                _buildMedal('assets/insignias/escudo_aluminio.png', 'Alumínio'),
-                                                _buildMedal('assets/insignias/escudo_bronze.png', 'Bronze'),
-                                                _buildMedal('assets/insignias/escudo_latao.png', 'Latão'),
-                                                _buildMedal('assets/insignias/escudo_prata.png', 'Prata'),
-                                                _buildMedal('assets/insignias/escudo_ouro.png', 'Ouro'),
-                                                _buildMedal('assets/insignias/escudo_diamante.png', 'Diamante'),
-                                              ],
-                                            ),
-                                          ],
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              // Badge Medalhas
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: isDark
+                                                        ? [
+                                                            const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                                                            const Color(0xFFD97706).withValues(alpha: 0.1),
+                                                          ]
+                                                        : [
+                                                            const Color(0xFFFEF3C7).withValues(alpha: 0.8),
+                                                            const Color(0xFFFDE68A).withValues(alpha: 0.5),
+                                                          ],
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: (isDark
+                                                            ? const Color(0xFFF59E0B)
+                                                            : const Color(0xFFD97706))
+                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'Medalhas',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFFD97706),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Wrap(
+                                                spacing: 12,
+                                                runSpacing: 6,
+                                                alignment: WrapAlignment.center,
+                                                children: [
+                                                  _buildMedalLarge('assets/gamification/medals/smoking/bronze.png', 'Bronze'),
+                                                  _buildMedalLarge('assets/gamification/medals/smoking/silver.png', 'Prata'),
+                                                  _buildMedalLarge('assets/gamification/medals/smoking/gold.png', 'Ouro'),
+                                                  _buildMedalLarge('assets/gamification/medals/smoking/diamond.png', 'Diamante'),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 12),
+                                              // Badge Insígnias
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: isDark
+                                                        ? [
+                                                            const Color(0xFF6366F1).withValues(alpha: 0.2),
+                                                            const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                                                          ]
+                                                        : [
+                                                            const Color(0xFFDBEAFE).withValues(alpha: 0.8),
+                                                            const Color(0xFFF0F9FF).withValues(alpha: 0.5),
+                                                          ],
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: (isDark
+                                                            ? const Color(0xFF6366F1)
+                                                            : const Color(0xFF3B82F6))
+                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'Insígnias',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF6366F1),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              // Primeira fileira: 8 insígnias
+                                              Wrap(
+                                                spacing: 6,
+                                                runSpacing: 6,
+                                                alignment: WrapAlignment.center,
+                                                children: [
+                                                  _buildMedal('assets/insignias/escudo_madeira.png', 'Madeira'),
+                                                  _buildMedal('assets/insignias/escudo_ferro.png', 'Ferro'),
+                                                  _buildMedal('assets/insignias/escudo_aluminio.png', 'Alumínio'),
+                                                  _buildMedal('assets/insignias/escudo_bronze.png', 'Bronze'),
+                                                  _buildMedal('assets/insignias/escudo_latao.png', 'Latão'),
+                                                  _buildMedal('assets/insignias/escudo_prata.png', 'Prata'),
+                                                  _buildMedal('assets/insignias/escudo_ouro.png', 'Ouro'),
+                                                  _buildMedal('assets/insignias/escudo_diamante.png', 'Diamante'),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              // Disciplinum sozinha embaixo com destaque
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: isDark
+                                                        ? [
+                                                            const Color(0xFF10B981).withValues(alpha: 0.15),
+                                                            const Color(0xFF34D399).withValues(alpha: 0.08),
+                                                          ]
+                                                        : [
+                                                            const Color(0xFFD1FAE5).withValues(alpha: 0.8),
+                                                            const Color(0xFFECFDF5).withValues(alpha: 0.5),
+                                                          ],
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: (isDark
+                                                            ? const Color(0xFF10B981)
+                                                            : const Color(0xFF10B981))
+                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: _buildMedal('assets/insignias/escudo_disciplinum.png', 'Disciplinum'),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     );
@@ -331,7 +531,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           }
                         }),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
 
                         // --- ÁREA DO TÍTULO ---
                         Align(
@@ -346,23 +546,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               pageTitle = 'Atenção!';
                             }
 
-                            return Text(
-                              pageTitle,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 30,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFFFFFFFF)
-                                    : const Color(0xFF1F2937),
-                                letterSpacing: -0.8,
-                                height: 1.2,
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: isDark
+                                      ? [
+                                          const Color(0xFF6366F1).withValues(alpha: 0.1),
+                                          const Color(0xFF8B5CF6).withValues(alpha: 0.05),
+                                          Colors.transparent,
+                                        ]
+                                      : [
+                                          const Color(0xFFDBEAFE).withValues(alpha: 0.6),
+                                          const Color(0xFFF0F9FF).withValues(alpha: 0.3),
+                                          Colors.transparent,
+                                        ],
+                                ),
+                              ),
+                              child: Text(
+                                pageTitle,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 24,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? const Color(0xFFFFFFFF)
+                                      : const Color(0xFF1F2937),
+                                  letterSpacing: -0.8,
+                                  height: 1.2,
+                                  shadows: [
+                                    Shadow(
+                                      color: (isDark
+                                              ? const Color(0xFF6366F1)
+                                              : const Color(0xFF3B82F6))
+                                          .withValues(alpha: isDark ? 0.4 : 0.25),
+                                      offset: const Offset(0, 2),
+                                      blurRadius: 8,
+                                    ),
+                                    Shadow(
+                                      color: (isDark
+                                              ? const Color(0xFF6366F1)
+                                              : const Color(0xFF60A5FA))
+                                          .withValues(alpha: isDark ? 0.2 : 0.15),
+                                      offset: const Offset(0, 4),
+                                      blurRadius: 16,
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
 
                         // --- ÁREA DA DESCRIÇÃO ---
                         Align(
@@ -379,22 +618,103 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
 
                             if (index == 0) {
-                              return Column(
+                              return Container(
+                                padding: const EdgeInsets.all(24),
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: isDark
+                                        ? [
+                                            const Color(0xFF1E293B).withValues(alpha: 0.8),
+                                            const Color(0xFF0F172A).withValues(alpha: 0.9),
+                                          ]
+                                        : [
+                                            const Color(0xFFFFFFFF),
+                                            const Color(0xFFF8FAFC),
+                                          ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (isDark
+                                              ? Colors.black
+                                              : const Color(0xFF64748B))
+                                          .withValues(alpha: isDark ? 0.4 : 0.12),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 8),
+                                      spreadRadius: 2,
+                                    ),
+                                    BoxShadow(
+                                      color: (isDark
+                                              ? const Color(0xFF6366F1)
+                                              : const Color(0xFF3B82F6))
+                                          .withValues(alpha: isDark ? 0.1 : 0.06),
+                                      blurRadius: 40,
+                                      offset: const Offset(0, 4),
+                                      spreadRadius: -4,
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: (isDark
+                                            ? const Color(0xFF334155)
+                                            : const Color(0xFFE2E8F0))
+                                        .withValues(alpha: isDark ? 0.5 : 0.8),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     'Transforme seus hábitos diários\ne seja mais disciplinado!',
                                     textAlign: TextAlign.center,
-                                    style: bodyStyle,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Este app pode te ajudar a:',
-                                    textAlign: TextAlign.center,
                                     style: bodyStyle?.copyWith(
-                                        fontWeight: FontWeight.w700),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? const Color(0xFFE2E8F0)
+                                          : const Color(0xFF374151),
+                                    ),
                                   ),
                                   const SizedBox(height: 20),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: isDark
+                                            ? [
+                                                const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                                const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                                              ]
+                                            : [
+                                                const Color(0xFFDBEAFE).withValues(alpha: 0.8),
+                                                const Color(0xFFF0F9FF).withValues(alpha: 0.5),
+                                              ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: (isDark
+                                                ? const Color(0xFF6366F1)
+                                                : const Color(0xFF3B82F6))
+                                            .withValues(alpha: isDark ? 0.3 : 0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Este app pode te ajudar a:',
+                                      textAlign: TextAlign.center,
+                                      style: bodyStyle?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                          color: isDark
+                                              ? const Color(0xFF818CF8)
+                                              : const Color(0xFF1D4ED8),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
                                   // Bloco de itens com alinhamento à esquerda, mas centralizado no eixo X
                                   IntrinsicWidth(
                                     child: Column(
@@ -415,59 +735,108 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                             bodyStyle),
                                         _buildListItem(
                                             'Evitar procrastinação', bodyStyle),
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.add_circle_outline_rounded,
-                                              size: 16,
-                                              color: (Theme.of(context).brightness == Brightness.dark
-                                                      ? const Color(0xFF6366F1)
-                                                      : const Color.fromARGB(
-                                                          255, 32, 32, 32))
-                                                  .withValues(alpha: 0.8),
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: isDark
+                                                  ? [
+                                                      const Color(0xFF10B981).withValues(alpha: 0.15),
+                                                      const Color(0xFF34D399).withValues(alpha: 0.08),
+                                                    ]
+                                                  : [
+                                                      const Color(0xFFD1FAE5).withValues(alpha: 0.8),
+                                                      const Color(0xFFECFDF5).withValues(alpha: 0.5),
+                                                    ],
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'E muito mais!',
-                                              style: bodyStyle?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: Theme.of(context).brightness == Brightness.dark
-                                                    ? Colors.white
-                                                    : Colors.black,
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: (isDark
+                                                      ? const Color(0xFF10B981)
+                                                      : const Color(0xFF10B981))
+                                                  .withValues(alpha: isDark ? 0.4 : 0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.add_circle_outline_rounded,
+                                                size: 18,
+                                                color: (isDark
+                                                        ? const Color(0xFF10B981)
+                                                        : const Color(0xFF059669))
+                                                    .withValues(alpha: 0.9),
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'E muito mais!',
+                                                style: bodyStyle?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 14,
+                                                  color: isDark
+                                                      ? const Color(0xFF34D399)
+                                                      : const Color(0xFF047857),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
                                 ],
+                              ),
                               );
                             } else if (index == 1) {
                               return Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.star_rounded,
-                                          color: Colors.amber, size: 20),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Recompensas Fictícias',
-                                        style: bodyStyle?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: Theme.of(context).brightness == Brightness.dark
-                                              ? Colors.white
-                                              : Colors.black,
-                                          fontSize: 14,
-                                        ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: isDark
+                                            ? [
+                                                const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                                const Color(0xFFD97706).withValues(alpha: 0.08),
+                                              ]
+                                            : [
+                                                const Color(0xFFFEF3C7).withValues(alpha: 0.6),
+                                                const Color(0xFFFDE68A).withValues(alpha: 0.3),
+                                              ],
                                       ),
-                                    ],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: (isDark
+                                                ? const Color(0xFFF59E0B)
+                                                : const Color(0xFFD97706))
+                                            .withValues(alpha: isDark ? 0.4 : 0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.warning_rounded,
+                                            color: Colors.amber, size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Recompensas Fictícias*',
+                                          style: bodyStyle?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 10),
                                   IntrinsicWidth(
                                     child: Column(
                                       crossAxisAlignment:
@@ -479,43 +848,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         _buildListItem(
                                             'Motive-se visualmente', bodyStyle),
                                         _buildListItem(
-                                            'Atinga metas de evolução',
+                                            'Acompanhe sua evolução',
                                             bodyStyle),
                                         _buildListItem(
-                                            'Mantenha sua disciplina viva',
+                                            'Mantenha sua disciplina viva e constante!',
                                             bodyStyle),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color:
-                                            Colors.red.withValues(alpha: 0.2),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.warning_amber_rounded,
-                                            color: Colors.red, size: 20),
-                                        const SizedBox(width: 12),
-                                        Flexible(
-                                          child: Text(
-                                            'Atenção:\nse quebrar a sequência em algum módulo, o progresso naquele módulo é zerado.',
-                                            style: bodyStyle?.copyWith(
-                                              color: Theme.of(context).brightness == Brightness.dark
-                                                  ? Colors.red[300]
-                                                  : Colors.red[700],
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -567,7 +904,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // Indicadores de Página (Dots)
             Row(

@@ -28,8 +28,8 @@ class BingeEatingDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      BingeEatingStreakRule(_bingeEatingService, _awardEngine),
-      BingeEatingRecoveryRule(_bingeEatingService, _awardEngine),
+      BingeEatingStreakRule(_bingeEatingService, _gamificationEvents),
+      BingeEatingRecoveryRule(_bingeEatingService, _gamificationEvents),
     ];
   }
 
@@ -43,10 +43,10 @@ class BingeEatingDisciplineModule extends ModuleDisciplineInterface {
 /// Regra para verificar streak de recuperação
 class BingeEatingStreakRule extends ModuleRule {
   final BingeEatingService _bingeEatingService;
-  final GamificationAwardEngine _awardEngine;
+  final BingeEatingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  BingeEatingStreakRule(this._bingeEatingService, this._awardEngine);
+  BingeEatingStreakRule(this._bingeEatingService, this._gamificationEvents);
 
   @override
   String get ruleId => 'binge_eating_streak_check';
@@ -110,10 +110,10 @@ class BingeEatingStreakRule extends ModuleRule {
 /// Regra para verificar marcos de recuperação
 class BingeEatingRecoveryRule extends ModuleRule {
   final BingeEatingService _bingeEatingService;
-  final GamificationAwardEngine _awardEngine;
+  final BingeEatingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  BingeEatingRecoveryRule(this._bingeEatingService, this._awardEngine);
+  BingeEatingRecoveryRule(this._bingeEatingService, this._gamificationEvents);
 
   @override
   String get ruleId => 'binge_eating_recovery_check';

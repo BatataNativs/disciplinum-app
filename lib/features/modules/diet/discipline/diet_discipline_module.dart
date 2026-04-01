@@ -1,17 +1,17 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Diet
 class DietDisciplineModule extends ModuleDisciplineInterface {
   final DietService _dietService;
-  final GamificationAwardEngine _awardEngine;
+  final DietGamificationEvents _gamificationEvents;
   
   DietDisciplineModule({
     required DietService dietService,
-    required GamificationAwardEngine awardEngine,
+    required DietGamificationEvents gamificationEvents,
   }) : _dietService = dietService,
-       _awardEngine = awardEngine;
+       _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'diet';
@@ -27,7 +27,7 @@ class DietDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      DietGoalRule(_dietService, _awardEngine),
+      DietGoalRule(_dietService, _gamificationEvents),
     ];
   }
 
@@ -41,10 +41,10 @@ class DietDisciplineModule extends ModuleDisciplineInterface {
 /// Regra específica do módulo Diet
 class DietGoalRule extends ModuleRule {
   final DietService _dietService;
-  final GamificationAwardEngine _awardEngine;
+  final DietGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  DietGoalRule(this._dietService, this._awardEngine);
+  DietGoalRule(this._dietService, this._gamificationEvents);
 
   @override
   String get ruleId => 'diet_goal_check';
@@ -79,7 +79,7 @@ class DietGoalRule extends ModuleRule {
         );
       }
 
-      await _awardEngine.processDietEvent(eventType, _dietService);
+      await _gamificationEvents.processDietEvent(eventType, _dietService);
 
       return ModuleDisciplineResult.success(
         message: 'Evento de dieta processado: $eventType',

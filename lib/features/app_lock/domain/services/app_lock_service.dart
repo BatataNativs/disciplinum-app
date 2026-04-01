@@ -1,8 +1,8 @@
 import 'package:disciplinum/features/app_lock/domain/entities/app_lock_event.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import 'package:disciplinum/features/app_lock/infrastructure/services/navigation_service.dart';
 import 'package:disciplinum/features/app_lock/infrastructure/channels/app_lock_channel.dart';
 import 'package:disciplinum/core/di/providers.dart';
@@ -28,13 +28,13 @@ class AppLockService {
   Future<void> showAppLockScreen({
     required String packageName,
     required String appName,
-    required String appIcon,
+    required Uint8List? appIconBytes,
     required NicheId nicheId,
     required VoidCallback onExitApp,
     required VoidCallback onOpenApp,
   }) async {
     try {
-      final alertMessage = defaultModuleMessages[nicheId] ?? 'Atenção! Este app está sendo monitorado.';
+      final alertMessage = 'Atenção! Este app está sendo monitorado.';
       
       LoggerService.instance.gamification('App Lock exibido para: $appName - Mensagem: $alertMessage');
       
@@ -42,7 +42,7 @@ class AppLockService {
       final lockEvent = AppLockEvent(
         packageName: packageName,
         appName: appName,
-        appIcon: appIcon,
+        appIconBytes: appIconBytes,
         nicheId: nicheId,
         alertMessage: alertMessage,
         timestamp: DateTime.now(),

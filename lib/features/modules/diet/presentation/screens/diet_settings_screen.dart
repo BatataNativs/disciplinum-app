@@ -130,8 +130,14 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider.notifier)
-        .startModuleCycle(_niche.nicheId.id);
+    // Usando provider local do Diet - CORRETO: usar .notifier
+    final dietController = ref.read(dietControllerIsarProvider.notifier);
+    // Verifica se a configuração está carregada
+    final dietState = ref.read(dietControllerIsarProvider);
+    if (dietState.config != null) {
+      LoggerService.instance.i('Diet: Módulo ativado com configuração');
+      dietController.startGamificationCycle();
+    }
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -164,32 +170,28 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   }
 
   void _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
-    final confirmed = await DeactivateModuleDialog.showWithService(
+    // Usando provider local do Diet - CORRETO: usar .notifier para métodos
+    final dietController = ref.read(dietControllerIsarProvider.notifier);
+    final confirmed = await DeactivateModuleDialog.show(
       context: context,
-      gamificationService: gamification,
       nicheId: NicheId.diet,
-      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       
-      // Para o ciclo da gamificação primeiro
-      gamification.stopModuleCycle(NicheId.diet.id);
+      // Para o ciclo da gamificação usando provider local
+      LoggerService.instance.i('Diet: Parando ciclo de gamificação');
+      await dietController.stopGamificationCycle();
       
-      // Reset medals and deactivate
-      gamification.resetMedals(
-        _niche.nicheId.id,
-        // notificationTitle: 'Módulo Desativado 🛑',
-        // notificationBody:
-        //     'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
-        // deactivate: true,
-      );
+      // Reseta medalhas via controller local
+      LoggerService.instance.i('Diet: Resetando medalhas');
+      await dietController.resetMedals();
 
-      // Força atualização do estado da gamificação
-      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.diet.id);
+      // Obtém o estado atual do módulo via provider local
+      final gamificationStatus = false; // Módulo foi desativado
 
       setState(() {
         _gamificationRunning = gamificationStatus;
@@ -255,10 +257,10 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
               // Update gamification if module active
               if (mounted) {
-                final gamification =
-                    ref.read(gamificationServiceProvider.notifier);
-                if (gamification.getModuleStatus(_niche.nicheId.id)) {
-                  // Not used directly anymore but triggers change
+                // Usando provider local do Diet para notificações
+                final dietState = ref.read(dietControllerIsarProvider);
+                if (_gamificationRunning && dietState.config != null) {
+                  LoggerService.instance.i('Diet: Atualizando notificações');
                 }
               }
             },
@@ -282,10 +284,10 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     );
 
     if (mounted) {
-      final gamification =
-          ref.read(gamificationServiceProvider.notifier);
-      if (gamification.getModuleStatus(_niche.nicheId.id)) {
-        // Not used directly anymore but triggers change
+      // Usando provider local do Diet
+      final dietState = ref.read(dietControllerIsarProvider);
+      if (dietState.config != null) {
+        LoggerService.instance.i('Diet: Horário removido, verificando estado');
       }
 
       EnhancedSnackBarHelper.showInfo(

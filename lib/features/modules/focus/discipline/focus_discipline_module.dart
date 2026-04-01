@@ -1,19 +1,14 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
-import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Focus
 /// Demonstra como um módulo implementa suas próprias regras
 class FocusDisciplineModule extends ModuleDisciplineInterface {
-  final FocusService _focusService;
-  final GamificationAwardEngine _awardEngine;
+  final FocusGamificationEvents _gamificationEvents;
   
   FocusDisciplineModule({
-    required FocusService focusService,
-    required GamificationAwardEngine awardEngine,
-  }) : _focusService = focusService,
-       _awardEngine = awardEngine;
+    required FocusGamificationEvents gamificationEvents,
+  }) : _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'focus';
@@ -29,7 +24,7 @@ class FocusDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      FocusStreakRule(_focusService, _awardEngine),
+      FocusStreakRule(_gamificationEvents),
     ];
   }
 
@@ -42,11 +37,10 @@ class FocusDisciplineModule extends ModuleDisciplineInterface {
 
 /// Regra específica do módulo Focus para verificação de streak
 class FocusStreakRule extends ModuleRule {
-  final FocusService _focusService;
-  final GamificationAwardEngine _awardEngine;
+  final FocusGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  FocusStreakRule(this._focusService, this._awardEngine);
+  FocusStreakRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'focus_streak_check';
@@ -72,10 +66,7 @@ class FocusStreakRule extends ModuleRule {
   @override
   Future<ModuleDisciplineResult> execute(ModuleDisciplineContext context) async {
     try {
-      await _awardEngine.checkFocusInsigniasByPeriods(
-        NicheId.focus, // Usando enum NicheId correto
-        _focusService,
-      );
+      await _gamificationEvents.processFocusEvent('streak_check');
 
       return ModuleDisciplineResult.success(
         message: 'Streak de foco verificado com sucesso',

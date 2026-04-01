@@ -52,43 +52,48 @@ const DietConfigEntitySchema = CollectionSchema(
       name: r'lastMealDate',
       type: IsarType.dateTime,
     ),
-    r'proteins': PropertySchema(
+    r'mealTimes': PropertySchema(
       id: 7,
+      name: r'mealTimes',
+      type: IsarType.stringList,
+    ),
+    r'proteins': PropertySchema(
+      id: 8,
       name: r'proteins',
       type: IsarType.double,
     ),
     r'reminderHour': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'reminderHour',
       type: IsarType.long,
     ),
     r'reminderMinute': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'reminderMinute',
       type: IsarType.long,
     ),
     r'streakDays': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'streakDays',
       type: IsarType.long,
     ),
     r'totalWeightLost': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'totalWeightLost',
       type: IsarType.double,
     ),
     r'updatedAt': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'userId': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'userId',
       type: IsarType.string,
     ),
     r'water': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'water',
       type: IsarType.double,
     )
@@ -127,6 +132,13 @@ int _dietConfigEntityEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.mealTimes.length * 3;
+  {
+    for (var i = 0; i < object.mealTimes.length; i++) {
+      final value = object.mealTimes[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.userId.length * 3;
   return bytesCount;
 }
@@ -144,14 +156,15 @@ void _dietConfigEntitySerialize(
   writer.writeDouble(offsets[4], object.fats);
   writer.writeDouble(offsets[5], object.fiber);
   writer.writeDateTime(offsets[6], object.lastMealDate);
-  writer.writeDouble(offsets[7], object.proteins);
-  writer.writeLong(offsets[8], object.reminderHour);
-  writer.writeLong(offsets[9], object.reminderMinute);
-  writer.writeLong(offsets[10], object.streakDays);
-  writer.writeDouble(offsets[11], object.totalWeightLost);
-  writer.writeDateTime(offsets[12], object.updatedAt);
-  writer.writeString(offsets[13], object.userId);
-  writer.writeDouble(offsets[14], object.water);
+  writer.writeStringList(offsets[7], object.mealTimes);
+  writer.writeDouble(offsets[8], object.proteins);
+  writer.writeLong(offsets[9], object.reminderHour);
+  writer.writeLong(offsets[10], object.reminderMinute);
+  writer.writeLong(offsets[11], object.streakDays);
+  writer.writeDouble(offsets[12], object.totalWeightLost);
+  writer.writeDateTime(offsets[13], object.updatedAt);
+  writer.writeString(offsets[14], object.userId);
+  writer.writeDouble(offsets[15], object.water);
 }
 
 DietConfigEntity _dietConfigEntityDeserialize(
@@ -161,7 +174,7 @@ DietConfigEntity _dietConfigEntityDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = DietConfigEntity(
-    userId: reader.readString(offsets[13]),
+    userId: reader.readString(offsets[14]),
   );
   object.calories = reader.readLong(offsets[0]);
   object.carbs = reader.readDouble(offsets[1]);
@@ -171,13 +184,14 @@ DietConfigEntity _dietConfigEntityDeserialize(
   object.fiber = reader.readDouble(offsets[5]);
   object.id = id;
   object.lastMealDate = reader.readDateTimeOrNull(offsets[6]);
-  object.proteins = reader.readDouble(offsets[7]);
-  object.reminderHour = reader.readLong(offsets[8]);
-  object.reminderMinute = reader.readLong(offsets[9]);
-  object.streakDays = reader.readLong(offsets[10]);
-  object.totalWeightLost = reader.readDouble(offsets[11]);
-  object.updatedAt = reader.readDateTime(offsets[12]);
-  object.water = reader.readDouble(offsets[14]);
+  object.mealTimes = reader.readStringList(offsets[7]) ?? [];
+  object.proteins = reader.readDouble(offsets[8]);
+  object.reminderHour = reader.readLong(offsets[9]);
+  object.reminderMinute = reader.readLong(offsets[10]);
+  object.streakDays = reader.readLong(offsets[11]);
+  object.totalWeightLost = reader.readDouble(offsets[12]);
+  object.updatedAt = reader.readDateTime(offsets[13]);
+  object.water = reader.readDouble(offsets[15]);
   return object;
 }
 
@@ -203,20 +217,22 @@ P _dietConfigEntityDeserializeProp<P>(
     case 6:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 9:
       return (reader.readLong(offset)) as P;
     case 10:
       return (reader.readLong(offset)) as P;
     case 11:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 12:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 13:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -864,6 +880,231 @@ extension DietConfigEntityQueryFilter
         upper: upper,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mealTimes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mealTimes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mealTimes',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mealTimes',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mealTimes',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QAfterFilterCondition>
+      mealTimesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mealTimes',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -1914,6 +2155,13 @@ extension DietConfigEntityQueryWhereDistinct
   }
 
   QueryBuilder<DietConfigEntity, DietConfigEntity, QDistinct>
+      distinctByMealTimes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mealTimes');
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, DietConfigEntity, QDistinct>
       distinctByProteins() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'proteins');
@@ -2020,6 +2268,13 @@ extension DietConfigEntityQueryProperty
       lastMealDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastMealDate');
+    });
+  }
+
+  QueryBuilder<DietConfigEntity, List<String>, QQueryOperations>
+      mealTimesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mealTimes');
     });
   }
 

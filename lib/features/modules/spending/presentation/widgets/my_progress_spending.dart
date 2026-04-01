@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
+import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_medal.dart';
 
 class MyProgressSpending extends ConsumerWidget {
   const MyProgressSpending({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.spending.id] ?? 0;
+    final dias = ref.watch(spendingStreakProvider);
 
     return _SpendingProgressDetailScreen(
       title: 'Controlar gastos',
@@ -82,12 +81,12 @@ class _SpendingProgressDetailScreen extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
+                children: SpendingMedalEntity.values.map((medal) {
                   final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                      (medal == SpendingMedalEntity.bronze && dias >= 1) ||
+                          (medal == SpendingMedalEntity.prata && dias >= 3) ||
+                          (medal == SpendingMedalEntity.ouro && dias >= 6) ||
+                          (medal == SpendingMedalEntity.diamante && dias >= 12);
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -104,16 +103,16 @@ class _SpendingProgressDetailScreen extends ConsumerWidget {
     );
   }
 
-  String _getMedalRequirement(GamificationMedal medal) {
+  String _getMedalRequirement(SpendingMedalEntity medal) {
     switch (medal) {
-      case GamificationMedal.bronze:
-        return '3 dias consecutivos';
-      case GamificationMedal.prata:
-        return '5 dias consecutivos';
-      case GamificationMedal.ouro:
-        return '7 dias consecutivos';
-      case GamificationMedal.diamante:
-        return '10 dias consecutivos';
+      case SpendingMedalEntity.bronze:
+        return '1 mês consecutivo';
+      case SpendingMedalEntity.prata:
+        return '3 meses consecutivos';
+      case SpendingMedalEntity.ouro:
+        return '6 meses consecutivos';
+      case SpendingMedalEntity.diamante:
+        return '12 meses consecutivos';
     }
   }
 }

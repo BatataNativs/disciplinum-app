@@ -25,6 +25,12 @@ class SmokingModuleState {
   /// Valor de um maço de cigarros (configurado pelo usuário)
   double packCost = 0.0;
 
+  /// Mensagens customizadas por módulo (para notificações de motivação)
+  Map<String, List<String>> customMessages = {};
+
+  /// Mensagem principal customizada
+  String? customMainMessage;
+
   /// Construtor padrão - CONCEDE MADEIRA AUTOMATICAMENTE
   SmokingModuleState() {
     // Concede insígnia madeira automaticamente ao ativar o módulo
@@ -42,7 +48,9 @@ class SmokingModuleState {
             : null,
         startDate = json['startDate'] != null
             ? DateTime.parse(json['startDate'])
-            : null {
+            : null,
+        customMessages = _parseCustomMessages(json['customMessages']),
+        customMainMessage = json['customMainMessage'] {
     _earnedInsignias.addAll(List<String>.from(json['earnedInsignias'] ?? []));
     _earnedMedalhas.addAll(List<String>.from(json['earnedMedalhas'] ?? []));
     
@@ -50,6 +58,16 @@ class SmokingModuleState {
     if (!_earnedInsignias.contains('madeira')) {
       _earnedInsignias.add('madeira');
     }
+  }
+
+  /// Helper para parsear customMessages do JSON
+  static Map<String, List<String>> _parseCustomMessages(dynamic value) {
+    if (value == null) return {};
+    if (value is Map) {
+      return value.map((key, val) => 
+        MapEntry(key.toString(), List<String>.from(val as List? ?? [])));
+    }
+    return {};
   }
 
   /// Converte para JSON
@@ -63,6 +81,8 @@ class SmokingModuleState {
       'startDate': startDate?.toIso8601String(),
       'dailyCost': dailyCost,
       'packCost': packCost,
+      'customMessages': customMessages,
+      'customMainMessage': customMainMessage,
     };
   }
 
@@ -76,6 +96,8 @@ class SmokingModuleState {
     DateTime? startDate,
     double? dailyCost,
     double? packCost,
+    Map<String, List<String>>? customMessages,
+    String? customMainMessage,
   }) {
     final newState = SmokingModuleState();
     newState._earnedInsignias.addAll(earnedInsignias ?? _earnedInsignias);
@@ -86,6 +108,8 @@ class SmokingModuleState {
     newState.startDate = startDate ?? this.startDate;
     newState.dailyCost = dailyCost ?? this.dailyCost;
     newState.packCost = packCost ?? this.packCost;
+    newState.customMessages = customMessages ?? this.customMessages;
+    newState.customMainMessage = customMainMessage ?? this.customMainMessage;
     return newState;
   }
 

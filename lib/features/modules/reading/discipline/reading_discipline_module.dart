@@ -1,19 +1,14 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine_extensions.dart';
+import 'package:disciplinum/features/modules/reading/gamification/domain/services/reading_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Reading
 class ReadingDisciplineModule extends ModuleDisciplineInterface {
-  final ReadingService _readingService;
-  final GamificationAwardEngine _awardEngine;
+  final ReadingGamificationEvents _gamificationEvents;
   
   ReadingDisciplineModule({
-    required ReadingService readingService,
-    required GamificationAwardEngine awardEngine,
-  }) : _readingService = readingService,
-       _awardEngine = awardEngine;
+    required ReadingGamificationEvents gamificationEvents,
+  }) : _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'reading';
@@ -29,8 +24,8 @@ class ReadingDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      ReadingStreakRule(_readingService, _awardEngine),
-      ReadingGoalRule(_readingService, _awardEngine),
+      ReadingStreakRule(_gamificationEvents),
+      ReadingGoalRule(_gamificationEvents),
     ];
   }
 
@@ -43,11 +38,10 @@ class ReadingDisciplineModule extends ModuleDisciplineInterface {
 
 /// Regra para verificar streak de leitura
 class ReadingStreakRule extends ModuleRule {
-  final ReadingService _readingService;
-  final GamificationAwardEngine _awardEngine;
+  final ReadingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  ReadingStreakRule(this._readingService, this._awardEngine);
+  ReadingStreakRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'reading_streak_check';
@@ -82,13 +76,10 @@ class ReadingStreakRule extends ModuleRule {
         );
       }
 
-      // Implementar processReadingEvent no GamificationAwardEngine
-      await _awardEngine.processReadingEvent(eventType, _readingService);
+      // Implementar processReadingEvent no serviço local
+      await _gamificationEvents.processReadingEvent(eventType);
       
       LoggerService.instance.d('Evento reading recebido: $eventType');
-      
-      _readingService;
-      _awardEngine;
       
       return ModuleDisciplineResult.success(
         message: 'Evento de reading processado: $eventType',
@@ -108,11 +99,10 @@ class ReadingStreakRule extends ModuleRule {
 
 /// Regra para verificar metas de leitura
 class ReadingGoalRule extends ModuleRule {
-  final ReadingService _readingService;
-  final GamificationAwardEngine _awardEngine;
+  final ReadingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  ReadingGoalRule(this._readingService, this._awardEngine);
+  ReadingGoalRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'reading_goal_check';
@@ -143,8 +133,8 @@ class ReadingGoalRule extends ModuleRule {
       
       if (pagesRead >= dailyGoal) {
         // Meta diária alcançada
-        // Implementar processReadingEvent no GamificationAwardEngine
-        await _awardEngine.processReadingEvent('daily_goal_completed', _readingService);
+        // Implementar processReadingEvent no serviço local
+        await _gamificationEvents.processReadingEvent('daily_goal_completed');
         
         LoggerService.instance.d('Meta diária de leitura alcançada: $pagesRead páginas');
         

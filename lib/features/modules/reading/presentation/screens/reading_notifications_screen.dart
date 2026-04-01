@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -244,9 +245,13 @@ class _ReadingNotificationsScreenState
                       phrase: '📚 Hora da leitura diária! Mantenha sua mente ativa.',
                     );
                   }
-                  // Reagendar notificações
-                  ref.read(gamificationServiceProvider.notifier)
-                      .restoreMonitoringSession();
+                  // Reagendar notificações localmente
+                  NotificationService.scheduleNotification(
+                    id: _niche.id + 1000,
+                    title: '📚 Hora da leitura!',
+                    body: 'Mantenha sua mente ativa com leitura diária.',
+                    scheduledDate: DateTime.now().add(const Duration(minutes: 1)),
+                  );
                   // Atualiza o contador
                   _loadCount();
                 },

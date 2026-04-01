@@ -17,10 +17,11 @@ class AppLockNavigationService {
       }
 
       // Prepara os dados para o MethodChannel
+      // Nota: appIconBytes pode ser null se o ícone não for encontrado
       final eventData = {
         'packageName': lockEvent.packageName,
         'appName': lockEvent.appName,
-        'appIcon': lockEvent.appIcon,
+        'appIconBytes': lockEvent.appIconBytes,
         'nicheId': lockEvent.nicheId.index,
         'alertMessage': lockEvent.alertMessage,
         'timestamp': lockEvent.timestamp.millisecondsSinceEpoch,

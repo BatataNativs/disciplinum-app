@@ -3,8 +3,6 @@ import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/events/events/gamification_events.dart';
 import 'package:disciplinum/core/events/events/behavior_events.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
-import 'package:disciplinum/features/gamification/domain/entities/insignia.dart';
 
 /// Helper para emitir eventos de gamificação de forma padronizada
 /// Centraliza a lógica de emissão de eventos para evitar duplicação
@@ -24,23 +22,7 @@ class GamificationEventEmitter {
   }
 
   /// Emite evento quando uma medalha é conquistada
-  static void emitMedalAwarded({
-    required NicheId nicheId,
-    required GamificationMedal medal,
-    required int consecutiveDays,
-  }) {
-    final event = MedalAwardedEvent(
-      nicheId: nicheId,
-      medal: {'name': medal.name},
-      consecutiveDays: consecutiveDays,
-      userId: _currentUserId,
-      sessionId: _currentSessionId,
-    );
-    
-    _eventBus.emit(event);
-    
-    LoggerService.instance.gamification('Medal awarded', data: {'medal': medal.name, 'module': nicheId});
-  }
+  /// Usa [Map] com dados da medalha (fragmentação por módulo)
 
   /// Emite evento quando um módulo é ativado
   static void emitModuleActivated({
@@ -100,23 +82,7 @@ class GamificationEventEmitter {
   }
 
   /// Emite evento quando uma insígnia de foco é conquistada
-  static void emitFocusInsigniaAwarded({
-    required NicheId nicheId,
-    required FocusInsignia insignia,
-    required int totalFocusTime,
-  }) {
-    final event = FocusInsigniaAwardedEvent(
-      nicheId: nicheId,
-      insignia: {'name': insignia.name},
-      totalFocusTime: totalFocusTime,
-      userId: _currentUserId,
-      sessionId: _currentSessionId,
-    );
-    
-    _eventBus.emit(event);
-    
-    LoggerService.instance.gamification('Focus insignia awarded', data: {'insignia': insignia.name});
-  }
+  /// Usa [Map] com dados da insígnia (fragmentação por módulo)
 
   /// Emite evento quando um período de foco é completado
   static void emitFocusPeriodCompleted({

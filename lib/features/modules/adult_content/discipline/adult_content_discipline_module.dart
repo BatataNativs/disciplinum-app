@@ -1,17 +1,17 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
+import 'package:disciplinum/features/modules/adult_content/gamification/domain/services/adult_content_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Adult Content
 class AdultContentDisciplineModule extends ModuleDisciplineInterface {
   final AdultContentService _adultContentService;
-  final GamificationAwardEngine _awardEngine;
+  final AdultContentGamificationEvents _gamificationEvents;
   
   AdultContentDisciplineModule({
     required AdultContentService adultContentService,
-    required GamificationAwardEngine awardEngine,
+    required AdultContentGamificationEvents gamificationEvents,
   }) : _adultContentService = adultContentService,
-       _awardEngine = awardEngine;
+       _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'adult_content';
@@ -27,7 +27,7 @@ class AdultContentDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      AdultContentBlockRule(_adultContentService, _awardEngine),
+      AdultContentBlockRule(_adultContentService, _gamificationEvents),
     ];
   }
 
@@ -41,10 +41,10 @@ class AdultContentDisciplineModule extends ModuleDisciplineInterface {
 /// Regra específica do módulo Adult Content
 class AdultContentBlockRule extends ModuleRule {
   final AdultContentService _adultContentService;
-  final GamificationAwardEngine _awardEngine;
+  final AdultContentGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  AdultContentBlockRule(this._adultContentService, this._awardEngine);
+  AdultContentBlockRule(this._adultContentService, this._gamificationEvents);
 
   @override
   String get ruleId => 'adult_content_block_check';
@@ -79,7 +79,7 @@ class AdultContentBlockRule extends ModuleRule {
         );
       }
 
-      await _awardEngine.processAdultContentEvent(action, _adultContentService);
+      await _gamificationEvents.processAdultContentEvent(action, _adultContentService);
 
       return ModuleDisciplineResult.success(
         message: 'Evento de conteúdo adulto processado: $action',

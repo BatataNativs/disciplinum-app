@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     as fln;
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/presentation/providers/procrastination_gamification_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
+// NOTA: GamificationService removido - agora usando ProcrastinationGamificationController via ProviderContainer
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
@@ -16,7 +17,8 @@ class ProcrastinationService extends ChangeNotifier {
   static const String _localKey = 'procrastination_data';
   static const String _listsKey = 'procrastination_lists';
 
-  final GamificationService _gamificationService;
+  // NOTA: ProcrastinationGamificationController acessado via ProviderContainer quando necessário
+  // Não armazenamos a instância diretamente para evitar conflitos com ChangeNotifier
   final IsarPreferencesRepository _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -35,7 +37,8 @@ class ProcrastinationService extends ChangeNotifier {
   static ProcrastinationService? _instance;
   static ProcrastinationService get instance => _instance!;
 
-  ProcrastinationService(this._gamificationService, this._prefs) {
+  ProcrastinationService(this._prefs) {
+    // Inicialização do singleton
     _instance = this;
     _loadData();
   }
@@ -190,13 +193,15 @@ class ProcrastinationService extends ChangeNotifier {
         _days[key] = day.copyWith(isDayFailed: true, isDayComplete: false);
 
         if (!resetTriggered) {
-          _gamificationService.resetMedals(
-            NicheId.procrastination.id,
-            notificationTitle: "Dia Incompleto 📉",
-            notificationBody:
-                "Você deixou tarefas pendentes em dias anteriores. Seu streak foi reiniciado.",
-            deactivate: false,
-          );
+          // Reset de progresso via ProviderContainer (gamificação local)
+          try {
+            final container = ProviderContainer();
+            final gamification = container.read(procrastinationGamificationControllerProvider);
+            gamification.resetProgress();
+            LoggerService.instance.i('Procrastination: Progresso resetado por dia incompleto');
+          } catch (e) {
+            LoggerService.instance.w('Erro ao resetar progresso: $e');
+          }
           resetTriggered = true;
         }
       }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/features/modules/adult_content/gamification/presentation/providers/adult_content_gamification_provider.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_medal.dart';
 
 class MyProgressAdultContent extends ConsumerWidget {
@@ -9,9 +9,7 @@ class MyProgressAdultContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
-    final dias =
-        gamification.diasConsecutivosByModule[NicheId.adultContent.id] ?? 0;
+    final dias = ref.watch(adultContentStreakProvider);
 
     return _AdultContentProgressDetailScreen(
       title: 'Evitar conteúdo adulto',

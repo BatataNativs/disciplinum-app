@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/common/niche_category.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -54,9 +54,6 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
       final route = ModalRoute.of(context);
       if (route != null && route.isCurrent) {
         _permissionsChecked = true;
-
-        // REMOVIDO: Não pedir permissões automaticamente na home guest
-        // As permissões agora são pedidas apenas na ativação dos módulos
       }
     });
   }
@@ -64,8 +61,6 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
   Future<void> _handleNicheTap(Niche niche, String heroTag) async {
     HapticFeedback.lightImpact();
 
-    // REMOVIDO: Não verificar permissões aqui
-    // As permissões agora são pedidas apenas na ativação dos módulos
     if (!mounted) return;
 
     Navigator.pushNamed(
@@ -292,7 +287,7 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.map((id) => NicheId.tryFromInt(id)).whereType<NicheId>().toList()));
+                            final activeModules = ref.watch(activeModulesProvider);
                             return _buildActiveModulesSection(
                                 activeModules, isDark, textTheme);
                           },

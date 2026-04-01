@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/modules/reading/presentation/notifiers/reading_gamification_notifier.dart';
+import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_medal.dart';
 
 class MyProgressReading extends ConsumerWidget {
   const MyProgressReading({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.reading.id] ?? 0;
+    final dias = ref.watch(readingGamificationStateProvider).currentStreak;
 
     return _ReadingProgressDetailScreen(
       title: 'Leitura',
@@ -82,12 +81,12 @@ class _ReadingProgressDetailScreen extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
+                children: ReadingMedalEntity.values.map((medal) {
                   final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                      (medal == ReadingMedalEntity.bronze && dias >= 3) ||
+                          (medal == ReadingMedalEntity.prata && dias >= 5) ||
+                          (medal == ReadingMedalEntity.ouro && dias >= 7) ||
+                          (medal == ReadingMedalEntity.diamante && dias >= 10);
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -104,15 +103,15 @@ class _ReadingProgressDetailScreen extends ConsumerWidget {
     );
   }
 
-  String _getMedalRequirement(GamificationMedal medal) {
+  String _getMedalRequirement(ReadingMedalEntity medal) {
     switch (medal) {
-      case GamificationMedal.bronze:
+      case ReadingMedalEntity.bronze:
         return '3 dias consecutivos';
-      case GamificationMedal.prata:
+      case ReadingMedalEntity.prata:
         return '5 dias consecutivos';
-      case GamificationMedal.ouro:
+      case ReadingMedalEntity.ouro:
         return '7 dias consecutivos';
-      case GamificationMedal.diamante:
+      case ReadingMedalEntity.diamante:
         return '10 dias consecutivos';
     }
   }

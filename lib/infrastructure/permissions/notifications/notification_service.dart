@@ -4,6 +4,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Mantive o alias 'fln' para segurança
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     as fln;
@@ -18,7 +19,8 @@ import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/meal_tracking_service.dart';
+import 'package:disciplinum/features/modules/diet/presentation/providers/meal_tracking_provider.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
 
 final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -133,11 +135,22 @@ Future<void> initNotifications() async {
       // Lógica para ações rápidas de DIETA (refeições)
       if (response.payload != null &&
           response.payload!.startsWith('diet_meal_')) {
-        final mealTime = response.payload!.replaceFirst('diet_meal_', '');
+        final mealTimeStr = response.payload!.replaceFirst('diet_meal_', '');
+        final timeParts = mealTimeStr.split(':');
+        final hour = int.tryParse(timeParts[0]) ?? 0;
+        final minute = int.tryParse(timeParts[1]) ?? 0;
+        
+        // Usar ProviderContainer para acessar o repository
+        final container = ProviderContainer();
+        final mealRepo = container.read(mealEntryRepositoryProvider);
+        final userId = container.read(currentUserIdProvider);
+        
         if (response.actionId == 'DIET_SIM') {
-          MealTrackingService.instance.recordMeal(mealTime, done: true);
+          // Registrar refeição como feita
+          mealRepo.recordMealFromNotification(hour, minute, done: true, userId: userId);
         } else if (response.actionId == 'DIET_NAO') {
-          MealTrackingService.instance.recordMeal(mealTime, done: false);
+          // Registrar refeição como não feita
+          mealRepo.recordMealFromNotification(hour, minute, done: false, userId: userId);
         }
       }
     },

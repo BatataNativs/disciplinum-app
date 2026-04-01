@@ -62,6 +62,18 @@ class DietModuleState extends Equatable {
     );
   }
 
+  /// Cria um estado inicial
+  factory DietModuleState.initial() {
+    return DietModuleState(
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveDays: 0,
+      disciplinumCount: 0,
+      lastUpdated: DateTime.now(),
+      isActive: false,
+    );
+  }
+
   @override
   List<Object?> get props => [
         earnedInsignias,

@@ -35,7 +35,6 @@ class AppConstants {
   static const int maxNotificationMessages = 100;
   
   // Tempo e Datas
-  static const int checkInGracePeriodHours = 4;
   static const int focusSessionMinMinutes = 1;
   static const int focusSessionMaxMinutes = 480; // 8 horas
   static const int defaultFocusMinutes = 25;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -253,9 +254,13 @@ class _BingeEatingNotificationsScreenState
                       phrase: 'Você resistiu às tentações de delivery hoje?',
                     );
                   }
-                  // Reagendar notificações
-                  final gamification = ref.read(gamificationServiceProvider.notifier);
-                  gamification.restoreMonitoringSession();
+                  // Reagendar notificações localmente
+                  NotificationService.scheduleNotification(
+                    id: _niche.id + 2000,
+                    title: '🥗 Check-in de alimentação!',
+                    body: 'Você resistiu às tentações de delivery hoje?',
+                    scheduledDate: DateTime.now().add(const Duration(minutes: 1)),
+                  );
                   // Atualiza o contador
                   _loadCounts();
                 },

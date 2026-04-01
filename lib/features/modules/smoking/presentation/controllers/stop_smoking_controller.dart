@@ -85,6 +85,11 @@ class StopSmokingController extends StateNotifier<StopSmokingState> {
       state = state.copyWith(error: null);
     }
   }
+
+  /// Limpa o estado da gamificação (usado ao desativar módulo)
+  void clearGamification() {
+    state = StopSmokingState.initial();
+  }
 }
 
 /// Provider para StopSmokingController

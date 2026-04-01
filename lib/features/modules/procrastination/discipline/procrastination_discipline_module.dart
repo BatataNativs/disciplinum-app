@@ -1,19 +1,18 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine_extensions.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/domain/services/procrastination_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Procrastination
 class ProcrastinationDisciplineModule extends ModuleDisciplineInterface {
   final ProcrastinationService _procrastinationService;
-  final GamificationAwardEngine _awardEngine;
+  final ProcrastinationGamificationEvents _gamificationEvents;
   
   ProcrastinationDisciplineModule({
     required ProcrastinationService procrastinationService,
-    required GamificationAwardEngine awardEngine,
+    required ProcrastinationGamificationEvents gamificationEvents,
   }) : _procrastinationService = procrastinationService,
-       _awardEngine = awardEngine;
+       _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'procrastination';
@@ -29,8 +28,8 @@ class ProcrastinationDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      ProcrastinationStreakRule(_procrastinationService, _awardEngine),
-      ProcrastinationFocusRule(_procrastinationService, _awardEngine),
+      ProcrastinationStreakRule(_procrastinationService, _gamificationEvents),
+      ProcrastinationFocusRule(_gamificationEvents),
     ];
   }
 
@@ -44,10 +43,10 @@ class ProcrastinationDisciplineModule extends ModuleDisciplineInterface {
 /// Regra para verificar streak de produtividade
 class ProcrastinationStreakRule extends ModuleRule {
   final ProcrastinationService _procrastinationService;
-  final GamificationAwardEngine _awardEngine;
+  final ProcrastinationGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  ProcrastinationStreakRule(this._procrastinationService, this._awardEngine);
+  ProcrastinationStreakRule(this._procrastinationService, this._gamificationEvents);
 
   @override
   String get ruleId => 'procrastination_streak_check';
@@ -82,15 +81,15 @@ class ProcrastinationStreakRule extends ModuleRule {
         );
       }
 
-      // Implementar processProcrastinationEvent no GamificationAwardEngine
-      await _awardEngine.processProcrastinationEvent(eventType, _procrastinationService);
+      // Implementar processProcrastinationEvent no serviço local
+      await _gamificationEvents.processProcrastinationEvent(eventType);
       
       // Por enquanto, apenas logamos o evento
       LoggerService.instance.d('Evento procrastination recebido: $eventType');
       
       // Simula uso dos serviços para evitar warnings
       _procrastinationService;
-      _awardEngine;
+      _gamificationEvents;
       
       return ModuleDisciplineResult.success(
         message: 'Evento de procrastination processado: $eventType',
@@ -110,11 +109,10 @@ class ProcrastinationStreakRule extends ModuleRule {
 
 /// Regra para verificar foco e produtividade
 class ProcrastinationFocusRule extends ModuleRule {
-  final ProcrastinationService _procrastinationService;
-  final GamificationAwardEngine _awardEngine;
+  final ProcrastinationGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  ProcrastinationFocusRule(this._procrastinationService, this._awardEngine);
+  ProcrastinationFocusRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'procrastination_focus_check';
@@ -145,7 +143,7 @@ class ProcrastinationFocusRule extends ModuleRule {
       
       if (focusMinutes >= dailyGoal) {
         // Meta diária de foco alcançada
-        await _awardEngine.processProcrastinationEvent('daily_focus_goal', _procrastinationService);
+        await _gamificationEvents.processProcrastinationEvent('daily_focus_goal');
         
         LoggerService.instance.d('Meta diária de foco alcançada: $focusMinutes minutos');
         

@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/providers/binge_eating_gamification_provider.dart';
+
+// Temporário - classe substituta
+class GamificationMedal {
+  final String name;
+  final String asset;
+  
+  const GamificationMedal({required this.name, required this.asset});
+  
+  // Getter para compatibilidade
+  String get nameBr => name;
+  
+  // Assets corrigidos - organizados por módulo
+  static const bronze = GamificationMedal(name: 'bronze', asset: 'assets/gamification/medals/bingeEating/bronze.png');
+  static const prata = GamificationMedal(name: 'prata', asset: 'assets/gamification/medals/bingeEating/silver.png');
+  static const ouro = GamificationMedal(name: 'ouro', asset: 'assets/gamification/medals/bingeEating/gold.png');
+  static const diamante = GamificationMedal(name: 'diamante', asset: 'assets/gamification/medals/bingeEating/diamond.png');
+  
+  static const List<GamificationMedal> values = [bronze, prata, ouro, diamante];
+}
 
 class MyProgressBingeEating extends ConsumerWidget {
   const MyProgressBingeEating({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
-    final dias =
-        gamification.diasConsecutivosByModule[NicheId.bingeEating.id] ?? 0;
+    final dias = ref.watch(bingeEatingStreakProvider);
 
     return _BingeEatingProgressDetailScreen(
       title: 'Compulsão alimentar',
@@ -115,6 +131,8 @@ class _BingeEatingProgressDetailScreen extends ConsumerWidget {
         return '7 dias consecutivos';
       case GamificationMedal.diamante:
         return '10 dias consecutivos';
+      default:
+        return 'Requisito não definido';
     }
   }
 }

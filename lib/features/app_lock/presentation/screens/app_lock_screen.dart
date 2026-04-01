@@ -34,49 +34,7 @@ class AppLockScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo do app com ícone REAL do pacote
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.cyan.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: FutureBuilder<Uint8List?>(
-                        future: InstalledAppService().getAppIcon(lockEvent.packageName),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData && snapshot.data != null) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.memory(
-                                snapshot.data!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              ),
-                            );
-                          }
-
-                          // Fallback para emoji enquanto carrega ou se falhar
-                          return Center(
-                            child: Text(
-                              lockEvent.appIcon,
-                              style: const TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Mensagem de alerta
+                    // Mensagem personalizada do módulo (acima)
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -87,20 +45,6 @@ class AppLockScreen extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child:Colum(
-                                            // Nome do app
-                          Text(
-                            lockEvent.appName,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          
-                          const SizedBox(height: 48),
-                      )
                       child: Column(
                         children: [
                           Text(
@@ -109,7 +53,6 @@ class AppLockScreen extends StatelessWidget {
                               color: Colors.cyan,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -128,6 +71,63 @@ class AppLockScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Logo do app com ícone REAL do pacote
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.cyan.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: FutureBuilder<Uint8List?>(
+                        // Usar appIconBytes do lockEvent se disponível, senão buscar
+                        future: lockEvent.appIconBytes != null 
+                            ? Future.value(lockEvent.appIconBytes)
+                            : InstalledAppService().getAppIcon(lockEvent.packageName),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                snapshot.data!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          }
+
+                          // Fallback enquanto carrega ou se falhar
+                          return const Center(
+                            child: Icon(
+                              Icons.android,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Nome do app abaixo do ícone
+                    Text(
+                      lockEvent.appName,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     
                     const SizedBox(height: 40),
@@ -201,7 +201,7 @@ class AppLockScreen extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.warning,
+                                  Icons.open_in_new,
                                   color: Colors.cyan,
                                   size: 20,
                                 ),

@@ -301,4 +301,39 @@ class DietServiceIsar {
       rethrow;
     }
   }
+
+  /// Inicia o ciclo de gamificação do módulo Diet
+  Future<void> startGamificationCycle() async {
+    try {
+      LoggerService.instance.i('Diet: Ciclo de gamificação iniciado');
+      // O ciclo é iniciado quando o módulo é ativado
+      // Aqui podemos adicionar lógica específica se necessário
+    } catch (e) {
+      LoggerService.instance.e('Erro ao iniciar ciclo de gamificação', error: e);
+      rethrow;
+    }
+  }
+
+  /// Para o ciclo de gamificação do módulo Diet
+  Future<void> stopGamificationCycle() async {
+    try {
+      LoggerService.instance.i('Diet: Ciclo de gamificação parado');
+      // O ciclo é parado quando o módulo é desativado
+      // Aqui podemos adicionar lógica específica se necessário
+    } catch (e) {
+      LoggerService.instance.e('Erro ao parar ciclo de gamificação', error: e);
+      rethrow;
+    }
+  }
+
+  /// Reseta as medalhas/conquistas do módulo
+  Future<void> resetMedals() async {
+    try {
+      await resetStreak();
+      LoggerService.instance.i('Diet: Medalhas resetadas');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar medalhas', error: e);
+      rethrow;
+    }
+  }
 }

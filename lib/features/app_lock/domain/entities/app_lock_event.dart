@@ -10,8 +10,8 @@ class AppLockEvent {
   /// Nome amigável do app
   final String appName;
   
-  /// Ícone do app
-  final String appIcon;
+  /// Ícone do app (bytes da imagem)
+  final Uint8List? appIconBytes;
   
   /// ID do módulo ativo
   final NicheId nicheId;
@@ -31,7 +31,7 @@ class AppLockEvent {
   const AppLockEvent({
     required this.packageName,
     required this.appName,
-    required this.appIcon,
+    this.appIconBytes,
     required this.nicheId,
     required this.alertMessage,
     required this.timestamp,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
-import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/gamification/module_gamification_provider.dart';
 
 /// Widget de progresso genérico para módulos
 /// Reutilizável por todos os módulos do app
@@ -23,12 +23,11 @@ class ModuleProgressWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamificationState = ref.watch(gamificationServiceProvider);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
-    
     final niche = NicheRepository.getById(nicheId);
-    final isActive = gamificationNotifier.isModuleActive(nicheId.id);
-    final consecutiveDays = gamificationState.diasConsecutivosByModule[nicheId.id] ?? 0;
+    final gamificationState = ref.watch(moduleGamificationProvider(nicheId));
+    
+    final isActive = gamificationState.isActive;
+    final consecutiveDays = gamificationState.consecutiveDays;
     
     return Card(
       margin: const EdgeInsets.all(16),

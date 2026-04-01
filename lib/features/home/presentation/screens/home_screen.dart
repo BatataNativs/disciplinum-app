@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/di/providers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/common/niche_category.dart';
@@ -63,21 +63,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
         // Verifica medalhas pendentes assim que a tela monta
         _checkPendingMedals();
-
-        // REMOVIDO: Não pedir permissões automaticamente na home
-        // As permissões agora são pedidas apenas na ativação dos módulos
       }
     });
   }
 
-  void _checkPendingMedals() {
-    final gamification = ref.read(gamificationServiceProvider);
-    final pending = gamification.pendingMedals;
+  Future<void> _checkPendingMedals() async {
+    final pendingAsync = ref.read(pendingMedalsProvider);
+    final pending = await pendingAsync;
 
     if (pending.isNotEmpty) {
       // Pega a primeira e mostra
-      final medalData = pending.first;
-      _showMedalDialog(medalData);
+      final medalName = pending.first;
+      _showMedalDialog(medalName);
     }
   }
 
@@ -123,8 +120,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
-                    // Consome e tenta mostrar próxima se houver
-                    ref.read(gamificationServiceProvider.notifier).consumePendingMedal(medalName);
+                    // Consumir medalha localmente (remover da lista visualizada)
+                    Navigator.pop(context);
                     Navigator.of(ctx).pop();
 
                     // Pequeno delay para animação de fechar e abrir a próxima
@@ -147,8 +144,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   Future<void> _handleNicheTap(Niche niche, String heroTag) async {
     HapticFeedback.lightImpact();
 
-    // REMOVIDO: Não verificar permissões aqui
-    // As permissões agora são pedidas apenas na ativação dos módulos
     if (!mounted) return;
 
     // Se for stopSmoking, mantemos a lógica (mas agora passando heroTag se quiser,
@@ -371,7 +366,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(gamificationServiceProvider.select((s) => s.diasConsecutivosByModule.keys.map((id) => NicheId.tryFromInt(id)).whereType<NicheId>().toList()));
+                            final activeModules = ref.watch(activeModulesProvider);
                             return _buildActiveModulesSection(
                               activeModules, isDark, textTheme);
                           },

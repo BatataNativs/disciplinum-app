@@ -166,6 +166,11 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Limpa o estado da gamificação (usado ao desativar módulo)
+  void clearGamification() {
+    state = const MoneySavingGamificationState();
+  }
 }
 
 // Providers

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_isar.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
 import 'package:disciplinum/features/app_lock/domain/entities/app_lock_event.dart';
@@ -64,12 +66,12 @@ class BingeEatingAppLockService {
   }
 
   /// Mostra a tela de AppLock para BingeEating
-  Future<void> showAppLockScreen(String packageName, String appName, String appIcon) async {
+  Future<void> showAppLockScreen(String packageName, String appName, Uint8List? appIconBytes) async {
     try {
       await AppLockService.instance.showAppLockScreen(
         packageName: packageName,
         appName: appName,
-        appIcon: appIcon,
+        appIconBytes: appIconBytes,
         nicheId: NicheId.bingeEating,
         onOpenApp: () => _handleOpenApp(packageName),
         onExitApp: () => _handleExitApp(packageName),
@@ -88,7 +90,7 @@ class BingeEatingAppLockService {
         AppLockEvent(
           packageName: packageName,
           appName: _getAppName(packageName),
-          appIcon: _getAppIcon(packageName),
+          appIconBytes: null, // Será buscado automaticamente
           nicheId: NicheId.bingeEating,
           alertMessage: "Você escolheu abrir o app durante seu controle alimentar.",
           timestamp: DateTime.now(),
@@ -113,7 +115,7 @@ class BingeEatingAppLockService {
         AppLockEvent(
           packageName: packageName,
           appName: _getAppName(packageName),
-          appIcon: _getAppIcon(packageName),
+          appIconBytes: null, // Será buscado automaticamente
           nicheId: NicheId.bingeEating,
           alertMessage: "Ótimo! Você resistiu à tentação durante seu controle alimentar.",
           timestamp: DateTime.now(),
@@ -195,27 +197,5 @@ class BingeEatingAppLockService {
     };
     
     return appNames[packageName] ?? packageName;
-  }
-
-  String _getAppIcon(String packageName) {
-    // Mapeamento simples de package names para ícones
-    final appIcons = {
-      'com.instagram.android': '📷',
-      'com.facebook.katana': '📘',
-      'com.tinder': '🔥',
-      'com.zhiliaoapp.musically': '🎵',
-      'com.snapchat.android': '👻',
-      'com.twitter.android': '🐦',
-      'com.pinterest': '📌',
-      'com.netflix.mediaclient': '🎬',
-      'com.amazon.avod.thirdpartyclient': '📺',
-      'com.google.android.youtube': '▶️',
-      'com.spotify.music': '🎶',
-      'com.whatsapp': '💬',
-      'com.discord': '💎',
-      'com.reddit.frontpage': '🤖',
-    };
-    
-    return appIcons[packageName] ?? '📱';
   }
 }

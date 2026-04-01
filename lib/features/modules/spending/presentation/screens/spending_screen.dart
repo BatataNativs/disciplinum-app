@@ -15,6 +15,7 @@ import 'package:disciplinum/features/modules/spending/presentation/widgets/spend
 import 'package:disciplinum/features/modules/spending/presentation/widgets/spending_segmented_control.dart';
 import 'package:disciplinum/features/modules/spending/presentation/widgets/spending_tab_content.dart';
 import 'package:disciplinum/features/modules/spending/presentation/widgets/spending_actions_widget.dart';
+import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
 
 class SpendingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -63,11 +64,13 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
         });
       }
 
-      // Carrega status da gamificação
-      LoggerService.instance.i('SpendingScreen: Carregando status da gamificação');
-      final gamificationState = ref.read(gamificationServiceProvider);
-      final isRunning = gamificationState.moduleStatus[NicheId.spending.id] ?? false;
-      LoggerService.instance.i('SpendingScreen: Gamificação ativa: $isRunning');
+      // Carrega status do controller local do Spending
+      LoggerService.instance.i('SpendingScreen: Carregando status do controller');
+      // Usando provider local do Spending via gamification repository
+      final spendingRepo = ref.read(moneySavingGamificationRepositoryProvider);
+      final moduleState = await spendingRepo.getMoneySavingState();
+      final isRunning = moduleState?.isActive ?? false;
+      LoggerService.instance.i('SpendingScreen: Controller ativo: $isRunning');
       
       if (mounted) {
         setState(() => _gamificationRunning = isRunning);
@@ -138,7 +141,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     }
   }
 
-  void _startGamificationCycle() {
+  Future<void> _startGamificationCycle() async {
     HapticFeedback.heavyImpact();
     setState(() {
       _gamificationRunning = true;
@@ -147,8 +150,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       nicheId: NicheId.spending,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider.notifier)
-        .startModuleCycle(NicheId.spending.id);
+    // Ativa o controller local do Spending
+    final controller = ref.read(spendingGamificationControllerProvider);
+    await controller.activateModule();
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -195,19 +199,17 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
     HapticFeedback.heavyImpact();
     
-    // Para o ciclo da gamificação primeiro
-    ref.read(gamificationServiceProvider.notifier).stopModuleCycle(NicheId.spending.id);
+    // Desativa o controller local do Spending
+    final controller = ref.read(spendingGamificationControllerProvider);
+    await controller.deactivateModule();
 
     _resetMedalsForModule(
       notificationTitle: 'Módulo Desativado 🛑',
-      notificationBody:
-          'O módulo foi desativado e todos os dados de estatística e gamificação foram resetados.',
+      notificationBody: 'Seu progresso foi resetado',
       deactivate: true,
     );
 
-    // Força atualização do estado da gamificação
-    ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.spending.id);
-
+    // Força atualização do estado local
     setState(() {
       _gamificationRunning = false;
       _selectedIndex = 0;
@@ -235,10 +237,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     String? notificationBody,
     bool deactivate = false,
   }) {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
-    gamification.resetMedals(
-      NicheId.spending.id,
-    );
+    // Usar o controller local do Spending em vez do GamificationService global
+    final controller = ref.read(spendingGamificationControllerProvider);
+    controller.resetProgress();
   }
 
   Future<void> _openSelectApps() async {

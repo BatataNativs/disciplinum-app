@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_medal.dart';
 
 class MyProgressDiet extends ConsumerWidget {
   const MyProgressDiet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.diet.id] ?? 0;
+    final dias = ref.watch(dietStreakProvider);
 
     return _DietProgressDetailScreen(
       title: 'Manter dieta',
@@ -82,12 +81,12 @@ class _DietProgressDetailScreen extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
+                children: DietMedal.values.map((medal) {
                   final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                      (medal == DietMedal.bronze && dias >= 3) ||
+                          (medal == DietMedal.prata && dias >= 5) ||
+                          (medal == DietMedal.ouro && dias >= 7) ||
+                          (medal == DietMedal.diamante && dias >= 10);
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -104,15 +103,15 @@ class _DietProgressDetailScreen extends ConsumerWidget {
     );
   }
 
-  String _getMedalRequirement(GamificationMedal medal) {
+  String _getMedalRequirement(DietMedal medal) {
     switch (medal) {
-      case GamificationMedal.bronze:
+      case DietMedal.bronze:
         return '3 dias consecutivos';
-      case GamificationMedal.prata:
+      case DietMedal.prata:
         return '5 dias consecutivos';
-      case GamificationMedal.ouro:
+      case DietMedal.ouro:
         return '7 dias consecutivos';
-      case GamificationMedal.diamante:
+      case DietMedal.diamante:
         return '10 dias consecutivos';
     }
   }

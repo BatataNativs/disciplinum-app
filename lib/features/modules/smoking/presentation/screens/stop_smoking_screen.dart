@@ -235,7 +235,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     }
     if (!mounted) return;
 
-    final gamification = ref.read(gamificationServiceProvider.notifier);
+    // Usando provider local do Smoking
+    ref.read(stopSmokingControllerProvider);
 
     if (onlySyncSchedules) {
       // Sincronização e agendamentos agora são responsabilidade do NotificationScheduler e CloudSyncService
@@ -244,7 +245,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
     if (times.isNotEmpty && _gamificationRunning) {
       await PermissionService.ensurePermissions(context, nicheId: NicheId.smoking);
-      gamification.startModuleCycle(NicheId.smoking.id);
+      // Inicia o ciclo de monitoramento local
+      LoggerService.instance.i('Smoking: Iniciando ciclo de monitoramento');
     }
   }
 
@@ -388,11 +390,14 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     HapticFeedback.heavyImpact();
     setState(() => _gamificationRunning = true);
     ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isActive: true);
-    ref.read(gamificationServiceProvider.notifier).startModuleCycle(NicheId.smoking.id);
+    // Usando provider local do Smoking
+    ref.read(stopSmokingControllerProvider);
+    LoggerService.instance.i('Smoking: Ciclo de gamificação iniciado');
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
+    // Usando provider local do Smoking
+    ref.read(stopSmokingControllerProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => DeactivateModuleDialog(
@@ -413,19 +418,14 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id + 100);
 
-        // Para o ciclo da gamificação primeiro
-        gamification.stopModuleCycle(NicheId.smoking.id);
-        
-        // Depois reseta as medalhas
-        gamification.resetMedals(
-          NicheId.smoking.id,
-        );
+        // Usando provider local do Smoking para resetar dados
+        await ref.read(smokingServiceProvider).archiveAndReset();
 
         if (mounted) {
           final data = await ref.read(smokingServiceProvider).getSettings();
           
-          // Força atualização do estado da gamificação
-          ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.smoking.id);
+          // Usando provider local do Smoking para obter status atualizado
+          LoggerService.instance.i('Smoking: Módulo desativado, dados resetados');
           
           setState(() {
             settings = data;

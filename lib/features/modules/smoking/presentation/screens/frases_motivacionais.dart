@@ -5,11 +5,11 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart' show NicheId;
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
+import 'package:disciplinum/infrastructure/services/gamification_messages.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
-import 'package:disciplinum/services/gamification/gamification_service.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/providers/module_unlock_providers.dart';
 
 class FrasesMotivacionaisScreen extends ConsumerStatefulWidget {
   const FrasesMotivacionaisScreen({super.key});
@@ -31,15 +31,24 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
   }
 
   Future<void> _loadData() async {
-    final gamificationState = ref.read(gamificationServiceProvider);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
+    final smokingGamification = ref.read(smokingGamificationServiceProvider);
+    await smokingGamification.initialize();
+    
     final iap = ref.read(iapServiceProvider);
 
     // Niche ID + 100 para motivação
     final nicheIdMotivation = _niche.id + 100;
     final serverTimes =
         await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheIdMotivation);
-    final customPhrases = gamificationState.customPhrases;
+    // Carrega frases customizadas do serviço local
+    final customPhrases = smokingGamification.getCustomMessages();
+
+    // Verificar desbloqueio local uma vez para todos os slots
+    final localUnlock = await ref.read(moduleUnlockRepositoryProvider).isUnlocked(
+      _niche.nicheId.id.toString(), 
+      'motivation_phrases',
+    );
+    final canCustomize = iap.isMotivationPhrasesUnlocked || localUnlock;
 
     setState(() {
       _slots = [];
@@ -53,25 +62,23 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
           final t = serverTimes[i];
 
           String phraseText;
-          final nichePhrases = customPhrases[_niche.nicheId.id] ?? [];
+          final nichePhrases = customPhrases[_niche.nicheId.id.toString()] ?? [];
           
-          if (iap.isMotivationPhrasesUnlocked) {
+          if (canCustomize) {
             // Se for Personalização, tenta pegar a frase customizada salva
             phraseText = (i < nichePhrases.length)
                 ? nichePhrases[i]
                 : GamificationMessages.getModuleMessage(
                     _niche.nicheId,
-                    isUnlocked: iap.isCustomNotifUnlocked ||
-                        gamificationNotifier.isNotificationUnlocked(_niche.nicheId),
-                    customMessages: gamificationState.customMessages,
+                    isUnlocked: canCustomize,
+                    customMessages: {},
                   );
           } else {
             // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
             phraseText = GamificationMessages.getModuleMessage(
               _niche.nicheId,
-              isUnlocked: iap.isCustomNotifUnlocked ||
-                  gamificationNotifier.isNotificationUnlocked(_niche.nicheId),
-              customMessages: gamificationState.customMessages,
+              isUnlocked: canCustomize,
+              customMessages: {},
             );
           }
 
@@ -86,7 +93,7 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
   }
 
   Future<void> _saveData() async {
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
+    final smokingGamification = ref.read(smokingGamificationServiceProvider);
     final iap = ref.read(iapServiceProvider);
 
     setState(() => _isLoading = true);
@@ -106,19 +113,19 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
       );
     }
 
-    // 3. Salva cache de frases no GamificationService
+    // Salva cache de frases no storage local
     final phrases = _slots.map((s) => s.text).toList();
     if (iap.isMotivationPhrasesUnlocked) {
-      gamificationNotifier.setCustomPhrases(_niche.nicheId.id, phrases);
+      await smokingGamification.setCustomMessages(_niche.nicheId.id.toString(), phrases);
     }
 
-    // Compatibilidade: Salva a primeira frase como mensagem principal customizada
+    // Salva a primeira frase como mensagem principal customizada
     if (phrases.isNotEmpty) {
-      gamificationNotifier.setCustomMessage(_niche.nicheId, phrases.first);
+      await smokingGamification.setCustomMessage(_niche.nicheId, phrases.first);
     }
 
-    // 4. Recarrega sessões de monitoramento (Reagendar notificações)
-    await gamificationNotifier.restoreMonitoringSession();
+    // Recarrega sessões de monitoramento (Reagendar notificações)
+    await smokingGamification.reloadMonitoringSession();
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -127,22 +134,23 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
     }
   }
 
-  void _addSlot() {
+  void _addSlot() async {
     if (_slots.length >= 8) return;
     final iap = ref.read(iapServiceProvider);
-    final gamificationState = ref.read(gamificationServiceProvider);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
-    // Agenda as notificações nativas
-    if (mounted) {
-      ref.read(gamificationServiceProvider.notifier).scheduleChallengeNotification();
-    }  
+    
+    // Verificar desbloqueio local
+    final localUnlock = await ref.read(moduleUnlockRepositoryProvider).isUnlocked(
+      _niche.nicheId.id.toString(), 
+      'motivation_phrases',
+    );
+    final canCustomize = iap.isMotivationPhrasesUnlocked || localUnlock;
+    
     setState(() {
       _slots.add(PhraseSlot(
         text: GamificationMessages.getModuleMessage(
           _niche.nicheId,
-          isUnlocked: iap.isCustomNotifUnlocked ||
-              gamificationNotifier.isNotificationUnlocked(_niche.nicheId),
-          customMessages: gamificationState.customMessages,
+          isUnlocked: canCustomize,
+          customMessages: {},
         ),
         time: const TimeOfDay(hour: 12, minute: 0),
       ));
@@ -185,11 +193,16 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final iap = ref.watch(iapServiceProvider);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
-
-    // Define se o usuário pode EDITAR O TEXTO (IAP Global ou Desbloqueio Local via Ad)
-    final bool canEditText = iap.isMotivationPhrasesUnlocked ||
-        gamificationNotifier.isMotivationUnlocked(_niche.nicheId.id);
+    // Verificar desbloqueio local via provider
+    final localUnlockAsync = ref.watch(moduleUnlockStatusProvider(
+      (moduleId: _niche.nicheId.id.toString(), unlockType: 'motivation_phrases'),
+    ));
+    
+    final bool canEditText = localUnlockAsync.when(
+      data: (localUnlock) => iap.isMotivationPhrasesUnlocked || localUnlock,
+      loading: () => iap.isMotivationPhrasesUnlocked,
+      error: (_, __) => iap.isMotivationPhrasesUnlocked,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -395,7 +408,9 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
 
   void _showUnlockDialog() {
     final adService = ref.read(adServiceProvider.notifier);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
+    final unlockNotifier = ref.read(moduleUnlockNotifierProvider(
+      (moduleId: _niche.nicheId.id.toString(), unlockType: 'motivation_phrases'),
+    ).notifier);
 
     adService.loadRewardedAd();
 
@@ -421,7 +436,7 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
                 icon: const Icon(Icons.play_arrow, size: 18),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  _handleAdUnlock(gamificationNotifier, adService);
+                  _handleAdUnlock(adService, unlockNotifier);
                 },
                 label: const Text('Assistir Vídeo'),
                 style: ElevatedButton.styleFrom(
@@ -445,15 +460,17 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
     );
   }
 
-  void _handleAdUnlock(GamificationService gamificationNotifier, AdService adService) {
+  void _handleAdUnlock(AdService adService, ModuleUnlockNotifier unlockNotifier) {
     SnackBarHelper.showInfo(context, 'Carregando anúncio...');
 
     adService.showRewardedAd(
-      onUserEarnedReward: () {
-        gamificationNotifier.unlockMotivation(_niche.nicheId.id);
+      onUserEarnedReward: () async {
+        // Desbloqueia via provider local
+        await unlockNotifier.unlock(method: 'ad');
         if (mounted) {
           SnackBarHelper.showSuccess(
               context, 'Personalização desbloqueada! 🎉');
+          setState(() {}); // Recarrega para atualizar UI
         }
       },
       onAdDismissed: () {

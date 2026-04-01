@@ -46,7 +46,6 @@ class AvatarService {
   // Seleciona imagem da galeria
   // Retorna null se cancelar ou der erro (erro logado no console)
   static Future<File?> pickAvatar() async {
-    // Removido context daqui
     final picker = ImagePicker();
 
     try {

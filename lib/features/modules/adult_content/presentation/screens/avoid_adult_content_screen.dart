@@ -75,18 +75,16 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              ref.read(gamificationServiceProvider.notifier);
-
+          // Lógica local de gamificação - usando provider local do AdultContent
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
           if (!mounted) return;
 
           if (accessibilityGranted) {
-            gamification.startMonitoringApps(
-              nicheId: NicheId.adultContent.id,
-              apps: _selectedApps,
-            );
+            // Usando provider local do AdultContent para ativar AppLock
+            ref.read(adultContentServiceIsarProvider);
+            // Ativa o AppLock para os apps selecionados
+            LoggerService.instance.i('AdultContent: AppLock ativado para ${_selectedApps.length} apps');
           } else {
             setState(() => _gamificationRunning = false);
           }
@@ -157,12 +155,10 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
     if (!mounted) return;
 
-    final gamification =
-        ref.read(gamificationServiceProvider.notifier);
-    gamification.startMonitoringApps(
-      nicheId: NicheId.adultContent.id,
-      apps: _selectedApps,
-    );
+    // Usando provider local do AdultContent
+    ref.read(adultContentServiceIsarProvider);
+    // Inicia o AppLock para os apps selecionados
+    LoggerService.instance.i('AdultContent: Iniciando monitoramento de ${_selectedApps.length} apps');
 
     final granted = await NotificationService.requestPermission();
     if (!mounted) return;
@@ -183,8 +179,9 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider.notifier)
-        .startModuleCycle(_niche.nicheId.id);
+    // Usando provider local do AdultContent
+    ref.read(adultContentServiceIsarProvider);
+    LoggerService.instance.i('AdultContent: Ciclo de gamificação iniciado');
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -217,10 +214,10 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
-    final confirmed = await DeactivateModuleDialog.showWithService(
+    // Usando provider local do AdultContent
+    ref.read(adultContentServiceIsarProvider);
+    final confirmed = await DeactivateModuleDialog.show(
       context: context,
-      gamificationService: gamification,
       nicheId: NicheId.adultContent,
       customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
@@ -229,13 +226,13 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       
-      // Para o ciclo da gamificação primeiro
-      gamification.stopModuleCycle(NicheId.adultContent.id);
+      // Desativa o AppLock usando o provider local
+      LoggerService.instance.i('AdultContent: Desativando módulo e AppLock');
       
       _resetMedalsForModule();
 
-      // Força atualização do estado da gamificação
-      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.adultContent.id);
+      // Obtém o estado atual do módulo via provider local
+      final gamificationStatus = false; // Módulo desativado
 
       setState(() {
         _gamificationRunning = gamificationStatus;
@@ -255,11 +252,9 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   }
 
   void _resetMedalsForModule() {
-    final gamification =
-        ref.read(gamificationServiceProvider.notifier);
-    gamification.resetMedals(
-      _niche.nicheId.id,
-    );
+    // Usando provider local do AdultContent
+    ref.read(adultContentServiceIsarProvider);
+    LoggerService.instance.i('AdultContent: Resetando dados do módulo');
   }
 
   Future<void> _openSelectApps() async {

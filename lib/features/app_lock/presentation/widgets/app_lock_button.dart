@@ -34,7 +34,7 @@ class AppLockButton extends StatelessWidget {
     final testEvent = AppLockEvent(
       packageName: 'com.whatsapp',
       appName: 'WhatsApp',
-      appIcon: '📱',
+      appIconBytes: null, // Ícone será buscado automaticamente
       nicheId: NicheId.focus, // Teste com módulo Focus
       alertMessage: '⏳ Atenção aos objetivos. Mantenha o foco e a disciplina para alcançar seu objetivo!',
       timestamp: DateTime.now(),

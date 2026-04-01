@@ -172,4 +172,51 @@ class DietControllerIsar extends StateNotifier<DietState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Limpa o estado da gamificação (usado ao desativar módulo)
+  void clearGamification() {
+    state = const DietState();
+  }
+
+  /// Inicia o ciclo de gamificação do módulo Diet
+  Future<void> startGamificationCycle() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _service.startGamificationCycle();
+      await _loadData(); // Recarrega os dados atualizados
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Para o ciclo de gamificação do módulo Diet
+  Future<void> stopGamificationCycle() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _service.stopGamificationCycle();
+      await _loadData(); // Recarrega os dados atualizados
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Reseta as medalhas/conquistas do módulo
+  Future<void> resetMedals() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _service.resetMedals();
+      await _loadData(); // Recarrega os dados atualizados
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
 }

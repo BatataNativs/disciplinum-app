@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/gamification/domain/entities/medal.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
 
 class MyProgressSmoking extends ConsumerWidget {
   const MyProgressSmoking({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
+    final dias = ref.watch(smokingStreakProvider);
     final authService = ref.watch(authServiceProvider);
-    final dias = gamification.diasConsecutivosByModule[NicheId.smoking.id] ?? 0;
 
     // Lógica para obter o primeiro nome
     String fullName = authService.userProfile?['name'] ?? 'Usuário';
@@ -66,12 +65,12 @@ class MyProgressSmoking extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
+                children: SmokingMedalEntity.values.map((medal) {
                   final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                      (medal == SmokingMedalEntity.bronze && dias >= 3) ||
+                          (medal == SmokingMedalEntity.prata && dias >= 5) ||
+                          (medal == SmokingMedalEntity.ouro && dias >= 7) ||
+                          (medal == SmokingMedalEntity.diamante && dias >= 10);
 
                   return _AwardItem(
                     asset: medal.asset,
@@ -88,15 +87,15 @@ class MyProgressSmoking extends ConsumerWidget {
     );
   }
 
-  String _getMedalRequirement(GamificationMedal medal) {
+  String _getMedalRequirement(SmokingMedalEntity medal) {
     switch (medal) {
-      case GamificationMedal.bronze:
+      case SmokingMedalEntity.bronze:
         return '3 dias consecutivos';
-      case GamificationMedal.prata:
+      case SmokingMedalEntity.prata:
         return '5 dias consecutivos';
-      case GamificationMedal.ouro:
+      case SmokingMedalEntity.ouro:
         return '7 dias consecutivos';
-      case GamificationMedal.diamante:
+      case SmokingMedalEntity.diamante:
         return '10 dias consecutivos';
     }
   }

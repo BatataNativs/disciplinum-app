@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/presentation/providers/procrastination_gamification_provider.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -61,8 +62,9 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final service = ref.watch(procrastinationServiceProvider);
-    final gamificationState = ref.watch(gamificationServiceProvider);
-    final isActive = gamificationState.moduleStatus[NicheId.procrastination.id] ?? false;
+    // Usando provider local do Procrastination
+    final procrastinationState = ref.watch(procrastinationControllerIsarProvider);
+    final isActive = procrastinationState.config?.isEnabled ?? false;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -333,7 +335,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
 
   Future<void> _toggleModule(bool isActive) async {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
+    // Usar provider local do Procrastination
+    final gamification = ref.read(procrastinationGamificationControllerProvider);
 
     if (isActive) {
       final confirmed = await AppDialog.showConfirmation(
@@ -349,15 +352,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         if (!mounted) return;
         HapticFeedback.heavyImpact();
 
-        // Para o ciclo da gamificação primeiro
-        gamification.stopModuleCycle(NicheId.procrastination.id);
-        
-        gamification.resetMedals(
-          NicheId.procrastination.id,
-        );
-
-        // Força atualização do estado da gamificação
-        ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.procrastination.id);
+        // Desativar via controller local
+        await gamification.deactivateModule();
 
         setState(() {
           // O estado será atualizado automaticamente pelo gamification.isModuleActive() no build
@@ -394,7 +390,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         nicheId: NicheId.procrastination,
         isActive: true,
       );
-      gamification.startModuleCycle(NicheId.procrastination.id);
+      // Ativar via controller local
+      await gamification.activateModule();
 
       if (mounted) {
         SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');

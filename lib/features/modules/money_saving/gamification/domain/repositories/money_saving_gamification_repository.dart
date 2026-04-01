@@ -1,9 +1,9 @@
+import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/database/supabase_migration_checker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_migration_checker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Money Saving Challenge
 /// Implementa persistência local com Isar e sincronização com Supabase
@@ -66,7 +66,7 @@ class MoneySavingGamificationRepository {
   /// Sincroniza com Supabase (upload)
   Future<void> syncWithSupabase(MoneySavingModuleState state) async {
     try {
-      final isReady = await SupabaseMigrationChecker.instance.ensureMigration();
+      final isReady = await MoneySavingMigrationChecker.instance.ensureMigration();
       if (!isReady) {
         LoggerService.instance.w('Supabase não está pronto para sincronização');
         return;
@@ -193,7 +193,7 @@ class MoneySavingGamificationRepository {
   Future<void> initialize() async {
     try {
       // Verifica se o Supabase está pronto para uso
-      final migrationOk = await SupabaseMigrationChecker.instance.ensureMigration();
+      final migrationOk = await MoneySavingMigrationChecker.instance.ensureMigration();
       if (!migrationOk) {
         LoggerService.instance.w('⚠️ Supabase não está migrado - usando apenas Isar local');
       }

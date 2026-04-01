@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import '../widgets/health_timeline_card.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 class HealthDetailScreen extends ConsumerWidget {
   final SmokingSettingsModel settings;
@@ -13,8 +12,9 @@ class HealthDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamificationState = ref.watch(gamificationServiceProvider);
-    final isActive = gamificationState.moduleStatus[NicheId.smoking.id] ?? false;
+    // Usando provider local do Smoking
+    final smokingState = ref.watch(stopSmokingControllerProvider);
+    final isActive = smokingState.smokingData?.isActive ?? false;
     final effectiveDuration = isActive ? settings.timeSmokeFree : Duration.zero;
 
     return Scaffold(

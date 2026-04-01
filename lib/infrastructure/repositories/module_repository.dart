@@ -1,4 +1,4 @@
-import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
+import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
 

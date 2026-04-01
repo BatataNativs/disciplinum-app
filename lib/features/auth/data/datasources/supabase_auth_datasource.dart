@@ -5,7 +5,7 @@ import 'package:disciplinum/features/auth/domain/entities/auth_result.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Datasource para autenticação com Supabase - Versão Final Corrigida
-/// Todos os problemas de lint resolvidos
+/// Problemas de lint resolvidos
 class SupabaseAuthDatasource {
   final SupabaseClient _supabase;
   final LoggerService _logger;

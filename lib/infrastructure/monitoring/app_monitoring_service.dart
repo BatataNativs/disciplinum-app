@@ -9,9 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
-import 'package:disciplinum/services/gamification/gamification_service.dart';
-
-import 'package:disciplinum/features/gamification/domain/services/gamification_messages.dart';
+import 'package:disciplinum/infrastructure/services/gamification_messages.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
 
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
@@ -20,9 +18,9 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
+import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 
 class AppMonitoringService {
-  GamificationService? _gamificationService;
   late final IsarPreferencesRepository _prefsRepo;
   IapService? _iapService;
   final SessionPersistenceService _sessionPersistence;
@@ -31,12 +29,10 @@ class AppMonitoringService {
   AppMonitoringService(
     IsarPreferencesRepository prefsRepo,
     this._sessionPersistence, {
-    GamificationService? gamificationService,
     IapService? iapService,
     FocusService? focusService,
   }) : _focusService = focusService {
     _prefsRepo = prefsRepo;
-    _gamificationService = gamificationService;
     _iapService = iapService;
   }
 
@@ -86,11 +82,8 @@ class AppMonitoringService {
   // Acessibilidade
   static const _accessibilityChannel =
       EventChannel('com.disciplinum.app/accessibility');
-  static const _methodChannel =
-      MethodChannel('com.disciplinum.app/accessibility_methods');
   StreamSubscription? _accessibilitySubscription;
   String? _lastAccessibilityApp;
-  String? _currentOverlayMessage;
 
   void setNotificationsPaused(bool value) async {
     notificationsPaused = value;
@@ -182,13 +175,10 @@ class AppMonitoringService {
 
     await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
-    // ✅ Limpar estado de monitoramento com Isar
+    // Limpar estado de monitoramento com Isar
     await _sessionPersistence.clearMonitoringState();
 
     await _stopForegroundService();
-
-    // Garantir que o overlay suma
-    await _hideOverlay();
   }
 
   void _monitorLoop(Timer timer) async {
@@ -205,13 +195,11 @@ class AppMonitoringService {
         await _sessionPersistence.updateHeartbeat();
       }
       
-      // ✅ Cleanup periódico a cada 5 minutos
+      // Cleanup periódico a cada 5 minutos
       if (timer.tick % 300 == 0) {
         await _sessionPersistence.cleanupOldSessions();
       }
       
-      _gamificationService?.runProgressCheck();
-
       if (notificationsPaused) {
         _violationStartByApp.clear();
         _warnedApps.clear();
@@ -329,185 +317,7 @@ class AppMonitoringService {
 
     if (activeNicheId == null || activeNicheId != NicheId.focus) return;
 
-    final gamification = _gamificationService;
-
-    final focusInterval = gamification?.focusIntervalByModule[activeNicheId.id];
-
-    if (focusInterval == null) return;
-
-    final now = DateTime.now();
-
-    final window = _getLastCompletedFocusWindow(
-      now: now,
-      startHour: focusInterval.start.hour,
-      startMinute: focusInterval.start.minute,
-      endHour: focusInterval.end.hour,
-      endMinute: focusInterval.end.minute,
-    );
-
-    if (window == null) return;
-
-    final startTime = window[0];
-
-    final endTime = window[1];
-
-    if (now.isBefore(endTime)) return;
-
-    final lastCheckedEnd =
-        await _prefsRepo.getInt('last_focus_checked_end_${activeNicheId.id}');
-
-    if (lastCheckedEnd == endTime.millisecondsSinceEpoch) {
-      return;
-    }
-
-    final hadViolations = await _hadViolationsInFocusPeriod(startTime, endTime);
-
-    if (!hadViolations) {
-      if (_focusService != null) {
-        await _focusService.addRespectedPeriod();
-
-        final total = await _focusService.getRespectedPeriods();
-        LoggerService.instance.gamification(
-          'Período de foco respeitado',
-          data: {
-            'nicheId': activeNicheId.id,
-            'total': total,
-          },
-        );
-      }
-    }
-
-    await _prefsRepo.setInt(
-      'last_focus_checked_end_${activeNicheId.id}',
-      endTime.millisecondsSinceEpoch,
-    );
-  }
-
-  List<DateTime>? _getLastCompletedFocusWindow({
-    required DateTime now,
-    required int startHour,
-    required int startMinute,
-    required int endHour,
-    required int endMinute,
-  }) {
-    final startMinutes = startHour * 60 + startMinute;
-    final endMinutes = endHour * 60 + endMinute;
-
-    if (startMinutes <= endMinutes) {
-      // Período não cruza meia-noite (ex: 9:00-17:00)
-
-      final todayStart = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        startHour,
-        startMinute,
-      );
-
-      final todayEnd = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        endHour,
-        endMinute,
-      );
-
-      // CORREÇÃO: Só considerar como completado se agora for depois do fim E se já passou pelo menos 1 minuto
-      if (!now.isBefore(todayEnd) && now.difference(todayEnd).inMinutes >= 1) {
-        return [todayStart, todayEnd];
-      }
-
-      final yesterday = now.subtract(const Duration(days: 1));
-
-      final yesterdayStart = DateTime(
-        yesterday.year,
-        yesterday.month,
-        yesterday.day,
-        startHour,
-        startMinute,
-      );
-
-      final yesterdayEnd = DateTime(
-        yesterday.year,
-        yesterday.month,
-        yesterday.day,
-        endHour,
-        endMinute,
-      );
-
-      return [yesterdayStart, yesterdayEnd];
-    } else {
-      // Período cruza meia-noite (ex: 22:00-6:00)
-
-      final currentMinutes = now.hour * 60 + now.minute;
-
-      if (currentMinutes < endMinutes) {
-        // Ainda estamos na janela "de hoje", então a última COMPLETA terminou ontem
-        // CORREÇÃO: Só considerar como completado se já passou pelo menos 1 minuto do fim
-        
-        final yesterday = now.subtract(const Duration(days: 1));
-        final yesterdayEnd = DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          endHour,
-          endMinute,
-        );
-        
-        // Se já passou pelo menos 1 minuto do fim de ontem
-        if (now.difference(yesterdayEnd).inMinutes >= 1) {
-          final twoDaysAgo = now.subtract(const Duration(days: 2));
-
-          final start = DateTime(
-            twoDaysAgo.year,
-            twoDaysAgo.month,
-            twoDaysAgo.day,
-            startHour,
-            startMinute,
-          );
-
-          final end = yesterdayEnd;
-
-          return [start, end];
-        }
-      } else {
-        // Já passou do fim hoje, então a última COMPLETA terminou hoje
-        // CORREÇÃO: Só considerar como completado se já passou pelo menos 1 minuto
-        
-        final todayEnd = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          endHour,
-          endMinute,
-        );
-        
-        // Se já passou pelo menos 1 minuto do fim de hoje
-        if (now.difference(todayEnd).inMinutes >= 1) {
-          final yesterday = now.subtract(const Duration(days: 1));
-
-          final start = DateTime(
-            yesterday.year,
-            yesterday.month,
-            yesterday.day,
-            startHour,
-            startMinute,
-          );
-
-          final end = todayEnd;
-
-          return [start, end];
-        }
-      }
-    }
-    return null;
-  }
-
-  // NOVO: Verificar se houve violações em um período
-
-  Future<bool> _hadViolationsInFocusPeriod(
-      DateTime startTime, DateTime endTime) async {
-    return false;
+    return;
   }
 
   /// Handle real-time accessibility event
@@ -639,10 +449,6 @@ class AppMonitoringService {
 
       if (duration >= _violationTimeoutSeconds) {
         await _triggerViolationReset(packageName);
-      } else {
-        await _updateOverlay(
-            secondsRemaining: _violationTimeoutSeconds - duration,
-            message: _currentOverlayMessage);
       }
     }
   }
@@ -660,10 +466,8 @@ class AppMonitoringService {
       _violationStartByApp.remove(packageName);
       _warnedApps.remove(packageName);
       _lastSeenMonitoredApp.remove(packageName);
-      _currentOverlayMessage = null; // Limpa mensagem ativa
 
       LoggerService.instance.system('Violation cancelled for $packageName');
-      await _hideOverlay();
     }
   }
 
@@ -677,9 +481,8 @@ class AppMonitoringService {
     // Preparar mensagem para o App Lock
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
-      isUnlocked: (_iapService?.isCustomNotifUnlocked ?? false) ||
-          (_gamificationService?.isNotificationUnlocked(currentNicheId as dynamic) ?? false),
-      customMessages: _gamificationService?.customMessages ?? {},
+      isUnlocked: (_iapService?.isCustomNotifUnlocked ?? false),
+      customMessages: {},
     );
 
     // 🚀 INTEGRAÇÃO COM APP LOCK - Substituir overlay por App Lock
@@ -707,12 +510,14 @@ class AppMonitoringService {
     try {
       final niche = currentNicheId!;
       final appName = _getAppName(packageName);
-      final appIcon = _getAppIcon(packageName);
+      
+      // Buscar ícone real do app
+      final Uint8List? appIconBytes = await InstalledAppService().getAppIcon(packageName);
       
       await AppLockService.instance.showAppLockScreen(
         packageName: packageName,
         appName: appName,
-        appIcon: appIcon,
+        appIconBytes: appIconBytes,
         nicheId: niche,
         onExitApp: () async {
           LoggerService.instance.gamification('Usuário escolheu sair do app: $appName');
@@ -728,8 +533,6 @@ class AppMonitoringService {
       
     } catch (e) {
       LoggerService.instance.e('Erro ao mostrar App Lock', error: e);
-      // Fallback para overlay se App Lock falhar
-      await _showOverlay(_violationTimeoutSeconds, message: alertMessage);
     }
   }
 
@@ -756,159 +559,12 @@ class AppMonitoringService {
     return appNames[packageName] ?? packageName.split('.').last;
   }
 
-  /// Obtém o ícone do app a partir do package name
-  String _getAppIcon(String packageName) {
-    // Mapeamento de ícones para apps conhecidos
-    final appIcons = {
-      'com.whatsapp': '💬',
-      'com.instagram.android': '📷',
-      'com.facebook.katana': '📘',
-      'com.twitter.android': '🐦',
-      'com.tiktok': '🎵',
-      'com.snapchat.android': '👻',
-      'com.spotify.music': '🎶',
-      'com.netflix.mediaclient': '🎬',
-      'com.youtube.android': '📺',
-      'com.discord': '🎮',
-      'com.telegram.messenger': '✈️',
-      'com.google.android.youtube': '📺',
-      'com.google.android.gm': '📧',
-      'com.google.android.apps.photos': '📸',
-      'com.reddit.frontpage': '🤖',
-      'com.pinterest': '📌',
-      'com.linkedin.android': '💼',
-      'com.tinder': '🔥',
-      'com.badoo.mobile': '💕',
-      'com.zello': '📡',
-      'com.skype.raider': '📞',
-      'com.viber.voip': '💜',
-      'com.kik.mobile': '👽',
-      'com.linecorp.linethree': '💚',
-      'com.tencent.mm': '💬',
-      'com.whatsapp.w4b': '💼',
-      'com.instagram.boomerang': '🎬',
-      'com.instagram.layout': '📋',
-      'com.facebook.orca': '📱',
-      'com.facebook.work': '💼',
-      'com.facebook.workchat': '💼',
-      'com.twitter.android.lite': '🐦',
-      'com.twitter.android.tv': '📺',
-      'com.tiktok.lite': '🎵',
-      'com.snapchat.kit': '👻',
-      'com.spotify.lite': '🎶',
-      'com.netflix.lite': '🎬',
-      'com.amazon.avod.thirdpartyclient': '📺',
-      'com.amazon.mp3': '🎵',
-      'com.apple.android.music': '🎵',
-      'com.apple.android.podcasts': '🎧',
-      'com.soundcloud.android': '🎵',
-      'com.pandora.android': '🎵',
-      'com.deezer.android.app': '🎵',
-      'com.shazam.encore.android': '🎵',
-      'com.google.android.apps.youtube.music': '🎵',
-      'com.google.android.play.music': '🎵',
-      'com.microsoft.office.word': '📄',
-      'com.microsoft.office.excel': '📊',
-      'com.microsoft.office.powerpoint': '📽️',
-      'com.microsoft.office.outlook': '📧',
-      'com.microsoft.office.onenote': '📝',
-      'com.microsoft.teams': '👥',
-      'com.slack': '💬',
-      'com.zoom.us': '🎥',
-      'us.zoom.videomeetings': '🎥',
-      'com.google.android.apps.meetings': '🎥',
-      'com.google.android.apps.docs.editors.docs': '📄',
-      'com.google.android.apps.docs.editors.sheets': '📊',
-      'com.google.android.apps.docs.editors.slides': '📽️',
-      'com.adobe.reader': '📄',
-      'com.duolingo': '🦉',
-      'com.khanacademy': '📚',
-      'com.coursera': '🎓',
-      'com.udemy.android': '📖',
-      'com.lyft': '🚗',
-      'com.ubercab': '🚕',
-      'com.waze': '🗺️',
-      'com.google.android.apps.maps': '🗺️',
-      'com.google.android.apps.mapslite': '🗺️',
-      'com.mapswithme.maps.pro': '🗺️',
-      'com.yandex.yandexmaps': '🗺️',
-      'com.here.app.maps': '🗺️',
-      'com.bbm': '💬',
-      'com.kakao.talk': '💬',
-      'com.joypac.joypac': '🎮',
-      'com.riotgames.leagueoflegendswildrift': '🎮',
-      'com.epicgames.fortnite': '🎮',
-      'com.king.candycrushsaga': '🍬',
-      'com.supercell.clashofclans': '⚔️',
-      'com.supercell.clashroyale': '👑',
-      'com.gramgames.ww2': '⚔️',
-      'com.miniclip.8ballpool': '🎱',
-      'com.ea.game.fifa14': '⚽',
-      'com.firsttouchgames.dreamleaguesoccer': '⚽',
-      'com.gameloft.android.ANMP.GloftA8HM': '🏁',
-      'com.nianticlabs.pokemongo': '🎮',
-      'com.ubisoft.hungrydragon': '🐲',
-      'com.king.candycrushsodasaga': '🥤',
-      'com.playrix.gardenscapes': '🌳',
-      'com.playrix.homescapes': '🏠',
-      'com.playrix.township': '🏘️',
-      'com.king.candycrushfriends': '👥',
-      'com.king.candycrushjellysaga': '🍯',
-      'com.king.farmscapes': '🌾',
-      'com.king.bubblewitch3saga': '🧙',
-      'com.king.diamonddiaries': '💎',
-      'com.king.petrescuesaga': '🐾',
-      'com.king.pepperpanicepisodes': '🌶️',
-      'com.king.pyramidsolitairesaga': '🔺',
-      'com.king.tripledash': '🎯',
-      'com.king.valentines': '💝',
-      'com.king.candycrushknights': '🛡️',
-      'com.king.candycrushdreamsaga': '💭',
-      'com.king.candycrushsagamod': '🔧',
-      'com.king.candycrushsagafree': '🆓',
-      'com.king.candycrushsagapremium': '💎',
-      'com.king.candycrushsagapro': '👑',
-      'com.king.candycrushsagaunlimited': '♾️',
-      'com.king.candycrushsagaworld': '🌍',
-      'com.king.candycrushsagax': '❌',
-      'com.king.candycrushsagay': '🎯',
-      'com.king.candycrushsagaz': '🎲',
-      'com.king.candycrushsagaw': '🎯',
-      'com.king.candycrushsagav': '🎯',
-      'com.king.candycrushsagau': '🎯',
-      'com.king.candycrushsagat': '🎯',
-      'com.king.candycrushsagags': '🎯',
-      'com.king.candycrushsagagr': '🎯',
-      'com.king.candycrushsagagf': '🎯',
-      'com.king.candycrushsagagd': '🎯',
-      'com.king.candycrushsagagc': '🎯',
-      'com.king.candycrushsagagb': '🎯',
-      'com.king.candycrushsagaga': '🎯',
-      'com.king.candycrushsagag9': '🎯',
-      'com.king.candycrushsagag8': '🎯',
-      'com.king.candycrushsagag7': '🎯',
-      'com.king.candycrushsagag6': '🎯',
-      'com.king.candycrushsagag5': '🎯',
-      'com.king.candycrushsagag4': '🎯',
-      'com.king.candycrushsagag3': '🎯',
-      'com.king.candycrushsagag2': '🎯',
-      'com.king.candycrushsagag1': '🎯',
-      'com.king.candycrushsagag0': '🎯',
-    };
-    
-    return appIcons[packageName] ?? '📱';
-  }
-
   /// Trigger violation reset
 
   Future<void> _triggerViolationReset(String packageName) async {
     final niche = NicheRepository.getById(currentNicheId!);
 
     LoggerService.instance.w('TRIGGERING VIOLATION RESET for $packageName');
-
-    // Mensagem específica de reset — não usa a mensagem de aviso do overlay
-    final resetBody =
-        'Você ficou mais de 30s em um app bloqueado. Seu progresso no módulo ${niche.name} foi reiniciado.';
 
     // CORREÇÃO: Para Compulsão Alimentar, desativar o módulo quando o overlay termina
     final shouldDeactivate = currentNicheId == NicheId.bingeEating;
@@ -917,7 +573,7 @@ class AppMonitoringService {
       LoggerService.instance.w('DESATIVANDO módulo ${niche.name} por violação de overlay');
     }
 
-    // ✅ Persistir sessão de violação com Isar
+    // Persistir sessão de violação com Isar
     await _sessionPersistence.saveDetectionSession(
       packageName: packageName,
       nicheId: currentNicheId!,
@@ -925,28 +581,11 @@ class AppMonitoringService {
       remainingSeconds: 0, // Violação completou
     );
 
-    // IMPORTANTE: deactivate: false para NÃO desativar o módulo/monitoramento.
-    // Apenas reseta gamificação (medalhas, streak) e mantém o monitoramento ativo.
-    // EXCEÇÃO: Para Compulsão Alimentar, desativar o módulo completamente.
-    await _gamificationService?.resetMedals(
-      currentNicheId!.id,
-      notificationTitle: shouldDeactivate 
-          ? '${niche.name} Desativado 🔴'  // Emoji vermelho para compulsão alimentar
-          : '${niche.name}: Progresso Reiniciado',
-      notificationBody: resetBody,
-      iconPath: niche.iconPath,
-      deactivate: shouldDeactivate, // true apenas para bingeEating
-    );
-
     _violationStartByApp.remove(packageName);
 
     _warnedApps.remove(packageName);
 
     _lastSeenMonitoredApp.remove(packageName);
-
-    _currentOverlayMessage = null;
-
-    await _hideOverlay();
   }
 
   void _clearViolationState() {
@@ -999,40 +638,7 @@ class AppMonitoringService {
             !packageName.contains('launcher'));
   }
 
-  // --- MÉTODOS AUXILIARES DE OVERLAY ---
-
-  Future<void> _showOverlay(int secondsRemaining, {String? message}) async {
-    try {
-      await _methodChannel.invokeMethod('showTimerOverlay', {
-        'seconds': secondsRemaining,
-        'message': message,
-      });
-    } catch (e) {
-      LoggerService.instance.e('Erro ao mostrar overlay', error: e);
-    }
-  }
-
-  Future<void> _updateOverlay(
-      {required int secondsRemaining, String? message}) async {
-    try {
-      await _methodChannel.invokeMethod('updateTimerOverlay', {
-        'seconds': secondsRemaining,
-        'message': message,
-      });
-    } catch (e) {
-      // Ignorar erros de atualização rápida
-    }
-  }
-
-  Future<void> _hideOverlay() async {
-    try {
-      await _methodChannel.invokeMethod('hideTimerOverlay');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao esconder overlay', error: e);
-    }
-  }
-
-  /// 🚨 MÉTODO ESSENCIAL: Libera todos os recursos para prevenir memory leaks
+  /// MÉTODO ESSENCIAL: Libera todos os recursos para prevenir memory leaks
   void dispose() {
     try {
       // 1. Cancelar timer de monitoramento
@@ -1050,7 +656,6 @@ class AppMonitoringService {
       // 4. Limpar estados
       _isModuleActive = false;
       _lastAccessibilityApp = null;
-      _currentOverlayMessage = null;
       
       LoggerService.instance.i('AppMonitoringService disposed - memory leaks prevenidos');
     } catch (e) {

@@ -15,6 +15,8 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/entities/
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_gamification_entity.dart';
+import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_config_entity.dart';
@@ -23,6 +25,8 @@ import 'package:disciplinum/features/modules/focus/domain/entities/focus_config_
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_config_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_entity.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_config_entity.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
+import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
 import 'package:disciplinum/infrastructure/iap/domain/entities/iap_entitlement.dart';
 
 /// Serviço principal para gerenciamento do banco Isar
@@ -58,6 +62,8 @@ class IsarService {
           DietGamificationEntitySchema,
           MoneySavingGamificationEntitySchema,
           ReadingGamificationEntitySchema,
+          BingeEatingGamificationEntitySchema,
+          AdultContentGamificationEntitySchema,
           AdultContentConfigEntitySchema,
           BingeEatingConfigEntitySchema,
           DietConfigEntitySchema,
@@ -67,6 +73,8 @@ class IsarService {
           MoneySavingChallengeEntitySchema,
           MoneySavingGridCellEntitySchema,
           ProcrastinationConfigEntitySchema,
+          ProcrastinationGamificationEntitySchema,
+          SpendingGamificationEntitySchema,
           IapEntitlementSchema,
         ],
         directory: dbPath,
@@ -109,6 +117,12 @@ class IsarService {
   /// Getter para FocusStatus
   IsarCollection<FocusStatusEntity> get focusStatus => database.focusStatusEntitys;
 
+  /// Getter para SmokingGamificationEntity
+  IsarCollection<SmokingGamificationEntity> get smokingGamificationStates => database.smokingGamificationEntitys;
+
+  /// Getter para FocusGamificationEntity
+  IsarCollection<FocusGamificationEntity> get focusGamificationStates => database.focusGamificationEntitys;
+
   /// Getter para DietGamificationEntity
   IsarCollection<DietGamificationEntity> get dietGamificationStates => database.dietGamificationEntitys;
 
@@ -117,6 +131,12 @@ class IsarService {
 
   /// Getter para ReadingGamificationEntity
   IsarCollection<ReadingGamificationEntity> get readingGamificationStates => database.readingGamificationEntitys;
+
+  /// Getter para BingeEatingGamificationEntity
+  IsarCollection<BingeEatingGamificationEntity> get bingeEatingGamificationStates => database.bingeEatingGamificationEntitys;
+
+  /// Getter para AdultContentGamificationEntity
+  IsarCollection<AdultContentGamificationEntity> get adultContentGamificationStates => database.adultContentGamificationEntitys;
 
   /// Getter para AdultContentConfigEntity
   IsarCollection<AdultContentConfigEntity> get adultContentConfigs => database.adultContentConfigEntitys;
@@ -144,6 +164,15 @@ class IsarService {
 
   /// Getter para ProcrastinationConfigEntity
   IsarCollection<ProcrastinationConfigEntity> get procrastinationConfigs => database.procrastinationConfigEntitys;
+
+  /// Getter para ProcrastinationGamificationEntity
+  IsarCollection<ProcrastinationGamificationEntity> get procrastinationGamificationStates => database.procrastinationGamificationEntitys;
+
+  /// Getter para ExpenseEntity
+  IsarCollection<ExpenseEntity> get expensesCollection => database.expenseEntitys;
+
+  /// Getter para SpendingGamificationEntity
+  IsarCollection<SpendingGamificationEntity> get spendingGamificationStates => database.spendingGamificationEntitys;
 
   /// Fecha o banco de dados banco (apenas para desenvolvimento)
   Future<void> clearAll() async {

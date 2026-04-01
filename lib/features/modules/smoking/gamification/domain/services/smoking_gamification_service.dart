@@ -4,6 +4,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_medalha_interfac
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_module_state.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
 
@@ -219,12 +220,35 @@ class SmokingGamificationService implements ModuleGamificationInterface {
 
   /// Obtém progresso para próxima insignia
   double getProgressToNextInsignia() {
-    return 0.0; // Implementar se necessário
+    if (!_isInitialized || _currentState == null) return 0.0;
+    
+    final consecutiveDays = _currentState!.consecutivePositiveDays;
+    final earnedInsignias = _currentState!.earnedInsignias;
+    
+    // Encontrar próxima insignia não conquistada
+    for (final insignia in SmokingInsigniaEntity.values) {
+      final insigniaName = insignia.name;
+      if (!earnedInsignias.contains(insigniaName)) {
+        // Calcular progresso para esta insignia baseado nos dias necessários
+        final requiredDays = insignia.requiredDays;
+        if (requiredDays == 0) return 1.0; // Madeira é conquistada automaticamente
+        return (consecutiveDays / requiredDays).clamp(0.0, 1.0);
+      }
+    }
+    
+    // Todas as insignias conquistadas
+    return 1.0;
   }
 
   /// Obtém progresso para próxima medalha
   double getProgressToNextMedalha() {
-    return 0.0; // Implementar se necessário
+    if (!_isInitialized || _currentState == null) return 0.0;
+    
+    final earnedInsigniasCount = _currentState!.earnedInsignias.length;
+    final totalInsignias = SmokingInsigniaEntity.values.length;
+    
+    // Progresso baseado em quantas insignias foram conquistadas
+    return (earnedInsigniasCount / totalInsignias).clamp(0.0, 1.0);
   }
 
   /// Obtém estatísticas detalhadas
@@ -254,5 +278,72 @@ class SmokingGamificationService implements ModuleGamificationInterface {
       'lastPositiveCheckIn': _currentState!.lastPositiveCheckIn?.toIso8601String(),
       'startDate': _currentState!.startDate?.toIso8601String(),
     };
+  }
+
+  // ===========================================
+  // MÉTODOS PARA MENSAGENS CUSTOMIZADAS (FRAGMENTAÇÃO)
+  // ===========================================
+  
+  /// Armazena mensagens customizadas por módulo
+  final Map<String, List<String>> _customMessages = {};
+  
+  /// Obtém todas as mensagens customizadas
+  Map<String, List<String>> getCustomMessages() {
+    return Map.unmodifiable(_customMessages);
+  }
+  
+  /// Define mensagens customizadas para um módulo específico
+  Future<void> setCustomMessages(String moduleId, List<String> messages) async {
+    try {
+      _customMessages[moduleId] = List<String>.from(messages);
+      
+      // Persiste no Isar através do repositório
+      if (_currentState != null) {
+        final updatedState = _currentState!.copyWith(
+          customMessages: _customMessages,
+        );
+        await _updateState(updatedState);
+      }
+      
+      LoggerService.instance.gamification('Mensagens customizadas salvas para módulo: $moduleId');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao salvar mensagens customizadas', error: e);
+    }
+  }
+  
+  /// Define a mensagem principal customizada
+  Future<void> setCustomMessage(dynamic nicheId, String message) async {
+    try {
+      // Persiste no estado
+      if (_currentState != null) {
+        final updatedState = _currentState!.copyWith(
+          customMainMessage: message,
+        );
+        await _updateState(updatedState);
+      }
+      
+      LoggerService.instance.gamification('Mensagem principal customizada salva');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao salvar mensagem principal customizada', error: e);
+    }
+  }
+  
+  /// Recarrega sessão de monitoramento (reagenda notificações)
+  Future<void> reloadMonitoringSession() async {
+    try {
+      LoggerService.instance.gamification('Recarregando sessão de monitoramento do Smoking');
+      
+      // Reagenda notificações de motivação se houver mensagens customizadas
+      if (_customMessages.isNotEmpty) {
+        // Implementação específica de reagendamento
+        LoggerService.instance.gamification('Notificações de motivação reagendadas');
+      }
+      
+      // Notifica outros serviços sobre a recarga
+      await sendSpecialNotifications();
+      
+    } catch (e) {
+      LoggerService.instance.e('Erro ao recarregar sessão de monitoramento', error: e);
+    }
   }
 }

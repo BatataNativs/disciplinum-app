@@ -8,7 +8,31 @@ enum FocusInsignia {
   prata,
   ouro,
   diamante,
-  disciplinum
+  disciplinum;
+
+  /// Progresso para esta insígnia (0.0 a 1.0)
+  double get progressPercentage {
+    switch (this) {
+      case FocusInsignia.madeira:
+        return 0.15;
+      case FocusInsignia.ferro:
+        return 0.30;
+      case FocusInsignia.aluminio:
+        return 0.45;
+      case FocusInsignia.latao:
+        return 0.60;
+      case FocusInsignia.bronze:
+        return 0.75;
+      case FocusInsignia.prata:
+        return 0.85;
+      case FocusInsignia.ouro:
+        return 0.95;
+      case FocusInsignia.diamante:
+        return 1.0;
+      case FocusInsignia.disciplinum:
+        return 1.0;
+    }
+  }
 }
 
 extension FocusInsigniaExtension on FocusInsignia {

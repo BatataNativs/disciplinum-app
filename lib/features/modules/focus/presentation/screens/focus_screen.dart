@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -9,7 +9,6 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/features/modules/focus/presentation/widgets.dart' as focus_progress;
 import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
@@ -101,8 +100,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         });
 
         if (_gamificationRunning) {
-          final gamification =
-              ref.read(gamificationServiceProvider.notifier);
+          // Usando provider local do Focus
+          final focusController = ref.read(focusControllerIsarProvider.notifier);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -110,14 +109,19 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           if (!mounted) return;
 
           if (accessibilityGranted) {
-            final interval = (_focusStart != null && _focusEnd != null)
-                ? TimeOfDayRange(start: _focusStart!, end: _focusEnd!)
-                : null;
-            gamification.startMonitoringApps(
-              nicheId: _niche.nicheId.id,
-              apps: _selectedApps,
-              focusInterval: interval,
-            );
+            // Registra sessão de foco quando as permissões são concedidas
+            if (_focusStart != null && _focusEnd != null) {
+              final startMinutes = _focusStart!.hour * 60 + _focusStart!.minute;
+              final endMinutes = _focusEnd!.hour * 60 + _focusEnd!.minute;
+              final durationMinutes = endMinutes - startMinutes;
+              
+              if (durationMinutes > 0) {
+                await focusController.recordFocusSession(
+                  minutes: durationMinutes,
+                  nicheId: _niche.nicheId.id,
+                );
+              }
+            }
           } else {
             setState(() => _gamificationRunning = false);
           }
@@ -192,17 +196,22 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
     if (!mounted) return;
 
-    final gamification =
-        ref.read(gamificationServiceProvider.notifier);
+    // Usando provider local do Focus
+    final focusController = ref.read(focusControllerIsarProvider.notifier);
 
-    final interval = (_focusStart != null && _focusEnd != null)
-        ? TimeOfDayRange(start: _focusStart!, end: _focusEnd!)
-        : null;
-    gamification.startMonitoringApps(
-      nicheId: _niche.nicheId.id,
-      apps: _selectedApps,
-      focusInterval: interval,
-    );
+    // Registra sessão de foco quando ativa o módulo
+    if (_focusStart != null && _focusEnd != null) {
+      final startMinutes = _focusStart!.hour * 60 + _focusStart!.minute;
+      final endMinutes = _focusEnd!.hour * 60 + _focusEnd!.minute;
+      final durationMinutes = endMinutes - startMinutes;
+      
+      if (durationMinutes > 0) {
+        await focusController.recordFocusSession(
+          minutes: durationMinutes,
+          nicheId: _niche.nicheId.id,
+        );
+      }
+    }
 
     if (!mounted) return;
 
@@ -223,8 +232,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       nicheId: _niche.nicheId,
       isActive: true,
     );
-    ref.read(gamificationServiceProvider.notifier)
-        .startModuleCycle(_niche.nicheId.id);
+    // Incrementa streak ao iniciar ciclo de gamificação
+    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    focusController.incrementStreak();
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -257,20 +267,20 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    final gamification = ref.read(gamificationServiceProvider.notifier);
-    final confirmed = await DeactivateModuleDialog.showWithService(
+    // Usando provider local do Focus
+    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    final confirmed = await DeactivateModuleDialog.show(
       context: context,
-      gamificationService: gamification,
       nicheId: NicheId.focus,
-      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado.\n\nDeseja continuar?",
+      customMessage: "Ao desativar o módulo, seu progresso de dias e medalhas será reiniciado. Deseja continuar?",
     );
 
     if (confirmed == true) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       
-      // Para o ciclo da gamificação primeiro
-      gamification.stopModuleCycle(NicheId.focus.id);
+      // Reseta o streak ao desativar o módulo
+      await focusController.resetStreak();
       
       _resetMedalsForModule(
         notificationTitle: 'Módulo Desativado 🛑',
@@ -279,8 +289,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         deactivate: true,
       );
 
-      // Força atualização do estado da gamificação
-      final gamificationStatus = ref.read(gamificationServiceProvider.notifier).getModuleStatus(NicheId.focus.id);
+      // Obtém o estado atual do módulo
+      final focusState = ref.read(focusControllerIsarProvider);
+      final gamificationStatus = focusState.config?.isEnabled ?? false;
 
       setState(() {
         _gamificationRunning = gamificationStatus;
@@ -306,18 +317,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   void _resetMedalsForModule({
     String? notificationTitle,
     String? notificationBody,
-    bool sendNotification = true,
     bool deactivate = false,
   }) {
-    final gamification =
-        ref.read(gamificationServiceProvider.notifier);
-    gamification.resetMedals(
-      _niche.nicheId.id,
-      notificationTitle: notificationTitle,
-      notificationBody: notificationBody,
-      sendNotification: sendNotification,
-      deactivate: deactivate,
-    );
+    // Usando provider local do Focus para limpar dados
+    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    focusController.clearAllData();
   }
 
   Future<void> _openSelectApps() async {

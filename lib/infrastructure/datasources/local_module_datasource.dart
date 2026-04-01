@@ -1,4 +1,4 @@
-import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
+import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 

@@ -120,6 +120,10 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  void clearGamification() {
+    state = const ReadingGamificationState();
+  }
 }
 
 // Providers
@@ -133,19 +137,6 @@ final readingGamificationNotifierProvider = StateNotifierProvider.family<Reading
     return ReadingGamificationNotifier(repository, userId);
   },
 );
-
-// Provider para o userId atual do usuário autenticado
-final currentUserIdProvider = Provider<String>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  final currentUser = authService.currentUser;
-  
-  if (currentUser != null) {
-    return currentUser.id;
-  }
-  
-  // Fallback para usuário não autenticado (modo convidado)
-  return 'guest_user';
-});
 
 // Provider conveniente para o estado atual
 final readingGamificationStateProvider = Provider<ReadingGamificationState>((ref) {

@@ -1,19 +1,16 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/spending/domain/services/spending_service_wrapper.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine_extensions.dart';
+import 'package:disciplinum/features/modules/spending/gamification/domain/services/spending_gamification_events.dart';
+import 'package:disciplinum/features/modules/spending/gamification/presentation/controllers/spending_gamification_controller.dart';
 
 /// Implementação do módulo de disciplina para Spending
+/// Agora usa serviço local de gamificação em vez do GamificationAwardEngine central
 class SpendingDisciplineModule extends ModuleDisciplineInterface {
-  final SpendingService _spendingService;
-  final GamificationAwardEngine _awardEngine;
+  final SpendingGamificationEvents _gamificationEvents;
   
   SpendingDisciplineModule({
-    required SpendingService spendingService,
-    required GamificationAwardEngine awardEngine,
-  }) : _spendingService = spendingService,
-       _awardEngine = awardEngine;
+    required SpendingGamificationController controller,
+  }) : _gamificationEvents = SpendingGamificationEvents(controller);
 
   @override
   String get moduleId => 'spending';
@@ -29,10 +26,7 @@ class SpendingDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      SpendingGoalRule(
-        spendingService: _spendingService,
-        awardEngine: _awardEngine,
-      ),
+      // SpendingGoalRule precisa do controller - será injetado via bootstrap
     ];
   }
 
@@ -55,12 +49,9 @@ class SpendingDisciplineModule extends ModuleDisciplineInterface {
         );
       }
 
-      await _awardEngine.processSpendingEvent(eventType, _spendingService);
+      await _gamificationEvents.processSpendingEvent(eventType);
       
       LoggerService.instance.d('Evento spending recebido: $eventType');
-      
-      _spendingService;
-      _awardEngine;
       
       return ModuleDisciplineResult.success(
         message: 'Evento de spending processado: $eventType',
@@ -83,14 +74,11 @@ class SpendingDisciplineModule extends ModuleDisciplineInterface {
 }
 
 class SpendingGoalRule extends ModuleRule {
-  final SpendingService _spendingService;
-  final GamificationAwardEngine _awardEngine;
+  final SpendingGamificationEvents _gamificationEvents;
   
   SpendingGoalRule({
-    required SpendingService spendingService,
-    required GamificationAwardEngine awardEngine,
-  }) : _spendingService = spendingService,
-       _awardEngine = awardEngine;
+    required SpendingGamificationController controller,
+  }) : _gamificationEvents = SpendingGamificationEvents(controller);
 
   @override
   String get ruleId => 'spending_goal_check';
@@ -121,7 +109,7 @@ class SpendingGoalRule extends ModuleRule {
       final monthlyGoal = context.getData<double>('monthlyGoal') ?? 100.0;
       
       if (savedAmount >= monthlyGoal) {
-        await _awardEngine.processSpendingEvent('monthly_goal_achieved', _spendingService);
+        await _gamificationEvents.processSpendingEvent('monthly_goal_achieved');
         
         LoggerService.instance.d('Meta mensal de spending alcançada: R\$ $savedAmount');
         

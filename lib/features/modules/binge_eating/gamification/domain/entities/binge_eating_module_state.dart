@@ -45,6 +45,12 @@ class BingeEatingModuleState {
     };
   }
 
+  factory BingeEatingModuleState.initial() {
+    return BingeEatingModuleState(
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   factory BingeEatingModuleState.fromJson(Map<String, dynamic> json) {
     return BingeEatingModuleState(
       earnedInsignias: List<String>.from(json['earnedInsignias'] ?? []),

@@ -152,6 +152,39 @@ class FocusGamificationRepository {
     }
   }
 
+  /// Sincronização completa (merge local + cloud)
+  Future<FocusModuleState> performFullSync() async {
+    try {
+      // Tenta baixar do Supabase primeiro
+      final cloudState = await loadFromSupabase();
+      
+      if (cloudState != null) {
+        // Salva localmente e retorna
+        await saveFocusState(cloudState);
+        return cloudState;
+      }
+      
+      // Se não encontrou na nuvem, carrega localmente
+      final localState = await getFocusState();
+      
+      if (localState != null) {
+        // Envia para o Supabase
+        await syncWithSupabase(localState);
+        return localState;
+      }
+      
+      // Se não encontrou em nenhum lugar, retorna estado inicial
+      LoggerService.instance.gamification('Criando estado inicial Focus');
+      final initialState = FocusModuleState.initial();
+      await saveFocusState(initialState);
+      return initialState;
+    } catch (e) {
+      LoggerService.instance.e('Erro na sincronização completa Focus', error: e);
+      // Fallback para estado inicial
+      return FocusModuleState.initial();
+    }
+  }
+
   /// Inicializa o repositório
   Future<void> initialize() async {
     try {

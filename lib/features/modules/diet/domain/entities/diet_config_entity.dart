@@ -22,6 +22,9 @@ class DietConfigEntity {
   int reminderHour = 12;
   int reminderMinute = 0;
   
+  // Horários das refeições (formato "HH:MM")
+  List<String> mealTimes = ['08:00', '12:00', '18:00'];
+  
   // Estatísticas
   int streakDays = 0;
   DateTime? lastMealDate;
@@ -45,6 +48,7 @@ class DietConfigEntity {
     bool? enableNotifications,
     int? reminderHour,
     int? reminderMinute,
+    List<String>? mealTimes,
     int? streakDays,
     DateTime? lastMealDate,
     double? totalWeightLost,
@@ -61,6 +65,7 @@ class DietConfigEntity {
     entity.enableNotifications = enableNotifications ?? this.enableNotifications;
     entity.reminderHour = reminderHour ?? this.reminderHour;
     entity.reminderMinute = reminderMinute ?? this.reminderMinute;
+    entity.mealTimes = mealTimes ?? this.mealTimes;
     entity.streakDays = streakDays ?? this.streakDays;
     entity.lastMealDate = lastMealDate ?? this.lastMealDate;
     entity.totalWeightLost = totalWeightLost ?? this.totalWeightLost;

@@ -142,58 +142,59 @@ class FocusGamificationController extends StateNotifier<FocusGamificationState> 
     await processRespectedPeriod();
   }
 
-  /// Falha em um período (compatibilidade)
+  /// Falha em um período - implementação real
   Future<void> failPeriod() async {
     try {
       state = state.copyWith(isLoading: true);
       
-      // Simulação - implementar lógica real se necessário
+      // Processa o período falho através do service
+      await _gamificationService.processModuleEvent({'type': 'focus_period_failed'});
       await _loadCurrentState();
       
-      LoggerService.instance.gamification('Período falho processado');
+      LoggerService.instance.gamification('Período falho registrado');
     } catch (e) {
-      state = state.copyWith(error: 'Falha ao processar período falho: $e');
-    } finally {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(error: 'Falha ao processar período falho: $e', isLoading: false);
     }
   }
 
-  /// Tenta conceder Disciplinum
+  /// Tenta conceder Disciplinum - implementação real
   Future<void> tryAwardDisciplinum() async {
     try {
       state = state.copyWith(isLoading: true);
       
-      // Simulação - implementar lógica real se necessário
+      // Usa o service para tentar conceder Disciplinum
+      final awarded = await _gamificationService.tryAwardDisciplinum();
       await _loadCurrentState();
       
-      LoggerService.instance.gamification('Tentativa de concessão Disciplinum processada');
+      if (awarded) {
+        LoggerService.instance.gamification('🏆 Disciplinum concedido!');
+      } else {
+        LoggerService.instance.gamification('⏳ Ainda não atingiu requisitos para Disciplinum');
+      }
     } catch (e) {
-      state = state.copyWith(error: 'Falha ao conceder Disciplinum: $e');
-    } finally {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(error: 'Falha ao conceder Disciplinum: $e', isLoading: false);
     }
   }
 
-  /// Reseta o progresso
+  /// Reseta o progresso - implementação real
   Future<void> resetProgress() async {
     try {
       state = state.copyWith(isLoading: true);
       
-      // Simulação - implementar lógica real se necessário
+      // Usa o service para resetar o progresso
+      await _gamificationService.resetProgress();
       await _loadCurrentState();
       
-      LoggerService.instance.gamification('Progresso resetado');
+      LoggerService.instance.gamification('🔄 Progresso do Focus resetado completamente');
     } catch (e) {
-      state = state.copyWith(error: 'Falha ao resetar progresso: $e');
-    } finally {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(error: 'Falha ao resetar progresso: $e', isLoading: false);
     }
   }
 
   /// Obtém informações da insígnia
-  FocusInsigniaEntity? getInsigniaInfo(String insigniaId) {
+  FocusInsignia? getInsigniaInfo(String insigniaId) {
     try {
-      return FocusInsigniaEntity.values.cast<FocusInsigniaEntity?>().firstWhere(
+      return FocusInsignia.values.cast<FocusInsignia?>().firstWhere(
         (insignia) => insignia?.name == insigniaId,
         orElse: () => null,
       );
@@ -229,5 +230,10 @@ class FocusGamificationController extends StateNotifier<FocusGamificationState> 
   /// Limpa o erro
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Limpa o estado da gamificação (usado ao desativar módulo)
+  void clearGamification() {
+    state = const FocusGamificationState();
   }
 }

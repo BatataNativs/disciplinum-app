@@ -1,0 +1,260 @@
+A minha intenção final com a gamificação do app Disciplinum é a seguinte:
+Eu quero que cada pasta de módulo tenha sua própria pasta "gamification", 
+que - cada uma delas - vai conter toda a gamificação relacionada àquele módulo 
+exclusivamente, e deforma independente. Atualmente, ainda tem muito arquivo centralizando 
+a gamificação na pasta "lib/features/gamification". Porém, cada pasta de módulo tem que 
+ter pasta "gamification" (acho que todos já tem, a essa altura), e toda a gamificação 
+de cada módulo tem que estar numa pasta dessas. Entendeu? eu quero que os módulos 
+sejam "plug-in", independentes, pra facilitar inclusão de novos módulos e exclusão de 
+algum sem afetar outros pontos do app e outros módulos. Cada classe, função, objeto, etc 
+que pertencer a um módulo, tem que estar dentro de 
+"ib/features/modules/[nome do módulo]/gamification". 
+E, ao fim (quando toda a gamificação estiver 100% fragmentada pelas pastas 
+"lib/features/modules/[nome do módulo]/gamification"), remover a pasta 
+"lib/features/gamification".
+
+O sistema de gamificação vai ser assim:
+
+Pra módulos como o "Desafio da Poupança", por exemplo, que pode ter mais de uma "ocorrência de uso" (tipo, o user, neste módulo, pode ter mais de um desafio né: uma meta pra juntar R$ 1000.. outra pra juntar R$ 5000 ... etc, ao mesmo tempo) não faz sentido ter um ciclo só de insígnias. Porque, se ele concluir a meta de juntar 1000 reais, ele já vai ter a insígnia "Disciplinum" (por ter completado 100% do grid), e não vai ter mais nada a ganhar se também concluir a meta de R$ 5000 né. Aí eu pensei em incluir neste módulo, como uma lógica a parte, o seguinte: concluiu um desafio/meta (preencheu 100% de um grid) > vai ter ganhado a insígnia Disciplinum. Com isso (ao alcançar uma insígnia Disciplinum) ele ganha uma medalha de Bronze. 
+Abaixo vai a gamificação completa atual para cada módulo pra você entender e ter ciência da gamificação em cada módulo (esse trecho acima é sobre parte da gamificação do módulo Desafio da poupança) :
+
+Módulos:
+
+> Parar de Fumar:
+
+Unidade de medida:
+check-ins diários positivos consecutivos. (User define horário pra check-in diário, de preferência pouco antes de dormir. Respondeu que conseguiu se controlar naquele dia, isso é um check-in diário positivo).
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 1 dia com check-in positivo.
+🥈 Alumínio - 2 dias com check-in positivo.
+🥇 Latão - 3 dias com check-in positivo
+🥉 Bronze - 5 dias com check-in positivo
+🥈 Prata - 10 dias com check-in positivo
+🥇 Ouro - 15 dias com check-in positivo
+💎 Diamante - 20 dias com check-in positivo
+🎱 Disciplinum - 30 dias com check-in positivo
+
+- Nomes e requisitos das medalhas:
+ 1 insígnia Disciplinum - medalha de bronze
+ 2 insígnia Disciplinum - medalha de prata
+ 3 insígnia Disciplinum - medalha de ouro
+ 4 insígnia Disciplinum - medalha de diamante
+
+Especial:
+(nesses não terão insígnias ou medalhas. Mas sim, notificações e, ao entrar no app, confetes com janelinha flutuante de mensagem parabenizando).
+
+- Saúde:
+  > Pressão arterial normal (20 min) - "Parabéns 🎊! Sua pressão arterial e frequência cardíaca tem potencial de melhora após 20 minutos. Continue!" (esta mensagem chega em notificação, e quando o user abre o app depois de recebê-la, aparece janelinha flutuante com isso escrito também, e soltando confetes, com botão de "Ok", que ao ser apertado uma vez, para os confetes e fecha a janelinha)
+  > Sem monóxido de carbono (1 dia) - "Parabéns 🎊! Seus níveis de monóxido de carbono no sangue podem diminuir drasticamente após 1 dia. Continue!"
+  > Olfato e paladar melhoram (2 dias) - "Parabéns 🎊! Olfato e paladar costumam melhorar após 2 dias. Aproveite. E continue!"
+  > Respiração mais fácil (3 dias) - "Parabéns 🎊! Sua respiração tende a melhorar após 3 dias. Provavelmente vai conseguir dormir melhor. E continue!"
+  > Circulação melhora (14 dias) - "Parabéns 🎊! Sua circulação tende a melhorar após 14 dias. Tente caminhar mais após isso. Continue!"
+  > Função pulmonar + 10% (90 dias) - "Parabéns 🎊! Sua função pulmonar pode ter tido uma melhora de uns 10% após 90 dias. Aproveite mais a vida! E continue em frente!"
+
+- Economia:
+
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 1 maço"
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 2 maços"
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 5 maços"
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 10 maços"
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 20 maços"
+  > poupou o equivalente ao valor de 1 maço: "Parabéns 🎊! Economizou o valor de 30 maços"
+
+> Compulsão Alimentar:
+
+o user configurou os apps que não pretende abrir, e naquele dia ele não o(s) abriu (ou, mesmo que tenha chegado a clicar nele(s), mas não clicou no "Entrar no app" na tela de applock), no primeiro segundo do dia seguinte ele recebe a insígnia (e/ou medalha) que tem direito.
+
+unidade de medida:
+Dias sem quebrar regras não abrir apps que selecionou pra não abrir.
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 1 dia com check-in positivo.
+🥈 Alumínio - 2 dias com check-in positivo.
+🥇 Latão - 3 dias com check-in positivo
+🥉 Bronze - 5 dias com check-in positivo
+🥈 Prata - 10 dias com check-in positivo
+🥇 Ouro - 15 dias com check-in positivo
+💎 Diamante - 20 dias com check-in positivo
+🎱 Disciplinum - 30 dias com check-in positivo
+
+- Nomes e requisitos das medalhas:
+ 1 insígnia Disciplinum - medalha de bronze
+ 2 insígnia Disciplinum - medalha de prata
+ 3 insígnia Disciplinum - medalha de ouro
+ 4 insígnia Disciplinum - medalha de diamante
+
+> Dieta:
+Esse módulo tem uma tela, dentro de estatísticas, chamada "Registro de refeições". 
+Lá deve mostrar as refeições que o user fez no dia, e se foram dentro do horário ou não.
+Para isso, o user deve configurar os horários de refeição que ele pretende fazer no dia, e ao longo do dia, ele pode marcar quais refeições ele já fez, e se foram dentro do horário ou não.
+E então, quando ele marcar que realizou a última refeição do dia - no horário definido - ele recebe a insígnia (e/ou medalha) que tem direito.
+
+Unidade de medida:
+Dias que cumpriu todos os horários de refeição selecionados no dia, (em dias consecutivos). 
+Isso é, que o user fez as refeições nos horários propostos - selecionados pelo próprio user, e que chega notificação 30 minutos antes desse horário definido, pra dar tempo de preparar ou esquentar a refeição - 
+e o user respondeu, via resposta rápida na própria notificação - que chega 30 minutos depois do horário de cada refeição selecionada - que fez a refeição.
+Quando ele responder - na notificação da última refeição do dia - que fez a refeição, ele recebe a insígnia (e/ou medalha) que tem direito.
+
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 1 dia que cumpriu todos os horários de refeição selecionados no dia.
+🥈 Alumínio - 2 dias que cumpriu todos os horários de refeição selecionados no dia.
+🥇 Latão - 4 dias que cumpriu todos os horários de refeição selecionados no dia.
+🥉 Bronze - 8 dias que cumpriu todos os horários de refeição selecionados no dia.
+🥈 Prata - 12 dias que cumpriu todos os horários de refeição selecionados no dia.
+🥇 Ouro - 18 dias que cumpriu todos os horários de refeição selecionados no dia.
+💎 Diamante - 26 dias que cumpriu todos os horários de refeição selecionados no dia.
+🎱 Disciplinum - 30 dias que cumpriu todos os horários de refeição selecionados no dia.
+
+- Nomes e requisitos das medalhas:
+ 1 insígnia Disciplinum - medalha de bronze
+ 2 insígnia Disciplinum - medalha de prata
+ 3 insígnia Disciplinum - medalha de ouro
+ 4 insígnia Disciplinum - medalha de diamante
+
+> Controle de Gastos:
+
+o user configurou os apps que não pretende abrir, e naquele dia ele não o(s) abriu (ou, mesmo que tenha chegado a clicar nele(s), mas não clicou no "Entrar no app" na tela de applock), no primeiro segundo do dia seguinte é verificado se ele violou a regra. Se violou, o módulo reseta a gamificação (mantendo a insígnia de mandeira, obviamente). 
+Se não violou, a gamificação continua.
+
+medalhas e insígnias:
+Unidade de medida: contas pagas dentro do mês.
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - todas as contas pagas no mês atual
+🥈 Alumínio - todas as contas pagas em 2 meses 
+🥇 Latão - todas as contas pagas em 3 meses
+🥉 Bronze - todas as contas pagas em 4 meses
+🥈 Prata - todas as contas pagas em 6 meses
+🥇 Ouro - todas as contas pagas em 8 meses
+💎 Diamante - todas as contas pagas em 10 meses
+🎱 Disciplinum - todas as contas pagas em 12 meses 
+
+Nomes e requisitos das medalhas: 
+- ganhou insígnia Latão  - medalha de bronze
+- ganhou insígnia Ouro - medalha de prata
+- ganhou insígnia Diamante - medalha de ouro
+- ganhou insígnia Disciplinum - medalha de diamante
+
+
+> Desafio da Poupança:
+
+Unidade de medida: porcentagem de preenchimento do grid do desafio/meta. 
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 5% da grid de um desafio preenchida
+🥈 Alumínio - 10% da grid de um desafio preenchida
+🥇 Latão - 15% da grid de um desafio preenchida
+🥉 Bronze - 20% da grid de um desafio preenchida
+🥈 Prata - 40% da grid de um desafio preenchida
+🥇 Ouro - 60% da grid de um desafio preenchida
+💎 Diamante 80% períodos de foco respeitado
+🎱 Disciplinum - 100% da grid de um desafio preenchida
+
+Nomes e requisitos das medalhas: 
+- 1 desafio concluído - medalha de bronze
+- 2 desafio concluído - medalha de prata
+- 3 desafio concluído - medalha de ouro
+- 4 desafio concluído - medalha de diamante
+
+> Foco e produtividade:
+
+Unidade de medida: períodos de foco respeitados. Se o user configurou uma faixa de tempo - tempo inicial e final a que se dispôs a não usar apps selecionados -, selecionou os apps que não pretende abrir pra manter o foco e, no primeiro segundo do minuto seguinte do minuto da hora final - isso é, se ele colocou período de 12:00 a 13:30, às 13:30 e 1 segundo ele recebe a insígnia (e/ou medalha) que tem direito -, se  ele não apertou em "Entrar no app", isso é um período de foco respeitado.
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 1 período de foco respeitado
+🥈 Alumínio - 2 períodos de foco respeitado
+🥇 Latão - 3 períodos de foco respeitado
+🥉 Bronze - 4 períodos de foco respeitado
+🥈 Prata - 5 períodos de foco respeitado
+🥇 Ouro - 6 períodos de foco respeitado
+💎 Diamante - 9 períodos de foco respeitado
+🎱 Disciplinum - 10 períodos de foco respeitado
+
+Nomes e requisitos das medalhas: 
+- ganhou insígnia Latão  - medalha de bronze
+- ganhou insígnia Ouro - medalha de prata
+- ganhou insígnia Diamante - medalha de ouro
+- ganhou insígnia Disciplinum - medalha de diamante
+
+
+> Evitar procrastinação:
+
+Unidade de medida: 
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - todas as tarefas do dia concluídas em 1 dia
+🥈 Alumínio - todas as tarefas do dia concluídas em 2 dia
+🥇 Latão - todas as tarefas do dia concluídas em 3 dia
+🥉 Bronze - todas as tarefas do dia concluídas em 5 dia
+🥈 Prata - todas as tarefas do dia concluídas em 12 dia
+🥇 Ouro - todas as tarefas do dia concluídas em 18 dia
+💎 Diamante - todas as tarefas do dia concluídas em 25 dia
+🎱 Disciplinum - todas as tarefas do dia concluídas em 30 dia
+
+- Nomes e requisitos das medalhas:
+
+  1 insígnia Disciplinum > medalha de bronze
+  2 insígnia Disciplinum > medalha de prata
+  3 insígnia Disciplinum > medalha de ouro
+  4 insígnia Disciplinum > medalha de diamante
+
+PS: tem que ter tarefa no dia! Caso não tenha tarefas configuradas no dia, a gamificação permanece como está (na insígnia e medalha que estão. Sem somas positivas ou negativas).
+
+> Evitar Conteúdo Adulto:
+o user configurou os apps que não pretende abrir, e naquele dia ele não o(s) abriu (ou, mesmo que tenha chegado a clicar nele(s), mas não clicou no "Entrar no app" na tela de applock), no primeiro segundo do dia seguinte ele recebe a insígnia (e/ou medalha) que tem direito.
+
+unidade de medida:
+Dias sem quebrar regras não abrir apps que selecionou pra não abrir.
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 1 dia com check-in positivo.
+🥈 Alumínio - 2 dias com check-in positivo.
+🥇 Latão - 3 dias com check-in positivo
+🥉 Bronze - 5 dias com check-in positivo
+🥈 Prata - 10 dias com check-in positivo
+🥇 Ouro - 15 dias com check-in positivo
+💎 Diamante - 20 dias com check-in positivo
+🎱 Disciplinum - 30 dias com check-in positivo
+
+- Nomes e requisitos das medalhas:
+ 1 insígnia Disciplinum - medalha de bronze
+ 2 insígnia Disciplinum - medalha de prata
+ 3 insígnia Disciplinum - medalha de ouro
+ 4 insígnia Disciplinum - medalha de diamante
+
+> Leitura
+
+Unidade de medida:
+
+- Nomes e requisitos das insígnias:
+🪵 Madeira - (apenas por configurar e ativar o módulo já ganha)
+🥈 Ferro - 2% lido do total de páginas do primeiro livro cadastrado. 
+🥈 Alumínio - 5% lido do total de páginas do primeiro livro cadastrado.
+🥇 Latão - 10% lido do total de páginas do primeiro livro cadastrado.
+🥉 Bronze - 50% de um livro concluído
+🥈 Prata - 80% livro concluído
+🥇 Ouro - 1 livro concluído
+💎 Diamante - 2 livros concluídos
+🎱 Disciplinum - 3 livros concluídos
+
+- Nomes e requisitos das medalhas:
+
+  ganhou 1 insígnia Disciplinum > medalha de bronze
+  ganhou 2 insígnia Disciplinum > medalha de prata
+  ganhou 3 insígnia Disciplinum > medalha de ouro
+  ganhou 4 insígnia Disciplinum > medalha de diamante
+
+---------------------------------------------
+Obs 1: emojis meramente ilustrativos. As insígnias e as medalhas tem seus próprios assets!
+Obs 2: mantem as lógicas de, se o user descumprir regra, tiver recaída, ou desativar o módulo, reseta tudo. Mantendo só a insígnia de mandeira (perde as medalhas também. Remova a questão de "medalha máxima alcançada se ainda tiver isso perdido pelo código do projeto).
+Obs 3: remova o tal do grace period (sua lógica, suas menções e tudo mais). Futuramente pensarei em algo assim, mas por agora, tire.

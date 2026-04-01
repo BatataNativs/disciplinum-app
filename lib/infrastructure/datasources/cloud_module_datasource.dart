@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:disciplinum/features/gamification/domain/entities/user_module_status.dart';
+import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
 
 /// DataSource para dados em nuvem usando Supabase
 /// Responsável pela sincronização com o backend

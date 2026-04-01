@@ -31,6 +31,17 @@ class BingeEatingConfigRepository {
       final isar = IsarService.instance.database;
       
       await isar.writeTxn(() async {
+        // Verificar se já existe uma configuração com o mesmo userId
+        final existingConfig = await isar.bingeEatingConfigEntitys
+            .filter()
+            .userIdEqualTo(config.userId)
+            .findFirst();
+        
+        if (existingConfig != null) {
+          // Reutilizar o ID interno do Isar para atualizar em vez de criar nova
+          config.id = existingConfig.id;
+        }
+        
         config.touch();
         await isar.bingeEatingConfigEntitys.put(config);
       });

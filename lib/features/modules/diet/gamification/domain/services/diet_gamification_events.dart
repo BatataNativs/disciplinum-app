@@ -1,5 +1,5 @@
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules\diet/domain/services\diet_service.dart';
+import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
 
 /// Eventos de gamificação específicos do módulo Diet
 /// 100% independente e local ao módulo
@@ -35,10 +35,16 @@ class DietGamificationEvents {
 
   /// Atualiza estatísticas do Diet Service
   Future<void> _updateDietStats(DietService service, String action) async {
-    final summary = service.getSummary();
-    LoggerService.instance.gamification('Diet estatísticas atualizadas para ação: $action');
-    
-    // Log do completion rate para analytics
-    LoggerService.instance.gamification('Metas atingidas: ${summary.goalsMet}');
+    try {
+      final summary = service.summary;
+      LoggerService.instance.gamification('Diet estatísticas atualizadas para ação: $action');
+      
+      // Log do completion rate para analytics
+      if (summary.goalsMet == true) {
+        LoggerService.instance.gamification('Metas atingidas: ${summary.goalsMet}');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar estatísticas do diet: $e');
+    }
   }
 }

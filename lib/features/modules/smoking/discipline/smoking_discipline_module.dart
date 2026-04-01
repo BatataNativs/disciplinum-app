@@ -1,19 +1,14 @@
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine.dart';
-import 'package:disciplinum/features/gamification/domain/services/gamification_award_engine_extensions.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_gamification_events.dart';
 
 /// Implementação do módulo de disciplina para Smoking
 class SmokingDisciplineModule extends ModuleDisciplineInterface {
-  final SmokingService _smokingService;
-  final GamificationAwardEngine _awardEngine;
+  final SmokingGamificationEvents _gamificationEvents;
   
   SmokingDisciplineModule({
-    required SmokingService smokingService,
-    required GamificationAwardEngine awardEngine,
-  }) : _smokingService = smokingService,
-       _awardEngine = awardEngine;
+    required SmokingGamificationEvents gamificationEvents,
+  }) : _gamificationEvents = gamificationEvents;
 
   @override
   String get moduleId => 'smoking';
@@ -29,8 +24,8 @@ class SmokingDisciplineModule extends ModuleDisciplineInterface {
   @override
   Future<void> initializeRules() async {
     _rules = [
-      SmokingStreakRule(_smokingService, _awardEngine),
-      SmokingMilestoneRule(_smokingService, _awardEngine),
+      SmokingStreakRule(_gamificationEvents),
+      SmokingMilestoneRule(_gamificationEvents),
     ];
   }
 
@@ -43,11 +38,10 @@ class SmokingDisciplineModule extends ModuleDisciplineInterface {
 
 /// Regra para verificar streak de dias sem fumar
 class SmokingStreakRule extends ModuleRule {
-  final SmokingService _smokingService;
-  final GamificationAwardEngine _awardEngine;
+  final SmokingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  SmokingStreakRule(this._smokingService, this._awardEngine);
+  SmokingStreakRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'smoking_streak_check';
@@ -82,14 +76,11 @@ class SmokingStreakRule extends ModuleRule {
         );
       }
 
-      // Implementar processSmokingEvent no GamificationAwardEngine
-      await _awardEngine.processSmokingEvent(eventType, _smokingService);
+      // Implementar processSmokingEvent no serviço local
+      await _gamificationEvents.processSmokingEvent(eventType);
       
       // Por enquanto, apenas logamos o evento
       LoggerService.instance.d('Evento smoking recebido: $eventType');
-      
-      // Simula uso dos serviços para evitar warnings
-      _smokingService;
       
       return ModuleDisciplineResult.success(
         message: 'Evento de smoking processado: $eventType',
@@ -109,11 +100,10 @@ class SmokingStreakRule extends ModuleRule {
 
 /// Regra para verificar marcos de conquista
 class SmokingMilestoneRule extends ModuleRule {
-  final SmokingService _smokingService;
-  final GamificationAwardEngine _awardEngine;
+  final SmokingGamificationEvents _gamificationEvents;
   bool _isEnabled = true;
 
-  SmokingMilestoneRule(this._smokingService, this._awardEngine);
+  SmokingMilestoneRule(this._gamificationEvents);
 
   @override
   String get ruleId => 'smoking_milestone_check';
@@ -144,7 +134,7 @@ class SmokingMilestoneRule extends ModuleRule {
       
       if (daysWithoutSmoking > 0 && daysWithoutSmoking % 30 == 0) {
         // Marco a cada 30 dias
-        await _awardEngine.processSmokingEvent('milestone_30_days', _smokingService);
+        await _gamificationEvents.processSmokingEvent('milestone_30_days');
         
         return ModuleDisciplineResult.success(
           message: 'Marco de $daysWithoutSmoking dias sem fumar alcançado',

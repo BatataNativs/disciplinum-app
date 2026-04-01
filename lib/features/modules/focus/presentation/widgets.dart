@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
 
@@ -10,16 +9,8 @@ class MyProgressFocus extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gamification = ref.watch(gamificationServiceProvider);
     final focusService = ref.watch(focusServiceProvider);
-    final authService = ref.watch(authServiceProvider);
-    final periodosRespeitados = gamification.periodosFocoRespeitados[NicheId.focus.id] ?? 0; // CORRIGIDO: Usar id do enum
     final earnedInsigniasFuture = focusService.getEarnedInsignias(); // CORRIGIDO: Obter do FocusService
-
-    // Lógica para obter o primeiro nome
-    String fullName = authService.userProfile?['name'] ?? 'Usuário';
-    String firstName = fullName.split(' ').first;
-    if (firstName.isEmpty) firstName = 'Usuário';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -78,15 +69,20 @@ class MyProgressFocus extends ConsumerWidget {
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.8,
                 children: FocusMedalha.values.map((medal) {
-                  final isEarned = medal.canBeAwarded(
-                    earnedInsignias.map((e) => e.toString().split('.').last).toList()
-                  );
-
-                  return _AwardItem(
-                    asset: medal.asset,
-                    label: medal.nameBr,
-                    isEarned: isEarned,
-                    requirement: _getMedalRequirement(medal),
+                  return FutureBuilder<List<FocusInsignia>?>(
+                    future: earnedInsigniasFuture.then((list) => list as List<FocusInsignia>?),
+                    builder: (context, snapshot) {
+                      final earnedInsignias = snapshot.data ?? [];
+                      final earnedInsigniaNames = earnedInsignias.map((insignia) => insignia.name).toList();
+                      final isEarned = medal.canBeAwarded(earnedInsigniaNames);
+                      
+                      return _AwardItem(
+                        asset: medal.asset,
+                        label: medal.nameBr,
+                        isEarned: isEarned,
+                        requirement: _getMedalRequirement(medal),
+                      );
+                    },
                   );
                 }).toList(),
               ),
@@ -95,44 +91,40 @@ class MyProgressFocus extends ConsumerWidget {
             const SizedBox(height: 32),
 
             // --- Seção: Insígnias ---
-            const Text(
+            Text(
               'Insígnias',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E), // Cinza escuro/grafite
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: FutureBuilder<List<FocusInsignia>>(
-                future: earnedInsigniasFuture,
-                builder: (context, snapshot) {
-                  final earnedInsignias = snapshot.data ?? [];
-                  return GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    childAspectRatio: 0.8,
-                    children: FocusInsignia.values.map((insignia) {
-                      final isEarned = earnedInsignias.contains(insignia);
-                      return _AwardItem(
-                        asset: insignia.asset,
-                        label: insignia.nameBr.split(' ').last,
-                        isEarned: isEarned,
-                        requirement: _getInsigniaRequirement(insignia),
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
+            
+            const SizedBox(height: 32),
+            
+            // Grid de insígnias
+            FutureBuilder<List<FocusInsignia>?>(
+              future: earnedInsigniasFuture.then((list) => list as List<FocusInsignia>?), // Convert to nullable
+              builder: (context, snapshot) {
+                final earnedInsignias = snapshot.data ?? [];
+                return GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  childAspectRatio: 0.8,
+                  children: FocusInsignia.values.map((insignia) {
+                    final isEarned = earnedInsignias.contains(insignia);
+                    return _AwardItem(
+                      asset: insignia.asset,
+                      label: insignia.nameBr.split(' ').last,
+                      isEarned: isEarned,
+                      requirement: '', // Insígnias não têm requisitos
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),
@@ -142,11 +134,6 @@ class MyProgressFocus extends ConsumerWidget {
 
   String _getMedalRequirement(FocusMedalha medal) {
     return medal.requirementDescription;
-  }
-
-  String _getInsigniaRequirement(FocusInsignia insignia) {
-    if (insignia == FocusInsignia.madeira) return 'Ative o módulo de Foco'; // CORRIGIDO: madeira em vez de ferro
-    return '${insignia.requiredPeriods} períodos de foco respeitados';
   }
 }
 

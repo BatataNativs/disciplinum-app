@@ -11,10 +11,42 @@ import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; // I
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
+import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'secret_menu_screen.dart'; // Importe a nova tela
+
+/// Provider para estado de pausa de notificações
+final notificationsPausedProvider = StateNotifierProvider<NotificationsPausedNotifier, bool>((ref) {
+  final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  return NotificationsPausedNotifier(prefs);
+});
+
+/// Notifier para gerenciar estado de pausa de notificações
+class NotificationsPausedNotifier extends StateNotifier<bool> {
+  final IsarPreferencesRepository _prefs;
+  static const String _key = 'notifications_paused';
+
+  NotificationsPausedNotifier(this._prefs) : super(false) {
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final paused = await _prefs.getBool(_key) ?? false;
+    state = paused;
+  }
+
+  Future<void> setPaused(bool paused) async {
+    state = paused;
+    await _prefs.setBool(_key, paused);
+    
+    // Cancelar ou reagendar notificações baseado no estado
+    if (paused) {
+      await NotificationService.cancelAll();
+    }
+  }
+}
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -211,8 +243,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gamificationState = ref.watch(gamificationServiceProvider);
-    final gamificationNotifier = ref.read(gamificationServiceProvider.notifier);
+    // Usar provider local para estado de notificações
+    final notificationsPaused = ref.watch(notificationsPausedProvider);
+    final notificationsNotifier = ref.read(notificationsPausedProvider.notifier);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -301,9 +334,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: const Text('Silenciar alertas temporariamente'),
                   secondary: Icon(Icons.notifications_paused_outlined,
                       color: isDark ? Colors.white70 : Colors.black54),
-                  value: gamificationState.notificationsPaused,
-                  onChanged: (val) =>
-                      gamificationNotifier.setNotificationsPaused(val),
+                  value: notificationsPaused,
+                  onChanged: (val) async {
+                    await notificationsNotifier.setPaused(val);
+                    if (context.mounted) {
+                      EnhancedSnackBarHelper.showInfo(
+                        context,
+                        val ? 'Notificações pausadas' : 'Notificações ativadas',
+                      );
+                    }
+                  },
                 ),
                 Divider(
                     height: 1,

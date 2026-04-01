@@ -508,14 +508,14 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         
         // Implementando lógica de desativação local
         final notifier = ref.read(readingGamificationNotifierProvider(ref.read(currentUserIdProvider)).notifier);
-        notifier.clearError();
+        notifier.clearGamification(); // Limpa o estado da gamificação
         
         // Salvar estado desativado em configuração local
         await ReadingConfigRepository.instance.setModuleActive(ref.read(currentUserIdProvider), false);
         
-        setState(() {
-          isActive = false;
-        });
+        if (mounted) {
+          setState(() {}); // Rebuild para atualizar UI
+        }
       }
     } else {
       HapticFeedback.lightImpact();
