@@ -3,7 +3,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_medalha.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 
 /// Service de medalhas específico do módulo Binge Eating
 /// Implementa a interface base com lógica específica do Binge Eating

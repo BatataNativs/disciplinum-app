@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_module_state.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/repositories/procrastination_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';

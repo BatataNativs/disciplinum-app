@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 
 part 'binge_eating_gamification_entity.g.dart';
 
@@ -39,7 +39,7 @@ class BingeEatingGamificationEntity {
       earnedMedalhas: state.earnedMedalhas,
       consecutivePositiveDays: state.consecutivePositiveDays,
       disciplinumCount: state.disciplinumCount,
-      lastUpdated: state.lastUpdated,
+      lastUpdated: state.updatedAt,
       isActive: state.isActive,
     );
   }
@@ -51,7 +51,7 @@ class BingeEatingGamificationEntity {
       earnedMedalhas: earnedMedalhas,
       consecutivePositiveDays: consecutivePositiveDays,
       disciplinumCount: disciplinumCount,
-      lastUpdated: lastUpdated,
+      updatedAt: lastUpdated,
       isActive: isActive,
     );
   }

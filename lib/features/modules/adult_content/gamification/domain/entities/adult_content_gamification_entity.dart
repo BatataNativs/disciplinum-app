@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'adult_content_module_state.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 
 part 'adult_content_gamification_entity.g.dart';
 
@@ -39,7 +39,7 @@ class AdultContentGamificationEntity {
       earnedMedalhas: state.earnedMedalhas,
       consecutiveDays: state.consecutiveDays,
       disciplinumCount: state.disciplinumCount,
-      lastUpdated: state.lastUpdated,
+      lastUpdated: state.updatedAt,
       isActive: state.isActive,
     );
   }

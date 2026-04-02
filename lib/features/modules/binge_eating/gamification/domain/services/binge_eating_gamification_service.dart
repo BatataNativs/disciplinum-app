@@ -3,7 +3,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_insignia_interfa
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_insignia_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_medalha_service.dart';
 
@@ -189,7 +189,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
         earnedMedalhas: earnedMedalhas,
         consecutivePositiveDays: _currentState?.consecutivePositiveDays ?? 0,
         disciplinumCount: _currentState?.disciplinumCount ?? 0,
-        lastUpdated: DateTime.now(),
+        updatedAt: DateTime.now(),
         isActive: earnedInsignias.isNotEmpty,
       );
 
@@ -212,7 +212,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
       'disciplinumCount': disciplinumCount,
       'earnedInsigniasCount': _currentState!.earnedInsignias.length,
       'earnedMedalhasCount': _currentState!.earnedMedalhas.length,
-      'lastUpdated': _currentState!.lastUpdated.toIso8601String(),
+      'lastUpdated': _currentState!.updatedAt.toIso8601String(),
       'nextInsignia': _getNextInsignia(),
       'nextMedalha': _getNextMedalha(),
     };

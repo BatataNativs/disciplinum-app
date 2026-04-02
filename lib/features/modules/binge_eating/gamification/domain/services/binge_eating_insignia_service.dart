@@ -2,7 +2,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_insignia_interfa
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_insignia.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 
 /// Service de insignias específico do módulo Binge Eating
 /// Implementa a interface base com lógica específica do Binge Eating
@@ -46,7 +46,7 @@ class BingeEatingInsigniaService implements ModuleInsigniaInterface {
         earnedMedalhas: [], // Será gerenciado pelo MedalhaService
         consecutivePositiveDays: _consecutivePositiveDays,
         disciplinumCount: _earnedInsignias.where((id) => id == 'disciplinum').length,
-        lastUpdated: DateTime.now(),
+        updatedAt: DateTime.now(),
         isActive: true,
       );
       

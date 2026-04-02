@@ -1,4 +1,4 @@
-import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_module_state.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Service especializado em gerenciar streaks de dias livres do Adult Content

@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_module_state.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/services/adult_content_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

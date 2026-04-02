@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';

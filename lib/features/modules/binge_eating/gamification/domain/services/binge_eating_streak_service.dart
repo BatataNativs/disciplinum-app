@@ -1,4 +1,4 @@
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Service especializado em gerenciar streaks de dias positivos do Binge Eating

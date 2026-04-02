@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_module_state.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/services/procrastination_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

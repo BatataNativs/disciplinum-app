@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_module_state.dart';
+import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/services/spending_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

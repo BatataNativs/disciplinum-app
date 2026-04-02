@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'procrastination_module_state.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 
 part 'procrastination_gamification_entity.g.dart';
 
@@ -37,9 +37,9 @@ class ProcrastinationGamificationEntity {
       userId: userId,
       earnedInsignias: state.earnedInsignias,
       earnedMedalhas: state.earnedMedalhas,
-      consecutiveDays: state.consecutiveDays,
+      consecutiveDays: state.consecutiveProductiveDays,
       disciplinumCount: state.disciplinumCount,
-      lastUpdated: state.lastUpdated,
+      lastUpdated: state.updatedAt,
       isActive: state.isActive,
     );
   }
@@ -49,9 +49,9 @@ class ProcrastinationGamificationEntity {
     return ProcrastinationModuleState(
       earnedInsignias: earnedInsignias,
       earnedMedalhas: earnedMedalhas,
-      consecutiveDays: consecutiveDays,
+      consecutiveProductiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
-      lastUpdated: lastUpdated,
+      updatedAt: lastUpdated,
       isActive: isActive,
     );
   }

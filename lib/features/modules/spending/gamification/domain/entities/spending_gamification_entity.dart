@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'spending_module_state.dart';
+import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 
 part 'spending_gamification_entity.g.dart';
 
@@ -39,7 +39,7 @@ class SpendingGamificationEntity {
       earnedMedalhas: state.earnedMedalhas,
       consecutiveMonths: state.consecutiveMonths,
       disciplinumCount: state.disciplinumCount,
-      lastUpdated: state.lastUpdated,
+      lastUpdated: state.updatedAt,
       isActive: state.isActive,
     );
   }
@@ -51,7 +51,7 @@ class SpendingGamificationEntity {
       earnedMedalhas: earnedMedalhas,
       consecutiveMonths: consecutiveMonths,
       disciplinumCount: disciplinumCount,
-      lastUpdated: lastUpdated,
+      updatedAt: lastUpdated,
       isActive: isActive,
     );
   }

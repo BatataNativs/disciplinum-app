@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_module_state.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_gamification_entity.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

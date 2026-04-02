@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_module_state.dart';
+import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/repositories/spending_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
