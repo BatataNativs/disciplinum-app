@@ -19,6 +19,8 @@ class FocusModuleState implements ModuleStateContract {
   DateTime updatedAt;
 
   // Campos específicos do módulo Focus
+  final List<String> earnedInsignias;
+  final List<String> earnedMedalhas;
   final int sessionsCompleted;
   final int totalFocusMinutes;
   final int currentStreakDays;
@@ -29,6 +31,8 @@ class FocusModuleState implements ModuleStateContract {
   FocusModuleState({
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.earnedInsignias = const [],
+    this.earnedMedalhas = const [],
     this.sessionsCompleted = 0,
     this.totalFocusMinutes = 0,
     this.currentStreakDays = 0,
@@ -40,6 +44,8 @@ class FocusModuleState implements ModuleStateContract {
 
   /// Cria cópia com valores atualizados
   FocusModuleState copyWith({
+    List<String>? earnedInsignias,
+    List<String>? earnedMedalhas,
     int? sessionsCompleted,
     int? totalFocusMinutes,
     int? currentStreakDays,
@@ -50,6 +56,8 @@ class FocusModuleState implements ModuleStateContract {
     return FocusModuleState(
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      earnedInsignias: earnedInsignias ?? this.earnedInsignias,
+      earnedMedalhas: earnedMedalhas ?? this.earnedMedalhas,
       sessionsCompleted: sessionsCompleted ?? this.sessionsCompleted,
       totalFocusMinutes: totalFocusMinutes ?? this.totalFocusMinutes,
       currentStreakDays: currentStreakDays ?? this.currentStreakDays,
@@ -67,6 +75,8 @@ class FocusModuleState implements ModuleStateContract {
       createdAt: createdAt,
       updatedAt: updatedAt,
     )
+      ..setField('earned_insignias', earnedInsignias)
+      ..setField('earned_medalhas', earnedMedalhas)
       ..setField('sessions_completed', sessionsCompleted)
       ..setField('total_focus_minutes', totalFocusMinutes)
       ..setField('current_streak_days', currentStreakDays)
@@ -118,6 +128,16 @@ class FocusModuleState implements ModuleStateContract {
     return FocusModuleState(
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      earnedInsignias:
+          (json['earned_insignias'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              [],
+      earnedMedalhas:
+          (json['earned_medalhas'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              [],
       sessionsCompleted: json['sessions_completed'] as int? ?? 0,
       totalFocusMinutes: json['total_focus_minutes'] as int? ?? 0,
       currentStreakDays: json['current_streak_days'] as int? ?? 0,
