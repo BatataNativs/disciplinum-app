@@ -5,6 +5,7 @@ import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
+import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Procrastination implementando ModuleRepositoryContract
@@ -75,7 +76,8 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
       _setStatus(RepositoryStatus.busy);
       
       final isar = IsarService.instance.database;
-      final entity = await isar.procrastinationGamificationEntitys.filter().userIdEqualTo(userId).findFirst();
+      // Usar ID fixo (1) como padrão do projeto, igual ao Reading
+      final entity = await isar.procrastinationGamificationEntitys.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -98,7 +100,7 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
   Future<bool> existsLocal(String userId) async {
     try {
       final isar = IsarService.instance.database;
-      final count = await isar.procrastinationGamificationEntitys.filter().userIdEqualTo(userId).count();
+      final count = await isar.procrastinationGamificationEntitys.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,8 +113,8 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
       _setStatus(RepositoryStatus.busy);
       final isar = IsarService.instance.database;
       await isar.writeTxn(() async {
-        final entities = await isar.procrastinationGamificationEntitys.filter().userIdEqualTo(userId).findAll();
-        await isar.procrastinationGamificationEntitys.deleteAll(entities.map((e) => e.id).toList());
+        // Limpar todas as entidades (padrão igual ao Reading)
+        await isar.procrastinationGamificationEntitys.clear();
       });
       LoggerService.instance.gamification('🗑️ ProcrastinationModuleState local deletado');
       _setStatus(RepositoryStatus.ready);

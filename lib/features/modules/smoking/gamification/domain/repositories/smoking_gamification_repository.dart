@@ -2,7 +2,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/database/supabase_migration_checker.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_module_state.dart';
+import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório Isar para gamificação do módulo Smoking

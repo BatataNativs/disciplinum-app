@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -104,7 +104,6 @@ class MoneySavingGamificationController extends ChangeNotifier {
         consecutiveDays: _moduleState!.consecutiveDays + 1,
         completedChallenges: _moduleState!.completedChallenges + 1,
         lastSavingDate: DateTime.now(),
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado atualizado
@@ -152,7 +151,6 @@ class MoneySavingGamificationController extends ChangeNotifier {
       final updatedState = _moduleState!.copyWith(
         consecutiveDays: 0,
         lastSavingDate: null,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado atualizado
@@ -194,13 +192,11 @@ class MoneySavingGamificationController extends ChangeNotifier {
         // Criar novo estado
         _moduleState = MoneySavingModuleState(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -241,7 +237,6 @@ class MoneySavingGamificationController extends ChangeNotifier {
 
       final updatedState = _moduleState!.copyWith(
         isActive: false,
-        lastUpdated: DateTime.now(),
       );
 
       await _repository.saveMoneySavingState(updatedState);
@@ -278,7 +273,6 @@ class MoneySavingGamificationController extends ChangeNotifier {
 
       final resetState = MoneySavingModuleState(
         isActive: _moduleState?.isActive ?? false,
-        lastUpdated: DateTime.now(),
       );
 
       await _repository.saveMoneySavingState(resetState);

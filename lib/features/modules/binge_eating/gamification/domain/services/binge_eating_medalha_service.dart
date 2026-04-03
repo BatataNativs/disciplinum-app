@@ -47,7 +47,6 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
         final updatedState = currentState.copyWith(
           earnedMedalhas: _earnedMedalhas,
           disciplinumCount: _disciplinumCount,
-          lastUpdated: DateTime.now(),
         );
         
         await _repository.saveBingeEatingState(updatedState);

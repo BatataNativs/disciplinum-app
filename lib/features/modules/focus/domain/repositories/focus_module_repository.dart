@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:isar/isar.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
 import 'package:disciplinum/core/database/isar_service.dart';

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:isar/isar.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
@@ -75,7 +76,8 @@ class BingeEatingModuleRepository implements ModuleRepositoryContract<BingeEatin
       _setStatus(RepositoryStatus.busy);
       
       final isar = IsarService.instance.database;
-      final entity = await isar.bingeEatingGamificationEntitys.filter().userIdEqualTo(userId).findFirst();
+      // Usar ID fixo (1) como padrão do projeto, igual ao Reading
+      final entity = await isar.bingeEatingGamificationEntitys.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -98,7 +100,7 @@ class BingeEatingModuleRepository implements ModuleRepositoryContract<BingeEatin
   Future<bool> existsLocal(String userId) async {
     try {
       final isar = IsarService.instance.database;
-      final count = await isar.bingeEatingGamificationEntitys.filter().userIdEqualTo(userId).count();
+      final count = await isar.bingeEatingGamificationEntitys.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,8 +113,8 @@ class BingeEatingModuleRepository implements ModuleRepositoryContract<BingeEatin
       _setStatus(RepositoryStatus.busy);
       final isar = IsarService.instance.database;
       await isar.writeTxn(() async {
-        final entities = await isar.bingeEatingGamificationEntitys.filter().userIdEqualTo(userId).findAll();
-        await isar.bingeEatingGamificationEntitys.deleteAll(entities.map((e) => e.id).toList());
+        // Limpar todas as entidades (padrão igual ao Reading)
+        await isar.bingeEatingGamificationEntitys.clear();
       });
       LoggerService.instance.gamification('🗑️ BingeEatingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);

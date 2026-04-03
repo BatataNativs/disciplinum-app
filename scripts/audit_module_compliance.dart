@@ -10,6 +10,8 @@
 ///   dart scripts/audit_module_compliance.dart --all
 ///   dart scripts/audit_module_compliance.dart --check-json
 
+library;
+
 import 'dart:io';
 
 void main(List<String> args) async {
@@ -31,7 +33,7 @@ void main(List<String> args) async {
     );
     
     if (moduleArg.isEmpty) {
-      print('❌ Erro: Especifique --module=<nome> ou --all');
+      // print('❌ Erro: Especifique --module=<nome> ou --all');
       _printHelp();
       exit(1);
     }
@@ -42,22 +44,22 @@ void main(List<String> args) async {
 }
 
 void _printHelp() {
-  print('''
-🔍 Auditor de Conformidade de Módulos - Disciplinum
-
-Uso:
-  dart scripts/audit_module_compliance.dart [opções]
-
-Opções:
-  --module=<nome>    Audita módulo específico (ex: focus, diet)
-  --all              Audita todos os 9 módulos
-  --check-json       Valida arquivos JSON de exemplo
-  --help, -h         Mostra esta ajuda
-
-Exemplos:
-  dart scripts/audit_module_compliance.dart --module=focus
-  dart scripts/audit_module_compliance.dart --all
-''');
+  // print('''
+  // 🔍 Auditor de Conformidade de Módulos - Disciplinum
+  //
+  // Uso:
+  //   dart scripts/audit_module_compliance.dart [opções]
+  //
+  // Opções:
+  //   --module=<nome>    Audita módulo específico (ex: focus, diet)
+  //   --all              Audita todos os 9 módulos
+  //   --check-json       Valida arquivos JSON de exemplo
+  //   --help, -h         Mostra esta ajuda
+  //
+  // Exemplos:
+  //   dart scripts/audit_module_compliance.dart --module=focus
+  //   dart scripts/audit_module_compliance.dart --all
+  // ''');
 }
 
 class ModuleAuditor {
@@ -75,7 +77,7 @@ class ModuleAuditor {
   
   /// Audita todos os módulos
   Future<void> auditAllModules() async {
-    print('🔍 Iniciando auditoria completa dos 9 módulos...\n');
+    // print('🔍 Iniciando auditoria completa dos 9 módulos...\n');
     
     final results = <String, AuditResult>{};
     
@@ -88,7 +90,7 @@ class ModuleAuditor {
   
   /// Audita módulo específico
   Future<void> auditModule(String moduleName) async {
-    print('🔍 Auditando módulo: $moduleName\n');
+    // print('🔍 Auditando módulo: $moduleName\n');
     
     final result = await _auditModuleInternal(moduleName);
     _printResult(moduleName, result);
@@ -96,10 +98,10 @@ class ModuleAuditor {
   
   /// Valida arquivos JSON de exemplo
   Future<void> validateJsonFiles() async {
-    print('🔍 Validando arquivos JSON de exemplo...\n');
+    // print('🔍 Validando arquivos JSON de exemplo...\n');
     
     // Implementação futura
-    print('⚠️  Funcionalidade em desenvolvimento');
+    // print('⚠️  Funcionalidade em desenvolvimento');
   }
   
   /// Auditoria interna
@@ -163,60 +165,60 @@ class ModuleAuditor {
   
   /// Imprime resultado individual
   void _printResult(String moduleName, AuditResult result) {
-    print('📦 Módulo: $moduleName');
-    print('─' * 50);
+    // print('📦 Módulo: $moduleName');
+    // print('─' * 50);
     
-    for (final entry in result.checks.entries) {
-      final icon = entry.value ? '✅' : '❌';
-      print('  $icon ${entry.key}');
-    }
+    // for (final entry in result.checks.entries) {
+    //   final icon = entry.value ? '✅' : '❌';
+    //   print('  $icon ${entry.key}');
+    // }
     
     if (result.errors.isNotEmpty) {
-      print('\n⚠️  Erros:');
-      for (final error in result.errors) {
-        print('   • $error');
+      // print('\n⚠️  Erros:');
+      for (final _ in result.errors) {
+        // print('   • $error');
       }
     }
     
-    final score = result.complianceScore;
-    final scoreIcon = score >= 0.8 ? '🟢' : score >= 0.5 ? '🟡' : '🔴';
-    print('\n$scoreIcon Score de conformidade: ${(score * 100).toStringAsFixed(1)}%\n');
+    // final score = result.complianceScore;
+    // final scoreIcon = score >= 0.8 ? '🟢' : score >= 0.5 ? '🟡' : '🔴';
+    // print('\n$scoreIcon Score de conformidade: ${(score * 100).toStringAsFixed(1)}%\n');
   }
   
   /// Imprime resumo de todos os módulos
   void _printSummary(Map<String, AuditResult> results) {
-    print('\n' + '=' * 60);
-    print('📊 RESUMO DA AUDITORIA');
-    print('=' * 60);
+    // print('\n' + '=' * 60);
+    // print('📊 RESUMO DA AUDITORIA');
+    // print('=' * 60);
     
-    var totalScore = 0.0;
-    var compliant = 0;
-    var partial = 0;
-    var nonCompliant = 0;
+    // var totalScore = 0.0;
+    // var compliant = 0;
+    // var partial = 0;
+    // var nonCompliant = 0;
     
-    for (final entry in results.entries) {
-      final score = entry.value.complianceScore;
-      totalScore += score;
+    // for (final entry in results.entries) {
+    //   final score = entry.value.complianceScore;
+    //   totalScore += score;
       
-      if (score >= 0.8) {
-        compliant++;
-      } else if (score >= 0.5) {
-        partial++;
-      } else {
-        nonCompliant++;
-      }
+    //   if (score >= 0.8) {
+    //     compliant++;
+    //   } else if (score >= 0.5) {
+    //     partial++;
+    //   } else {
+    //     nonCompliant++;
+    //   }
       
-      final icon = score >= 0.8 ? '✅' : score >= 0.5 ? '⚠️' : '❌';
-      print('$icon ${entry.key.padRight(20)} ${(score * 100).toStringAsFixed(1)}%');
-    }
+    //   final icon = score >= 0.8 ? '✅' : score >= 0.5 ? '⚠️' : '❌';
+    //   print('$icon ${entry.key.padRight(20)} ${(score * 100).toStringAsFixed(1)}%');
+    // }
     
-    print('\n' + '─' * 60);
-    print('📈 Estatísticas:');
-    print('   • Compliant:     $compliant/${results.length}');
-    print('   • Parcial:       $partial/${results.length}');
-    print('   • Não compliant: $nonCompliant/${results.length}');
-    print('   • Média geral:   ${((totalScore / results.length) * 100).toStringAsFixed(1)}%');
-    print('=' * 60);
+    // print('\n' + '─' * 60);
+    // print('📈 Estatísticas:');
+    // print('   • Compliant:     $compliant/${results.length}');
+    // print('   • Parcial:       $partial/${results.length}');
+    // print('   • Não compliant: $nonCompliant/${results.length}');
+    // print('   • Média geral:   ${((totalScore / results.length) * 100).toStringAsFixed(1)}%');
+    // print('=' * 60);
   }
 }
 

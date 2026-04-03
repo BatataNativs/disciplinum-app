@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medalha.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_module_state.dart';
+import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 
@@ -128,7 +128,10 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     try {
       _currentState ??= SmokingModuleState();
       
-      _currentState!.disciplinumCount++;
+      // Usar copyWith para atualizar o campo final
+      _currentState = _currentState!.copyWith(
+        disciplinumCount: _currentState!.disciplinumCount + 1,
+      );
       await _saveState(_currentState!);
       LoggerService.instance.gamification('Contador Disciplinum incrementado: ${_currentState!.disciplinumCount}');
     } catch (e) {

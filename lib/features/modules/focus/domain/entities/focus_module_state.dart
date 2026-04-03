@@ -27,6 +27,8 @@ class FocusModuleState implements ModuleStateContract {
   final int longestStreakDays;
   final String currentStageId;
   final List<String> unlockedAchievements;
+  final List<String> respectedPeriods;
+  final bool isActive;
 
   FocusModuleState({
     DateTime? createdAt,
@@ -39,8 +41,34 @@ class FocusModuleState implements ModuleStateContract {
     this.longestStreakDays = 0,
     this.currentStageId = 'bronze',
     this.unlockedAchievements = const [],
+    this.respectedPeriods = const [],
+    this.isActive = false,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  /// Cria estado inicial padrão
+  factory FocusModuleState.initial() {
+    return FocusModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      sessionsCompleted: 0,
+      totalFocusMinutes: 0,
+      currentStreakDays: 0,
+      longestStreakDays: 0,
+      currentStageId: 'bronze',
+      unlockedAchievements: const [],
+      respectedPeriods: const [],
+      isActive: false,
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
+  /// Contagem de períodos respeitados
+  int get respectedPeriodsCount => respectedPeriods.length;
 
   /// Cria cópia com valores atualizados
   FocusModuleState copyWith({
@@ -52,6 +80,8 @@ class FocusModuleState implements ModuleStateContract {
     int? longestStreakDays,
     String? currentStageId,
     List<String>? unlockedAchievements,
+    List<String>? respectedPeriods,
+    bool? isActive,
   }) {
     return FocusModuleState(
       createdAt: createdAt,
@@ -64,6 +94,8 @@ class FocusModuleState implements ModuleStateContract {
       longestStreakDays: longestStreakDays ?? this.longestStreakDays,
       currentStageId: currentStageId ?? this.currentStageId,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
+      respectedPeriods: respectedPeriods ?? this.respectedPeriods,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -148,6 +180,36 @@ class FocusModuleState implements ModuleStateContract {
                   ?.map((e) => e as String)
                   .toList() ??
               [],
+      respectedPeriods:
+          (json['respected_periods'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              [],
+      isActive: json['is_active'] as bool? ?? false,
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory FocusModuleState.fromMap(Map<String, dynamic> map) => FocusModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial
+  FocusModuleState reset() => FocusModuleState.initial();
+
+  /// Verifica se tem uma insignia específica
+  bool hasInsignia(String insigniaId) => earnedInsignias.contains(insigniaId);
+
+  /// Verifica se tem uma medalha específica
+  bool hasMedalha(String medalhaId) => earnedMedalhas.contains(medalhaId);
+
+  /// Retorna a próxima insignia (primeira não conquistada)
+  String? get nextInsignia {
+    final allInsignias = ['madeira', 'bronze', 'prata', 'ouro', 'diamante'];
+    for (final id in allInsignias) {
+      if (!earnedInsignias.contains(id)) return id;
+    }
+    return null;
+  }
+
+  /// Contagem de disciplinum (respectedPeriods.length)
+  int get disciplinumCount => respectedPeriods.length;
 }

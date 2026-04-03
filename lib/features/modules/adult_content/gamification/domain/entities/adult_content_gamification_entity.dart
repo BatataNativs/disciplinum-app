@@ -51,7 +51,7 @@ class AdultContentGamificationEntity {
       earnedMedalhas: earnedMedalhas,
       consecutiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
-      lastUpdated: lastUpdated,
+      updatedAt: lastUpdated,
       isActive: isActive,
     );
   }

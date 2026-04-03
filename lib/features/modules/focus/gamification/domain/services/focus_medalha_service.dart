@@ -2,7 +2,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_medalha_interfac
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 
 /// Service de medalhas específico do módulo Focus
@@ -112,8 +112,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
       final currentState = FocusModuleState(
         earnedInsignias: [], // Mantém insígnias existentes
         earnedMedalhas: _earnedMedalhas,
-        respectedPeriods: _disciplinumCount,
-        lastUpdated: DateTime.now(),
+        respectedPeriods: [],
         isActive: true,
       );
       
@@ -131,7 +130,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
       if (loadedState != null) {
         _earnedMedalhas.clear();
         _earnedMedalhas.addAll(loadedState.earnedMedalhas);
-        _disciplinumCount = loadedState.respectedPeriods;
+        _disciplinumCount = loadedState.respectedPeriodsCount;
       }
       
       LoggerService.instance.gamification('Estado Focus carregado');

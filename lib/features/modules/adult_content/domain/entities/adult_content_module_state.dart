@@ -41,6 +41,23 @@ class AdultContentModuleState implements ModuleStateContract {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Cria estado inicial padrão
+  factory AdultContentModuleState.initial() {
+    return AdultContentModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveDays: 0,
+      disciplinumCount: 0,
+      isActive: false,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
   /// Cria cópia com valores atualizados
   AdultContentModuleState copyWith({
     List<String>? earnedInsignias,
@@ -81,9 +98,8 @@ class AdultContentModuleState implements ModuleStateContract {
       ..setField('last_blocked_date', lastBlockedDate?.toIso8601String())
       ..setField('start_date', startDate?.toIso8601String())
       ..setField('is_active', isActive)
-      ..setStage(currentStage)
-      ..setProgressMetric(progressMetrics[0])
-      ..setProgressMetric(progressMetrics[1]);
+      ..setField('current_stage_id', currentStageId)
+      ..setField('last_updated', updatedAt.toIso8601String());
 
     return builder.build();
   }
@@ -148,4 +164,7 @@ class AdultContentModuleState implements ModuleStateContract {
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory AdultContentModuleState.fromMap(Map<String, dynamic> map) => AdultContentModuleState.fromJson(map);
 }

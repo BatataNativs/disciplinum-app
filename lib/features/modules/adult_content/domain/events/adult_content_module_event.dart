@@ -2,39 +2,55 @@ import 'package:disciplinum/core/modules/contracts/module_event_contract.dart';
 
 /// Eventos do módulo Adult Content
 class AdultContentModuleEvent implements ModuleEventContract {
-  @override
-  final String eventType;
-  @override
-  final String moduleId = 'adult_content';
-  @override
-  final String userId;
-  @override
-  final DateTime timestamp;
-  @override
-  final Map<String, dynamic> payload;
-  @override
-  final int eventVersion = 1;
-  @override
-  final ModuleEventCategory category;
+  final String _eventType;
+  final String _userId;
+  final DateTime _timestamp;
+  final Map<String, dynamic> _payload;
+  final ModuleEventCategory _category;
 
   AdultContentModuleEvent({
-    required this.eventType,
-    required this.userId,
-    required this.category,
-    this.payload = const {},
+    required String eventType,
+    required String userId,
+    required ModuleEventCategory category,
+    Map<String, dynamic>? payload,
     DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  })  : _eventType = eventType,
+        _userId = userId,
+        _category = category,
+        _payload = payload ?? const {},
+        _timestamp = timestamp ?? DateTime.now();
+
+  @override
+  String get eventType => _eventType;
+
+  @override
+  String get moduleId => 'adult_content';
+
+  @override
+  String get userId => _userId;
+
+  @override
+  DateTime get timestamp => _timestamp;
+
+  @override
+  Map<String, dynamic> get payload => _payload;
+
+  @override
+  int get eventVersion => 1;
+
+  @override
+  ModuleEventCategory get category => _category;
 
   @override
   Map<String, dynamic> toJson() => {
-    'event_type': eventType,
-    'module_id': moduleId,
-    'user_id': userId,
-    'timestamp': timestamp.toIso8601String(),
-    'payload': payload,
-    'event_version': eventVersion,
-    'category': category.name,
-  };
+        'event_type': eventType,
+        'module_id': moduleId,
+        'user_id': userId,
+        'timestamp': timestamp.toIso8601String(),
+        'payload': payload,
+        'event_version': eventVersion,
+        'category': category.name,
+      };
 }
 
 /// Factory de eventos do módulo Adult Content

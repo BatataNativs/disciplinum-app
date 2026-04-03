@@ -5,6 +5,7 @@ import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
+import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Money Saving implementando ModuleRepositoryContract
@@ -48,7 +49,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
     try {
       _setStatus(RepositoryStatus.busy);
       
-      final entity = MoneySavingGamificationEntity.fromModuleState('', state.toJson());
+      final entity = MoneySavingGamificationEntity.fromModuleState(state);
 
       final isar = IsarService.instance.database;
       await isar.writeTxn(() async {
@@ -75,12 +76,13 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
       _setStatus(RepositoryStatus.busy);
       
       final isar = IsarService.instance.database;
-      final entity = await isar.moneySavingGamificationEntitys.filter().userIdEqualTo(userId).findFirst();
+      // Usar ID fixo (1) como padrão do projeto, igual ao Reading
+      final entity = await isar.moneySavingGamificationEntitys.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
       if (entity != null) {
-        return MoneySavingModuleState.fromJson(entity.toModuleStateMap());
+        return entity.toModuleState();
       }
       return null;
     } catch (e) {
@@ -98,7 +100,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
   Future<bool> existsLocal(String userId) async {
     try {
       final isar = IsarService.instance.database;
-      final count = await isar.moneySavingGamificationEntitys.filter().userIdEqualTo(userId).count();
+      final count = await isar.moneySavingGamificationEntitys.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,8 +113,8 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
       _setStatus(RepositoryStatus.busy);
       final isar = IsarService.instance.database;
       await isar.writeTxn(() async {
-        final entities = await isar.moneySavingGamificationEntitys.filter().userIdEqualTo(userId).findAll();
-        await isar.moneySavingGamificationEntitys.deleteAll(entities.map((e) => e.id).toList());
+        // Limpar todas as entidades (padrão igual ao Reading)
+        await isar.moneySavingGamificationEntitys.clear();
       });
       LoggerService.instance.gamification('🗑️ MoneySavingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
@@ -132,7 +134,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
     try {
       final isar = IsarService.instance.database;
       final entities = await isar.moneySavingGamificationEntitys.where().findAll();
-      return entities.map((e) => MoneySavingModuleState.fromJson(e.toModuleStateMap())).toList();
+      return entities.map((e) => e.toModuleState()).toList();
     } catch (e) {
       return [];
     }

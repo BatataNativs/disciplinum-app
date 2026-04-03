@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_module_state.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -94,7 +94,6 @@ class DietGamificationController extends ChangeNotifier {
       final updatedState = _moduleState!.copyWith(
         consecutiveDays: _moduleState!.consecutiveDays + 1,
         disciplinumCount: _moduleState!.disciplinumCount + 1,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -141,7 +140,6 @@ class DietGamificationController extends ChangeNotifier {
       // Resetar streak em caso de recaída
       final updatedState = _moduleState!.copyWith(
         consecutiveDays: 0,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -186,14 +184,12 @@ class DietGamificationController extends ChangeNotifier {
           earnedMedalhas: const [],
           consecutiveDays: 0,
           disciplinumCount: 0,
-          lastUpdated: DateTime.now(),
           isActive: true,
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -231,7 +227,6 @@ class DietGamificationController extends ChangeNotifier {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: false,
-          lastUpdated: DateTime.now(),
         );
 
         await _repository.saveDietState(_moduleState!);

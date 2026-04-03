@@ -37,6 +37,21 @@ class ReadingModuleState implements ModuleStateContract {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Cria estado inicial padrão
+  factory ReadingModuleState.initial() {
+    return ReadingModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveDays: 0,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
   /// Cria cópia com valores atualizados
   ReadingModuleState copyWith({
     List<String>? earnedInsignias,
@@ -136,4 +151,7 @@ class ReadingModuleState implements ModuleStateContract {
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory ReadingModuleState.fromMap(Map<String, dynamic> map) => ReadingModuleState.fromJson(map);
 }

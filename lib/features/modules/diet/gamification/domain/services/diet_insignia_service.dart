@@ -2,7 +2,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_insignia_interfa
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_insignia.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_module_state.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 
 /// Service de insignias específico do módulo Dieta
 /// Implementa a interface base com lógica específica da Dieta
@@ -46,7 +46,6 @@ class DietInsigniaService implements ModuleInsigniaInterface {
         earnedMedalhas: [], // Será gerenciado pelo MedalhaService
         consecutiveDays: _consecutiveDays,
         disciplinumCount: _earnedInsignias.where((id) => id == 'disciplinum').length,
-        lastUpdated: DateTime.now(),
         isActive: true,
       );
       

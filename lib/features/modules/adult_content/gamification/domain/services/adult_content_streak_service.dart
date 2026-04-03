@@ -133,20 +133,19 @@ class AdultContentStreakService {
     return currentState.copyWith(
       consecutiveDays: newStreak,
       disciplinumCount: newDisciplinumCount,
-      lastUpdated: DateTime.now(),
     );
   }
 
   /// Cria estado inicial do módulo
   static AdultContentModuleState createInitialState({
-    required DateTime lastUpdated,
+    required DateTime updatedAt,
     int consecutiveDays = 0,
     DateTime? lastFreeDay,
     int disciplinumCount = 0,
     bool isActive = false,
   }) {
     return AdultContentModuleState(
-      lastUpdated: lastUpdated,
+      updatedAt: updatedAt,
       consecutiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
       isActive: isActive,

@@ -3,7 +3,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_medalha.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_module_state.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 
 /// Service de medalhas específico do módulo Dieta
 /// Implementa a interface base com lógica específica da Dieta
@@ -47,7 +47,6 @@ class DietMedalhaService implements ModuleMedalhaInterface {
         final updatedState = currentState.copyWith(
           earnedMedalhas: _earnedMedalhas,
           disciplinumCount: _disciplinumCount,
-          lastUpdated: DateTime.now(),
         );
         
         await _repository.saveDietState(updatedState);

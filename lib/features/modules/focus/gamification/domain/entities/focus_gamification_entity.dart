@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'dart:convert';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 
 part 'focus_gamification_entity.g.dart';
 
@@ -49,10 +50,31 @@ class FocusGamificationEntity {
   /// Construtor padrão
   FocusGamificationEntity();
 
+  /// Converte para FocusModuleState
+  FocusModuleState toModuleState() {
+    return FocusModuleState(
+      earnedInsignias: earnedInsigniasList,
+      earnedMedalhas: earnedMedalhasList,
+      sessionsCompleted: completedSessions,
+      totalFocusMinutes: totalFocusMinutes,
+      currentStreakDays: currentStreakDays,
+      longestStreakDays: maxStreakDays,
+      currentStageId: 'bronze',
+      unlockedAchievements: blockedAppsList,
+    );
+  }
+
   /// Construtor a partir do FocusModuleState
-  factory FocusGamificationEntity.fromModuleState(dynamic moduleState) {
+  factory FocusGamificationEntity.fromModuleState(FocusModuleState moduleState) {
     final entity = FocusGamificationEntity();
-    // Implementação já está sendo feita no repositório
+    entity.earnedInsignias = json.encode(moduleState.earnedInsignias);
+    entity.earnedMedalhas = json.encode(moduleState.earnedMedalhas);
+    entity.totalFocusMinutes = moduleState.totalFocusMinutes;
+    entity.completedSessions = moduleState.sessionsCompleted;
+    entity.maxStreakDays = moduleState.longestStreakDays;
+    entity.currentStreakDays = moduleState.currentStreakDays;
+    entity.blockedApps = json.encode(moduleState.unlockedAchievements);
+    entity.updatedAt = moduleState.updatedAt;
     return entity;
   }
 

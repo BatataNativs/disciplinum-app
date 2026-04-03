@@ -95,9 +95,7 @@ class ProcrastinationGamificationController extends ChangeNotifier {
 
       // Atualizar estado com novo dia produtivo
       final updatedState = _moduleState!.copyWith(
-        consecutiveDays: _moduleState!.consecutiveDays + 1,
         disciplinumCount: _moduleState!.disciplinumCount + 1,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -142,10 +140,7 @@ class ProcrastinationGamificationController extends ChangeNotifier {
       }
 
       // Resetar streak em caso de procrastinação
-      final updatedState = _moduleState!.copyWith(
-        consecutiveDays: 0,
-        lastUpdated: DateTime.now(),
-      );
+      final updatedState = _moduleState!.copyWith();
 
       // Salvar estado
       await _repository.saveProcrastinationState(updatedState);
@@ -187,16 +182,13 @@ class ProcrastinationGamificationController extends ChangeNotifier {
         _moduleState = ProcrastinationModuleState(
           earnedInsignias: const [],
           earnedMedalhas: const [],
-          consecutiveDays: 0,
           disciplinumCount: 0,
-          lastUpdated: DateTime.now(),
           isActive: true,
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -234,7 +226,6 @@ class ProcrastinationGamificationController extends ChangeNotifier {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: false,
-          lastUpdated: DateTime.now(),
         );
 
         await _repository.saveProcrastinationState(_moduleState!);

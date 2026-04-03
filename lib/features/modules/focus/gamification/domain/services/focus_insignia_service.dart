@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 
 /// Service de insígnias específico do módulo Focus
@@ -98,7 +98,6 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
       if (!state.earnedInsignias.contains(insigniaId)) {
         final updatedState = state.copyWith(
           earnedInsignias: [...state.earnedInsignias, insigniaId],
-          lastUpdated: DateTime.now(),
         );
         
         await _saveState(updatedState);
@@ -119,7 +118,6 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
       if (state.earnedInsignias.contains(insigniaId)) {
         final updatedState = state.copyWith(
           earnedInsignias: state.earnedInsignias.where((id) => id != insigniaId).toList(),
-          lastUpdated: DateTime.now(),
         );
         
         await _saveState(updatedState);
@@ -159,7 +157,7 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
       final insigniaId = entry.key;
       final requiredPeriods = entry.value;
 
-      if (!state.hasInsignia(insigniaId) && state.respectedPeriods >= requiredPeriods) {
+      if (!state.hasInsignia(insigniaId) && state.respectedPeriodsCount >= requiredPeriods) {
         newInsignias.add(insigniaId);
       }
     }
@@ -170,7 +168,7 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
   @override
   Future<void> resetInsignias() async {
     try {
-      final resetState = FocusModuleState.reset();
+      final resetState = (_currentState ?? FocusModuleState.initial()).reset();
       await _saveState(resetState);
       _currentState = resetState;
       
@@ -186,13 +184,11 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
     
     try {
       // Carrega estado do FocusService
-      final respectedPeriods = await _focusService.getRespectedPeriods();
       final earnedInsignias = await _focusService.getEarnedInsignias();
       
       _currentState = FocusModuleState(
         earnedInsignias: earnedInsignias.map((e) => e.name).toList(),
-        respectedPeriods: respectedPeriods,
-        lastUpdated: DateTime.now(),
+        respectedPeriods: [],
       );
       
       return _currentState!;

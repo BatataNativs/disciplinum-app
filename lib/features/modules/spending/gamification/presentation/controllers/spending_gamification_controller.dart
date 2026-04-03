@@ -93,7 +93,6 @@ class SpendingGamificationController extends ChangeNotifier {
       final updatedState = _moduleState!.copyWith(
         consecutiveMonths: _moduleState!.consecutiveMonths + 1,
         disciplinumCount: _moduleState!.disciplinumCount + 1,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -140,7 +139,6 @@ class SpendingGamificationController extends ChangeNotifier {
       // Resetar streak em caso de falha
       final updatedState = _moduleState!.copyWith(
         consecutiveMonths: 0,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -185,14 +183,12 @@ class SpendingGamificationController extends ChangeNotifier {
           earnedMedalhas: const [],
           consecutiveMonths: 0,
           disciplinumCount: 0,
-          lastUpdated: DateTime.now(),
           isActive: true,
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -230,7 +226,6 @@ class SpendingGamificationController extends ChangeNotifier {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: false,
-          lastUpdated: DateTime.now(),
         );
 
         await _repository.saveSpendingState(_moduleState!);

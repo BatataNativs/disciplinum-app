@@ -28,6 +28,8 @@ class MoneySavingModuleState implements ModuleStateContract {
   final DateTime? startDate;
   final bool isActive;
   final String currentStageId;
+  final int gridPercentage;
+  final bool streakBroken;
 
   MoneySavingModuleState({
     DateTime? createdAt,
@@ -42,8 +44,58 @@ class MoneySavingModuleState implements ModuleStateContract {
     this.startDate,
     this.isActive = false,
     this.currentStageId = 'bronze',
+    this.gridPercentage = 0,
+    this.streakBroken = false,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  /// Cria estado inicial padrão
+  factory MoneySavingModuleState.initial() {
+    return MoneySavingModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveDays: 0,
+      disciplinumCount: 0,
+      totalSavedAmount: 0.0,
+      bestStreak: 0,
+      isActive: false,
+      currentStageId: 'bronze',
+      gridPercentage: 0,
+      streakBroken: false,
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
+  /// Getter para isInStreak - true se consecutiveDays > 0
+  bool get isInStreak => consecutiveDays > 0;
+
+  /// Getter para currentStreak - alias para consecutiveDays
+  int get currentStreak => consecutiveDays;
+
+  /// Getter para totalSaved - alias para totalSavedAmount
+  double get totalSaved => totalSavedAmount;
+
+  /// Getter para completedChallenges - retorna disciplinumCount
+  int get completedChallenges => disciplinumCount;
+
+  /// Getter para totalChallenges - alias para disciplinumCount
+  int get totalChallenges => disciplinumCount;
+
+  /// Getter para longestStreak - alias para bestStreak
+  int get longestStreak => bestStreak;
+
+  /// Getter para currentInsignia - retorna primeira insignia ou vazio
+  String get currentInsignia => earnedInsignias.isNotEmpty ? earnedInsignias.first : '';
+
+  /// Getter para gridPercentage
+  int get gridPercentageValue => gridPercentage;
+
+  /// Getter para streakBroken
+  bool get streakBrokenValue => streakBroken;
 
   /// Cria cópia com valores atualizados
   MoneySavingModuleState copyWith({
@@ -57,6 +109,9 @@ class MoneySavingModuleState implements ModuleStateContract {
     DateTime? startDate,
     bool? isActive,
     String? currentStageId,
+    int? gridPercentage,
+    int? completedChallenges,
+    String? currentInsignia,
   }) {
     return MoneySavingModuleState(
       createdAt: createdAt,
@@ -160,6 +215,36 @@ class MoneySavingModuleState implements ModuleStateContract {
           : null,
       isActive: json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
+    );
+  }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory MoneySavingModuleState.fromMap(Map<String, dynamic> map) => MoneySavingModuleState.fromJson(map);
+
+  /// Retorna estatísticas do módulo
+  Map<String, dynamic> getStatistics() {
+    return {
+      'totalChallenges': totalChallenges,
+      'completedChallenges': completedChallenges,
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'totalSaved': totalSaved,
+      'inSignia': currentInsignia,
+      'medalhas': earnedMedalhas,
+    };
+  }
+
+  /// Revoga uma medalha específica
+  MoneySavingModuleState revokeMedalha(String medalhaId) {
+    return copyWith(
+      earnedMedalhas: earnedMedalhas.where((m) => m != medalhaId).toList(),
+    );
+  }
+
+  /// Reseta todas as medalhas
+  MoneySavingModuleState resetMedalhas() {
+    return copyWith(
+      earnedMedalhas: [],
     );
   }
 }

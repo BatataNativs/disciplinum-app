@@ -4,18 +4,19 @@ import 'package:disciplinum/core/gamification/interfaces/module_insignia_interfa
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_insignia.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_insignia_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_medalha_service.dart';
 
 /// Service principal de gamificação do módulo Money Saving Challenge - VERSÃO RIVERPOD
 /// Implementação completa e profissional seguindo Clean Architecture
-class MoneySavingGamificationService extends StateNotifier<MoneySavingModuleState?> implements ModuleGamificationInterface {
+class MoneySavingGamificationService extends StateNotifier<MoneySavingModuleState?>
+    implements ModuleGamificationInterface {
   final MoneySavingGamificationRepository _repository;
   late final MoneySavingInsigniaService _insigniaService;
   late final MoneySavingMedalhaService _medalhaService;
-  
+
   bool _isInitialized = false;
 
   MoneySavingGamificationService(this._repository) : super(null) {

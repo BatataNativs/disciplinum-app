@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_medalha.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 
 /// Service de medalhas do módulo Money Saving Challenge
@@ -65,7 +65,6 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
       final updatedState = _currentState!.copyWith(
         earnedMedalhas: updatedMedalhas,
         disciplinumCount: disciplinumCount,
-        lastUpdated: DateTime.now(),
       );
       
       await updateState(updatedState);
@@ -92,7 +91,6 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
 
     final updatedState = _currentState!.copyWith(
       earnedMedalhas: updatedMedalhas,
-      lastUpdated: DateTime.now(),
     );
 
     await updateState(updatedState);
@@ -119,7 +117,6 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
 
     final updatedState = _currentState!.copyWith(
       earnedMedalhas: updatedMedalhas,
-      lastUpdated: DateTime.now(),
     );
 
     await updateState(updatedState);
@@ -184,7 +181,6 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
     final updatedState = _currentState!.copyWith(
       earnedMedalhas: [],
       disciplinumCount: 0,
-      lastUpdated: DateTime.now(),
     );
 
     await updateState(updatedState);

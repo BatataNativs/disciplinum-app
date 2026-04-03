@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_insignia.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 
 /// Service de insignias do módulo Money Saving Challenge
@@ -64,7 +64,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     if (awardedInsignias.isNotEmpty) {
       final updatedState = _currentState!.copyWith(
         earnedInsignias: updatedInsignias,
-        lastUpdated: DateTime.now(),
       );
       
       await updateState(updatedState);
@@ -91,7 +90,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
 
     final updatedState = _currentState!.copyWith(
       earnedInsignias: updatedInsignias,
-      lastUpdated: DateTime.now(),
     );
 
     await updateState(updatedState);
@@ -118,7 +116,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
 
     final updatedState = _currentState!.copyWith(
       earnedInsignias: updatedInsignias,
-      lastUpdated: DateTime.now(),
     );
 
     await updateState(updatedState);
@@ -197,7 +194,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
       final updatedState = _currentState!.copyWith(
         earnedInsignias: updatedInsignias,
         disciplinumCount: 0,
-        lastUpdated: DateTime.now(),
       );
 
       await updateState(updatedState);

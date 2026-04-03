@@ -94,7 +94,6 @@ class BingeEatingGamificationController extends ChangeNotifier {
       final updatedState = _moduleState!.copyWith(
         consecutivePositiveDays: _moduleState!.consecutivePositiveDays + 1,
         disciplinumCount: _moduleState!.disciplinumCount + 1,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -141,7 +140,6 @@ class BingeEatingGamificationController extends ChangeNotifier {
       // Resetar streak em caso de recaída
       final updatedState = _moduleState!.copyWith(
         consecutivePositiveDays: 0,
-        lastUpdated: DateTime.now(),
       );
 
       // Salvar estado
@@ -183,13 +181,11 @@ class BingeEatingGamificationController extends ChangeNotifier {
         // Criar novo estado
         _moduleState = BingeEatingModuleState(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -227,7 +223,6 @@ class BingeEatingGamificationController extends ChangeNotifier {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: false,
-          lastUpdated: DateTime.now(),
         );
 
         await _repository.saveBingeEatingState(_moduleState!);

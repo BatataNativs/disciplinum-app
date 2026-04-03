@@ -3,7 +3,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_insignia_interfa
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_module_state.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_insignia_service.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_medalha_service.dart';
 
@@ -206,7 +206,6 @@ class DietGamificationService implements ModuleGamificationInterface {
         earnedMedalhas: earnedMedalhas,
         consecutiveDays: _currentState?.consecutiveDays ?? 0,
         disciplinumCount: _currentState?.disciplinumCount ?? 0,
-        lastUpdated: DateTime.now(),
         isActive: earnedInsignias.isNotEmpty,
       );
 

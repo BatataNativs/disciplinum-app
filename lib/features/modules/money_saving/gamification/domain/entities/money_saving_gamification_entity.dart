@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'dart:convert';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 
 part 'money_saving_gamification_entity.g.dart';
 
@@ -62,43 +63,36 @@ class MoneySavingGamificationEntity {
   }) : createdAt = DateTime.now();
 
   /// Converte de MoneySavingModuleState para Isar entity
-  factory MoneySavingGamificationEntity.fromModuleState(
-    String userId, 
-    Map<String, dynamic> moduleState
-  ) {
+  factory MoneySavingGamificationEntity.fromModuleState(MoneySavingModuleState moduleState) {
     return MoneySavingGamificationEntity(
-      userId: userId,
-      earnedInsignias: jsonEncode(moduleState['earnedInsignias'] ?? []),
-      earnedMedalhas: jsonEncode(moduleState['earnedMedalhas'] ?? []),
-      consecutiveDays: moduleState['consecutiveDays'] ?? 0,
-      disciplinumCount: moduleState['disciplinumCount'] ?? 0,
-      totalSavedAmount: (moduleState['totalSavedAmount'] ?? 0.0).toDouble(),
-      bestStreak: moduleState['bestStreak'] ?? 0,
-      lastSavingDate: moduleState['lastSavingDate'] != null 
-          ? DateTime.parse(moduleState['lastSavingDate'])
-          : null,
-      startDate: moduleState['startDate'] != null 
-          ? DateTime.parse(moduleState['startDate'])
-          : null,
-      lastUpdated: DateTime.parse(moduleState['lastUpdated'] ?? DateTime.now().toIso8601String()),
-      isActive: moduleState['isActive'] ?? false,
+      userId: '', // Definido pelo repositório
+      earnedInsignias: jsonEncode(moduleState.earnedInsignias),
+      earnedMedalhas: jsonEncode(moduleState.earnedMedalhas),
+      consecutiveDays: moduleState.consecutiveDays,
+      disciplinumCount: moduleState.disciplinumCount,
+      totalSavedAmount: moduleState.totalSavedAmount,
+      bestStreak: moduleState.bestStreak,
+      lastSavingDate: moduleState.lastSavingDate,
+      startDate: moduleState.startDate,
+      lastUpdated: moduleState.updatedAt,
+      isActive: moduleState.isActive,
     );
   }
 
-  /// Converte para Map (compatível com MoneySavingModuleState)
-  Map<String, dynamic> toModuleStateMap() {
-    return {
-      'earnedInsignias': jsonDecode(earnedInsignias),
-      'earnedMedalhas': jsonDecode(earnedMedalhas),
-      'consecutiveDays': consecutiveDays,
-      'disciplinumCount': disciplinumCount,
-      'totalSavedAmount': totalSavedAmount,
-      'bestStreak': bestStreak,
-      'lastSavingDate': lastSavingDate?.toIso8601String(),
-      'startDate': startDate?.toIso8601String(),
-      'lastUpdated': lastUpdated.toIso8601String(),
-      'isActive': isActive,
-    };
+  /// Converte para MoneySavingModuleState
+  MoneySavingModuleState toModuleState() {
+    return MoneySavingModuleState(
+      earnedInsignias: jsonDecode(earnedInsignias).cast<String>(),
+      earnedMedalhas: jsonDecode(earnedMedalhas).cast<String>(),
+      consecutiveDays: consecutiveDays,
+      disciplinumCount: disciplinumCount,
+      totalSavedAmount: totalSavedAmount,
+      bestStreak: bestStreak,
+      lastSavingDate: lastSavingDate,
+      startDate: startDate,
+      updatedAt: lastUpdated,
+      isActive: isActive,
+    );
   }
 
   /// Cria uma cópia com alguns campos alterados

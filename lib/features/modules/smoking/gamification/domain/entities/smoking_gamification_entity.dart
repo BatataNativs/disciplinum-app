@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'dart:convert';
+import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 
 part 'smoking_gamification_entity.g.dart';
 
@@ -44,10 +45,33 @@ class SmokingGamificationEntity {
   SmokingGamificationEntity();
 
   /// Construtor a partir do SmokingModuleState
-  factory SmokingGamificationEntity.fromModuleState(dynamic moduleState) {
+  factory SmokingGamificationEntity.fromModuleState(SmokingModuleState moduleState) {
     final entity = SmokingGamificationEntity();
-    // Implementação já está sendo feita no repositório
+    entity.earnedInsignias = json.encode(moduleState.earnedInsignias);
+    entity.earnedMedalhas = json.encode(moduleState.earnedMedalhas);
+    entity.consecutivePositiveDays = moduleState.consecutivePositiveDays;
+    entity.disciplinumCount = moduleState.disciplinumCount;
+    entity.lastPositiveCheckIn = moduleState.lastPositiveCheckIn;
+    entity.startDate = moduleState.startDate;
+    entity.dailyCost = moduleState.dailyCost;
+    entity.packCost = moduleState.packCost;
+    entity.updatedAt = moduleState.updatedAt;
     return entity;
+  }
+
+  /// Converte para SmokingModuleState
+  SmokingModuleState toModuleState() {
+    return SmokingModuleState(
+      earnedInsignias: earnedInsigniasList,
+      earnedMedalhas: earnedMedalhasList,
+      consecutivePositiveDays: consecutivePositiveDays,
+      disciplinumCount: disciplinumCount,
+      lastPositiveCheckIn: lastPositiveCheckIn,
+      startDate: startDate,
+      dailyCost: dailyCost,
+      packCost: packCost,
+      updatedAt: updatedAt,
+    );
   }
 
   /// Converte para JSON (para compatibilidade)

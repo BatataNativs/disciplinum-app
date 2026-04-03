@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
@@ -55,10 +55,8 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
 
   Future<void> activateModule() async {
     try {
-      final current = state.moduleState ?? MoneySavingModuleState(
-        lastUpdated: DateTime.now(),
-      );
-      final updated = current.copyWith(isActive: true, lastUpdated: DateTime.now());
+      final current = state.moduleState ?? MoneySavingModuleState();
+      final updated = current.copyWith(isActive: true);
       await _repository.saveMoneySavingState(updated);
       await loadGamification(); // Recarrega para atualizar o estado
     } catch (e) {
@@ -70,7 +68,7 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     try {
       final current = state.moduleState;
       if (current != null) {
-        final updated = current.copyWith(isActive: false, lastUpdated: DateTime.now());
+        final updated = current.copyWith(isActive: false);
         await _repository.saveMoneySavingState(updated);
         await loadGamification(); // Recarrega para atualizar o estado
       }
@@ -81,14 +79,11 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
 
   Future<void> updateStreak(int consecutiveDays) async {
     try {
-      final current = state.moduleState ?? MoneySavingModuleState(
-        lastUpdated: DateTime.now(),
-      );
+      final current = state.moduleState ?? MoneySavingModuleState();
       final updated = current.copyWith(
         consecutiveDays: consecutiveDays,
         bestStreak: consecutiveDays > current.bestStreak ? consecutiveDays : current.bestStreak,
         lastSavingDate: DateTime.now(),
-        lastUpdated: DateTime.now(),
       );
       await _repository.saveMoneySavingState(updated);
       await loadGamification(); // Recarrega para atualizar o estado
@@ -99,13 +94,10 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
 
   Future<void> addSavedAmount(double amount) async {
     try {
-      final current = state.moduleState ?? MoneySavingModuleState(
-        lastUpdated: DateTime.now(),
-      );
+      final current = state.moduleState ?? MoneySavingModuleState();
       final updated = current.copyWith(
         totalSavedAmount: current.totalSavedAmount + amount,
         lastSavingDate: DateTime.now(),
-        lastUpdated: DateTime.now(),
       );
       await _repository.saveMoneySavingState(updated);
       await loadGamification(); // Recarrega para atualizar o estado
@@ -116,15 +108,12 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
 
   Future<void> unlockInsignia(String insigniaId) async {
     try {
-      final current = state.moduleState ?? MoneySavingModuleState(
-        lastUpdated: DateTime.now(),
-      );
+      final current = state.moduleState ?? MoneySavingModuleState();
       final currentInsignias = current.earnedInsignias;
       if (!currentInsignias.contains(insigniaId)) {
         final newInsignias = [...currentInsignias, insigniaId];
         final updated = current.copyWith(
           earnedInsignias: newInsignias,
-          lastUpdated: DateTime.now(),
         );
         await _repository.saveMoneySavingState(updated);
         await loadGamification(); // Recarrega para atualizar o estado
@@ -136,15 +125,12 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
 
   Future<void> unlockMedalha(String medalhaId) async {
     try {
-      final current = state.moduleState ?? MoneySavingModuleState(
-        lastUpdated: DateTime.now(),
-      );
+      final current = state.moduleState ?? MoneySavingModuleState();
       final currentMedalhas = current.earnedMedalhas;
       if (!currentMedalhas.contains(medalhaId)) {
         final newMedalhas = [...currentMedalhas, medalhaId];
         final updated = current.copyWith(
           earnedMedalhas: newMedalhas,
-          lastUpdated: DateTime.now(),
         );
         await _repository.saveMoneySavingState(updated);
         await loadGamification(); // Recarrega para atualizar o estado

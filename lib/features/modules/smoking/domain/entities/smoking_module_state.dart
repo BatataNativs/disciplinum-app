@@ -27,6 +27,8 @@ class SmokingModuleState implements ModuleStateContract {
   final double dailyCost;
   final double packCost;
   final String currentStageId;
+  final Map<String, List<String>> customMessages;
+  final String? customMainMessage;
 
   SmokingModuleState({
     DateTime? createdAt,
@@ -40,8 +42,28 @@ class SmokingModuleState implements ModuleStateContract {
     this.dailyCost = 0.0,
     this.packCost = 0.0,
     this.currentStageId = 'bronze',
+    this.customMessages = const {},
+    this.customMainMessage,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  /// Cria estado inicial padrão
+  factory SmokingModuleState.initial() {
+    return SmokingModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutivePositiveDays: 0,
+      disciplinumCount: 0,
+      dailyCost: 0.0,
+      packCost: 0.0,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
 
   /// Cria cópia com valores atualizados
   SmokingModuleState copyWith({
@@ -54,6 +76,8 @@ class SmokingModuleState implements ModuleStateContract {
     double? dailyCost,
     double? packCost,
     String? currentStageId,
+    Map<String, List<String>>? customMessages,
+    String? customMainMessage,
   }) {
     return SmokingModuleState(
       createdAt: createdAt,
@@ -67,6 +91,8 @@ class SmokingModuleState implements ModuleStateContract {
       dailyCost: dailyCost ?? this.dailyCost,
       packCost: packCost ?? this.packCost,
       currentStageId: currentStageId ?? this.currentStageId,
+      customMessages: customMessages ?? this.customMessages,
+      customMainMessage: customMainMessage ?? this.customMainMessage,
     );
   }
 
@@ -176,5 +202,54 @@ class SmokingModuleState implements ModuleStateContract {
       packCost: (json['pack_cost'] as num?)?.toDouble() ?? 0.0,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
+  }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory SmokingModuleState.fromMap(Map<String, dynamic> map) => SmokingModuleState.fromJson(map);
+
+  /// Verifica se possui uma insignia específica
+  bool hasInsignia(String insigniaId) {
+    return earnedInsignias.contains(insigniaId);
+  }
+
+  /// Concede uma insignia
+  SmokingModuleState awardInsignia(String insigniaId) {
+    if (hasInsignia(insigniaId)) return this;
+    final updatedInsignias = [...earnedInsignias, insigniaId];
+    return copyWith(earnedInsignias: updatedInsignias);
+  }
+
+  /// Revoga uma insignia
+  SmokingModuleState revokeInsignia(String insigniaId) {
+    final updatedInsignias = earnedInsignias.where((id) => id != insigniaId).toList();
+    return copyWith(earnedInsignias: updatedInsignias);
+  }
+
+  /// Reseta todas as insignias
+  SmokingModuleState resetInsignias() {
+    return copyWith(earnedInsignias: []);
+  }
+
+  /// Verifica se possui uma medalha específica
+  bool hasMedalha(String medalhaId) {
+    return earnedMedalhas.contains(medalhaId);
+  }
+
+  /// Concede uma medalha
+  SmokingModuleState awardMedalha(String medalhaId) {
+    if (hasMedalha(medalhaId)) return this;
+    final updatedMedalhas = [...earnedMedalhas, medalhaId];
+    return copyWith(earnedMedalhas: updatedMedalhas);
+  }
+
+  /// Revoga uma medalha
+  SmokingModuleState revokeMedalha(String medalhaId) {
+    final updatedMedalhas = earnedMedalhas.where((id) => id != medalhaId).toList();
+    return copyWith(earnedMedalhas: updatedMedalhas);
+  }
+
+  /// Reseta todas as medalhas
+  SmokingModuleState resetMedalhas() {
+    return copyWith(earnedMedalhas: []);
   }
 }

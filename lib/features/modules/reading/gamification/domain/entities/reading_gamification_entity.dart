@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'dart:convert';
+import 'package:disciplinum/features/modules/reading/domain/entities/reading_module_state.dart';
 
 part 'reading_gamification_entity.g.dart';
 
@@ -86,5 +87,29 @@ class ReadingGamificationEntity {
   set earnedMedalhasList(List<String> medalhas) {
     earnedMedalhas = json.encode(medalhas);
     touch();
+  }
+
+  /// Construtor a partir do ReadingModuleState
+  factory ReadingGamificationEntity.fromModuleState(ReadingModuleState moduleState) {
+    final entity = ReadingGamificationEntity();
+    entity.earnedInsignias = json.encode(moduleState.earnedInsignias);
+    entity.earnedMedalhas = json.encode(moduleState.earnedMedalhas);
+    entity.consecutiveDays = moduleState.consecutiveDays;
+    entity.lastReadingDate = moduleState.lastReadingDate;
+    entity.startDate = moduleState.startDate;
+    entity.updatedAt = moduleState.updatedAt;
+    return entity;
+  }
+
+  /// Converte para ReadingModuleState
+  ReadingModuleState toModuleState() {
+    return ReadingModuleState(
+      earnedInsignias: earnedInsigniasList,
+      earnedMedalhas: earnedMedalhasList,
+      consecutiveDays: consecutiveDays,
+      lastReadingDate: lastReadingDate,
+      startDate: startDate,
+      updatedAt: updatedAt,
+    );
   }
 }

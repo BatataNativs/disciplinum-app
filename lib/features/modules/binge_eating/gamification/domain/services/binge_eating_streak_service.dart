@@ -133,20 +133,17 @@ class BingeEatingStreakService {
     return currentState.copyWith(
       consecutivePositiveDays: newStreak,
       disciplinumCount: newDisciplinumCount,
-      lastUpdated: DateTime.now(),
     );
   }
 
   /// Cria estado inicial do módulo
   static BingeEatingModuleState createInitialState({
-    required DateTime lastUpdated,
     int consecutivePositiveDays = 0,
     DateTime? lastPositiveDay,
     int disciplinumCount = 0,
     bool isActive = false,
   }) {
     return BingeEatingModuleState(
-      lastUpdated: lastUpdated,
       consecutivePositiveDays: consecutivePositiveDays,
       disciplinumCount: disciplinumCount,
       isActive: isActive,

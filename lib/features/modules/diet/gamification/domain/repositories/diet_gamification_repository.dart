@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/supabase_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_module_state.dart';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 
@@ -152,7 +152,6 @@ class DietGamificationRepository {
         earnedMedalhas: [],
         consecutiveDays: 0,
         disciplinumCount: 0,
-        lastUpdated: DateTime.now(),
         isActive: false,
       );
 
@@ -168,7 +167,6 @@ class DietGamificationRepository {
         earnedMedalhas: [],
         consecutiveDays: 0,
         disciplinumCount: 0,
-        lastUpdated: DateTime.now(),
         isActive: false,
       );
     }
@@ -184,7 +182,6 @@ class DietGamificationRepository {
           earnedMedalhas: [], // Remove todas as medalhas
           consecutiveDays: 0,
           disciplinumCount: 0,
-          lastUpdated: DateTime.now(),
           isActive: false,
         );
         

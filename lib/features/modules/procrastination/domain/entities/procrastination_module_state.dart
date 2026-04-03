@@ -41,6 +41,28 @@ class ProcrastinationModuleState implements ModuleStateContract {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Cria estado inicial padrão
+  factory ProcrastinationModuleState.initial() {
+    return ProcrastinationModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveProductiveDays: 0,
+      disciplinumCount: 0,
+      totalTasksCompleted: 0,
+      totalFocusMinutes: 0,
+      isActive: false,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
+  /// Getter para consecutiveDays (alias para consecutiveProductiveDays)
+  int get consecutiveDays => consecutiveProductiveDays;
+
   /// Cria cópia com valores atualizados
   ProcrastinationModuleState copyWith({
     List<String>? earnedInsignias,
@@ -146,4 +168,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory ProcrastinationModuleState.fromMap(Map<String, dynamic> map) => ProcrastinationModuleState.fromJson(map);
 }

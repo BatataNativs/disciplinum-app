@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,8 +17,9 @@ class MoneySavingGamificationRepository {
   Future<void> saveMoneySavingState(MoneySavingModuleState state) async {
     try {
       // Converte para entidade Isar com ID fixo como outros módulos
-      final entity = MoneySavingGamificationEntity.fromModuleState('money_saving_user', state.toJson());
+      final entity = MoneySavingGamificationEntity.fromModuleState(state);
       entity.id = 1; // ID fixo como Smoking e Diet
+      entity.userId = 'money_saving_user';
       
       await IsarService.instance.database.writeTxn(() async {
         await IsarService.instance.moneySavingGamificationStates.put(entity);
@@ -38,9 +39,9 @@ class MoneySavingGamificationRepository {
       final entity = await isar.moneySavingGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
-        final stateMap = entity.toModuleStateMap();
+        final state = entity.toModuleState();
         LoggerService.instance.gamification('Estado Money Saving carregado do Isar');
-        return MoneySavingModuleState.fromJson(stateMap);
+        return state;
       }
       
       LoggerService.instance.gamification('Estado Money Saving não encontrado no Isar');

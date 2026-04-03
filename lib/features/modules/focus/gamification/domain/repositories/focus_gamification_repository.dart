@@ -2,7 +2,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/database/supabase_migration_checker.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório Isar para gamificação do módulo Focus
@@ -20,7 +20,7 @@ class FocusGamificationRepository {
       final entity = FocusGamificationEntity();
       entity.earnedInsigniasList = state.earnedInsignias;
       entity.earnedMedalhasList = state.earnedMedalhas;
-      entity.disciplinumCount = state.respectedPeriods; // Usa respectedPeriods como disciplinumCount
+      entity.disciplinumCount = state.respectedPeriods.length; // Usa length de respectedPeriods como disciplinumCount
       entity.touch();
       
       // Salva no Isar
@@ -107,7 +107,7 @@ class FocusGamificationRepository {
       final entity = FocusGamificationEntity();
       entity.earnedInsigniasList = state.earnedInsignias;
       entity.earnedMedalhasList = state.earnedMedalhas;
-      entity.disciplinumCount = state.respectedPeriods; // Usa respectedPeriods como disciplinumCount
+      entity.disciplinumCount = state.respectedPeriods.length; // Usa length de respectedPeriods como disciplinumCount
       entity.touch();
       
       final supabase = Supabase.instance.client;

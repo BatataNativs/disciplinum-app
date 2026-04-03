@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'dart:convert';
+import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 
 part 'diet_gamification_entity.g.dart';
 
@@ -61,16 +62,21 @@ class DietGamificationEntity {
     );
   }
 
-  /// Converte para Map (compatível com DietModuleState)
+  /// Converte para DietModuleState
+  DietModuleState toModuleState() {
+    return DietModuleState(
+      earnedInsignias: jsonDecode(earnedInsignias).cast<String>(),
+      earnedMedalhas: jsonDecode(earnedMedalhas).cast<String>(),
+      consecutiveDays: consecutiveDays,
+      disciplinumCount: disciplinumCount,
+      updatedAt: lastUpdated,
+      isActive: isActive,
+    );
+  }
+
+  /// Converte para Map (para compatibilidade)
   Map<String, dynamic> toModuleStateMap() {
-    return {
-      'earnedInsignias': jsonDecode(earnedInsignias),
-      'earnedMedalhas': jsonDecode(earnedMedalhas),
-      'consecutiveDays': consecutiveDays,
-      'disciplinumCount': disciplinumCount,
-      'lastUpdated': lastUpdated.toIso8601String(),
-      'isActive': isActive,
-    };
+    return toModuleState().toJson();
   }
 
   /// Cria uma cópia com alguns campos alterados

@@ -1,7 +1,7 @@
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_module_state.dart';
+import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 
 /// Service de insígnias específico do módulo Smoking
@@ -117,7 +117,10 @@ class SmokingInsigniaService implements ModuleInsigniaInterface {
     try {
       _currentState ??= SmokingModuleState();
 
-      _currentState!.consecutivePositiveDays = consecutivePositiveDays;
+      // Usar copyWith para atualizar o campo final
+      _currentState = _currentState!.copyWith(
+        consecutivePositiveDays: consecutivePositiveDays,
+      );
       
       // Verifica por novas insígnias
       final moduleData = {'consecutiveDays': consecutivePositiveDays};

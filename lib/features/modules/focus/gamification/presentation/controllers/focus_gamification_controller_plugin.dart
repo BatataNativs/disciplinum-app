@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -28,7 +28,7 @@ class FocusGamificationController extends ChangeNotifier {
   bool get hasError => _error != null;
   
   // Getters derivados do estado
-  int get currentStreak => _moduleState?.respectedPeriods ?? 0;
+  int get currentStreak => _moduleState?.respectedPeriodsCount ?? 0;
   int get disciplinumCount => _moduleState?.disciplinumCount ?? 0;
   List<String> get earnedInsignias => _moduleState?.earnedInsignias ?? [];
   List<String> get earnedMedalhas => _moduleState?.earnedMedalhas ?? [];
@@ -93,8 +93,7 @@ class FocusGamificationController extends ChangeNotifier {
 
       // Atualizar estado com novo período respeitado
       final updatedState = _moduleState!.copyWith(
-        respectedPeriods: _moduleState!.respectedPeriods + 1,
-        lastUpdated: DateTime.now(),
+        respectedPeriods: [..._moduleState!.respectedPeriods, 'period_${_moduleState!.respectedPeriods.length + 1}'],
       );
 
       // Salvar estado
@@ -140,8 +139,7 @@ class FocusGamificationController extends ChangeNotifier {
 
       // Resetar streak em caso de período quebrado
       final updatedState = _moduleState!.copyWith(
-        respectedPeriods: 0,
-        lastUpdated: DateTime.now(),
+        respectedPeriods: const [],
       );
 
       // Salvar estado
@@ -186,7 +184,6 @@ class FocusGamificationController extends ChangeNotifier {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: true,
-          lastUpdated: DateTime.now(),
         );
       }
 
@@ -224,7 +221,6 @@ class FocusGamificationController extends ChangeNotifier {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
           isActive: false,
-          lastUpdated: DateTime.now(),
         );
 
         await _repository.saveFocusState(_moduleState!);
@@ -259,7 +255,7 @@ class FocusGamificationController extends ChangeNotifier {
         return;
       }
 
-      final resetState = FocusModuleState.reset();
+      final resetState = (_moduleState ?? FocusModuleState.initial()).reset();
       
       await _repository.saveFocusState(resetState);
       _moduleState = resetState;

@@ -4,7 +4,7 @@ import 'package:disciplinum/core/gamification/interfaces/module_medalha_interfac
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart' hide FocusInsignia;
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_module_state.dart';
+import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
@@ -87,21 +87,18 @@ class FocusGamificationService implements ModuleGamificationInterface {
 
   /// Processa período de foco completado
   Future<void> _processFocusPeriodCompleted(Map<String, dynamic> eventData) async {
-    final respectedPeriods = (eventData['respectedPeriods'] ?? 0) as int;
+    final respectedPeriodsCount = (eventData['respectedPeriods'] ?? 0) as int;
     final sessionDuration = (eventData['sessionDuration'] ?? 0) as int;
     
-    final updatedState = FocusModuleState(
-      earnedInsignias: _currentState!.earnedInsignias,
-      earnedMedalhas: _currentState!.earnedMedalhas,
-      respectedPeriods: respectedPeriods,
-      lastUpdated: DateTime.now(),
-      isActive: _currentState!.isActive,
+    final updatedState = _currentState!.copyWith(
+      sessionsCompleted: _currentState!.sessionsCompleted + 1,
+      totalFocusMinutes: _currentState!.totalFocusMinutes + sessionDuration,
     );
     
     await _updateState(updatedState);
     
     // Verifica novas insignias baseadas em períodos respeitados
-    final moduleData = {'respectedPeriods': respectedPeriods, 'sessionDuration': sessionDuration};
+    final moduleData = {'respectedPeriods': respectedPeriodsCount, 'sessionDuration': sessionDuration};
     await _insigniaService.checkForNewInsignias(moduleData);
   }
 
@@ -118,20 +115,16 @@ class FocusGamificationService implements ModuleGamificationInterface {
 
   /// Processa atualização de streak
   Future<void> _processStreakUpdate(Map<String, dynamic> eventData) async {
-    final respectedPeriods = (eventData['respectedPeriods'] ?? 0) as int;
+    final respectedPeriodsCount = (eventData['respectedPeriods'] ?? 0) as int;
     final currentStreak = (eventData['currentStreak'] ?? 0) as int;
     
-    final updatedState = FocusModuleState(
-      earnedInsignias: _currentState!.earnedInsignias,
-      earnedMedalhas: _currentState!.earnedMedalhas,
-      respectedPeriods: respectedPeriods,
-      lastUpdated: DateTime.now(),
-      isActive: _currentState!.isActive,
+    final updatedState = _currentState!.copyWith(
+      currentStreakDays: currentStreak,
     );
     
     await _updateState(updatedState);
     
-    final moduleData = {'respectedPeriods': respectedPeriods, 'currentStreak': currentStreak};
+    final moduleData = {'respectedPeriods': respectedPeriodsCount, 'currentStreak': currentStreak};
     await _insigniaService.checkForNewInsignias(moduleData);
   }
 
@@ -152,7 +145,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
     }
 
     try {
-      final resetState = FocusModuleState.reset();
+      final resetState = _currentState!.reset();
       
       await _updateState(resetState);
       await _insigniaService.resetInsignias();
@@ -199,19 +192,19 @@ class FocusGamificationService implements ModuleGamificationInterface {
 
     try {
       // Notificações de milestones
-      if (_currentState!.respectedPeriods == 1) {
+      if (_currentState!.respectedPeriodsCount == 1) {
         LoggerService.instance.gamification('🎯 Primeiro período de foco concluído! Continue assim!');
       }
       
-      if (_currentState!.respectedPeriods == 7) {
+      if (_currentState!.respectedPeriodsCount == 7) {
         LoggerService.instance.gamification('🏆 7 períodos de foco! Sua disciplina está incrível!');
       }
       
-      if (_currentState!.respectedPeriods == 30) {
+      if (_currentState!.respectedPeriodsCount == 30) {
         LoggerService.instance.gamification('💪 30 períodos! Você é um mestre do foco!');
       }
       
-      if (_currentState!.respectedPeriods == 100) {
+      if (_currentState!.respectedPeriodsCount == 100) {
         LoggerService.instance.gamification('👑 100 períodos! Lenda do foco e produtividade!');
       }
     } catch (e) {
@@ -238,10 +231,10 @@ class FocusGamificationService implements ModuleGamificationInterface {
   @override
   String get moduleName => 'Foco e Produtividade';
   
-  int get respectedPeriods => _currentState?.respectedPeriods ?? 0;
-  int get disciplinumCount => _currentState?.respectedPeriods ?? 0;
+  int get respectedPeriods => _currentState?.respectedPeriodsCount ?? 0;
+  int get disciplinumCount => _currentState?.respectedPeriodsCount ?? 0;
   bool get isActive => _currentState?.isActive ?? false;
-  bool get isInStreak => (_currentState?.respectedPeriods ?? 0) > 0;
+  bool get isInStreak => (_currentState?.respectedPeriodsCount ?? 0) > 0;
 
   FocusInsignia? get currentInsignia {
     final nextId = _currentState?.nextInsignia;
@@ -294,7 +287,6 @@ class FocusGamificationService implements ModuleGamificationInterface {
   double getProgressToNextInsignia() {
     if (!_isInitialized || _currentState == null) return 0.0;
     
-    final respectedPeriods = _currentState!.respectedPeriods;
     final earnedInsignias = _currentState!.earnedInsignias;
     
     // Encontrar próxima insignia não conquistada
@@ -302,7 +294,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
       final insigniaName = insignia.name;
       if (!earnedInsignias.contains(insigniaName)) {
         // Calcular progresso para esta insignia
-        return insignia.calculateProgress(respectedPeriods);
+        return insignia.calculateProgress(_currentState!.respectedPeriodsCount);
       }
     }
     
@@ -336,7 +328,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
 
   Future<int> getRespectedPeriods() async {
     if (!_isInitialized) await initialize();
-    return _currentState?.respectedPeriods ?? 0;
+    return _currentState?.respectedPeriodsCount ?? 0;
   }
 
   Future<void> processRespectedPeriod() async {
@@ -374,7 +366,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
     if (!_isInitialized || _currentState == null) return false;
     
     // Implementar lógica para verificar se pode conceder novo Disciplinum
-    return _currentState!.respectedPeriods >= 30; // Exemplo: 30 períodos para Disciplinum
+    return _currentState!.respectedPeriodsCount >= 30; // Exemplo: 30 períodos para Disciplinum
   }
 
   /// Obtém estatísticas detalhadas
@@ -395,7 +387,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
     return {
       'moduleId': moduleId,
       'moduleName': moduleName,
-      'respectedPeriods': _currentState!.respectedPeriods,
+      'respectedPeriods': _currentState!.respectedPeriodsCount,
       'disciplinumCount': disciplinumCount,
       'earnedInsignias': _currentState!.earnedInsignias,
       'earnedMedalhas': _currentState!.earnedMedalhas,

@@ -27,6 +27,7 @@ class SpendingModuleState implements ModuleStateContract {
   final double monthlyBudget;
   final bool isActive;
   final String currentStageId;
+  final int consecutiveMonths;
 
   SpendingModuleState({
     DateTime? createdAt,
@@ -40,8 +41,29 @@ class SpendingModuleState implements ModuleStateContract {
     this.monthlyBudget = 0.0,
     this.isActive = false,
     this.currentStageId = 'bronze',
+    this.consecutiveMonths = 0,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  /// Cria estado inicial padrão
+  factory SpendingModuleState.initial() {
+    return SpendingModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutiveDays: 0,
+      disciplinumCount: 0,
+      totalMoneySaved: 0.0,
+      totalExpensesAvoided: 0,
+      monthlyBudget: 0.0,
+      isActive: false,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
 
   /// Cria cópia com valores atualizados
   SpendingModuleState copyWith({
@@ -54,6 +76,7 @@ class SpendingModuleState implements ModuleStateContract {
     double? monthlyBudget,
     bool? isActive,
     String? currentStageId,
+    int? consecutiveMonths,
   }) {
     return SpendingModuleState(
       createdAt: createdAt,
@@ -67,6 +90,7 @@ class SpendingModuleState implements ModuleStateContract {
       monthlyBudget: monthlyBudget ?? this.monthlyBudget,
       isActive: isActive ?? this.isActive,
       currentStageId: currentStageId ?? this.currentStageId,
+      consecutiveMonths: consecutiveMonths ?? this.consecutiveMonths,
     );
   }
 
@@ -152,4 +176,7 @@ class SpendingModuleState implements ModuleStateContract {
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory SpendingModuleState.fromMap(Map<String, dynamic> map) => SpendingModuleState.fromJson(map);
 }

@@ -186,7 +186,6 @@ class ProcrastinationGamificationRepository {
       }
       
       return {
-        'consecutiveDays': state.consecutiveDays,
         'disciplinumCount': state.disciplinumCount,
         'earnedInsignias': state.earnedInsignias,
         'earnedMedalhas': state.earnedMedalhas,
@@ -197,7 +196,6 @@ class ProcrastinationGamificationRepository {
     } catch (e) {
       LoggerService.instance.e('Erro ao obter estatísticas Procrastination', error: e);
       return {
-        'consecutiveDays': 0,
         'disciplinumCount': 0,
         'earnedInsignias': [],
         'earnedMedalhas': [],

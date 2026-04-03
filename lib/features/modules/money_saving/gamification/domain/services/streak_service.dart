@@ -1,4 +1,4 @@
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_module_state.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Service especializado em gerenciar streaks de economia do Money Saving
@@ -134,23 +134,19 @@ class MoneySavingStreakService {
       consecutiveDays: newStreak,
       lastSavingDate: newLastSavingDate,
       completedChallenges: newCompletedChallenges,
-      lastUpdated: DateTime.now(),
     );
   }
 
   /// Cria estado inicial do módulo
   static MoneySavingModuleState createInitialState({
-    required DateTime lastUpdated,
     int consecutiveDays = 0,
     DateTime? lastSavingDate,
     int completedChallenges = 0,
     bool isActive = false,
   }) {
     return MoneySavingModuleState(
-      lastUpdated: lastUpdated,
       consecutiveDays: consecutiveDays,
       lastSavingDate: lastSavingDate,
-      completedChallenges: completedChallenges,
       isActive: isActive,
     );
   }

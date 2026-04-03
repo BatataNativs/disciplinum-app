@@ -37,6 +37,23 @@ class BingeEatingModuleState implements ModuleStateContract {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Cria estado inicial padrão
+  factory BingeEatingModuleState.initial() {
+    return BingeEatingModuleState(
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      earnedInsignias: const [],
+      earnedMedalhas: const [],
+      consecutivePositiveDays: 0,
+      disciplinumCount: 0,
+      isActive: false,
+      currentStageId: 'bronze',
+    );
+  }
+
+  /// Alias para updatedAt (compatibilidade)
+  DateTime get lastUpdated => updatedAt;
+
   /// Cria cópia com valores atualizados
   BingeEatingModuleState copyWith({
     List<String>? earnedInsignias,
@@ -133,4 +150,7 @@ class BingeEatingModuleState implements ModuleStateContract {
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }
+
+  /// Factory para criar a partir de Map (alias para fromJson)
+  factory BingeEatingModuleState.fromMap(Map<String, dynamic> map) => BingeEatingModuleState.fromJson(map);
 }

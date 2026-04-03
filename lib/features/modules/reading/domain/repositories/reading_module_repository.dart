@@ -5,6 +5,7 @@ import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_module_state.dart';
+import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Reading implementando ModuleRepositoryContract

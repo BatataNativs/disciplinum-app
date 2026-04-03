@@ -28,6 +28,8 @@
 /// - [ModuleStateValidator] - Validador de conformidade
 /// - [EventEmitterMixin] - Mixin para emissão de eventos
 
+library;
+
 export 'module_state_contract.dart';
 export 'module_event_contract.dart';
 export 'module_repository_contract.dart';
