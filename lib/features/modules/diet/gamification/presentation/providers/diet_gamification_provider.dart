@@ -1,70 +1,46 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_gamification_service.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
+import 'package:disciplinum/features/modules/diet/presentation/notifiers/diet_gamification_notifier.dart';
 
-/// Provider para o serviço de gamificação do Diet
-/// Gerencia o estado e disponibiliza o serviço para a UI
-final dietGamificationProvider = Provider<DietGamificationService>((ref) {
-  return DietGamificationService(
-    ref.read(dietGamificationRepositoryProvider),
-  );
+/// Re-export do provider do notifier (plugin architecture)
+export 'package:disciplinum/features/modules/diet/presentation/notifiers/diet_gamification_notifier.dart'
+    show
+        dietGamificationNotifierProvider,
+        dietGamificationStateProvider,
+        DietGamificationNotifier,
+        DietGamificationState;
+
+/// Provider legado para compatibilidade durante transição
+@Deprecated('Use dietGamificationNotifierProvider em vez deste')
+final dietGamificationProvider = Provider((ref) {
+  return ref.read(dietGamificationNotifierProvider.notifier);
 });
 
-/// Provider para o estado inicializado do Diet
-final dietGamificationInitializedProvider = FutureProvider<bool>((ref) async {
-  final service = ref.read(dietGamificationProvider);
-  try {
-    await service.initialize();
-    return true;
-  } catch (e) {
-    return false;
-  }
-});
-
-/// Provider para o estado atual da gamificação do Diet
-final dietGamificationStateProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final service = ref.read(dietGamificationProvider);
-  return await service.getCurrentState();
-});
-
-/// Provider para as insignias conquistadas do Diet
-final dietInsigniasProvider = FutureProvider<List<String>>((ref) async {
-  final service = ref.read(dietGamificationProvider);
-  return await service.insigniaService.getEarnedInsignias();
-});
-
-/// Provider para as medalhas conquistadas do Diet
-final dietMedalhasProvider = FutureProvider<List<String>>((ref) async {
-  final service = ref.read(dietGamificationProvider);
-  return await service.medalhaService.getEarnedMedalhas();
+/// Provider para o repositório de gamificação do Diet
+final dietGamificationRepositoryProvider = Provider<DietGamificationRepository>((ref) {
+  return DietGamificationRepository.instance;
 });
 
 /// Provider para o streak do Diet
 final dietStreakProvider = Provider<int>((ref) {
-  final service = ref.read(dietGamificationProvider);
-  return service.consecutiveDays;
+  final state = ref.watch(dietGamificationNotifierProvider);
+  return state.currentStreak;
 });
 
 /// Provider para verificar se o módulo está ativo
 final dietActiveProvider = Provider<bool>((ref) {
-  final service = ref.read(dietGamificationProvider);
-  return service.isActive;
+  final state = ref.watch(dietGamificationNotifierProvider);
+  return state.isModuleActive;
 });
 
-/// Provider para o progresso até a próxima insignia
-final dietProgressProvider = Provider<double>((ref) {
-  final service = ref.read(dietGamificationProvider);
-  return service.getProgressToNextInsignia();
+/// Provider para insígnias conquistadas
+final dietInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(dietGamificationNotifierProvider);
+  return state.earnedInsignias;
 });
 
-/// Provider para estatísticas detalhadas
-final dietStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final service = ref.read(dietGamificationProvider);
-  return service.getStatistics();
-});
-
-/// Provider para verificar se está em streak
-final dietInStreakProvider = Provider<bool>((ref) {
-  final service = ref.read(dietGamificationProvider);
-  return service.isInStreak;
+/// Provider para medalhas conquistadas
+final dietMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(dietGamificationNotifierProvider);
+  return state.earnedMedalhas;
 });

@@ -46,7 +46,6 @@ import 'package:disciplinum/features/modules/adult_content/gamification/presenta
 import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/providers/binge_eating_gamification_provider.dart';
 import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/presentation/providers/money_saving_gamification_provider.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_gamification_service.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/presentation/providers/procrastination_gamification_provider.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
 import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
@@ -57,16 +56,10 @@ import 'package:disciplinum/features/modules/diet/presentation/controllers/diet_
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_gamification_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_notification_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_celebration_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 
 /// Provider para IsarService
 final isarServiceProvider = Provider<IsarService>((ref) {
@@ -321,27 +314,6 @@ final smokingCelebrationServiceProvider = Provider<SmokingCelebrationService>((r
   return SmokingCelebrationService.instance;
 });
 
-/// Provider para FocusInsigniaService
-final focusInsigniaServiceProvider = Provider<FocusInsigniaService>((ref) {
-  final focusService = ref.watch(focusServiceProvider);
-  return FocusInsigniaService(focusService);
-});
-
-/// Provider para FocusMedalhaService
-final focusMedalhaServiceProvider = Provider<FocusMedalhaService>((ref) {
-  return FocusMedalhaService();
-});
-
-/// Provider para FocusNotificationService
-final focusNotificationServiceProvider = Provider<FocusNotificationService>((ref) {
-  return FocusNotificationService();
-});
-
-/// Provider para FocusCelebrationService
-final focusCelebrationServiceProvider = Provider<FocusCelebrationService>((ref) {
-  return FocusCelebrationService.instance;
-});
-
 /// Provider para FocusGamificationRepository
 final focusGamificationRepositoryProvider = Provider<FocusGamificationRepository>((ref) {
   return FocusGamificationRepository.instance;
@@ -350,12 +322,6 @@ final focusGamificationRepositoryProvider = Provider<FocusGamificationRepository
 /// Provider para SmokingGamificationRepository
 final smokingGamificationRepositoryProvider = Provider<SmokingGamificationRepository>((ref) {
   return SmokingGamificationRepository.instance;
-});
-
-/// Provider para SmokingGamificationService
-final smokingGamificationServiceProvider = Provider<SmokingGamificationService>((ref) {
-  final repository = ref.watch(smokingGamificationRepositoryProvider);
-  return SmokingGamificationService(repository);
 });
 
 final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
@@ -384,12 +350,6 @@ final readingGamificationRepositoryProvider = Provider<ReadingGamificationReposi
 /// Provider para MoneySavingGamificationRepository
 final moneySavingOperationRepositoryProvider = Provider<MoneySavingGamificationRepository>((ref) {
   return MoneySavingGamificationRepository.instance;
-});
-
-/// Provider para MoneySavingGamificationService
-final moneySavingGamificationServiceProvider = StateNotifierProvider<MoneySavingGamificationService, MoneySavingModuleState?>((ref) {
-  final repository = ref.watch(moneySavingOperationRepositoryProvider);
-  return MoneySavingGamificationService(repository);
 });
 
 /// Provider para verificar se o módulo Focus está ativo
@@ -428,37 +388,37 @@ final activeModulesProvider = Provider<List<NicheId>>((ref) {
 final pendingMedalsProvider = Provider<Future<List<String>>>((ref) async {
   final pendingMedals = <String>[];
   
-  // Adult Content - via controller
+  // Adult Content - via notifier
   try {
-    final adultContentController = ref.watch(adultContentGamificationControllerProvider);
-    pendingMedals.addAll(adultContentController.earnedMedalhas);
+    final adultContentState = ref.watch(adultContentGamificationNotifierProvider);
+    pendingMedals.addAll(adultContentState.earnedMedalhas);
   } catch (_) {}
   
-  // Procrastination - via controller
+  // Procrastination - via notifier
   try {
-    final procrastinationController = ref.watch(procrastinationGamificationControllerProvider);
-    pendingMedals.addAll(procrastinationController.earnedMedalhas);
+    final procrastinationState = ref.watch(procrastinationGamificationNotifierProvider);
+    pendingMedals.addAll(procrastinationState.earnedMedalhas);
   } catch (_) {}
   
-  // Spending - via controller
+  // Spending - via notifier
   try {
-    final spendingController = ref.watch(spendingGamificationControllerProvider);
-    pendingMedals.addAll(spendingController.earnedMedalhas);
+    final spendingState = ref.watch(spendingGamificationNotifierProvider);
+    pendingMedals.addAll(spendingState.earnedMedalhas);
   } catch (_) {}
   
-  // Smoking - via gamification service
+  // Smoking - via notifier
   try {
-    final smokingService = ref.watch(smokingGamificationServiceProvider);
-    final medalhas = await smokingService.medalhaService.getEarnedMedalhas();
-    pendingMedals.addAll(medalhas);
+    final smokingState = ref.watch(smokingGamificationNotifierProvider);
+    pendingMedals.addAll(smokingState.earnedMedalhas);
   } catch (_) {}
   
-  // Money Saving - via gamification service
+  // Money Saving - via notifier
   try {
     final moneyState = ref.watch(moneySavingGamificationStateProvider);
-    final data = moneyState.valueOrNull ?? {};
-    final medalhas = (data['earnedMedalhas'] as List<dynamic>?)?.cast<String>() ?? [];
-    pendingMedals.addAll(medalhas);
+    final state = moneyState.valueOrNull;
+    if (state != null) {
+      pendingMedals.addAll(state.earnedMedalhas);
+    }
   } catch (_) {}
   
   return pendingMedals;

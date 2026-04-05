@@ -1,3 +1,18 @@
+=============================================================================
+DOCUMENTO HISTÓRICO - ANÁLISES E CONVERSAS ANTIGAS COM GPT
+=============================================================================
+Este arquivo contém análises e conversas históricas sobre o projeto Disciplinum.
+NÃO é a documentação oficial atual do projeto.
+
+Para documentação atualizada, consulte:
+- docs/ARCHITECTURE.md
+- docs/IMPLEMENTATION_SUMMARY.md
+- docs/adr/
+
+Data das análises: Março 2026
+Status: Arquivo preservado para histórico
+=============================================================================
+
 https://github.com/BatataNativs/disciplinum-app/tree/disciplinum_0.0.1
 
 Analise pra ver se tem erros de código, se Riverpod, Isar e integração com Supabase está completa em tudo que poderia ter, se tem as migrations necessárias do Supabase, se a gamificação está exatamente como o arquivo "como-deve-ser-a-gamificação.txt" pede.

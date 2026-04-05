@@ -196,7 +196,7 @@ class ProcrastinationService extends ChangeNotifier {
           // Reset de progresso via ProviderContainer (gamificação local)
           try {
             final container = ProviderContainer();
-            final gamification = container.read(procrastinationGamificationControllerProvider);
+            final gamification = container.read(procrastinationGamificationControllerProvider.notifier);
             gamification.resetProgress();
             LoggerService.instance.i('Procrastination: Progresso resetado por dia incompleto');
           } catch (e) {

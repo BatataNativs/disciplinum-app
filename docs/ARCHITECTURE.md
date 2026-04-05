@@ -16,7 +16,20 @@ Disciplinum é um aplicativo de **desenvolvimento pessoal** com **9 módulos ind
 
 ## 🏗️ Arquitetura de Alto Nível
 
-### Paradigma: Modular Monolith com Contratos
+### Paradigma: Modular Monolith com Contratos + Plugin Architecture
+
+O Disciplinum evoluiu para uma arquitetura híbrida:
+
+1. **Camada Base**: Modular Monolith com Contratos (Fases 1-4)
+   - Contratos Dart para consistência estrutural
+   - Sync Service para offline-first
+   - Supabase + Isar para persistência
+
+2. **Camada Plugin**: Arquitetura Plugin Independente (Fases 5-8) ✅ Implementado
+   - Cada módulo é um plugin autônomo
+   - StateNotifier Riverpod puro por módulo
+   - Zero dependências de services globais
+   - Reading e Money Saving 100% plugins
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -34,15 +47,13 @@ Disciplinum é um aplicativo de **desenvolvimento pessoal** com **9 módulos ind
 │  │  └─────────────┘  └──────────────┘  └─────────────┘  │   │
 │  └─────────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐│
-│  │ Smoking │ │  Focus  │ │  Diet   │ │  Money  │ │ Reading ││
-│  │ Module  │ │ Module  │ │ Module  │ │ Saving  │ │ Module  ││
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘│
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
-│  │  Binge  │ │  Adult  │ │Procrast.│ │ Spending│           │
-│  │ Eating  │ │ Content │ │ Module  │ │ Module  │           │
-│  │ Module  │ │ Module  │ │         │ │         │           │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              PLUGINS INDEPENDENTES (2/9) ✅            ││
+│  ├─────────────────────────────────────────────────────────┤│
+│  │  Reading ✅  │  Money Saving ✅  │  BingeEating ⏳    ││
+│  │  Adult ⏳     │  Diet ⏳            │  Procrast. ⏳      ││
+│  │  Smoking ⏳   │  Focus ⏳           │  Spending ⏳       ││
+│  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -231,7 +242,69 @@ final moduleSyncServiceProvider = Provider<ModuleSyncService>((ref) {
 });
 ```
 
-## 🛡️ Segurança
+## � Plugin Architecture (Fases 5-8)
+
+### Status da Migração
+
+| Módulo | Status | Notifier Plugin |
+|--------|--------|----------------|
+| Reading | ✅ Completo | reading_gamification_notifier.dart |
+| Money Saving | ✅ Completo | money_saving_gamification_notifier.dart |
+| BingeEating | ⏳ Pendente | - |
+| Adult Content | ⏳ Pendente | - |
+| Diet | ⏳ Pendente | - |
+| Procrastination | ⏳ Pendente | - |
+| Smoking | ⏳ Pendente | - |
+| Focus | ⏳ Pendente | - |
+| Spending | ⏳ Pendente | - |
+
+**Progresso: 2/9 módulos (22%)**
+
+### Padrão Plugin
+
+Módulos que implementaram a Arquitetura Plugin seguem este padrão:
+
+```dart
+// presentation/notifiers/{module}_gamification_notifier.dart
+class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState> {
+  final String userId;
+  
+  ReadingGamificationNotifier({required this.userId}) : super(
+    ReadingGamificationState.initial(userId: userId)
+  ) {
+    _init();
+  }
+  
+  Future<void> _init() async {
+    await loadGamification();
+  }
+  
+  Future<void> loadGamification() async {
+    // Lógica local, sem dependências globais
+  }
+}
+
+// Provider local - ZERO acoplamento global
+final readingGamificationNotifierProvider = StateNotifierProvider.family<
+  ReadingGamificationNotifier, 
+  ReadingGamificationState, 
+  String
+>((ref, userId) {
+  return ReadingGamificationNotifier(userId: userId);
+});
+```
+
+### Benefícios do Padrão Plugin
+
+- ✅ **Independência Total**: Cada módulo é autônomo
+- ✅ **Zero Acoplamento**: Sem dependências de services globais
+- ✅ **Testabilidade**: Fácil de testar isoladamente
+- ✅ **Manutenibilidade**: Mudanças em um não afetam outros
+- ✅ **Removibilidade**: Pode remover sem quebrar o app
+
+---
+
+## �️ Segurança
 
 ### Autenticação
 
@@ -261,6 +334,19 @@ flutter analyze
 ```
 
 ### Checklist de Conformidade
+
+#### Checklist para Módulos Plugin (Reading, Money Saving) ✅
+
+- [x] Possui `{Module}GamificationNotifier` em `presentation/notifiers/`
+- [x] Notifier estende `StateNotifier` com Riverpod puro
+- [x] Zero dependências de `gamificationServiceProvider` global
+- [x] Provider local com `.family` para userId
+- [x] Repository local Isar puro
+- [x] Entity @collection Isar nativa
+- [x] Métodos `activateModule()` / `deactivateModule()`
+- [x] Persistência de estado em configuração local
+
+#### Checklist para Módulos em Transição (Legacy)
 
 - [ ] Implementa `ModuleStateContract`
 - [ ] Implementa `ModuleRepositoryContract`

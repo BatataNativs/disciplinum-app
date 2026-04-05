@@ -336,7 +336,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
   Future<void> _toggleModule(bool isActive) async {
     // Usar provider local do Procrastination
-    final gamification = ref.read(procrastinationGamificationControllerProvider);
+    final notifier = ref.read(procrastinationGamificationNotifierProvider.notifier);
 
     if (isActive) {
       final confirmed = await AppDialog.showConfirmation(
@@ -352,8 +352,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         if (!mounted) return;
         HapticFeedback.heavyImpact();
 
-        // Desativar via controller local
-        await gamification.deactivateModule();
+        // Desativar via notifier local
+        await notifier.deactivateModule();
 
         setState(() {
           // O estado será atualizado automaticamente pelo gamification.isModuleActive() no build
@@ -390,8 +390,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         nicheId: NicheId.procrastination,
         isActive: true,
       );
-      // Ativar via controller local
-      await gamification.activateModule();
+      // Ativar via notifier local
+      await notifier.activateModule();
 
       if (mounted) {
         SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');

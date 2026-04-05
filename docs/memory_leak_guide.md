@@ -1,5 +1,11 @@
 # 🧠 Guia Completo: Memory Leaks no Flutter/Disciplinum
 
+> **Status do Documento:** Atualizado e Válido  
+> **Última revisão:** 2026-04-04  
+> **Aplicação:** Todos os services e widgets do projeto
+
+---
+
 ## O que é Memory Leak?
 
 Memory Leak é quando o app aloca memória mas **nunca a libera**, causando:

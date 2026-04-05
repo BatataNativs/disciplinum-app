@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/discipline/interfaces/module_discipline_interface.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/presentation/providers/money_saving_gamification_provider.dart';
 
@@ -12,20 +13,20 @@ class GamificationAwardEngine {
   /// Processa eventos de money saving e concede recompensas
   void processMoneySavingEvent(String eventType) async {
     try {
-      final service = _container.read(moneySavingGamificationProvider);
+      // Usar notifier diretamente - sem provider legado
+      final notifier = _container.read(moneySavingGamificationNotifierProvider(_container.read(currentUserIdProvider)).notifier);
       
-      // Usar processModuleEvent que é o método público disponível
       switch (eventType) {
         case 'deposit':
-          await service.processModuleEvent({'type': 'daily_save', 'amount': 10.0});
+          await notifier.addSavedAmount(10.0);
           LoggerService.instance.i('Depósito processado para gamificação');
           break;
         case 'challenge_completed':
-          await service.processModuleEvent({'type': 'goal_completed', 'goalAmount': 100.0});
+          await notifier.completeChallenge('default_challenge', 50.0);
           LoggerService.instance.i('Desafio completado processado');
           break;
         case 'streak_maintained':
-          await service.processModuleEvent({'type': 'streak_update', 'streakDays': 1});
+          // Streak é mantido automaticamente pelo notifier
           LoggerService.instance.i('Streak mantido processado');
           break;
         default:

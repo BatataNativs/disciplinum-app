@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_gamification_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
-import 'package:disciplinum/features/modules/focus/gamification/presentation/providers/focus_gamification_provider.dart';
 
 /// Controller Riverpod para gamificação do Focus
 /// Substitui ChangeNotifier por StateNotifier
@@ -130,9 +129,3 @@ class FocusGamificationState {
     return earnedMedals.contains(medal);
   }
 }
-
-/// Provider para o FocusGamificationController
-final focusGamificationControllerProvider = StateNotifierProvider<FocusGamificationController, FocusGamificationState>((ref) {
-  final service = ref.watch(focusGamificationServiceProvider);
-  return FocusGamificationController(service);
-});

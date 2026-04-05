@@ -30,8 +30,8 @@ dependencies:
   path_provider: ^2.1.4
   
   # Banco de Dados Isar
-  isar: ^3.0.5
-  isar_flutter_libs: ^3.0.5
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
   path: ^1.8.3
   
   # Gerenciamento de Estado

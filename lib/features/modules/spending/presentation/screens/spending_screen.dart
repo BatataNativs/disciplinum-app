@@ -150,9 +150,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       nicheId: NicheId.spending,
       isActive: true,
     );
-    // Ativa o controller local do Spending
-    final controller = ref.read(spendingGamificationControllerProvider);
-    await controller.activateModule();
+    // Ativa o notifier do Spending
+    final notifier = ref.read(spendingGamificationNotifierProvider.notifier);
+    await notifier.activateModule();
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -199,9 +199,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
     HapticFeedback.heavyImpact();
     
-    // Desativa o controller local do Spending
-    final controller = ref.read(spendingGamificationControllerProvider);
-    await controller.deactivateModule();
+    // Desativa o notifier do Spending
+    final notifier = ref.read(spendingGamificationNotifierProvider.notifier);
+    await notifier.deactivateModule();
 
     _resetMedalsForModule(
       notificationTitle: 'Módulo Desativado 🛑',
@@ -237,9 +237,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     String? notificationBody,
     bool deactivate = false,
   }) {
-    // Usar o controller local do Spending em vez do GamificationService global
-    final controller = ref.read(spendingGamificationControllerProvider);
-    controller.resetProgress();
+    // Usar o notifier do Spending
+    final notifier = ref.read(spendingGamificationNotifierProvider.notifier);
+    notifier.resetProgress();
   }
 
   Future<void> _openSelectApps() async {

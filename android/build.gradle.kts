@@ -33,11 +33,19 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
     
-    // Correção robusta para plugins sem namespace (Isar, etc.)
-    plugins.withId("com.android.library") {
-        extensions.configure<com.android.build.gradle.LibraryExtension> {
-            if (namespace == null) {
-                namespace = "fix.${project.name}"
+    // Correção para plugins sem namespace (Isar, etc.) - AGP 8.x requer namespace
+    afterEvaluate {
+        if (plugins.hasPlugin("com.android.library")) {
+            try {
+                val androidExtension = extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)
+                androidExtension?.let { ext ->
+                    if (ext.namespace == null || ext.namespace?.isEmpty() == true) {
+                        ext.namespace = "fix.${project.name}"
+                        println("Fixed namespace for ${project.name}: ${ext.namespace}")
+                    }
+                }
+            } catch (e: Exception) {
+                println("Could not fix namespace for ${project.name}: ${e.message}")
             }
         }
     }

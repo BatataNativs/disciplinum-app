@@ -9,6 +9,7 @@ import 'package:disciplinum/infrastructure/services/gamification_messages.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/providers/module_unlock_providers.dart';
 
 class FrasesMotivacionaisScreen extends ConsumerStatefulWidget {
@@ -31,8 +32,9 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
   }
 
   Future<void> _loadData() async {
-    final smokingGamification = ref.read(smokingGamificationServiceProvider);
-    await smokingGamification.initialize();
+    final smokingNotifier = ref.read(smokingGamificationNotifierProvider.notifier);
+    await smokingNotifier.loadGamification();
+    final gamificationState = ref.read(smokingGamificationNotifierProvider);
     
     final iap = ref.read(iapServiceProvider);
 
@@ -40,8 +42,8 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
     final nicheIdMotivation = _niche.id + 100;
     final serverTimes =
         await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheIdMotivation);
-    // Carrega frases customizadas do serviço local
-    final customPhrases = smokingGamification.getCustomMessages();
+    // Carrega frases customizadas do estado local
+    final customMessages = gamificationState.gamification?.customMessages ?? {};
 
     // Verificar desbloqueio local uma vez para todos os slots
     final localUnlock = await ref.read(moduleUnlockRepositoryProvider).isUnlocked(
@@ -62,7 +64,7 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
           final t = serverTimes[i];
 
           String phraseText;
-          final nichePhrases = customPhrases[_niche.nicheId.id.toString()] ?? [];
+          final nichePhrases = customMessages[_niche.nicheId.id.toString()] ?? [];
           
           if (canCustomize) {
             // Se for Personalização, tenta pegar a frase customizada salva
@@ -93,9 +95,6 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
   }
 
   Future<void> _saveData() async {
-    final smokingGamification = ref.read(smokingGamificationServiceProvider);
-    final iap = ref.read(iapServiceProvider);
-
     setState(() => _isLoading = true);
     final nicheIdMotivation = _niche.id + 100;
 
@@ -113,19 +112,23 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
       );
     }
 
-    // Salva cache de frases no storage local
+    // Salva frases customizadas no estado local
     final phrases = _slots.map((s) => s.text).toList();
-    if (iap.isMotivationPhrasesUnlocked) {
-      await smokingGamification.setCustomMessages(_niche.nicheId.id.toString(), phrases);
-    }
+    
+    // Obtém notifier para salvar mensagens customizadas
+    final smokingNotifier = ref.read(smokingGamificationNotifierProvider.notifier);
+    await smokingNotifier.setCustomMessages(
+      _niche.nicheId.id.toString(), 
+      phrases,
+    );
 
-    // Salva a primeira frase como mensagem principal customizada
+    // Define mensagem principal customizada (primeira frase)
     if (phrases.isNotEmpty) {
-      await smokingGamification.setCustomMessage(_niche.nicheId, phrases.first);
+      await smokingNotifier.setCustomMainMessage(phrases.first);
     }
 
-    // Recarrega sessões de monitoramento (Reagendar notificações)
-    await smokingGamification.reloadMonitoringSession();
+    // Recarrega sessões de monitoramento
+    await smokingNotifier.reloadMonitoringSessions();
 
     if (mounted) {
       setState(() => _isLoading = false);

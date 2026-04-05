@@ -124,6 +124,29 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
   void clearGamification() {
     state = const ReadingGamificationState();
   }
+
+  /// Reseta progresso do módulo preservando insígnia Madeira
+  Future<void> resetProgress(String userId) async {
+    try {
+      // Preserva a insígnia Madeira (incentivo para tentar novamente)
+      final current = state.gamification;
+      final hasMadeira = current?.unlockedAchievements.contains('Madeira') ?? false;
+      
+      // Cria estado inicial preservando Madeira se existia
+      final initialState = ReadingGamificationEntity(userId: userId);
+      initialState.id = 1;
+      if (hasMadeira) {
+        initialState.unlockedAchievements = ['Madeira'];
+      }
+      
+      // Salva estado inicial no repositório
+      await _repository.updateGamification(initialState);
+      
+      await loadGamification();
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
 }
 
 // Providers

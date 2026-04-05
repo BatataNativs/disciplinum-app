@@ -1,4 +1,19 @@
 
+=============================================================================
+DOCUMENTO HISTÓRICO - ANÁLISE INICIAL DO PROJETO
+=============================================================================
+Este arquivo contém uma análise antiga/inicial do projeto Disciplinum.
+NÃO reflete o estado atual do projeto.
+
+Para documentação atualizada, consulte:
+- docs/ARCHITECTURE.md
+- docs/IMPLEMENTATION_SUMMARY.md
+- docs/adr/
+
+Data da análise: Março 2026
+Status: Arquivo preservado para histórico
+=============================================================================
+
 https://github.com/BatataNativs/disciplinum-app/
 
 Você é um desenvolvedor mobile sênior, extremamente experiente em Flutter, Dart e Android como um todo. Aí está meu repositório so app Disciplinum. Analise cuidadosamente todo o projeto, e veja se tem erros de código, práticas ruins, divisão não profissional de responsabilidades, serviços e diretórios, e traga sugestões de correções e modificações para torná-lo profissional, escalável e completo. Seguindo as práticas mais recentes e estáveis atualmente.

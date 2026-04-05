@@ -1,29 +1,46 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_gamification_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
+
+/// Re-export do provider do notifier (plugin architecture)
+export 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart'
+    show
+        smokingGamificationNotifierProvider,
+        smokingGamificationStateProvider,
+        SmokingGamificationNotifier,
+        SmokingGamificationState;
 
 /// Provider para o repositório de gamificação do Smoking
 final smokingGamificationRepositoryProvider = Provider<SmokingGamificationRepository>((ref) {
   return SmokingGamificationRepository.instance;
 });
 
-/// Provider para o serviço de gamificação do Smoking
-final smokingGamificationServiceProvider = Provider<SmokingGamificationService>((ref) {
-  final repository = ref.watch(smokingGamificationRepositoryProvider);
-  return SmokingGamificationService(repository);
-});
-
 /// Provider para o streak do Smoking (dias consecutivos)
-/// Usa consecutivePositiveDays do serviço
 final smokingStreakProvider = Provider<int>((ref) {
-  final service = ref.watch(smokingGamificationServiceProvider);
-  // Inicializa o serviço se necessário
-  service.initialize();
-  return service.consecutivePositiveDays;
+  final state = ref.watch(smokingGamificationNotifierProvider);
+  return state.currentStreak;
 });
 
 /// Provider para verificar se o módulo Smoking está ativo
 final smokingActiveProvider = Provider<bool>((ref) {
-  final service = ref.watch(smokingGamificationServiceProvider);
-  return service.isActive;
+  final state = ref.watch(smokingGamificationNotifierProvider);
+  return state.isModuleActive;
+});
+
+/// Provider para contagem de disciplinum
+final smokingDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(smokingGamificationNotifierProvider);
+  return state.disciplinumCount;
+});
+
+/// Provider para insígnias ganhas
+final smokingEarnedInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(smokingGamificationNotifierProvider);
+  return state.earnedInsignias;
+});
+
+/// Provider para medalhas ganhas
+final smokingEarnedMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(smokingGamificationNotifierProvider);
+  return state.earnedMedalhas;
 });

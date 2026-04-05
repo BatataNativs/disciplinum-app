@@ -1,31 +1,35 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/repositories/spending_gamification_repository.dart';
-import 'package:disciplinum/features/modules/spending/gamification/presentation/controllers/spending_gamification_controller.dart';
-import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/features/modules/spending/presentation/notifiers/spending_gamification_notifier.dart';
+
+/// Re-export do provider do notifier (plugin architecture)
+export 'package:disciplinum/features/modules/spending/presentation/notifiers/spending_gamification_notifier.dart'
+    show
+        spendingGamificationNotifierProvider,
+        spendingGamificationStateProvider,
+        SpendingGamificationNotifier,
+        SpendingGamificationState;
+
+/// Provider legado para controller - redireciona para notifier
+@Deprecated('Use spendingGamificationNotifierProvider em vez deste')
+final spendingGamificationControllerProvider = StateNotifierProvider<SpendingGamificationNotifier, SpendingGamificationState>((ref) {
+  final repository = SpendingGamificationRepository.instance;
+  return SpendingGamificationNotifier(repository);
+});
 
 /// Provider para o repositório de gamificação do Spending
 final spendingGamificationRepositoryProvider = Provider<SpendingGamificationRepository>((ref) {
   return SpendingGamificationRepository.instance;
 });
 
-/// Provider para o controller de gamificação do Spending
-final spendingGamificationControllerProvider = ChangeNotifierProvider<SpendingGamificationController>((ref) {
-  final repository = ref.watch(spendingGamificationRepositoryProvider);
-  final authService = ref.read(authServiceProvider.notifier);
-  return SpendingGamificationController(
-    repository: repository,
-    authService: authService,
-  );
-});
-
-/// Provider para o streak do Spending (meses consecutivos)
+/// Provider para o streak do Spending
 final spendingStreakProvider = Provider<int>((ref) {
-  final controller = ref.watch(spendingGamificationControllerProvider);
-  return controller.currentStreak;
+  final state = ref.watch(spendingGamificationNotifierProvider);
+  return state.currentStreak;
 });
 
-/// Provider para verificar se o módulo Spending está ativo
+/// Provider para verificar se o módulo está ativo
 final spendingActiveProvider = Provider<bool>((ref) {
-  final controller = ref.watch(spendingGamificationControllerProvider);
-  return controller.isActive;
+  final state = ref.watch(spendingGamificationNotifierProvider);
+  return state.isModuleActive;
 });

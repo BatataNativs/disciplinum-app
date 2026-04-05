@@ -19,12 +19,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    // Mudamos de 8.9.1 (instável/bleeding edge) para 8.7.3 (Estável Atual)
-    id("com.android.application") version "8.7.3" apply false
-    // Mudamos o Kotlin para 1.9.24 ou 2.0.21 (que são mais garantidos com Flutter hoje)
-    // Mas se quiser manter 2.1.0, pode tentar, porém 2.0.21 é mais seguro.
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("com.android.application") version "8.11.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
-
 
 include(":app")
