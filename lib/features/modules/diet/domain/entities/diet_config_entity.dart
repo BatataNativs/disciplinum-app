@@ -1,35 +1,26 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'diet_config_entity.g.dart';
-
-@collection
+@Entity()
 class DietConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
-  // Metas nutricionais diárias
   int calories = 2000;
   double proteins = 150.0;
   double carbs = 250.0;
   double fats = 65.0;
   double fiber = 25.0;
-  double water = 2000.0; // ml
-
-  // Configurações
+  double water = 2000.0;
   bool enableNotifications = true;
   int reminderHour = 12;
   int reminderMinute = 0;
-  
-  // Horários das refeições (formato "HH:MM")
   List<String> mealTimes = ['08:00', '12:00', '18:00'];
-  
-  // Estatísticas
   int streakDays = 0;
   DateTime? lastMealDate;
-  double totalWeightLost = 0.0; // kg
-  
+  double totalWeightLost = 0.0;
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 

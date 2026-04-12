@@ -1,27 +1,23 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
 class ReadingRepository {
-  Isar get _isar => IsarService.instance.database;
+  Box<ReadingBookEntity> get _box => ObjectBoxService.instance.store.box<ReadingBookEntity>();
 
   Future<List<ReadingBookEntity>> getBooks(String userId) async {
-    return await _isar.readingBookEntitys.filter().userIdEqualTo(userId).findAll();
+    return _box.query(ReadingBookEntity_.userId.equals(userId)).build().find();
   }
 
   Future<void> saveBook(ReadingBookEntity book) async {
-    await _isar.writeTxn(() async {
-      await _isar.readingBookEntitys.put(book);
-    });
+    _box.put(book);
   }
 
   Future<void> deleteBook(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.readingBookEntitys.delete(id);
-    });
+    _box.remove(id);
   }
 
   Future<ReadingBookEntity?> getBook(int id) async {
-    return await _isar.readingBookEntitys.get(id);
+    return _box.get(id);
   }
 }

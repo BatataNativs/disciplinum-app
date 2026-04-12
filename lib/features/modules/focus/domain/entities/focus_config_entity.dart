@@ -1,25 +1,23 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'focus_config_entity.g.dart';
-
-@collection
+@Entity()
 class FocusConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
   bool isEnabled = false;
   bool enableNotifications = true;
-  int dailyGoalMinutes = 120; // Meta diária em minutos
+  int dailyGoalMinutes = 120;
   int reminderHour = 9;
   int reminderMinute = 0;
   
-  // Estatísticas
   int streakDays = 0;
   DateTime? lastFocusDate;
   int totalFocusMinutes = 0;
-  int longestFocusSession = 0; // Em minutos
+  int longestFocusSession = 0;
   
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
@@ -43,6 +41,7 @@ class FocusConfigEntity {
     DateTime? updatedAt,
   }) {
     final entity = FocusConfigEntity(userId: userId ?? this.userId);
+    entity.id = id;
     entity.isEnabled = isEnabled ?? this.isEnabled;
     entity.enableNotifications = enableNotifications ?? this.enableNotifications;
     entity.dailyGoalMinutes = dailyGoalMinutes ?? this.dailyGoalMinutes;

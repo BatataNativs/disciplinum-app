@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -11,11 +11,12 @@ import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 class SmokingCheckinService {
   static const String _prefsKey = 'smoking_checkin_dates';
   
-  final IsarService _isarService;
+  final Box<DailyCheckin> _box;
   final CloudSyncService _cloudSync;
   final SharedPreferences _prefs;
 
-  SmokingCheckinService(this._isarService, this._cloudSync, this._prefs) {
+  SmokingCheckinService(ObjectBoxService objectBoxService, this._cloudSync, this._prefs)
+      : _box = objectBoxService.store.box<DailyCheckin>() {
     // Tentar migração ao inicializar
     _migrateFromPrefs();
   }
@@ -29,28 +30,25 @@ class SmokingCheckinService {
   Future<void> recordCheckin({DateTime? date}) async {
     final target = date ?? DateTime.now();
     final dateStr = _dateKey(target);
+    final nicheIdDate = '${NicheId.smoking.index}_$dateStr';
 
-    // 1. Persiste localmente no Isar
+    // 1. Persiste localmente no ObjectBox
     try {
-      final existing = await _isarService.dailyCheckins
-          .filter()
-          .nicheIdEqualTo(NicheId.smoking)
-          .dateStrEqualTo(dateStr)
+      final existing = _box.query(DailyCheckin_.nicheIdDate.equals(nicheIdDate))
+          .build()
           .findFirst();
 
       if (existing == null) {
-        await _isarService.database.writeTxn(() async {
-          await _isarService.dailyCheckins.put(
-            DailyCheckin(
-              nicheId: NicheId.smoking,
-              dateStr: dateStr,
-            ),
-          );
-        });
+        _box.put(
+          DailyCheckin.create(
+            nicheId: NicheId.smoking,
+            dateStr: dateStr,
+          ),
+        );
         LoggerService.instance.i('✅ Check-in local registrado para $dateStr (Smoking)');
       }
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar check-in no Isar', error: e);
+      LoggerService.instance.e('Erro ao salvar check-in no ObjectBox', error: e);
     }
 
     // 2. Persiste na nuvem
@@ -61,46 +59,48 @@ class SmokingCheckinService {
   }
 
   /// Carrega todas as datas de check-in.
-  /// Tenta nuvem primeiro, com fallback local (Isar).
+  /// Tenta nuvem primeiro, com fallback local (ObjectBox).
   Future<List<DateTime>> loadCheckins() async {
     // 1. Tentar carregar da nuvem e sincronizar
     try {
       final cloudDatesStr = await _cloudSync.loadDailyCheckins(NicheId.smoking);
       if (cloudDatesStr.isNotEmpty) {
-        await _syncIsarFromCloud(cloudDatesStr);
+        await _syncObjectBoxFromCloud(cloudDatesStr);
         return cloudDatesStr.map((s) => DateTime.parse(s)).toList();
       }
     } catch (e) {
       LoggerService.instance.w('Erro ao carregar check-ins da nuvem', error: e);
     }
 
-    // 2. Fallback: carregar do Isar
+    // 2. Fallback: carregar do ObjectBox
     try {
-      final localCheckins = await _isarService.dailyCheckins
-          .filter()
-          .nicheIdEqualTo(NicheId.smoking)
-          .findAll();
+      final smokingIndex = NicheId.smoking.index;
+      final localCheckins = _box.query(DailyCheckin_.nicheIdIndex.equals(smokingIndex))
+          .build()
+          .find();
       
       return localCheckins.map((c) => DateTime.parse(c.dateStr)).toList();
     } catch (e) {
-      LoggerService.instance.e('Erro ao carregar check-ins do Isar', error: e);
+      LoggerService.instance.e('Erro ao carregar check-ins do ObjectBox', error: e);
       return [];
     }
   }
 
   /// Apaga todos os check-ins do usuário (usado no reset de módulo).
   Future<void> clearAllCheckins() async {
-    // 1. Limpa Isar
+    // 1. Limpa ObjectBox
     try {
-      await _isarService.database.writeTxn(() async {
-        await _isarService.dailyCheckins
-            .filter()
-            .nicheIdEqualTo(NicheId.smoking)
-            .deleteAll();
-      });
+      final smokingIndex = NicheId.smoking.index;
+      final query = _box.query(DailyCheckin_.nicheIdIndex.equals(smokingIndex)).build();
+      final toDelete = query.find();
+      query.close();
+      
+      for (final checkin in toDelete) {
+        _box.remove(checkin.id);
+      }
       LoggerService.instance.i('🗑️ Check-ins locais apagados (Smoking)');
     } catch (e) {
-      LoggerService.instance.e('Erro ao apagar check-ins no Isar', error: e);
+      LoggerService.instance.e('Erro ao apagar check-ins no ObjectBox', error: e);
     }
 
     // 2. Limpa Nuvem
@@ -109,7 +109,7 @@ class SmokingCheckinService {
 
   // --- MÉTODOS DE MANUTENÇÃO ---
 
-  /// Migra dados do SharedPreferences para o Isar (uma única vez)
+  /// Migra dados do SharedPreferences para o ObjectBox (uma única vez)
   Future<void> _migrateFromPrefs() async {
     try {
       if (!_prefs.containsKey(_prefsKey)) return;
@@ -117,27 +117,23 @@ class SmokingCheckinService {
       final stored = _prefs.getStringList(_prefsKey) ?? [];
       if (stored.isEmpty) return;
 
-      LoggerService.instance.i('📦 Iniciando migração de SmokingCheckins para Isar (${stored.length} itens)');
+      LoggerService.instance.i('📦 Iniciando migração de SmokingCheckins para ObjectBox (${stored.length} itens)');
 
-      await _isarService.database.writeTxn(() async {
-        for (final dateStr in stored) {
-          // Verificar se já existe no Isar para evitar duplicatas por causa do rollback/crash
-          final exists = await _isarService.dailyCheckins
-              .filter()
-              .nicheIdEqualTo(NicheId.smoking)
-              .dateStrEqualTo(dateStr)
-              .findFirst();
+      for (final dateStr in stored) {
+        final nicheIdDate = '${NicheId.smoking.index}_$dateStr';
+        final exists = _box.query(DailyCheckin_.nicheIdDate.equals(nicheIdDate))
+            .build()
+            .findFirst();
 
-          if (exists == null) {
-            await _isarService.dailyCheckins.put(
-              DailyCheckin(
-                nicheId: NicheId.smoking,
-                dateStr: dateStr,
-              ),
-            );
-          }
+        if (exists == null) {
+          _box.put(
+            DailyCheckin.create(
+              nicheId: NicheId.smoking,
+              dateStr: dateStr,
+            ),
+          );
         }
-      });
+      }
 
       // Remover do Prefs após migração bem-sucedida
       await _prefs.remove(_prefsKey);
@@ -147,28 +143,25 @@ class SmokingCheckinService {
     }
   }
 
-  Future<void> _syncIsarFromCloud(List<String> cloudDatesStr) async {
+  Future<void> _syncObjectBoxFromCloud(List<String> cloudDatesStr) async {
     try {
-      await _isarService.database.writeTxn(() async {
-        for (final dateStr in cloudDatesStr) {
-          final exists = await _isarService.dailyCheckins
-              .filter()
-              .nicheIdEqualTo(NicheId.smoking)
-              .dateStrEqualTo(dateStr)
-              .findFirst();
+      for (final dateStr in cloudDatesStr) {
+        final nicheIdDate = '${NicheId.smoking.index}_$dateStr';
+        final exists = _box.query(DailyCheckin_.nicheIdDate.equals(nicheIdDate))
+            .build()
+            .findFirst();
 
-          if (exists == null) {
-            await _isarService.dailyCheckins.put(
-              DailyCheckin(
-                nicheId: NicheId.smoking,
-                dateStr: dateStr,
-              ),
-            );
-          }
+        if (exists == null) {
+          _box.put(
+            DailyCheckin.create(
+              nicheId: NicheId.smoking,
+              dateStr: dateStr,
+            ),
+          );
         }
-      });
+      }
     } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar Isar com nuvem', error: e);
+      LoggerService.instance.e('Erro ao sincronizar ObjectBox com nuvem', error: e);
     }
   }
 }

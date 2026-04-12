@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 
 class PreferencesService {
-  final IsarPreferencesRepository _prefsRepo;
+  final ObjectBoxPreferencesRepository _prefsRepo;
 
   PreferencesService(this._prefsRepo);
 

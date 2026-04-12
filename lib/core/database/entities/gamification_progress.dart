@@ -1,42 +1,20 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
-part 'gamification_progress.g.dart';
-
-/// Entidade para armazenar progresso de gamificação no Isar
-@collection
+@Entity()
 class GamificationProgress {
-  /// ID único do registro
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// ID do usuário
   final String userId;
-
-  /// ID do nicho/módulo
   final int nicheId;
-
-  /// Sequência atual de dias ativos
   final int currentStreak;
-
-  /// Maior sequência já alcançada
   final int bestStreak;
-
-  /// Data da última atividade
   final DateTime lastActivityDate;
-
-  /// Conquistas desbloqueadas (JSON array)
   final String? unlockedAchievements;
-
-  /// Medalha atual
   final String? currentMedal;
-
-  /// Data de criação do registro
   final DateTime createdAt;
-
-  /// Data da última atualização
   final DateTime updatedAt;
-
-  /// Dados adicionais em formato JSON
   final String? additionalData;
 
   GamificationProgress({
@@ -52,7 +30,6 @@ class GamificationProgress {
     this.additionalData,
   });
 
-  /// Cria um GamificationProgress a partir do zero
   factory GamificationProgress.create({
     required String userId,
     required int nicheId,
@@ -69,14 +46,11 @@ class GamificationProgress {
     );
   }
 
-  /// Converte para NicheId enum
-  @enumerated
   NicheId get niche => NicheId.values.firstWhere(
         (id) => id.id == nicheId,
         orElse: () => NicheId.reading,
       );
 
-  /// Verifica se é um novo dia (para reset diário)
   bool get isNewDay {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -88,7 +62,6 @@ class GamificationProgress {
     return today.isAfter(lastActivity);
   }
 
-  /// Verifica se a sequência foi quebrada
   bool get isStreakBroken {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
@@ -102,11 +75,9 @@ class GamificationProgress {
       yesterday.month,
       yesterday.day,
     );
-    
     return lastActivity.isBefore(yesterdayDate);
   }
 
-  /// Cria uma cópia com valores atualizados
   GamificationProgress copyWith({
     String? userId,
     int? nicheId,
@@ -133,12 +104,10 @@ class GamificationProgress {
     );
   }
 
-  /// Atualiza a sequência de dias
   GamificationProgress updateStreak() {
     final now = DateTime.now();
     final newStreak = isStreakBroken ? 1 : currentStreak + 1;
     final newBestStreak = newStreak > bestStreak ? newStreak : bestStreak;
-    
     return copyWith(
       currentStreak: newStreak,
       bestStreak: newBestStreak,
@@ -147,57 +116,10 @@ class GamificationProgress {
     );
   }
 
-  /// Atualiza a medalha atual
   GamificationProgress updateMedal(String newMedal) {
     return copyWith(
       currentMedal: newMedal,
       updatedAt: DateTime.now(),
     );
-  }
-
-  @override
-  String toString() {
-    return 'GamificationProgress('
-        'id: $id, '
-        'userId: $userId, '
-        'nicheId: $nicheId, '
-        'currentStreak: $currentStreak, '
-        'bestStreak: $bestStreak, '
-        'lastActivityDate: $lastActivityDate, '
-        'unlockedAchievements: $unlockedAchievements, '
-        'currentMedal: $currentMedal, '
-        'createdAt: $createdAt, '
-        'updatedAt: $updatedAt, '
-        'additionalData: $additionalData)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is GamificationProgress &&
-        other.userId == userId &&
-        other.nicheId == nicheId &&
-        other.currentStreak == currentStreak &&
-        other.bestStreak == bestStreak &&
-        other.lastActivityDate == lastActivityDate &&
-        other.unlockedAchievements == unlockedAchievements &&
-        other.currentMedal == currentMedal &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.additionalData == additionalData;
-  }
-
-  @override
-  int get hashCode {
-    return userId.hashCode ^
-        nicheId.hashCode ^
-        currentStreak.hashCode ^
-        bestStreak.hashCode ^
-        lastActivityDate.hashCode ^
-        unlockedAchievements.hashCode ^
-        currentMedal.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        additionalData.hashCode;
   }
 }

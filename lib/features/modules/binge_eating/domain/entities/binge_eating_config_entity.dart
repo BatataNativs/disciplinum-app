@@ -1,12 +1,11 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'binge_eating_config_entity.g.dart';
-
-@collection
+@Entity()
 class BingeEatingConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
   bool isEnabled = false;
@@ -20,12 +19,11 @@ class BingeEatingConfigEntity {
   int reminderHour = 20;
   int reminderMinute = 0;
   
-  // AppLock Configuration
   bool enableAppLock = false;
-  List<String> monitoredApps = []; // Package names para monitorar
+  List<String> monitoredApps = [];
   bool appLockRequirePassword = false;
   String appLockMessage = "Pare! Você está tentando acessar um app durante seu momento de controle alimentar.";
-  int appLockCooldownMinutes = 5; // Tempo de bloqueio após violação
+  int appLockCooldownMinutes = 5;
   
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();

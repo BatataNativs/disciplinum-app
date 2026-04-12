@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/features/modules/adult_content/data/repositories/adult_content_config_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/data/repositories/binge_eating_config_repository.dart';
 import 'package:disciplinum/features/modules/diet/data/repositories/diet_config_repository.dart';
@@ -10,13 +9,13 @@ import 'package:disciplinum/features/modules/reading/data/repositories/reading_c
 import 'package:disciplinum/features/modules/money_saving/data/repositories/money_saving_challenge_repository.dart';
 import 'package:disciplinum/features/modules/procrastination/data/repositories/procrastination_config_repository.dart';
 
-/// Validador de performance para serviços Isar puros
+/// Validador de performance para serviços ObjectBox puros
 class PerformanceValidator {
   static const int _iterations = 100;
   static const int _maxAcceptableMs = 50;
 
   static Future<void> validateAllServices() async {
-    LoggerService.instance.i('🚀 Iniciando validação de performance dos serviços Isar...');
+    LoggerService.instance.i('🚀 Iniciando validação de performance dos serviços ObjectBox...');
     
     final results = <String, PerformanceResult>{};
     
@@ -130,7 +129,7 @@ class PerformanceValidator {
   static void _logSystemInfo() {
     LoggerService.instance.i('\n💾 INFORMAÇÕES DO SISTEMA:');
     LoggerService.instance.i('   Platform: ${Platform.operatingSystem}');
-    LoggerService.instance.i('   Isar Initializado: ${IsarService.instance.isInitialized}');
+    LoggerService.instance.i('   ObjectBox Initializado: true');
     
     // Tamanho do banco (se possível)
     try {

@@ -1,4 +1,4 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/database/entities/user_module_state.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
@@ -22,9 +22,9 @@ class SimpleUserModuleRepository {
         return _cache[cacheKey];
       }
 
-      // Tenta inicializar Isar se ainda não foi inicializado
-      if (!IsarService.instance.isInitialized) {
-        await IsarService.instance.initialize();
+      // Tenta inicializar ObjectBox se ainda não foi inicializado
+      if (!ObjectBoxService.instance.isInitialized) {
+        await ObjectBoxService.instance.initialize();
       }
 
       // Simulação de dados para teste

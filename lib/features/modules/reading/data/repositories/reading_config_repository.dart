@@ -1,25 +1,23 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_config_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repositório específico para configurações de Reading usando Isar puro
+/// Repositório específico para configurações de Reading usando ObjectBox
 class ReadingConfigRepository {
   static ReadingConfigRepository? _instance;
   static ReadingConfigRepository get instance => _instance ??= ReadingConfigRepository._internal();
   
   ReadingConfigRepository._internal();
 
+  Box<ReadingConfigEntity> get _box => ObjectBoxService.instance.store.box<ReadingConfigEntity>();
+
   Future<ReadingConfigEntity?> getConfig() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
       
-      return await isar.readingConfigEntitys
-          .filter()
-          .userIdEqualTo(userId)
-          .findFirst();
+      return _box.query(ReadingConfigEntity_.userId.equals(userId)).build().findFirst();
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar configuração do Reading', error: e);
       return null;
@@ -28,62 +26,40 @@ class ReadingConfigRepository {
 
   Future<void> saveConfig(ReadingConfigEntity config) async {
     try {
-      final isar = IsarService.instance.database;
+      // Verificar se já existe uma configuração com o mesmo userId
+      final existingConfig = _box.query(ReadingConfigEntity_.userId.equals(config.userId)).build().findFirst();
       
-      await isar.writeTxn(() async {
-        // Verificar se já existe uma configuração com o mesmo userId
-        final existingConfig = await isar.readingConfigEntitys
-            .filter()
-            .userIdEqualTo(config.userId)
-            .findFirst();
-        
-        if (existingConfig != null) {
-          // Reutilizar o ID interno do Isar para atualizar em vez de criar nova
-          config.id = existingConfig.id;
-        }
-        
-        config.touch();
-        await isar.readingConfigEntitys.put(config);
-      });
+      if (existingConfig != null) {
+        config.id = existingConfig.id;
+      }
       
-      LoggerService.instance.i('Configuração do Reading salva com sucesso');
+      _box.put(config);
+      LoggerService.instance.i('Configuração do Reading salva');
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Reading', error: e);
       rethrow;
     }
   }
 
-  Future<void> deleteConfig() async {
+  Future<void> deleteConfig(String userId) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.readingConfigEntitys
-            .filter()
-            .userIdEqualTo(userId)
-            .deleteAll();
-      });
-      
-      LoggerService.instance.i('Configuração do Reading removida com sucesso');
+      final existing = _box.query(ReadingConfigEntity_.userId.equals(userId)).build().findFirst();
+      if (existing != null) {
+        _box.remove(existing.id);
+        LoggerService.instance.i('Configuração do Reading deletada');
+      }
     } catch (e) {
-      LoggerService.instance.e('Erro ao remover configuração do Reading', error: e);
+      LoggerService.instance.e('Erro ao deletar configuração do Reading', error: e);
       rethrow;
     }
   }
 
-  Future<void> clearAll() async {
+  Future<List<ReadingConfigEntity>> getAllConfigs() async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.readingConfigEntitys.clear();
-      });
-      
-      LoggerService.instance.i('Todas as configurações do Reading foram limpas');
+      return _box.getAll();
     } catch (e) {
-      LoggerService.instance.e('Erro ao limpar configurações do Reading', error: e);
-      rethrow;
+      LoggerService.instance.e('Erro ao carregar todas as configurações do Reading', error: e);
+      return [];
     }
   }
 

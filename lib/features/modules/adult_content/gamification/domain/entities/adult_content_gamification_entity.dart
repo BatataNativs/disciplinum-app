@@ -1,24 +1,20 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 
-part 'adult_content_gamification_entity.g.dart';
-
-/// Entidade Isar para persistência do estado de gamificação do Adult Content
-@Collection()
+@Entity()
 class AdultContentGamificationEntity {
-  final Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
   
-  @Index()
-  final String userId;
-  
-  final List<String> earnedInsignias;
-  final List<String> earnedMedalhas;
-  final int consecutiveDays;
-  final int disciplinumCount;
-  final DateTime lastUpdated;
-  final bool isActive;
+  String userId;
+  List<String> earnedInsignias;
+  List<String> earnedMedalhas;
+  int consecutiveDays;
+  int disciplinumCount;
+  DateTime lastUpdated;
+  bool isActive;
 
-  const AdultContentGamificationEntity({
+  AdultContentGamificationEntity({
     required this.userId,
     this.earnedInsignias = const [],
     this.earnedMedalhas = const [],
@@ -28,7 +24,6 @@ class AdultContentGamificationEntity {
     this.isActive = true,
   });
 
-  /// Converte de ModuleState para Entity
   factory AdultContentGamificationEntity.fromModuleState(
     String userId,
     AdultContentModuleState state,
@@ -44,7 +39,6 @@ class AdultContentGamificationEntity {
     );
   }
 
-  /// Converte de Entity para ModuleState
   AdultContentModuleState toModuleState() {
     return AdultContentModuleState(
       earnedInsignias: earnedInsignias,
@@ -56,12 +50,10 @@ class AdultContentGamificationEntity {
     );
   }
 
-  /// Converte para Map (para persistência)
   Map<String, dynamic> toModuleStateMap() {
     return toModuleState().toJson();
   }
 
-  /// Converte para JSON (para Supabase)
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -74,7 +66,6 @@ class AdultContentGamificationEntity {
     };
   }
 
-  /// Cria a partir de JSON (do Supabase)
   factory AdultContentGamificationEntity.fromJson(Map<String, dynamic> json) {
     return AdultContentGamificationEntity(
       userId: json['user_id'],

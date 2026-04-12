@@ -1,37 +1,36 @@
 import 'dart:convert';
+
 import 'package:disciplinum/core/database/entities/app_preference.dart';
-import 'package:isar/isar.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
-/// Repositório para gerenciar preferências do app usando Isar
-/// Substituto moderno para o SharedPreferences
-class IsarPreferencesRepository {
-  final Isar _isar;
+/// Repositório para gerenciar preferências do app usando ObjectBox
+/// Substituto moderno para o SharedPreferences e IsarPreferencesRepository
+class ObjectBoxPreferencesRepository {
+  final Store _store;
 
-  IsarPreferencesRepository(this._isar);
+  ObjectBoxPreferencesRepository(this._store);
 
-  IsarCollection<AppPreference> get _collection => _isar.appPreferences;
+  Box<AppPreference> get _box => _store.box<AppPreference>();
 
   Future<void> setString(String key, String value) async {
-    await _isar.writeTxn(() async {
-      final existing = await _collection.filter().keyEqualTo(key).findFirst();
-      if (existing != null) {
-        existing.value = value;
-        await _collection.put(existing);
-      } else {
-        await _collection.put(AppPreference(key: key, value: value));
-      }
-    });
+    final existing = _box.query(AppPreference_.key.equals(key)).build().findFirst();
+    if (existing != null) {
+      existing.value = value;
+      _box.put(existing);
+    } else {
+      _box.put(AppPreference(key: key, value: value));
+    }
   }
 
   Future<String?> getString(String key) async {
-    final pref = await _collection.filter().keyEqualTo(key).findFirst();
+    final pref = _box.query(AppPreference_.key.equals(key)).build().findFirst();
     return pref?.value;
   }
 
   Future<void> deleteByKey(String key) async {
-    final existing = await _collection.filter().keyEqualTo(key).findFirst();
+    final existing = _box.query(AppPreference_.key.equals(key)).build().findFirst();
     if (existing != null) {
-      await _collection.delete(existing.id);
+      _box.remove(existing.id);
     }
   }
 
@@ -70,19 +69,18 @@ class IsarPreferencesRepository {
   }
 
   Future<void> remove(String key) async {
-    await _isar.writeTxn(() async {
-      await _collection.filter().keyEqualTo(key).deleteFirst();
-    });
+    final existing = _box.query(AppPreference_.key.equals(key)).build().findFirst();
+    if (existing != null) {
+      _box.remove(existing.id);
+    }
   }
 
   Future<void> clear() async {
-    await _isar.writeTxn(() async {
-      await _collection.clear();
-    });
+    _box.removeAll();
   }
 
   Future<Set<String>> getKeys() async {
-    final preferences = await _collection.where().findAll();
+    final preferences = _box.getAll();
     return preferences.map((p) => p.key).toSet();
   }
 }

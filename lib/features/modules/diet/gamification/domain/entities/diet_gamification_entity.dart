@@ -1,39 +1,19 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'dart:convert';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 
-part 'diet_gamification_entity.g.dart';
-
-/// Entidade Isar para gamificação do módulo Dieta
-/// Armazena estado completo de gamificação com persistência local
-@collection
+@Entity()
 class DietGamificationEntity {
-  /// ID único do registro
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// ID do usuário dono deste estado
-  @Index()
   String userId = '';
-
-  /// Lista de insígnias conquistadas (JSON)
   String earnedInsignias = '[]';
-
-  /// Lista de medalhas conquistadas (JSON)
   String earnedMedalhas = '[]';
-
-  /// Dias consecutivos de acompanhamento
   int consecutiveDays = 0;
-
-  /// Contador de insígnias Disciplinum conquistadas
   int disciplinumCount = 0;
-
-  /// Data da última atualização
   DateTime lastUpdated = DateTime.now();
-
-  /// Indica se o módulo está ativo
   bool isActive = false;
-
-  /// Data de criação do registro
   DateTime createdAt = DateTime.now();
 
   DietGamificationEntity({

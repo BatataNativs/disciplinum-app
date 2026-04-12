@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
-import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Money Saving implementando ModuleRepositoryContract
@@ -14,6 +15,8 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
   static MoneySavingModuleRepository get instance => _instance ??= MoneySavingModuleRepository._();
   
   MoneySavingModuleRepository._();
+
+  Box<MoneySavingGamificationEntity> get _box => ObjectBoxService.instance.store.box<MoneySavingGamificationEntity>();
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -50,11 +53,8 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
       _setStatus(RepositoryStatus.busy);
       
       final entity = MoneySavingGamificationEntity.fromModuleState(state);
-
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.moneySavingGamificationEntitys.put(entity);
-      });
+      entity.id = 1;
+      _box.put(entity);
 
       LoggerService.instance.gamification('✅ MoneySavingModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -75,9 +75,8 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
     try {
       _setStatus(RepositoryStatus.busy);
       
-      final isar = IsarService.instance.database;
       // Usar ID fixo (1) como padrão do projeto, igual ao Reading
-      final entity = await isar.moneySavingGamificationEntitys.get(1);
+      final entity = _box.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -99,8 +98,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.moneySavingGamificationEntitys.count();
+      final count = _box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,11 +109,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        // Limpar todas as entidades (padrão igual ao Reading)
-        await isar.moneySavingGamificationEntitys.clear();
-      });
+      _box.removeAll();
       LoggerService.instance.gamification('🗑️ MoneySavingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -132,8 +126,7 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
   @override
   Future<List<MoneySavingModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.moneySavingGamificationEntitys.where().findAll();
+      final entities = _box.getAll();
       return entities.map((e) => e.toModuleState()).toList();
     } catch (e) {
       return [];

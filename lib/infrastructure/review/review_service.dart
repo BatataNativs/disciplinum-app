@@ -1,6 +1,6 @@
 import 'package:in_app_review/in_app_review.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 
 class ReviewService {
   static const String _kPrefsDaysKey = 'review_days_count';
@@ -12,7 +12,7 @@ class ReviewService {
     final InAppReview inAppReview = InAppReview.instance;
 
     if (await inAppReview.isAvailable()) {
-      final prefs = IsarPreferencesRepository(IsarService.instance.database);
+      final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
 
       // Se já mostrou, não incomoda mais (ou implemente lógica para pedir novamente meses depois)
       final bool alreadyShown = await prefs.getBool(_kPrefsReviewDoneKey) ?? false;

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -21,13 +21,13 @@ import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.d
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 
 class AppMonitoringService {
-  late final IsarPreferencesRepository _prefsRepo;
+  late final ObjectBoxPreferencesRepository _prefsRepo;
   IapService? _iapService;
   final SessionPersistenceService _sessionPersistence;
   final FocusService? _focusService;
 
   AppMonitoringService(
-    IsarPreferencesRepository prefsRepo,
+    ObjectBoxPreferencesRepository prefsRepo,
     this._sessionPersistence, {
     IapService? iapService,
     FocusService? focusService,

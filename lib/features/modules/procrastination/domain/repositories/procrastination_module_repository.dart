@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
-import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Procrastination implementando ModuleRepositoryContract
@@ -14,6 +15,8 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
   static ProcrastinationModuleRepository get instance => _instance ??= ProcrastinationModuleRepository._();
   
   ProcrastinationModuleRepository._();
+
+  Box<ProcrastinationGamificationEntity> get _box => ObjectBoxService.instance.store.box<ProcrastinationGamificationEntity>();
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -50,11 +53,8 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
       _setStatus(RepositoryStatus.busy);
       
       final entity = ProcrastinationGamificationEntity.fromModuleState('', state);
-
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.procrastinationGamificationEntitys.put(entity);
-      });
+      entity.id = 1;
+      _box.put(entity);
 
       LoggerService.instance.gamification('✅ ProcrastinationModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -75,9 +75,8 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
     try {
       _setStatus(RepositoryStatus.busy);
       
-      final isar = IsarService.instance.database;
       // Usar ID fixo (1) como padrão do projeto, igual ao Reading
-      final entity = await isar.procrastinationGamificationEntitys.get(1);
+      final entity = _box.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -99,8 +98,7 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.procrastinationGamificationEntitys.count();
+      final count = _box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,11 +109,7 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        // Limpar todas as entidades (padrão igual ao Reading)
-        await isar.procrastinationGamificationEntitys.clear();
-      });
+      _box.removeAll();
       LoggerService.instance.gamification('🗑️ ProcrastinationModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -132,8 +126,7 @@ class ProcrastinationModuleRepository implements ModuleRepositoryContract<Procra
   @override
   Future<List<ProcrastinationModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.procrastinationGamificationEntitys.where().findAll();
+      final entities = _box.getAll();
       return entities.map((e) => e.toModuleState()).toList();
     } catch (e) {
       return [];

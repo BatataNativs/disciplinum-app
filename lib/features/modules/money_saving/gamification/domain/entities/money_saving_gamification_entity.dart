@@ -1,51 +1,23 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'dart:convert';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 
-part 'money_saving_gamification_entity.g.dart';
-
-/// Entidade Isar para gamificação do módulo Money Saving Challenge
-/// Armazena estado completo de gamificação com persistência local
-@collection
+@Entity()
 class MoneySavingGamificationEntity {
-  /// ID único do registro
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// ID do usuário dono deste estado
-  @Index()
   String userId = '';
-
-  /// Lista de insígnias conquistadas (JSON)
   String earnedInsignias = '[]';
-
-  /// Lista de medalhas conquistadas (JSON)
   String earnedMedalhas = '[]';
-
-  /// Dias consecutivos economizando
   int consecutiveDays = 0;
-
-  /// Contador de insígnias Disciplinum conquistadas
   int disciplinumCount = 0;
-
-  /// Valor total acumulado
   double totalSavedAmount = 0.0;
-
-  /// Maior sequência já alcançada
   int bestStreak = 0;
-
-  /// Data da última economia
   DateTime? lastSavingDate;
-
-  /// Data de início do desafio
   DateTime? startDate;
-
-  /// Data da última atualização
   DateTime lastUpdated = DateTime.now();
-
-  /// Indica se o módulo está ativo
   bool isActive = false;
-
-  /// Data de criação do registro
   DateTime createdAt = DateTime.now();
 
   MoneySavingGamificationEntity({

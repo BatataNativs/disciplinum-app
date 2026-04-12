@@ -1,24 +1,20 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 
-part 'binge_eating_gamification_entity.g.dart';
-
-/// Entidade Isar para persistência do estado de gamificação do Binge Eating
-@Collection()
+@Entity()
 class BingeEatingGamificationEntity {
-  final Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
   
-  @Index()
-  final String userId;
-  
-  final List<String> earnedInsignias;
-  final List<String> earnedMedalhas;
-  final int consecutivePositiveDays;
-  final int disciplinumCount;
-  final DateTime lastUpdated;
-  final bool isActive;
+  String userId;
+  List<String> earnedInsignias;
+  List<String> earnedMedalhas;
+  int consecutivePositiveDays;
+  int disciplinumCount;
+  DateTime lastUpdated;
+  bool isActive;
 
-  const BingeEatingGamificationEntity({
+  BingeEatingGamificationEntity({
     required this.userId,
     this.earnedInsignias = const [],
     this.earnedMedalhas = const [],
@@ -28,7 +24,6 @@ class BingeEatingGamificationEntity {
     this.isActive = true,
   });
 
-  /// Converte de ModuleState para Entity
   factory BingeEatingGamificationEntity.fromModuleState(
     String userId,
     BingeEatingModuleState state,
@@ -44,7 +39,6 @@ class BingeEatingGamificationEntity {
     );
   }
 
-  /// Converte de Entity para ModuleState
   BingeEatingModuleState toModuleState() {
     return BingeEatingModuleState(
       earnedInsignias: earnedInsignias,
@@ -56,12 +50,6 @@ class BingeEatingGamificationEntity {
     );
   }
 
-  /// Converte para Map (para persistência)
-  Map<String, dynamic> toModuleStateMap() {
-    return toModuleState().toJson();
-  }
-
-  /// Converte para JSON (para Supabase)
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -74,7 +62,6 @@ class BingeEatingGamificationEntity {
     };
   }
 
-  /// Cria a partir de JSON (do Supabase)
   factory BingeEatingGamificationEntity.fromJson(Map<String, dynamic> json) {
     return BingeEatingGamificationEntity(
       userId: json['user_id'],
@@ -87,16 +74,14 @@ class BingeEatingGamificationEntity {
     );
   }
 
-  /// Cria um estado padrão para novos usuários
   factory BingeEatingGamificationEntity.defaultState(String userId) {
     return BingeEatingGamificationEntity(
       userId: userId,
       lastUpdated: DateTime.now(),
-      isActive: false, // Inativo até configurar
+      isActive: false,
     );
   }
 
-  /// Reseta o progresso (mantém apenas madeira se ativo)
   BingeEatingGamificationEntity resetProgress() {
     return BingeEatingGamificationEntity(
       userId: userId,
@@ -109,7 +94,6 @@ class BingeEatingGamificationEntity {
     );
   }
 
-  /// Verifica se o estado está desatualizado (mais de 24 horas)
   bool get isStale {
     return DateTime.now().difference(lastUpdated).inHours > 24;
   }

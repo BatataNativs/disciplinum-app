@@ -287,7 +287,8 @@ class ReadingServiceIsar {
 
   Future<void> clearAllData() async {
     try {
-      await _repository.clearAll();
+      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      await _repository.deleteConfig(userId);
       LoggerService.instance.i('Todos os dados do Reading foram limpos');
     } catch (e) {
       LoggerService.instance.e('Erro ao limpar dados do Reading', error: e);

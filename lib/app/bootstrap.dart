@@ -4,7 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:disciplinum/core/storage/local_storage_service.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/app/startup_data.dart';
@@ -36,13 +37,13 @@ class AppBootstrap {
       // Inicializar serviços que dependem de outros (sequencial)
       await _initServices();  // Inicializa Isar
       
-      // Inicializar serviços que dependem do Isar
+      // Inicializar serviços que dependem do ObjectBox
       await _initNotifications();
       await _initStorage();
 
       // Usar LocalStorageService em vez de SharedPreferences diretos
-      final storageService = LocalStorageService.instance;
-      final seenOnboarding = await storageService.get<bool>('seen_onboarding') ?? false;
+      final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
+      final seenOnboarding = await prefs.getBool('seen_onboarding') ?? false;
 
       _isInitialized = true;
 
@@ -125,8 +126,8 @@ class AppBootstrap {
   /// Inicializa os serviços principais
   static Future<void> _initServices() async {
     try {
-      // ✅ Inicializar Isar primeiro (dependência para SessionPersistenceService)
-      await IsarService.instance.initialize();
+      // ✅ Inicializar ObjectBox primeiro (dependência para SessionPersistenceService)
+      await ObjectBoxService.instance.initialize();
       
       // SessionPersistenceService agora é injetado via Riverpod
       

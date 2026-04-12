@@ -1,12 +1,11 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'adult_content_config_entity.g.dart';
-
-@collection
+@Entity()
 class AdultContentConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
   bool isEnabled = false;
@@ -15,12 +14,11 @@ class AdultContentConfigEntity {
   int dailyLimitMinutes = 60;
   bool requirePassword = false;
   
-  // AppLock Configuration
   bool enableAppLock = false;
-  List<String> monitoredApps = []; // Package names para monitorar
+  List<String> monitoredApps = [];
   bool appLockRequirePassword = false;
   String appLockMessage = "Pare! Você está tentando acessar conteúdo adulto durante seu período de controle.";
-  int appLockCooldownMinutes = 10; // Tempo mais longo para conteúdo adulto
+  int appLockCooldownMinutes = 10;
   
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();

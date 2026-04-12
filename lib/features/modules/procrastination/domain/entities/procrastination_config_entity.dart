@@ -1,12 +1,11 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'procrastination_config_entity.g.dart';
-
-@collection
+@Entity()
 class ProcrastinationConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
   bool isEnabled = false;
@@ -15,13 +14,11 @@ class ProcrastinationConfigEntity {
   int reminderHour = 9;
   int reminderMinute = 0;
   
-  // Estatísticas
   int streakDays = 0;
   DateTime? lastFocusDate;
   int totalFocusMinutes = 0;
   int longestFocusSession = 0;
   
-  // Configurações de bloqueio
   bool enableAppBlocking = false;
   List<String> blockedApps = [];
   int blockDurationMinutes = 30;

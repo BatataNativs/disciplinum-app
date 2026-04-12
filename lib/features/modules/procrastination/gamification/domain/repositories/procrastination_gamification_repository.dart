@@ -1,4 +1,6 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
@@ -6,45 +8,50 @@ import 'package:disciplinum/features/modules/procrastination/gamification/domain
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Procrastination
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class ProcrastinationGamificationRepository {
   static ProcrastinationGamificationRepository? _instance;
   static ProcrastinationGamificationRepository get instance => _instance ??= ProcrastinationGamificationRepository._();
   
   ProcrastinationGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<ProcrastinationGamificationEntity> get _box => ObjectBoxService.instance.store.box<ProcrastinationGamificationEntity>();
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveProcrastinationState(ProcrastinationModuleState state) async {
     try {
       final entity = ProcrastinationGamificationEntity.fromModuleState('procrastination_user', state);
       
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.procrastinationGamificationStates.put(entity);
-      });
+      final existingEntity = _box.get(1);
+      if (existingEntity != null) {
+        entity.id = existingEntity.id;
+      } else {
+        entity.id = 1;
+      }
       
-      LoggerService.instance.gamification('Estado Procrastination salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Procrastination com Isar', error: e);
+      _box.put(entity);
+      
+      LoggerService.instance.gamification('Estado Procrastination salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Procrastination com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
   /// Carrega o estado salvo localmente
   Future<ProcrastinationModuleState?> getProcrastinationState() async {
     try {
-      // Usando sintaxe simples como outros módulos: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.procrastinationGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
-        final stateMap = entity.toModuleStateMap();
-        LoggerService.instance.gamification('Estado Procrastination carregado do Isar');
-        return ProcrastinationModuleState.fromJson(stateMap);
+        final state = entity.toModuleState();
+        LoggerService.instance.gamification('Estado Procrastination carregado do ObjectBox');
+        return state;
       }
       
-      LoggerService.instance.gamification('Estado Procrastination não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Procrastination não encontrado no ObjectBox');
       return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Procrastination do Isar', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Procrastination do ObjectBox', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -52,12 +59,10 @@ class ProcrastinationGamificationRepository {
   /// Limpa o estado local
   Future<void> clearProcrastinationState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.procrastinationGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Procrastination limpo do Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Procrastination do Isar', error: e);
+      _box.removeAll();
+      LoggerService.instance.gamification('Estado Procrastination limpo do ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Procrastination do ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 

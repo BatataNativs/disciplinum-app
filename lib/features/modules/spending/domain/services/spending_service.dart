@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:isar/isar.dart';
-
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/expense_entity.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
@@ -14,12 +13,12 @@ class SpendingNotifier extends AsyncNotifier<List<FixedExpenseModel>> {
   static const String _moduleId = 'spending';
 
   final SupabaseClient _supabase = Supabase.instance.client;
-  Isar get _isar => IsarService.instance.database;
+  final _store = ObjectBoxService.instance.store;
 
   @override
   Future<List<FixedExpenseModel>> build() async {
-    // 1. Carrega local (Isar)
-    final localData = await _isar.expenseEntitys.where().findAll();
+    // 1. Carrega local (ObjectBox)
+    final localData = _store.box<ExpenseEntity>().getAll();
     final expenses = localData.map((e) => e.toDomain()).toList();
 
     // 2. Tenta carregar da nuvem em background
@@ -61,23 +60,22 @@ class SpendingNotifier extends AsyncNotifier<List<FixedExpenseModel>> {
 
   Future<void> _saveAllLocal(List<FixedExpenseModel> models) async {
     final entities = models.map((e) => ExpenseEntity.fromDomain(e)).toList();
-    await _isar.writeTxn(() async {
-      await _isar.expenseEntitys.clear();
-      await _isar.expenseEntitys.putAll(entities);
-    });
+    _store.box<ExpenseEntity>().removeAll();
+    _store.box<ExpenseEntity>().putMany(entities);
   }
 
   Future<void> _saveLocal(FixedExpenseModel model) async {
     final entity = ExpenseEntity.fromDomain(model);
-    await _isar.writeTxn(() async {
-      await _isar.expenseEntitys.put(entity);
-    });
+    _store.box<ExpenseEntity>().put(entity);
   }
 
   Future<void> _deleteLocal(String uuid) async {
-    await _isar.writeTxn(() async {
-      await _isar.expenseEntitys.deleteByUuid(uuid);
-    });
+    final query = _store.box<ExpenseEntity>().query(ExpenseEntity_.uuid.equals(uuid)).build();
+    final entity = query.findFirst();
+    query.close();
+    if (entity != null) {
+      _store.box<ExpenseEntity>().remove(entity.id);
+    }
   }
 
   Future<void> _saveCloud(List<FixedExpenseModel> currentExpenses) async {

@@ -7,8 +7,8 @@ import 'package:disciplinum/features/modules/procrastination/domain/services/pro
 import 'package:disciplinum/features/modules/procrastination/presentation/controllers/procrastination_controller_isar.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -61,9 +61,9 @@ import 'package:disciplinum/features/modules/binge_eating/gamification/domain/re
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 
-/// Provider para IsarService
-final isarServiceProvider = Provider<IsarService>((ref) {
-  return IsarService.instance;
+/// Provider para ObjectBoxService
+final objectBoxServiceProvider = Provider<ObjectBoxService>((ref) {
+  return ObjectBoxService.instance;
 });
 
 /// Provider para BingeEatingGamificationRepository
@@ -83,8 +83,8 @@ final moneySavingGamificationRepositoryProvider = Provider<MoneySavingGamificati
 
 /// Provider para SessionPersistenceService
 final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((ref) {
-  final isarService = ref.watch(isarServiceProvider);
-  return SessionPersistenceService(isarService);
+  final objectBoxService = ref.watch(objectBoxServiceProvider);
+  return SessionPersistenceService(objectBoxService);
 });
 
 /// Provider para SmokingCheckinService
@@ -101,7 +101,7 @@ final bingeEatingServiceIsarProvider = Provider<BingeEatingServiceIsar>((ref) {
 
 /// Provider para BingeEatingService (legado)
 final bingeEatingServiceProvider = Provider<BingeEatingService>((ref) {
-  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
   return BingeEatingService(repository);
 });
 
@@ -113,10 +113,10 @@ final moduleRepositoryProvider = Provider<ModuleRepository>((ref) {
   );
 });
 
-/// Provider para IsarPreferencesRepository
-final isarPreferencesRepositoryProvider = Provider<IsarPreferencesRepository>((ref) {
-  final isarService = ref.watch(isarServiceProvider);
-  return IsarPreferencesRepository(isarService.database);
+/// Provider para ObjectBoxPreferencesRepository
+final objectboxPreferencesRepositoryProvider = Provider<ObjectBoxPreferencesRepository>((ref) {
+  final objectBoxService = ref.watch(objectBoxServiceProvider);
+  return ObjectBoxPreferencesRepository(objectBoxService.store);
 });
 
 /// Provider para LocalStorageService
@@ -131,7 +131,7 @@ final loggerServiceProvider = Provider<LoggerService>((ref) {
 
 /// Provider para PreferencesService
 final preferencesServiceProvider = Provider<PreferencesService>((ref) {
-  final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
   return PreferencesService(prefs);
 });
 
@@ -143,8 +143,8 @@ final smokingServiceProvider = Provider<SmokingService>((ref) {
 
 /// Provider para IapService
 final iapServiceProvider = StateNotifierProvider<iap.IapService, iap.IapState>((ref) {
-  final isar = ref.watch(isarServiceProvider);
-  final repository = IapEntitlementRepository(isar.database);
+  final objectBoxService = ref.watch(objectBoxServiceProvider);
+  final repository = IapEntitlementRepository(objectBoxService.store);
   return iap.IapService(repository);
 });
 
@@ -167,7 +167,7 @@ final themeControllerProvider = ChangeNotifierProvider<ThemeController>((ref) {
 
 /// Provider para AppMonitoringService
 final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
-  final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
   final sessionPersistence = ref.watch(sessionPersistenceServiceProvider);
   final focusService = ref.watch(focusServiceProvider);
   
@@ -195,7 +195,7 @@ final adultContentControllerIsarProvider = StateNotifierProvider<AdultContentCon
 
 /// Provider para AdultContentService (legado)
 final adultContentServiceProvider = Provider<AdultContentService>((ref) {
-  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
   return AdultContentService(repository);
 });
 
@@ -212,7 +212,7 @@ final dietControllerIsarProvider = StateNotifierProvider<DietControllerIsar, Die
 
 /// Provider para DietService (legado)
 final dietServiceProvider = Provider<DietService>((ref) {
-  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
   return DietService(repository);
 });
 
@@ -229,13 +229,13 @@ final procrastinationControllerIsarProvider = StateNotifierProvider<Procrastinat
 
 /// Provider para ProcrastinationService (serviço de listas de tarefas)
 final procrastinationServiceProvider = Provider<ProcrastinationService>((ref) {
-  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
   return ProcrastinationService(repository);
 });
 
 
 final moneySavingChallengeServiceProvider = Provider<MoneySavingChallengeService>((ref) {
-  final repository = ref.watch(isarPreferencesRepositoryProvider);
+  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
   return MoneySavingChallengeService(repository);
 });
 
@@ -247,7 +247,7 @@ final stopSmokingControllerProvider = StateNotifierProvider<StopSmokingControlle
 
 final focusServiceProvider = Provider<FocusService>((ref) {
   return FocusService(
-    ref.watch(isarServiceProvider),
+    ref.watch(objectBoxServiceProvider),
     ref.watch(cloudSyncServiceProvider),
   );
 });
@@ -325,7 +325,7 @@ final smokingGamificationRepositoryProvider = Provider<SmokingGamificationReposi
 });
 
 final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
-  final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
   return CloudSyncService(
     supabase: Supabase.instance.client,
     prefsRepo: prefs,

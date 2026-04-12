@@ -1,17 +1,16 @@
 import 'dart:async';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/storage/entities/detection_session_entity.dart';
 import 'package:disciplinum/core/storage/entities/monitoring_state_entity.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:isar/isar.dart';
 
-/// SessionPersistenceService com sintaxe Isar 3.0.5 corrigida
-/// Baseado na documentação: https://isar.dev/queries.html
+/// SessionPersistenceService com ObjectBox
+/// Baseado na documentação: https://docs.objectbox.io/queries
 class SessionPersistenceService {
-  final IsarService _isarService;
+  final ObjectBoxService _objectBoxService;
   
-  SessionPersistenceService(this._isarService);
+  SessionPersistenceService(this._objectBoxService);
   
   /// Salva uma sessão de detecção ativa
   Future<void> saveDetectionSession({
@@ -21,7 +20,7 @@ class SessionPersistenceService {
     int remainingSeconds = 30,
   }) async {
     try {
-      final session = DetectionSession(
+      final session = DetectionSession.create(
         packageName: packageName,
         startTime: DateTime.now(),
         duration: duration,
@@ -30,9 +29,7 @@ class SessionPersistenceService {
         remainingSeconds: remainingSeconds,
       );
       
-      await _isarService.database.writeTxn(() async {
-        await _isarService.database.detectionSessions.put(session);
-      });
+      _objectBoxService.store.box<DetectionSession>().put(session);
       
       LoggerService.instance.performance(
         'Detection session saved',
@@ -48,20 +45,17 @@ class SessionPersistenceService {
     }
   }
   
-  /// Recupera sessões ativas - Sintaxe Isar 3.0.5
+  /// Recupera sessões ativas
   Future<List<DetectionSession>> getActiveSessions() async {
     try {
-      // ✅ Sintaxe simples: buscar tudo e filtrar manualmente
-      final allSessions = await _isarService.database.detectionSessions.where().build().findAll();
+      final allSessions = _objectBoxService.store.box<DetectionSession>().getAll();
       final sessions = allSessions.where((session) => session.isActive).toList();
       
       // Remove sessões expiradas
       final activeSessions = <DetectionSession>[];
       for (final session in sessions) {
         if (session.isExpired) {
-          await _isarService.database.writeTxn(() async {
-            await _isarService.database.detectionSessions.delete(session.id!);
-          });
+          _objectBoxService.store.box<DetectionSession>().remove(session.id);
         } else {
           activeSessions.add(session);
         }
@@ -77,8 +71,7 @@ class SessionPersistenceService {
   /// Marca uma sessão como inativa
   Future<void> markSessionInactive(String packageName) async {
     try {
-      // ✅ Sintaxe simples: buscar tudo e filtrar manualmente
-      final allSessions = await _isarService.database.detectionSessions.where().build().findAll();
+      final allSessions = _objectBoxService.store.box<DetectionSession>().getAll();
       final sessions = allSessions.where((session) => 
           session.packageName == packageName && session.isActive).toList();
       
@@ -86,9 +79,7 @@ class SessionPersistenceService {
         session.markAsInactive();
       }
       
-      await _isarService.database.writeTxn(() async {
-        await _isarService.database.detectionSessions.putAll(sessions);
-      });
+      _objectBoxService.store.box<DetectionSession>().putMany(sessions);
       
       LoggerService.instance.performance(
         'Detection session marked inactive',
@@ -107,16 +98,16 @@ class SessionPersistenceService {
     required List<String> monitoredApps,
   }) async {
     try {
-      final state = MonitoringState(
+      final state = MonitoringState.create(
         activeNicheId: activeNicheId ?? NicheId.reading,
         isMonitoringActive: isMonitoringActive,
         monitoredApps: monitoredApps,
         lastHeartbeat: DateTime.now(),
       );
       
-      await _isarService.database.writeTxn(() async {
-        await _isarService.database.monitoringStates.put(state);
-      });
+      // MonitoringState usa ID fixo = 1
+      state.id = 1;
+      _objectBoxService.store.box<MonitoringState>().put(state);
       
       LoggerService.instance.performance(
         'Monitoring state saved',
@@ -135,7 +126,7 @@ class SessionPersistenceService {
   /// Recupera o estado de monitoramento
   Future<MonitoringState?> getMonitoringState() async {
     try {
-      final state = await _isarService.database.monitoringStates.get(1);
+      final state = _objectBoxService.store.box<MonitoringState>().get(1);
       
       if (state != null && state.isStale) {
         LoggerService.instance.w('Monitoring state is stale, clearing');
@@ -156,9 +147,7 @@ class SessionPersistenceService {
       final state = await getMonitoringState();
       if (state != null) {
         state.updateHeartbeat();
-        await _isarService.database.writeTxn(() async {
-          await _isarService.database.monitoringStates.put(state);
-        });
+        _objectBoxService.store.box<MonitoringState>().put(state);
       }
     } catch (e) {
       LoggerService.instance.e('Failed to update heartbeat', error: e);
@@ -171,9 +160,7 @@ class SessionPersistenceService {
       final state = await getMonitoringState();
       if (state != null) {
         state.registerViolation();
-        await _isarService.database.writeTxn(() async {
-          await _isarService.database.monitoringStates.put(state);
-        });
+        _objectBoxService.store.box<MonitoringState>().put(state);
         
         LoggerService.instance.performance(
           'Violation registered',
@@ -192,9 +179,7 @@ class SessionPersistenceService {
   /// Limpa o estado de monitoramento
   Future<void> clearMonitoringState() async {
     try {
-      await _isarService.database.writeTxn(() async {
-        await _isarService.database.monitoringStates.clear();
-      });
+      _objectBoxService.store.box<MonitoringState>().removeAll();
       LoggerService.instance.performance('Monitoring state cleared', const Duration(milliseconds: 1));
     } catch (e) {
       LoggerService.instance.e('Failed to clear monitoring state', error: e);
@@ -206,15 +191,12 @@ class SessionPersistenceService {
     try {
       final cutoff = DateTime.now().subtract(const Duration(hours: 24));
       
-      // ✅ Sintaxe simples: buscar tudo e filtrar manualmente
-      final allSessions = await _isarService.database.detectionSessions.where().build().findAll();
+      final allSessions = _objectBoxService.store.box<DetectionSession>().getAll();
       final oldSessions = allSessions.where((session) => session.startTime.isBefore(cutoff)).toList();
       
-      await _isarService.database.writeTxn(() async {
-        for (final session in oldSessions) {
-          await _isarService.database.detectionSessions.delete(session.id!);
-        }
-      });
+      for (final session in oldSessions) {
+        _objectBoxService.store.box<DetectionSession>().remove(session.id);
+      }
       
       if (oldSessions.isNotEmpty) {
         LoggerService.instance.performance(
@@ -231,8 +213,7 @@ class SessionPersistenceService {
   /// Recupera sessões para um nicho específico
   Future<List<DetectionSession>> getSessionsForNiche(NicheId nicheId) async {
     try {
-      // ✅ Sintaxe simples: buscar tudo e filtrar manualmente
-      final allSessions = await _isarService.database.detectionSessions.where().build().findAll();
+      final allSessions = _objectBoxService.store.box<DetectionSession>().getAll();
       return allSessions.where((session) => 
           session.nicheId == nicheId && session.isActive).toList();
     } catch (e) {
@@ -244,7 +225,7 @@ class SessionPersistenceService {
   /// Obtém estatísticas das sessões
   Future<Map<String, dynamic>> getSessionStats() async {
     try {
-      final totalSessions = await _isarService.database.detectionSessions.count();
+      final totalSessions = _objectBoxService.store.box<DetectionSession>().count();
       final activeSessions = await getActiveSessions();
       final state = await getMonitoringState();
       

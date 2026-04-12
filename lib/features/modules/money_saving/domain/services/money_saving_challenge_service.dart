@@ -1,20 +1,20 @@
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Serviço para persistência do Desafio da Poupança - VERSÃO RIVERPOD
 /// Service puro sem ChangeNotifier - estado gerenciado pelo controller
-/// Suporta armazenamento local (IsarPreferencesRepository) e cloud (Supabase)
+/// Suporta armazenamento local (ObjectBoxPreferencesRepository) e cloud (Supabase)
 /// Suporta múltiplos desafios simultâneos.
 class MoneySavingChallengeService {
   static const String _localKey = 'money_saving_challenge_list_data';
   static const String _oldLocalKey = 'money_saving_challenge_data';
   static const String _moduleId = 'money_saving_challenge';
 
-  final IsarPreferencesRepository _prefs;
+  final ObjectBoxPreferencesRepository _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
   final _uuid = const Uuid();
 

@@ -1,22 +1,15 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'money_saving_config_entity.g.dart';
-
-/// Entidade Isar para configurações do módulo Money Saving
-/// Persiste estado de ativação do módulo
-@Collection()
+@Entity()
 class MoneySavingConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
-  // Estado do módulo
   bool isModuleActive = false;
-
-  // ID do desafio ativo (opcional)
   String? activeChallengeId;
-
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 
@@ -26,12 +19,10 @@ class MoneySavingConfigEntity {
     this.activeChallengeId,
   });
 
-  /// Atualiza o timestamp
   void touch() {
     updatedAt = DateTime.now();
   }
 
-  /// Cria cópia com novos valores
   MoneySavingConfigEntity copyWith({
     String? userId,
     bool? isModuleActive,

@@ -1,52 +1,56 @@
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/supabase_migration_checker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Dieta
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class DietGamificationRepository {
   static DietGamificationRepository? _instance;
   static DietGamificationRepository get instance => _instance ??= DietGamificationRepository._();
   
   DietGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<DietGamificationEntity> get _box => ObjectBoxService.instance.store.box<DietGamificationEntity>();
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveDietState(DietModuleState state) async {
     try {
-      // Converte para entidade Isar com ID fixo como Smoking
       final entity = DietGamificationEntity.fromModuleState('diet_user', state.toJson());
-      entity.id = 1; // ID fixo como Smoking
       
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.dietGamificationStates.put(entity);
-      });
+      final existingEntity = _box.get(1);
+      if (existingEntity != null) {
+        entity.id = existingEntity.id;
+      } else {
+        entity.id = 1;
+      }
       
-      LoggerService.instance.gamification('Estado Dieta salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Dieta com Isar', error: e);
+      _box.put(entity);
+      
+      LoggerService.instance.gamification('Estado Dieta salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Dieta com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
   /// Carrega o estado salvo localmente
   Future<DietModuleState?> getDietState() async {
     try {
-      // Usando sintaxe simples como Smoking: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.dietGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
-        final stateMap = entity.toModuleStateMap();
-        LoggerService.instance.gamification('Estado Dieta carregado do Isar');
-        return DietModuleState.fromJson(stateMap);
+        LoggerService.instance.gamification('Estado Dieta carregado do ObjectBox');
+        return entity.toModuleState();
       }
       
-      LoggerService.instance.gamification('Estado Dieta não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Dieta não encontrado no ObjectBox');
       return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Dieta do Isar', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Dieta do ObjectBox', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -54,12 +58,10 @@ class DietGamificationRepository {
   /// Limpa todos os dados locais
   Future<void> clearDietState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.dietGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Dieta limpo do Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Dieta do Isar', error: e);
+      _box.removeAll();
+      LoggerService.instance.gamification('Estado Dieta limpo do ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Dieta do ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 

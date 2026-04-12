@@ -1,88 +1,66 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
-/// Repositório específico para configurações de Adult Content usando Isar puro
+/// Repositório específico para configurações de Adult Content usando ObjectBox
 class AdultContentConfigRepository {
   static AdultContentConfigRepository? _instance;
   static AdultContentConfigRepository get instance => _instance ??= AdultContentConfigRepository._internal();
   
   AdultContentConfigRepository._internal();
 
+  Box<AdultContentConfigEntity> get _box => ObjectBoxService.instance.store.box<AdultContentConfigEntity>();
+
   Future<AdultContentConfigEntity?> getConfig() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
-      
-      return await isar.adultContentConfigEntitys
-          .filter()
-          .userIdEqualTo(userId)
-          .findFirst();
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar configuração do Adult Content', error: e);
+      return _box.query(AdultContentConfigEntity_.userId.equals(userId)).build().findFirst();
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar configuração do Adult Content', error: e, stackTrace: stackTrace);
       return null;
     }
   }
 
   Future<void> saveConfig(AdultContentConfigEntity config) async {
     try {
-      final isar = IsarService.instance.database;
+      final existingConfig = await getConfig();
       
-      await isar.writeTxn(() async {
-        // Verificar se já existe uma configuração com o mesmo userId
-        final existingConfig = await isar.adultContentConfigEntitys
-            .filter()
-            .userIdEqualTo(config.userId)
-            .findFirst();
-        
-        if (existingConfig != null) {
-          // Reutilizar o ID interno do Isar para atualizar em vez de criar nova
-          config.id = existingConfig.id;
-        }
-        
-        config.touch();
-        await isar.adultContentConfigEntitys.put(config);
-      });
+      if (existingConfig != null) {
+        config.id = existingConfig.id;
+      }
+      
+      config.touch();
+      _box.put(config);
       
       LoggerService.instance.i('Configuração do Adult Content salva com sucesso');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar configuração do Adult Content', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar configuração do Adult Content', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
 
   Future<void> deleteConfig() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.adultContentConfigEntitys
-            .filter()
-            .userIdEqualTo(userId)
-            .deleteAll();
-      });
+      final existingConfig = await getConfig();
+      if (existingConfig != null) {
+        _box.remove(existingConfig.id);
+      }
       
       LoggerService.instance.i('Configuração do Adult Content removida com sucesso');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao remover configuração do Adult Content', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao remover configuração do Adult Content', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
 
   Future<void> clearAll() async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.adultContentConfigEntitys.clear();
-      });
-      
+      _box.removeAll();
       LoggerService.instance.i('Todas as configurações do Adult Content foram limpas');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar configurações do Adult Content', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar configurações do Adult Content', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }

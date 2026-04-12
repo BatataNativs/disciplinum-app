@@ -1,27 +1,20 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'smoking_config_entity.g.dart';
-
-/// Entidade Isar para configurações do módulo Smoking
-/// Persiste estado de ativação e configurações do usuário
-@Collection()
+@Entity()
 class SmokingConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
-  // Estado do módulo
   bool isModuleActive = false;
-
-  // Configurações de fumo
   int dailyCigarettes = 0;
   double pricePerPack = 0.0;
   int cigarettesPerPack = 20;
   DateTime? quitDate;
   String currency = 'R\$';
 
-  // Campos para histórico/backup
   double? lastPackPrice;
   double? lastPacksPerDay;
   DateTime? lastQuitDate;
@@ -46,14 +39,13 @@ class SmokingConfigEntity {
     this.lastCurrency,
     this.lastSavedTotal,
     this.lastEndDate,
-  });
+  })  : createdAt = DateTime.now(),
+        updatedAt = DateTime.now();
 
-  /// Atualiza o timestamp
   void touch() {
     updatedAt = DateTime.now();
   }
 
-  /// Cria cópia com novos valores
   SmokingConfigEntity copyWith({
     String? userId,
     bool? isModuleActive,

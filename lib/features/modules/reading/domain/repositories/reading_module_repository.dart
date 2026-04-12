@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_module_state.dart';
-import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Reading implementando ModuleRepositoryContract
@@ -55,12 +54,11 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
         ..consecutiveDays = state.consecutiveDays
         ..lastReadingDate = state.lastReadingDate
         ..startDate = state.startDate
+        ..id = 1
         ..touch();
 
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.readingGamificationEntitys.put(entity);
-      });
+      final store = ObjectBoxService.instance.store;
+      store.box<ReadingGamificationEntity>().put(entity);
 
       LoggerService.instance.gamification('✅ ReadingModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -81,8 +79,8 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
     try {
       _setStatus(RepositoryStatus.busy);
       
-      final isar = IsarService.instance.database;
-      final entity = await isar.readingGamificationEntitys.get(1);
+      final store = ObjectBoxService.instance.store;
+      final entity = store.box<ReadingGamificationEntity>().get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -104,8 +102,8 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.readingGamificationEntitys.count();
+      final store = ObjectBoxService.instance.store;
+      final count = store.box<ReadingGamificationEntity>().count();
       return count > 0;
     } catch (e) {
       return false;
@@ -116,10 +114,8 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.readingGamificationEntitys.clear();
-      });
+      final store = ObjectBoxService.instance.store;
+      store.box<ReadingGamificationEntity>().removeAll();
       LoggerService.instance.gamification('🗑️ ReadingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -136,8 +132,8 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
   @override
   Future<List<ReadingModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.readingGamificationEntitys.where().findAll();
+      final store = ObjectBoxService.instance.store;
+      final entities = store.box<ReadingGamificationEntity>().getAll();
       return entities.map((e) => ReadingModuleState.fromJson(e.toJson())).toList();
     } catch (e) {
       return [];

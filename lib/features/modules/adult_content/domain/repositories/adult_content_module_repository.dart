@@ -1,19 +1,27 @@
 import 'dart:async';
-import 'package:isar/isar.dart';
+
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
+import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Adult Content implementando ModuleRepositoryContract
 class AdultContentModuleRepository implements ModuleRepositoryContract<AdultContentModuleState> {
   static AdultContentModuleRepository? _instance;
   static AdultContentModuleRepository get instance => _instance ??= AdultContentModuleRepository._();
-  
+
   AdultContentModuleRepository._();
+
+  Box<AdultContentGamificationEntity>? _box;
+
+  Box<AdultContentGamificationEntity> get box {
+    _box ??= ObjectBoxService.instance.store.box<AdultContentGamificationEntity>();
+    return _box!;
+  }
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -51,10 +59,7 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
       
       final entity = AdultContentGamificationEntity.fromModuleState('', state);
 
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.adultContentGamificationEntitys.put(entity);
-      });
+      box.put(entity);
 
       LoggerService.instance.gamification('✅ AdultContentModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -74,10 +79,9 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
   Future<AdultContentModuleState?> loadLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      
-      final isar = IsarService.instance.database;
+
       // Usar ID fixo (1) como padrão do projeto, igual ao Reading
-      final entity = await isar.adultContentGamificationEntitys.get(1);
+      final entity = box.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -99,8 +103,7 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.adultContentGamificationEntitys.count();
+      final count = box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,11 +114,8 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        // Limpar todas as entidades (padrão igual ao Reading)
-        await isar.adultContentGamificationEntitys.clear();
-      });
+      // Limpar todas as entidades (padrão igual ao Reading)
+      box.removeAll();
       LoggerService.instance.gamification('🗑️ AdultContentModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -132,8 +132,7 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
   @override
   Future<List<AdultContentModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.adultContentGamificationEntitys.where().findAll();
+      final entities = box.getAll();
       return entities.map((e) => e.toModuleState()).toList();
     } catch (e) {
       return [];

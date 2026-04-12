@@ -1,81 +1,85 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
-part 'detection_session_entity.g.dart';
-
-/// Entidade para persistir sessões de detecção ativas
-/// Usada para recuperar timers quando o Android mata o processo
-@Collection()
+@Entity()
 class DetectionSession {
-  Id? id;
-  
-  @Index()
+  @Id()
+  int id = 0;
+
   late String packageName;
-  
-  @Index()
   late DateTime startTime;
-  
-  late int duration; // duração em segundos
-  
-  @Index()
+  late int duration;
   late bool isActive;
   
-  @Index()
-  @enumerated // ✅ ADICIONAR ESTA ANOTAÇÃO
-  late NicheId nicheId;
+  // Armazenado como int para ObjectBox (enum não é suportado no construtor)
+  late int nicheIdIndex;
   
-  /// Timestamp da última atualização
+  // Transient - não armazenado no banco, converte int para enum
+  @Transient()
+  NicheId get nicheId => NicheId.values[nicheIdIndex];
+  
   late DateTime lastUpdated;
-  
-  /// Tempo restante quando a sessão foi pausada/salva
   late int remainingSeconds;
-  
-  DetectionSession({
-    required this.packageName,
-    required this.startTime,
-    required this.duration,
-    required this.isActive,
-    required this.nicheId,
-    required this.remainingSeconds,
-  }) : lastUpdated = DateTime.now();
-  
-  /// Calcula o tempo restante baseado no tempo decorrido
+
+  // Construtor padrão necessário para ObjectBox
+  DetectionSession()
+      : packageName = '',
+        startTime = DateTime.now(),
+        duration = 0,
+        isActive = true,
+        nicheIdIndex = 0,
+        lastUpdated = DateTime.now(),
+        remainingSeconds = 0;
+
+  // Factory method para criar instâncias validadas
+  factory DetectionSession.create({
+    required String packageName,
+    required DateTime startTime,
+    required int duration,
+    required bool isActive,
+    required NicheId nicheId,
+    required int remainingSeconds,
+  }) {
+    final entity = DetectionSession();
+    entity.packageName = packageName;
+    entity.startTime = startTime;
+    entity.duration = duration;
+    entity.isActive = isActive;
+    entity.nicheIdIndex = nicheId.index;
+    entity.lastUpdated = DateTime.now();
+    entity.remainingSeconds = remainingSeconds;
+    return entity;
+  }
+
   int get calculatedRemainingSeconds {
     if (!isActive) return remainingSeconds;
-    
     final elapsed = DateTime.now().difference(startTime);
     final remaining = duration - elapsed.inSeconds;
     return remaining > 0 ? remaining : 0;
   }
-  
-  /// Verifica se a sessão expirou
-  bool get isExpired {
-    return calculatedRemainingSeconds <= 0;
-  }
-  
-  /// Marca a sessão como inativa
+
+  bool get isExpired => calculatedRemainingSeconds <= 0;
+
   void markAsInactive() {
     isActive = false;
     remainingSeconds = calculatedRemainingSeconds;
     lastUpdated = DateTime.now();
   }
-  
-  /// Converte para JSON (para compatibilidade)
+
   Map<String, dynamic> toJson() {
     return {
       'packageName': packageName,
       'startTime': startTime.millisecondsSinceEpoch,
       'duration': duration,
       'isActive': isActive,
-      'nicheId': nicheId.index,
+      'nicheId': nicheIdIndex,
       'remainingSeconds': remainingSeconds,
       'lastUpdated': lastUpdated.millisecondsSinceEpoch,
     };
   }
-  
-  /// Cria a partir de JSON (para compatibilidade)
+
   factory DetectionSession.fromJson(Map<String, dynamic> json) {
-    return DetectionSession(
+    return DetectionSession.create(
       packageName: json['packageName'],
       startTime: DateTime.fromMillisecondsSinceEpoch(json['startTime']),
       duration: json['duration'],

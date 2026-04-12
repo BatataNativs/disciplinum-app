@@ -1,12 +1,9 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'module_unlock_entity.g.dart';
-
-/// Entidade para armazenar estado de desbloqueio de funcionalidades por módulo
-/// Usado para verificar se usuário desbloqueou via anúncio ou outra forma local
-@collection
+@Entity()
 class ModuleUnlockEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
   
   /// ID do módulo (nicheId)
   late String moduleId;

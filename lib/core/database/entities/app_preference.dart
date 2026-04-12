@@ -1,15 +1,14 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'app_preference.g.dart';
-
-@collection
+@Entity()
 class AppPreference {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String key;
 
-  String? value; // Armazenado como String, podendo ser JSON encoded para tipos complexos
+  String? value;
 
   AppPreference({required this.key, this.value});
 }

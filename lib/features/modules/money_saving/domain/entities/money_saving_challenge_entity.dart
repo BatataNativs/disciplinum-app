@@ -1,19 +1,18 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'money_saving_challenge_entity.g.dart';
-
-@collection
+@Entity()
 class MoneySavingChallengeEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
-  String challengeId; // UUID do desafio
+  @Unique()
+  String challengeId;
 
   String userId;
   String title;
   double targetAmount;
   int periodValue;
-  String periodType; // 'dias', 'meses', 'anos', 'indeterminado'
+  String periodType;
   int gridSize;
   double minValue;
   double maxValue;
@@ -98,9 +97,10 @@ class MoneySavingChallengeEntity {
 }
 
 /// Entidade separada para os valores das células do grid
-@collection
+@Entity()
 class MoneySavingGridCellEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
   String challengeId;
   int cellIndex;
@@ -132,6 +132,7 @@ class MoneySavingGridCellEntity {
       value: value ?? this.value,
     );
     
+    entity.id = id;
     entity.isMarked = isMarked ?? this.isMarked;
     entity.markedAt = markedAt ?? this.markedAt;
     entity.createdAt = createdAt ?? this.createdAt;

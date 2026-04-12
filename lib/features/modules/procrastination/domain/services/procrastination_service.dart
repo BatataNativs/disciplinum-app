@@ -10,7 +10,7 @@ import 'package:disciplinum/features/modules/procrastination/domain/entities/pro
 // NOTA: GamificationService removido - agora usando ProcrastinationGamificationController via ProviderContainer
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 
 class ProcrastinationService extends ChangeNotifier {
   static const String _moduleId = 'procrastination';
@@ -19,7 +19,7 @@ class ProcrastinationService extends ChangeNotifier {
 
   // NOTA: ProcrastinationGamificationController acessado via ProviderContainer quando necessário
   // Não armazenamos a instância diretamente para evitar conflitos com ChangeNotifier
-  final IsarPreferencesRepository _prefs;
+  final ObjectBoxPreferencesRepository _prefs;
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Armazena todas as tarefas indexadas por listId

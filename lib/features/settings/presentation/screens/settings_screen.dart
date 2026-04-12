@@ -11,7 +11,8 @@ import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; // I
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -19,13 +20,13 @@ import 'secret_menu_screen.dart'; // Importe a nova tela
 
 /// Provider para estado de pausa de notificações
 final notificationsPausedProvider = StateNotifierProvider<NotificationsPausedNotifier, bool>((ref) {
-  final prefs = ref.watch(isarPreferencesRepositoryProvider);
+  final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
   return NotificationsPausedNotifier(prefs);
 });
 
 /// Notifier para gerenciar estado de pausa de notificações
 class NotificationsPausedNotifier extends StateNotifier<bool> {
-  final IsarPreferencesRepository _prefs;
+  final ObjectBoxPreferencesRepository _prefs;
   static const String _key = 'notifications_paused';
 
   NotificationsPausedNotifier(this._prefs) : super(false) {

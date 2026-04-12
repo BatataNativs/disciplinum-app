@@ -1,22 +1,18 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 
-part 'spending_gamification_entity.g.dart';
-
-/// Entidade Isar para persistência do estado de gamificação do Spending
-@Collection()
+@Entity()
 class SpendingGamificationEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
   
-  @Index(unique: true)
-  final String userId;
-  
-  final List<String> earnedInsignias;
-  final List<String> earnedMedalhas;
-  final int consecutiveMonths;
-  final int disciplinumCount;
-  final DateTime lastUpdated;
-  final bool isActive;
+  String userId;
+  List<String> earnedInsignias;
+  List<String> earnedMedalhas;
+  int consecutiveMonths;
+  int disciplinumCount;
+  DateTime lastUpdated;
+  bool isActive;
 
   SpendingGamificationEntity({
     required this.userId,
@@ -28,7 +24,6 @@ class SpendingGamificationEntity {
     this.isActive = true,
   });
 
-  /// Converte de ModuleState para Entity
   factory SpendingGamificationEntity.fromModuleState(
     String userId,
     SpendingModuleState state,
@@ -44,7 +39,6 @@ class SpendingGamificationEntity {
     );
   }
 
-  /// Converte de Entity para ModuleState
   SpendingModuleState toModuleState() {
     return SpendingModuleState(
       earnedInsignias: earnedInsignias,
@@ -56,12 +50,10 @@ class SpendingGamificationEntity {
     );
   }
 
-  /// Converte para Map (para persistência)
   Map<String, dynamic> toModuleStateMap() {
     return toModuleState().toJson();
   }
 
-  /// Converte para JSON (para Supabase)
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -74,7 +66,6 @@ class SpendingGamificationEntity {
     };
   }
 
-  /// Cria a partir de JSON (do Supabase)
   factory SpendingGamificationEntity.fromJson(Map<String, dynamic> json) {
     return SpendingGamificationEntity(
       userId: json['user_id'],

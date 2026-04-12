@@ -1,56 +1,27 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'dart:convert';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 
-part 'focus_gamification_entity.g.dart';
-
-/// Entidade Isar para gamificação do módulo Focus
-/// Armazena estado completo de gamificação com persistência local
-@collection
+@Entity()
 class FocusGamificationEntity {
-  /// ID único do registro
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// Lista de insígnias conquistadas (JSON)
   String earnedInsignias = '[]';
-
-  /// Lista de medalhas conquistadas (JSON)
   String earnedMedalhas = '[]';
-
-  /// Contador de insígnias Disciplinum conquistadas
   int disciplinumCount = 0;
-
-  /// Tempo total de foco (em minutos)
   int totalFocusMinutes = 0;
-
-  /// Número de sessões de foco completadas
   int completedSessions = 0;
-
-  /// Maior sequência de dias com foco
   int maxStreakDays = 0;
-
-  /// Sequência atual de dias com foco
   int currentStreakDays = 0;
-
-  /// Data da última sessão de foco
   DateTime? lastFocusSession;
-
-  /// Data de início da jornada de foco
   DateTime? startDate;
-
-  /// Lista de apps bloqueados durante foco (JSON)
   String blockedApps = '[]';
-
-  /// Data de criação do registro
   DateTime createdAt = DateTime.now();
-
-  /// Data da última atualização
   DateTime updatedAt = DateTime.now();
 
-  /// Construtor padrão
   FocusGamificationEntity();
 
-  /// Converte para FocusModuleState
   FocusModuleState toModuleState() {
     return FocusModuleState(
       earnedInsignias: earnedInsigniasList,
@@ -64,7 +35,6 @@ class FocusGamificationEntity {
     );
   }
 
-  /// Construtor a partir do FocusModuleState
   factory FocusGamificationEntity.fromModuleState(FocusModuleState moduleState) {
     final entity = FocusGamificationEntity();
     entity.earnedInsignias = json.encode(moduleState.earnedInsignias);
@@ -78,7 +48,6 @@ class FocusGamificationEntity {
     return entity;
   }
 
-  /// Converte para JSON (para compatibilidade)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -97,7 +66,6 @@ class FocusGamificationEntity {
     };
   }
 
-  /// Converte de JSON (para compatibilidade)
   factory FocusGamificationEntity.fromJson(Map<String, dynamic> json) {
     final entity = FocusGamificationEntity();
     entity.earnedInsignias = json['earnedInsignias'] ?? '[]';
@@ -123,12 +91,10 @@ class FocusGamificationEntity {
     return entity;
   }
 
-  /// Atualiza timestamp de modificação
   void touch() {
     updatedAt = DateTime.now();
   }
 
-  /// Obtém lista de insígnias como `List<String>`
   List<String> get earnedInsigniasList {
     try {
       final List<dynamic> decoded = json.decode(earnedInsignias);
@@ -138,13 +104,11 @@ class FocusGamificationEntity {
     }
   }
 
-  /// Define lista de insígnias
   set earnedInsigniasList(List<String> insignias) {
     earnedInsignias = json.encode(insignias);
     touch();
   }
 
-  /// Obtém lista de medalhas como `List<String>`
   List<String> get earnedMedalhasList {
     try {
       final List<dynamic> decoded = json.decode(earnedMedalhas);
@@ -154,13 +118,11 @@ class FocusGamificationEntity {
     }
   }
 
-  /// Define lista de medalhas
   set earnedMedalhasList(List<String> medalhas) {
     earnedMedalhas = json.encode(medalhas);
     touch();
   }
 
-  /// Obtém lista de apps bloqueados como `List<String>`
   List<String> get blockedAppsList {
     try {
       final List<dynamic> decoded = json.decode(blockedApps);
@@ -170,7 +132,6 @@ class FocusGamificationEntity {
     }
   }
 
-  /// Define lista de apps bloqueados
   set blockedAppsList(List<String> apps) {
     blockedApps = json.encode(apps);
     touch();

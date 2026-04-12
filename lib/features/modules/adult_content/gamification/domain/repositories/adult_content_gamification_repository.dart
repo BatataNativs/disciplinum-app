@@ -1,4 +1,6 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
@@ -6,45 +8,56 @@ import 'package:disciplinum/features/modules/adult_content/gamification/domain/s
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Adult Content
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class AdultContentGamificationRepository {
   static AdultContentGamificationRepository? _instance;
   static AdultContentGamificationRepository get instance => _instance ??= AdultContentGamificationRepository._();
   
   AdultContentGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<AdultContentGamificationEntity> get _box => ObjectBoxService.instance.store.box<AdultContentGamificationEntity>();
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveAdultContentState(AdultContentModuleState state) async {
     try {
       final entity = AdultContentGamificationEntity.fromModuleState('adult_content_user', state);
       
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.adultContentGamificationStates.put(entity);
-      });
+      // Manter sempre ID 1 para ser single state ou procurar existente
+      final existing = await getAdultContentState();
+      if (existing != null) {
+        final existingEntity = _box.get(1);
+        if (existingEntity != null) {
+          entity.id = existingEntity.id;
+        } else {
+          entity.id = 1;
+        }
+      } else {
+        entity.id = 1;
+      }
       
-      LoggerService.instance.gamification('Estado Adult Content salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Adult Content com Isar', error: e);
+      _box.put(entity);
+      
+      LoggerService.instance.gamification('Estado Adult Content salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Adult Content com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
   /// Carrega o estado salvo localmente
   Future<AdultContentModuleState?> getAdultContentState() async {
     try {
-      // Usando sintaxe simples como outros módulos: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.adultContentGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
         final stateMap = entity.toModuleStateMap();
-        LoggerService.instance.gamification('Estado Adult Content carregado do Isar');
+        LoggerService.instance.gamification('Estado Adult Content carregado do ObjectBox');
         return AdultContentModuleState.fromJson(stateMap);
       }
       
-      LoggerService.instance.gamification('Estado Adult Content não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Adult Content não encontrado no ObjectBox');
       return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Adult Content do Isar', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Adult Content do ObjectBox', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -52,12 +65,10 @@ class AdultContentGamificationRepository {
   /// Limpa o estado local
   Future<void> clearAdultContentState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.adultContentGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Adult Content limpo do Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Adult Content do Isar', error: e);
+      _box.removeAll();
+      LoggerService.instance.gamification('Estado Adult Content limpo do ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Adult Content do ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 

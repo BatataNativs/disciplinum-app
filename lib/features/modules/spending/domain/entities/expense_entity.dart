@@ -1,13 +1,12 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/fixed_expense_model.dart';
 
-part 'expense_entity.g.dart';
-
-@collection
+@Entity()
 class ExpenseEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true, replace: true)
+  @Unique()
   late String uuid;
 
   late String name;

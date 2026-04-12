@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/navigation/navigation_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
@@ -44,7 +44,7 @@ class PermissionService {
 
       // 3. Acessibilidade (Fase 6) - Apenas para módulos que monitoram apps
       if (nicheId != null && _moduleNeedsAccessibilityPermission(nicheId)) {
-        final prefs = IsarPreferencesRepository(IsarService.instance.database);
+        final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
         bool alreadyAsked =
             await prefs.getBool('asked_accessibility_permission_onboarding') ?? false;
 
@@ -85,7 +85,7 @@ class PermissionService {
     if (!effectiveContext.mounted) return;
 
     if (granted) {
-      final prefs = IsarPreferencesRepository(IsarService.instance.database);
+      final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
       await prefs.setBool('asked_accessibility_permission_onboarding', true);
 
       if (effectiveContext.mounted) {

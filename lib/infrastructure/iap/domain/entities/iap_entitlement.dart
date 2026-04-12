@@ -1,30 +1,18 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'iap_entitlement.g.dart';
-
-/// Entidade de entitlements IAP usando Isar puro
-/// Substitui o uso genérico de IsarPreferencesRepository
-@Collection()
+@Entity()
 class IapEntitlement {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
   
-  /// ID do produto (ex: 'dark_mode_unlock')
-  final String productId;
+  @Unique()
+  String productId;
   
-  /// Se o produto foi comprado
-  final bool isPurchased;
-  
-  /// Data de expiração (para produtos temporários como AdFree Lite)
-  final DateTime? expirationDate;
-  
-  /// Data da compra
-  final DateTime purchaseDate;
-  
-  /// Se a compra foi verificada/restaurada
-  final bool isVerified;
-  
-  /// Token de verificação da compra (opcional)
-  final String? verificationToken;
+  bool isPurchased;
+  DateTime? expirationDate;
+  DateTime purchaseDate;
+  bool isVerified;
+  String? verificationToken;
 
   IapEntitlement({
     required this.productId,
@@ -35,11 +23,10 @@ class IapEntitlement {
     this.verificationToken,
   });
 
-  /// Verifica se o entitlement está válido
   bool get isValid {
     if (!isPurchased || !isVerified) return false;
-    if (expirationDate == null) return true; // Permanente
-    return DateTime.now().isBefore(expirationDate!);
+    if (expirationDate != null && DateTime.now().isAfter(expirationDate!)) return false;
+    return true;
   }
 
   /// Verifica se é um produto permanente

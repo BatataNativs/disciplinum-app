@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/features/settings/presentation/screens/how_it_works_screen.dart';
 
@@ -181,7 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     // Fluxo normal: salva preferência e navega
-    final prefs = IsarPreferencesRepository(IsarService.instance.database);
+    final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     await prefs.setBool('seen_onboarding', true);
 
     if (!mounted) return;

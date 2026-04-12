@@ -1,19 +1,27 @@
 import 'dart:async';
+
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
-import 'package:isar/isar.dart';
+import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Spending implementando ModuleRepositoryContract
 class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModuleState> {
   static SpendingModuleRepository? _instance;
   static SpendingModuleRepository get instance => _instance ??= SpendingModuleRepository._();
-  
+
   SpendingModuleRepository._();
+
+  Box<SpendingGamificationEntity>? _box;
+
+  Box<SpendingGamificationEntity> get box {
+    _box ??= ObjectBoxService.instance.store.box<SpendingGamificationEntity>();
+    return _box!;
+  }
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -50,11 +58,9 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
       _setStatus(RepositoryStatus.busy);
       
       final entity = SpendingGamificationEntity.fromModuleState('', state);
+      entity.id = 1;
 
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.spendingGamificationEntitys.put(entity);
-      });
+      box.put(entity);
 
       LoggerService.instance.gamification('✅ SpendingModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -74,10 +80,9 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
   Future<SpendingModuleState?> loadLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      
-      final isar = IsarService.instance.database;
+
       // Usar ID fixo (1) como padrão do projeto, igual ao Reading
-      final entity = await isar.spendingGamificationEntitys.get(1);
+      final entity = box.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -99,8 +104,7 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.spendingGamificationEntitys.count();
+      final count = box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -111,11 +115,8 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        // Limpar todas as entidades (padrão igual ao Reading)
-        await isar.spendingGamificationEntitys.clear();
-      });
+      // Limpar todas as entidades (padrão igual ao Reading)
+      box.removeAll();
       LoggerService.instance.gamification('🗑️ SpendingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -132,8 +133,7 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
   @override
   Future<List<SpendingModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.spendingGamificationEntitys.where().findAll();
+      final entities = box.getAll();
       return entities.map((e) => e.toModuleState()).toList();
     } catch (e) {
       return [];

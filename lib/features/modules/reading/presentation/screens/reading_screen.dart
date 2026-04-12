@@ -507,7 +507,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         HapticFeedback.heavyImpact();
         
         // Implementando lógica de desativação local
-        final notifier = ref.read(readingGamificationNotifierProvider(ref.read(currentUserIdProvider)).notifier);
+        final notifier = ref.read(readingGamificationNotifierProvider.notifier);
         notifier.clearGamification(); // Limpa o estado da gamificação
         
         // Salvar estado desativado em configuração local
@@ -521,7 +521,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       HapticFeedback.lightImpact();
       
       // Implementando lógica de ativação local
-      final notifier = ref.read(readingGamificationNotifierProvider(ref.read(currentUserIdProvider)).notifier);
+      final notifier = ref.read(readingGamificationNotifierProvider.notifier);
       await notifier.loadGamification();
       
       // Salvar estado ativado em configuração local

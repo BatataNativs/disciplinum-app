@@ -1,6 +1,6 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/meal_entry_entity.dart';
-import 'package:isar/isar.dart';
 
 /// Repository para gerenciar registros de refeições
 class MealEntryRepository {
@@ -9,14 +9,12 @@ class MealEntryRepository {
 
   MealEntryRepository._internal();
 
-  Isar get _isar => IsarService.instance.database;
+  Box<MealEntryEntity> get _box => ObjectBoxService.instance.store.box<MealEntryEntity>();
 
   /// Salva uma refeição
   Future<void> saveMeal(MealEntryEntity meal) async {
     meal.touch();
-    await _isar.writeTxn(() async {
-      await _isar.mealEntryEntitys.put(meal);
-    });
+    _box.put(meal);
   }
 
   /// Obtém todas as refeições de um usuário em uma data específica
@@ -24,17 +22,24 @@ class MealEntryRepository {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    return await _isar.mealEntryEntitys
-        .filter()
-        .userIdEqualTo(userId)
-        .dateBetween(startOfDay, endOfDay, includeLower: true, includeUpper: false)
-        .sortByPlannedTime()
-        .findAll();
+    // Try multiple compatible ways of ObjectBox querying for dates:
+    // Some versions accept Datetime directly
+    final query = _box.query(
+      MealEntryEntity_.userId.equals(userId)
+        .and(MealEntryEntity_.date.betweenDate(
+          startOfDay, 
+          endOfDay.subtract(const Duration(milliseconds: 1))
+        ))
+    ).order(MealEntryEntity_.plannedTime).build();
+    
+    final result = query.find();
+    query.close();
+    return result;
   }
 
   /// Obtém a refeição por ID
   Future<MealEntryEntity?> getMealById(int id) async {
-    return await _isar.mealEntryEntitys.get(id);
+    return _box.get(id);
   }
 
   /// Marca uma refeição como completada
@@ -75,19 +80,15 @@ class MealEntryRepository {
 
   /// Deleta uma refeição
   Future<void> deleteMeal(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.mealEntryEntitys.delete(id);
-    });
+    _box.remove(id);
   }
 
   /// Deleta todas as refeições de um usuário
   Future<void> deleteAllUserMeals(String userId) async {
-    await _isar.writeTxn(() async {
-      await _isar.mealEntryEntitys
-          .filter()
-          .userIdEqualTo(userId)
-          .deleteAll();
-    });
+    final query = _box.query(MealEntryEntity_.userId.equals(userId)).build();
+    final ids = query.findIds();
+    _box.removeMany(ids);
+    query.close();
   }
 
   /// Cria refeições padrão para um dia (baseado nos horários configurados)

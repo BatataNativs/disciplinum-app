@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_model.dart';
 import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
@@ -17,7 +17,7 @@ class ReadingService {
   final ReadingRepository _repository;
   final ReadingGamificationRepository _gamificationRepository;
   final dynamic _gamificationService; // Tipo dinâmico para evitar dependência circular
-  late final IsarPreferencesRepository _prefs;
+  late final ObjectBoxPreferencesRepository _prefs;
 
   List<ReadingBook> _books = [];
   int _currentStreak = 0;
@@ -25,7 +25,7 @@ class ReadingService {
   ReadingGamificationEntity? _gamificationEntity;
 
   ReadingService(this._repository, this._gamificationRepository, [this._gamificationService]) {
-    _prefs = IsarPreferencesRepository(IsarService.instance.database);
+    _prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     _loadData();
   }
 

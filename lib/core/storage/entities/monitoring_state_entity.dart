@@ -1,61 +1,71 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
-part 'monitoring_state_entity.g.dart';
-
-/// Entidade para persistir o estado de monitoramento ativo
-/// Recupera automaticamente o monitoramento quando o app reinicia
-@Collection()
+@Entity()
 class MonitoringState {
-  Id? id = 1; // ID fixo, sempre apenas um registro
+  @Id()
+  int id = 1;
+
+  // Armazenado como int para ObjectBox (enum não é suportado no construtor)
+  late int activeNicheIdIndex;
   
-  @Index()
-  @enumerated // ✅ CORRIGIDO: Não nullable
-  late NicheId activeNicheId; // Mudado de NicheId? para NicheId
+  // Transient - não armazenado no banco, converte int para enum
+  @Transient()
+  NicheId get activeNicheId => NicheId.values[activeNicheIdIndex];
   
-  @Index()
+  // Setter para facilitar uso
+  set activeNicheId(NicheId value) => activeNicheIdIndex = value.index;
+
   late bool isMonitoringActive;
-  
-  /// Lista de apps monitorados (serializada como JSON)
   late List<String> monitoredApps;
-  
-  /// Timestamp do último heartbeat
   late DateTime lastHeartbeat;
-  
-  /// Timestamp de início do monitoramento atual
   late DateTime? monitoringStartTime;
-  
-  /// Contador de violações na sessão atual
   late int violationCount;
-  
-  /// Timestamp da última violação
   late DateTime? lastViolationTime;
-  
-  MonitoringState({
-    required this.activeNicheId, // ✅ Mudado para required NicheId
-    this.isMonitoringActive = false,
-    this.monitoredApps = const [],
-    required this.lastHeartbeat,
-    this.monitoringStartTime,
-    this.violationCount = 0,
-    this.lastViolationTime,
-  });
-  
-  /// Verifica se o monitoramento está obsoleto (mais de 5 minutos sem heartbeat)
+
+  // Construtor padrão necessário para ObjectBox
+  MonitoringState()
+      : activeNicheIdIndex = 8, // NicheId.reading.index = 8
+        isMonitoringActive = false,
+        monitoredApps = const [],
+        lastHeartbeat = DateTime.now(),
+        monitoringStartTime = null,
+        violationCount = 0,
+        lastViolationTime = null;
+
+  // Factory method para criar instâncias validadas
+  factory MonitoringState.create({
+    required NicheId activeNicheId,
+    bool isMonitoringActive = false,
+    List<String> monitoredApps = const [],
+    required DateTime lastHeartbeat,
+    DateTime? monitoringStartTime,
+    int violationCount = 0,
+    DateTime? lastViolationTime,
+  }) {
+    final entity = MonitoringState();
+    entity.activeNicheIdIndex = activeNicheId.index;
+    entity.isMonitoringActive = isMonitoringActive;
+    entity.monitoredApps = monitoredApps;
+    entity.lastHeartbeat = lastHeartbeat;
+    entity.monitoringStartTime = monitoringStartTime;
+    entity.violationCount = violationCount;
+    entity.lastViolationTime = lastViolationTime;
+    return entity;
+  }
+
   bool get isStale {
     final now = DateTime.now();
     final diff = now.difference(lastHeartbeat);
     return diff.inMinutes > 5;
   }
-  
-  /// Atualiza o heartbeat
+
   void updateHeartbeat() {
     lastHeartbeat = DateTime.now();
   }
-  
-  /// Inicia o monitoramento
+
   void startMonitoring(NicheId nicheId, List<String> apps) {
-    activeNicheId = nicheId;
+    activeNicheIdIndex = nicheId.index;
     isMonitoringActive = true;
     monitoredApps = apps;
     monitoringStartTime = DateTime.now();
@@ -63,34 +73,29 @@ class MonitoringState {
     lastViolationTime = null;
     updateHeartbeat();
   }
-  
-  /// Para o monitoramento
+
   void stopMonitoring() {
     isMonitoringActive = false;
-    activeNicheId = NicheId.reading; // ✅ Valor default em vez de null
+    activeNicheIdIndex = 8; // NicheId.reading.index = 8
     monitoredApps = [];
     monitoringStartTime = null;
     updateHeartbeat();
   }
-  
-  /// Registra uma violação
+
   void registerViolation() {
     violationCount++;
     lastViolationTime = DateTime.now();
     updateHeartbeat();
   }
-  
-  /// Tempo de monitoramento ativo
-  @ignore // ✅ Isar não suporta Duration? como propriedade
+
   Duration? get activeDuration {
     if (!isMonitoringActive || monitoringStartTime == null) return null;
     return DateTime.now().difference(monitoringStartTime!);
   }
-  
-  /// Converte para JSON (para compatibilidade)
+
   Map<String, dynamic> toJson() {
     return {
-      'activeNicheId': activeNicheId.index, // ✅ Removido ? porque não é mais nullable
+      'activeNicheId': activeNicheIdIndex,
       'isMonitoringActive': isMonitoringActive,
       'monitoredApps': monitoredApps,
       'lastHeartbeat': lastHeartbeat.millisecondsSinceEpoch,
@@ -99,13 +104,12 @@ class MonitoringState {
       'lastViolationTime': lastViolationTime?.millisecondsSinceEpoch,
     };
   }
-  
-  /// Cria a partir de JSON (para compatibilidade)
+
   factory MonitoringState.fromJson(Map<String, dynamic> json) {
-    return MonitoringState(
-      activeNicheId: json['activeNicheId'] != null 
-          ? NicheId.values[json['activeNicheId']] 
-          : NicheId.reading, // ✅ Valor default
+    return MonitoringState.create(
+      activeNicheId: json['activeNicheId'] != null
+          ? NicheId.values[json['activeNicheId']]
+          : NicheId.reading,
       isMonitoringActive: json['isMonitoringActive'] ?? false,
       monitoredApps: List<String>.from(json['monitoredApps'] ?? []),
       lastHeartbeat: DateTime.fromMillisecondsSinceEpoch(json['lastHeartbeat']),

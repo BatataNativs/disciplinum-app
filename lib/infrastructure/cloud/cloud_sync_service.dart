@@ -5,13 +5,13 @@ import 'package:disciplinum/shared/models/user_niche_app.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/network/network_health_service.dart';
 import 'package:disciplinum/core/network/connectivity_fallback.dart';
 
 class CloudSyncService {
   final SupabaseClient supabase;
-  final IsarPreferencesRepository? prefsRepo;
+  final ObjectBoxPreferencesRepository? prefsRepo;
   final ConnectivityFallback _fallback = ConnectivityFallback();
 
   CloudSyncService({

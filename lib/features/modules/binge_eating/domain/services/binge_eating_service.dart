@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_habit.dart';
 import 'package:flutter/material.dart';
 
@@ -146,7 +146,7 @@ class BingeEatingService {
   static const String _habitKey = 'binge_habit_data';
   static const String _episodesKey = 'binge_episodes';
 
-  final IsarPreferencesRepository _repository;
+  final ObjectBoxPreferencesRepository _repository;
 
   late BingeEatingConfig _config;
   BingeHabit? _habit;

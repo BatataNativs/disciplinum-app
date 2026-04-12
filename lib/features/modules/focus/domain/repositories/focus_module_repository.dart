@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
@@ -14,6 +15,8 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
   static FocusModuleRepository get instance => _instance ??= FocusModuleRepository._();
   
   FocusModuleRepository._();
+
+  Box<FocusGamificationEntity> get _box => ObjectBoxService.instance.store.box<FocusGamificationEntity>();
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -58,10 +61,8 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
         ..maxStreakDays = state.longestStreakDays
         ..touch();
 
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.focusGamificationEntitys.put(entity);
-      });
+      entity.id = 1;
+      _box.put(entity);
 
       LoggerService.instance.gamification('✅ FocusModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -82,8 +83,7 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
     try {
       _setStatus(RepositoryStatus.busy);
       
-      final isar = IsarService.instance.database;
-      final entity = await isar.focusGamificationEntitys.get(1);
+      final entity = _box.get(1);
 
       _setStatus(RepositoryStatus.ready);
       
@@ -116,8 +116,7 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.focusGamificationEntitys.count();
+      final count = _box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -128,10 +127,7 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.focusGamificationEntitys.clear();
-      });
+      _box.removeAll();
       LoggerService.instance.gamification('🗑️ FocusModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -148,8 +144,7 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
   @override
   Future<List<FocusModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.focusGamificationEntitys.where().findAll();
+      final entities = _box.getAll();
       return entities.map((e) => FocusModuleState(
         createdAt: e.createdAt,
         updatedAt: e.updatedAt,

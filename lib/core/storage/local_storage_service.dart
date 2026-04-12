@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 
 /// Camada de abstração para storage local
 /// Facilita testes e migrações futuras
@@ -29,12 +29,12 @@ abstract class LocalStorageService {
   Future<String?> getString(String key, {String? defaultValue});
 }
 
-/// Implementação concreta usando IsarPreferencesRepository
+/// Implementação concreta usando ObjectBoxPreferencesRepository
 class LocalStorageServiceImpl implements LocalStorageService {
-  late IsarPreferencesRepository _prefs;
+  late ObjectBoxPreferencesRepository _prefs;
   
   Future<void> _init() async {
-    _prefs = IsarPreferencesRepository(IsarService.instance.database);
+    _prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
   }
 
   @override

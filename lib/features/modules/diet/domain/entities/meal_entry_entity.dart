@@ -1,40 +1,19 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'meal_entry_entity.g.dart';
-
-/// Entidade para registro de refeições do módulo Diet
-/// Armazena informações sobre cada refeição feita pelo usuário
-@collection
+@Entity()
 class MealEntryEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index()
   String userId;
-
-  @Index()
   DateTime date;
-
-  /// Nome da refeição (Café da manhã, Almoço, Jantar, etc)
   String mealName;
-
-  /// Horário planejado para a refeição
   DateTime plannedTime;
-
-  /// Horário em que a refeição foi realmente feita (null se não fez)
   DateTime? actualTime;
-
-  /// Se a refeição foi feita dentro do horário planejado
   bool wasOnTime = false;
-
-  /// Se a refeição foi feita (mesmo fora do horário)
   bool wasCompleted = false;
-
-  /// Calorias consumidas (opcional)
   int? calories;
-
-  /// Observações sobre a refeição
   String? notes;
-
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 
@@ -43,7 +22,13 @@ class MealEntryEntity {
     required this.date,
     required this.mealName,
     required this.plannedTime,
-  });
+    this.actualTime,
+    this.wasOnTime = false,
+    this.wasCompleted = false,
+    this.calories,
+    this.notes,
+  })  : createdAt = DateTime.now(),
+        updatedAt = DateTime.now();
 
   /// Verifica se esta é a última refeição do dia
   bool isLastMealOfDay(List<MealEntryEntity> allMealsOfDay) {

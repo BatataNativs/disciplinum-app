@@ -2,33 +2,28 @@ import 'dart:convert';
 
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
 /// Entidade para fila de sync offline
-@collection
+@Entity()
 class SyncQueueItem {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index()
   late String moduleId;
 
-  @Index()
   late String userId;
 
-  @Index()
   late String operation;
 
   late String payloadJson;
 
-  @Index()
   late DateTime createdAt;
 
   int retryCount = 0;
 
-  @Index()
   bool processed = false;
 
-  @Index()
   DateTime? processedAt;
 
   String? errorMessage;

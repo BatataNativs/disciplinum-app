@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_model.dart';
 
 /// Serviço principal para gerenciamento de dieta - VERSÃO RIVERPOD
@@ -10,7 +10,7 @@ class DietService {
   static const String _mealsKey = 'diet_meals';
   static const String _summaryKey = 'diet_summary';
 
-  final IsarPreferencesRepository _prefs;
+  final ObjectBoxPreferencesRepository _prefs;
 
   DailyNutritionGoals? _goals;
   List<MealRecord> _meals = [];

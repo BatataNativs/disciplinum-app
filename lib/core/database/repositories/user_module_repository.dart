@@ -1,24 +1,24 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/database/entities/user_module_state.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
-/// Repositório para gerenciar estados de módulos do usuário no Isar
+/// Repositório para gerenciar estados de módulos do usuário no ObjectBox
 class UserModuleRepository {
   static UserModuleRepository? _instance;
   static UserModuleRepository get instance => _instance ??= UserModuleRepository._internal();
   
   UserModuleRepository._internal();
 
+  Box<UserModuleState> get _box => ObjectBoxService.instance.store.box<UserModuleState>();
+
   /// Obtém o estado de um módulo para um usuário
   Future<UserModuleState?> getModuleState(String userId, int nicheId) async {
     try {
-      final isar = IsarService.instance.database;
-      return await isar.userModuleStates
-          .filter()
-          .userIdEqualTo(userId)
-          .nicheIdEqualTo(nicheId)
-          .findFirst();
+      return _box.query(
+        UserModuleState_.userId.equals(userId)
+          .and(UserModuleState_.nicheId.equals(nicheId))
+      ).build().findFirst();
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to get module state', error: e, stackTrace: stackTrace);
       return null;
@@ -28,11 +28,9 @@ class UserModuleRepository {
   /// Obtém todos os estados de módulos de um usuário
   Future<List<UserModuleState>> getAllModuleStates(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      return await isar.userModuleStates
-          .filter()
-          .userIdEqualTo(userId)
-          .findAll();
+      return _box.query(
+        UserModuleState_.userId.equals(userId)
+      ).build().find();
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to get all module states', error: e, stackTrace: stackTrace);
       return [];
@@ -42,12 +40,10 @@ class UserModuleRepository {
   /// Obtém apenas os módulos ativos de um usuário
   Future<List<UserModuleState>> getActiveModules(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      return await isar.userModuleStates
-          .filter()
-          .userIdEqualTo(userId)
-          .isActiveEqualTo(true)
-          .findAll();
+      return _box.query(
+        UserModuleState_.userId.equals(userId)
+          .and(UserModuleState_.isActive.equals(true))
+      ).build().find();
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to get active modules', error: e, stackTrace: stackTrace);
       return [];
@@ -57,10 +53,7 @@ class UserModuleRepository {
   /// Salva ou atualiza o estado de um módulo
   Future<void> saveModuleState(UserModuleState moduleState) async {
     try {
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.userModuleStates.put(moduleState);
-      });
+      _box.put(moduleState);
       LoggerService.instance.i('Module state saved: ${moduleState.nicheId}');
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to save module state', error: e, stackTrace: stackTrace);
@@ -180,14 +173,9 @@ class UserModuleRepository {
   /// Deleta um estado de módulo específico
   Future<void> deleteModuleState(String userId, int nicheId) async {
     try {
-      final isar = IsarService.instance.database;
-      
       final moduleState = await getModuleState(userId, nicheId);
       if (moduleState != null) {
-        await isar.writeTxn(() async {
-          await isar.userModuleStates.delete(moduleState.id);
-        });
-        
+        _box.remove(moduleState.id);
         LoggerService.instance.i('Module state deleted: ${moduleState.nicheId}');
       }
     } catch (e, stackTrace) {
@@ -199,15 +187,19 @@ class UserModuleRepository {
   /// Limpa todos os estados de um usuário
   Future<void> clearUserStates(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        final count = await isar.userModuleStates
-            .filter()
-            .userIdEqualTo(userId)
-            .deleteAll();
-        
-        LoggerService.instance.i('Cleared $count module states for user $userId');
-      });
+      final query = _box.query(
+        UserModuleState_.userId.equals(userId)
+      ).build();
+      final count = query.find().length;
+      query.close();
+      
+      // Remove todos os estados do usuário
+      final allStates = await getAllModuleStates(userId);
+      for (final state in allStates) {
+        _box.remove(state.id);
+      }
+      
+      LoggerService.instance.i('Cleared $count module states for user $userId');
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to clear user states', error: e, stackTrace: stackTrace);
       rethrow;

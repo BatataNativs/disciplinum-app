@@ -1,15 +1,24 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_interval_entity.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-/// Repositório para gerenciar intervalos de foco usando Isar puro
+/// Repositório para gerenciar intervalos de foco usando ObjectBox
 class FocusIntervalRepository {
   static FocusIntervalRepository? _instance;
   static FocusIntervalRepository get instance => _instance ??= FocusIntervalRepository._internal();
   
   FocusIntervalRepository._internal();
+
+  Box<FocusIntervalEntity> get _box => ObjectBoxService.instance.store.box<FocusIntervalEntity>();
+
+  Future<FocusIntervalEntity?> _getEntity(int nicheId) async {
+    final query = _box.query(FocusIntervalEntity_.nicheId.equals(nicheId)).build();
+    final result = query.findFirst();
+    query.close();
+    return result;
+  }
 
   /// Salva ou atualiza um intervalo de foco para um nicho
   Future<void> saveInterval({
@@ -17,13 +26,7 @@ class FocusIntervalRepository {
     required TimeOfDayRange interval,
   }) async {
     try {
-      final isar = IsarService.instance.database;
-      
-      // Busca se já existe um intervalo para este nicheId
-      final existing = await isar.focusIntervalEntitys
-          .filter()
-          .nicheIdEqualTo(nicheId)
-          .findFirst();
+      final existing = await _getEntity(nicheId);
       
       final entity = existing != null
           ? existing.copyWith(
@@ -37,14 +40,12 @@ class FocusIntervalRepository {
               interval: interval,
             );
       
-      await isar.writeTxn(() async {
-        entity.touch();
-        await isar.focusIntervalEntitys.put(entity);
-      });
+      entity.touch();
+      _box.put(entity);
       
       LoggerService.instance.i('Intervalo de foco salvo: nicheId=$nicheId, interval=$interval');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar intervalo de foco', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar intervalo de foco', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -52,16 +53,10 @@ class FocusIntervalRepository {
   /// Busca um intervalo de foco por nicheId
   Future<TimeOfDayRange?> getInterval(int nicheId) async {
     try {
-      final isar = IsarService.instance.database;
-      
-      final entity = await isar.focusIntervalEntitys
-          .filter()
-          .nicheIdEqualTo(nicheId)
-          .findFirst();
-      
+      final entity = await _getEntity(nicheId);
       return entity?.toDomain();
-    } catch (e) {
-      LoggerService.instance.e('Erro ao buscar intervalo de foco', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao buscar intervalo de foco', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -69,9 +64,7 @@ class FocusIntervalRepository {
   /// Busca todos os intervalos de foco
   Future<Map<int, TimeOfDayRange>> getAllIntervals() async {
     try {
-      final isar = IsarService.instance.database;
-      
-      final entities = await isar.focusIntervalEntitys.where().findAll();
+      final entities = _box.getAll();
       
       final result = <int, TimeOfDayRange>{};
       for (final entity in entities) {
@@ -79,8 +72,8 @@ class FocusIntervalRepository {
       }
       
       return result;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao buscar todos os intervalos de foco', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao buscar todos os intervalos de foco', error: e, stackTrace: stackTrace);
       return {};
     }
   }
@@ -88,18 +81,14 @@ class FocusIntervalRepository {
   /// Remove um intervalo de foco por nicheId
   Future<void> removeInterval(int nicheId) async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.focusIntervalEntitys
-            .filter()
-            .nicheIdEqualTo(nicheId)
-            .deleteAll();
-      });
+      final query = _box.query(FocusIntervalEntity_.nicheId.equals(nicheId)).build();
+      final ids = query.findIds();
+      _box.removeMany(ids);
+      query.close();
       
       LoggerService.instance.i('Intervalo de foco removido: nicheId=$nicheId');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao remover intervalo de foco', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao remover intervalo de foco', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -107,15 +96,10 @@ class FocusIntervalRepository {
   /// Remove todos os intervalos de foco
   Future<void> clearAll() async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.focusIntervalEntitys.clear();
-      });
-      
+      _box.removeAll();
       LoggerService.instance.i('Todos os intervalos de foco foram removidos');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar intervalos de foco', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar intervalos de foco', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -125,8 +109,8 @@ class FocusIntervalRepository {
     try {
       final interval = await getInterval(nicheId);
       return interval != null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao verificar existência de intervalo', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao verificar existência de intervalo', error: e, stackTrace: stackTrace);
       return false;
     }
   }

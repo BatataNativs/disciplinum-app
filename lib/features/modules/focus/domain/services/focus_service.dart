@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
 // Temporário - classe substituta
 class FocusInsignia {
@@ -26,20 +26,20 @@ class FocusInsignia {
 }
 
 class FocusService {
-  final IsarService _isarService;
+  final ObjectBoxService _objectBoxService;
   final CloudSyncService _cloudSync;
 
-  FocusService(this._isarService, this._cloudSync);
+  FocusService(this._objectBoxService, this._cloudSync);
 
   Future<FocusStatusEntity?> _getOrCreateStatus() async {
     final user = Supabase.instance.client.auth.currentUser;
     final userId = user?.id ?? 'local';
 
-    final existing = await _isarService.focusStatus.filter().userIdEqualTo(userId).findFirst();
+    final existing = _objectBoxService.store.box<FocusStatusEntity>().query(FocusStatusEntity_.userId.equals(userId)).build().findFirst();
     if (existing != null) return existing;
 
     final newStatus = FocusStatusEntity()..userId = userId;
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(newStatus));
+    _objectBoxService.store.box<FocusStatusEntity>().put(newStatus);
     return newStatus;
   }
 
@@ -53,7 +53,7 @@ class FocusService {
     status.endMinute = end.minute;
     status.lastUpdated = DateTime.now();
 
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
+    _objectBoxService.store.box<FocusStatusEntity>().put(status);
 
     // Opcional: Sync com Cloud se necessário
     await _cloudSync.removeAllTimesForNiche(nicheId: NicheId.focus.id);
@@ -71,7 +71,7 @@ class FocusService {
     status.endMinute = null;
     status.lastUpdated = DateTime.now();
 
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
+    _objectBoxService.store.box<FocusStatusEntity>().put(status);
     await _cloudSync.removeAllTimesForNiche(nicheId: NicheId.focus.id);
   }
 
@@ -109,7 +109,7 @@ class FocusService {
     status.respectedPeriods++;
     status.lastUpdated = DateTime.now();
 
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
+    _objectBoxService.store.box<FocusStatusEntity>().put(status);
   }
 
   Future<void> resetProgress() async {
@@ -128,7 +128,7 @@ class FocusService {
     
     status.lastUpdated = DateTime.now();
 
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
+    _objectBoxService.store.box<FocusStatusEntity>().put(status);
   }
 
   Future<List<FocusInsignia>> getEarnedInsignias() async {
@@ -149,6 +149,6 @@ class FocusService {
     status.earnedInsigniaNames.add(insignia.name);
     status.lastUpdated = DateTime.now();
 
-    await _isarService.database.writeTxn(() => _isarService.focusStatus.put(status));
+    _objectBoxService.store.box<FocusStatusEntity>().put(status);
   }
 }

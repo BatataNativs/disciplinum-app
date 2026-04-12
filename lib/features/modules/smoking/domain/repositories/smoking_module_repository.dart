@@ -1,19 +1,27 @@
 import 'dart:async';
+
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/module_repository_contract.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
-import 'package:isar/isar.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Smoking implementando ModuleRepositoryContract
 class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleState> {
   static SmokingModuleRepository? _instance;
   static SmokingModuleRepository get instance => _instance ??= SmokingModuleRepository._();
-  
+
   SmokingModuleRepository._();
+
+  Box<SmokingGamificationEntity>? _box;
+
+  Box<SmokingGamificationEntity> get box {
+    _box ??= ObjectBoxService.instance.store.box<SmokingGamificationEntity>();
+    return _box!;
+  }
 
   final _statusController = StreamController<RepositoryStatus>.broadcast();
   RepositoryStatus _status = RepositoryStatus.initializing;
@@ -58,12 +66,10 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
         ..startDate = state.startDate
         ..dailyCost = state.dailyCost
         ..packCost = state.packCost
+        ..id = 1
         ..touch();
 
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.smokingGamificationEntitys.put(entity);
-      });
+      box.put(entity);
 
       LoggerService.instance.gamification('✅ SmokingModuleState salvo localmente');
       _setStatus(RepositoryStatus.ready);
@@ -83,12 +89,11 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
   Future<SmokingModuleState?> loadLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      
-      final isar = IsarService.instance.database;
-      final entity = await isar.smokingGamificationEntitys.get(1);
+
+      final entity = box.get(1);
 
       _setStatus(RepositoryStatus.ready);
-      
+
       if (entity != null) {
         return SmokingModuleState.fromJson(entity.toJson());
       }
@@ -107,8 +112,7 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
   @override
   Future<bool> existsLocal(String userId) async {
     try {
-      final isar = IsarService.instance.database;
-      final count = await isar.smokingGamificationEntitys.count();
+      final count = box.count();
       return count > 0;
     } catch (e) {
       return false;
@@ -119,10 +123,7 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
   Future<void> deleteLocal(String userId) async {
     try {
       _setStatus(RepositoryStatus.busy);
-      final isar = IsarService.instance.database;
-      await isar.writeTxn(() async {
-        await isar.smokingGamificationEntitys.clear();
-      });
+      box.removeAll();
       LoggerService.instance.gamification('🗑️ SmokingModuleState local deletado');
       _setStatus(RepositoryStatus.ready);
     } catch (e) {
@@ -139,8 +140,7 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
   @override
   Future<List<SmokingModuleState>> listAllLocal() async {
     try {
-      final isar = IsarService.instance.database;
-      final entities = await isar.smokingGamificationEntitys.where().findAll();
+      final entities = box.getAll();
       return entities.map((e) => SmokingModuleState.fromJson(e.toJson())).toList();
     } catch (e) {
       return [];

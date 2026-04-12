@@ -1,33 +1,44 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/services/spending_migration_checker.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Spending
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class SpendingGamificationRepository {
   static SpendingGamificationRepository? _instance;
   static SpendingGamificationRepository get instance => _instance ??= SpendingGamificationRepository._();
-  
+
   SpendingGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<SpendingGamificationEntity>? _box;
+
+  Box<SpendingGamificationEntity> get box {
+    _box ??= ObjectBoxService.instance.store.box<SpendingGamificationEntity>();
+    return _box!;
+  }
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveSpendingState(SpendingModuleState state) async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
       final entity = SpendingGamificationEntity.fromModuleState(userId, state);
-      final isar = IsarService.instance.database;
       
-      await isar.writeTxn(() async {
-        // Usar putByUserId que gerencia automaticamente o upsert pelo índice único
-        await isar.spendingGamificationEntitys.putByUserId(entity);
-      });
-      
-      LoggerService.instance.gamification('Estado Spending salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Spending com Isar', error: e);
+      final existingEntity = box.get(1);
+      if (existingEntity != null) {
+        entity.id = existingEntity.id;
+      } else {
+        entity.id = 1;
+      }
+
+      box.put(entity);
+
+      LoggerService.instance.gamification('Estado Spending salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Spending com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -35,19 +46,18 @@ class SpendingGamificationRepository {
   Future<SpendingModuleState?> getSpendingState() async {
     try {
       // Usando sintaxe simples como outros módulos: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.spendingGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
         final stateMap = entity.toModuleStateMap();
-        LoggerService.instance.gamification('Estado Spending carregado do Isar');
+        LoggerService.instance.gamification('Estado Spending carregado do ObjectBox');
         return SpendingModuleState.fromJson(stateMap);
       }
       
-      LoggerService.instance.gamification('Estado Spending não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Spending não encontrado no ObjectBox');
       return null;
     } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Spending do Isar', error: e);
+      LoggerService.instance.e('Erro ao carregar estado Spending do ObjectBox', error: e);
       return null;
     }
   }
@@ -55,12 +65,10 @@ class SpendingGamificationRepository {
   /// Limpa o estado local
   Future<void> clearSpendingState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.spendingGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Spending limpo do Isar');
+      box.removeAll();
+      LoggerService.instance.gamification('Estado Spending limpo do ObjectBox');
     } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Spending do Isar', error: e);
+      LoggerService.instance.e('Erro ao limpar estado Spending do ObjectBox', error: e);
     }
   }
 

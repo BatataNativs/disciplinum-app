@@ -1,4 +1,6 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
@@ -6,48 +8,51 @@ import 'package:disciplinum/features/modules/money_saving/gamification/domain/se
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Money Saving Challenge
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class MoneySavingGamificationRepository {
   static MoneySavingGamificationRepository? _instance;
   static MoneySavingGamificationRepository get instance => _instance ??= MoneySavingGamificationRepository._();
   
   MoneySavingGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<MoneySavingGamificationEntity> get _box => ObjectBoxService.instance.store.box<MoneySavingGamificationEntity>();
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveMoneySavingState(MoneySavingModuleState state) async {
     try {
-      // Converte para entidade Isar com ID fixo como outros módulos
       final entity = MoneySavingGamificationEntity.fromModuleState(state);
-      entity.id = 1; // ID fixo como Smoking e Diet
+      
+      final existingEntity = _box.get(1);
+      if (existingEntity != null) {
+        entity.id = existingEntity.id;
+      } else {
+        entity.id = 1;
+      }
       entity.userId = 'money_saving_user';
       
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.moneySavingGamificationStates.put(entity);
-      });
+      _box.put(entity);
       
-      LoggerService.instance.gamification('Estado Money Saving salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Money Saving com Isar', error: e);
+      LoggerService.instance.gamification('Estado Money Saving salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Money Saving com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
   /// Carrega o estado salvo localmente
   Future<MoneySavingModuleState?> getMoneySavingState() async {
     try {
-      // Usando sintaxe simples como outros módulos: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.moneySavingGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
         final state = entity.toModuleState();
-        LoggerService.instance.gamification('Estado Money Saving carregado do Isar');
+        LoggerService.instance.gamification('Estado Money Saving carregado do ObjectBox');
         return state;
       }
       
-      LoggerService.instance.gamification('Estado Money Saving não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Money Saving não encontrado no ObjectBox');
       return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Money Saving do Isar', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Money Saving do ObjectBox', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -55,12 +60,10 @@ class MoneySavingGamificationRepository {
   /// Limpa todos os dados locais
   Future<void> clearMoneySavingState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.moneySavingGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Money Saving limpo do Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Money Saving do Isar', error: e);
+      _box.removeAll();
+      LoggerService.instance.gamification('Estado Money Saving limpo do ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Money Saving do ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 

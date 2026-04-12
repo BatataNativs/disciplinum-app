@@ -1,26 +1,21 @@
-import 'package:isar/isar.dart';
 import 'package:disciplinum/infrastructure/iap/domain/entities/iap_entitlement.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
-/// Repositório Isar puro para entitlements IAP
-/// Substitui o uso genérico de IsarPreferencesRepository
+/// Repositório ObjectBox puro para entitlements IAP
+/// Substitui o uso genérico de Isar
 class IapEntitlementRepository {
-  final Isar _isar;
+  final Box<IapEntitlement> _box;
 
-  IapEntitlementRepository(this._isar);
+  IapEntitlementRepository(Store store) : _box = store.box<IapEntitlement>();
 
   /// Salva ou atualiza um entitlement
   Future<void> saveEntitlement(IapEntitlement entitlement) async {
-    await _isar.writeTxn(() async {
-      await _isar.iapEntitlements.put(entitlement);
-    });
+    _box.put(entitlement);
   }
 
   /// Obtém um entitlement por productId
   Future<IapEntitlement?> getEntitlement(String productId) async {
-    return await _isar.iapEntitlements
-        .filter()
-        .productIdEqualTo(productId)
-        .findFirst();
+    return _box.query(IapEntitlement_.productId.equals(productId)).build().findFirst();
   }
 
   /// Verifica se um produto foi comprado
@@ -31,29 +26,25 @@ class IapEntitlementRepository {
 
   /// Obtém todos os entitlements válidos
   Future<List<IapEntitlement>> getValidEntitlements() async {
-    return await _isar.iapEntitlements
-        .filter()
-        .isPurchasedEqualTo(true)
-        .isVerifiedEqualTo(true)
-        .findAll();
+    return _box.query(IapEntitlement_.isPurchased.equals(true)
+        .and(IapEntitlement_.isVerified.equals(true)))
+        .build()
+        .find();
   }
 
   /// Obtém entitlements por tipo (permanentes vs temporários)
   Future<List<IapEntitlement>> getEntitlementsByType({bool? isPermanent}) async {
-    var query = _isar.iapEntitlements
-        .filter()
-        .isPurchasedEqualTo(true)
-        .isVerifiedEqualTo(true);
-    
-    if (isPermanent != null) {
-      if (isPermanent) {
-        query = query.expirationDateIsNull();
-      } else {
-        query = query.expirationDateIsNotNull();
-      }
+    if (isPermanent == null) {
+      return _box.getAll();
     }
-    
-    return await query.findAll();
+
+    // Query all and filter in memory for null check
+    final all = _box.getAll();
+    if (isPermanent) {
+      return all.where((e) => e.expirationDate == null).toList();
+    } else {
+      return all.where((e) => e.expirationDate != null).toList();
+    }
   }
 
   /// Marca entitlement como verificado
@@ -81,49 +72,43 @@ class IapEntitlementRepository {
 
   /// Remove um entitlement
   Future<void> removeEntitlement(String productId) async {
-    await _isar.writeTxn(() async {
-      await _isar.iapEntitlements
-          .filter()
-          .productIdEqualTo(productId)
-          .deleteAll();
-    });
+    final entitlement = await getEntitlement(productId);
+    if (entitlement != null) {
+      _box.remove(entitlement.id);
+    }
   }
 
   /// Limpa todos os entitlements (para reset)
   Future<void> clearAll() async {
-    await _isar.writeTxn(() async {
-      await _isar.iapEntitlements.clear();
-    });
+    _box.removeAll();
   }
 
-  /// Migra dados do IsarPreferencesRepository (legado)
+  /// Migra dados do ObjectBoxPreferencesRepository (legado)
   Future<void> migrateFromLegacy(Map<String, dynamic> legacyData) async {
-    await _isar.writeTxn(() async {
-      for (final entry in legacyData.entries) {
-        final productId = entry.key;
-        final data = entry.value as Map<String, dynamic>;
-        
-        // Converter dados legados para novo formato
-        final entitlement = IapEntitlement(
-          productId: productId,
-          isPurchased: data['purchased'] ?? false,
-          expirationDate: data['expiration'] != null 
-              ? DateTime.tryParse(data['expiration'])
-              : null,
-          purchaseDate: data['purchaseDate'] != null
-              ? DateTime.tryParse(data['purchaseDate']) ?? DateTime.now()
-              : DateTime.now(),
-          isVerified: true, // Se estava no legado, assume verificado
-        );
-        
-        await _isar.iapEntitlements.put(entitlement);
-      }
-    });
+    for (final entry in legacyData.entries) {
+      final productId = entry.key;
+      final data = entry.value as Map<String, dynamic>;
+      
+      // Converter dados legados para novo formato
+      final entitlement = IapEntitlement(
+        productId: productId,
+        isPurchased: data['purchased'] ?? false,
+        expirationDate: data['expiration'] != null 
+            ? DateTime.tryParse(data['expiration'])
+            : null,
+        purchaseDate: data['purchaseDate'] != null
+            ? DateTime.tryParse(data['purchaseDate']) ?? DateTime.now()
+            : DateTime.now(),
+        isVerified: true, // Se estava no legado, assume verificado
+      );
+      
+      _box.put(entitlement);
+    }
   }
 
   /// Obtém estatísticas dos entitlements
   Future<Map<String, dynamic>> getStats() async {
-    final all = await _isar.iapEntitlements.where().findAll();
+    final all = _box.getAll();
     final valid = all.where((e) => e.isValid).toList();
     final permanent = valid.where((e) => e.isPermanent).toList();
     final temporary = valid.where((e) => !e.isPermanent).toList();

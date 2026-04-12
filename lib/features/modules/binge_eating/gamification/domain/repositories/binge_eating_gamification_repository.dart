@@ -1,4 +1,6 @@
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_gamification_entity.dart';
@@ -6,45 +8,54 @@ import 'package:disciplinum/features/modules/binge_eating/gamification/domain/se
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório para gerenciar o estado de gamificação do módulo Binge Eating
-/// Implementa persistência local com Isar e sincronização com Supabase
+/// Implementa persistência local com ObjectBox e sincronização com Supabase
 class BingeEatingGamificationRepository {
   static BingeEatingGamificationRepository? _instance;
   static BingeEatingGamificationRepository get instance => _instance ??= BingeEatingGamificationRepository._();
   
   BingeEatingGamificationRepository._();
 
-  /// Salva o estado localmente usando Isar
+  Box<BingeEatingGamificationEntity> get _box => ObjectBoxService.instance.store.box<BingeEatingGamificationEntity>();
+
+  /// Salva o estado localmente usando ObjectBox
   Future<void> saveBingeEatingState(BingeEatingModuleState state) async {
     try {
       final entity = BingeEatingGamificationEntity.fromModuleState('binge_eating_user', state);
       
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.bingeEatingGamificationStates.put(entity);
-      });
+      final existing = await getBingeEatingState();
+      if (existing != null) {
+        final existingEntity = _box.get(1);
+        if (existingEntity != null) {
+          entity.id = existingEntity.id;
+        } else {
+          entity.id = 1;
+        }
+      } else {
+        entity.id = 1;
+      }
       
-      LoggerService.instance.gamification('Estado Binge Eating salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Binge Eating com Isar', error: e);
+      _box.put(entity);
+      
+      LoggerService.instance.gamification('Estado Binge Eating salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Binge Eating com ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 
   /// Carrega o estado salvo localmente
   Future<BingeEatingModuleState?> getBingeEatingState() async {
     try {
-      // Usando sintaxe simples como outros módulos: pega primeiro registro
-      final isar = IsarService.instance.database;
-      final entity = await isar.bingeEatingGamificationEntitys.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1); // Pega o primeiro registro (id=1)
       
       if (entity != null) {
-        final stateMap = entity.toModuleStateMap();
-        LoggerService.instance.gamification('Estado Binge Eating carregado do Isar');
-        return BingeEatingModuleState.fromJson(stateMap);
+        LoggerService.instance.gamification('Estado Binge Eating carregado do ObjectBox');
+        return entity.toModuleState();
       }
       
-      LoggerService.instance.gamification('Estado Binge Eating não encontrado no Isar');
+      LoggerService.instance.gamification('Estado Binge Eating não encontrado no ObjectBox');
       return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Binge Eating do Isar', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Binge Eating do ObjectBox', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -52,12 +63,10 @@ class BingeEatingGamificationRepository {
   /// Limpa o estado local
   Future<void> clearBingeEatingState() async {
     try {
-      await IsarService.instance.database.writeTxn(() async {
-        await IsarService.instance.bingeEatingGamificationStates.clear();
-      });
-      LoggerService.instance.gamification('Estado Binge Eating limpo do Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Binge Eating do Isar', error: e);
+      _box.removeAll();
+      LoggerService.instance.gamification('Estado Binge Eating limpo do ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Binge Eating do ObjectBox', error: e, stackTrace: stackTrace);
     }
   }
 

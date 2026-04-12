@@ -1,26 +1,31 @@
-import 'package:isar/isar.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
-import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_config_entity.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_config_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repositório específico para configurações de Smoking usando Isar puro
+/// Repositório específico para configurações de Smoking usando ObjectBox puro
 /// Com sincronização para Supabase (cloud)
 class SmokingConfigRepository {
   static SmokingConfigRepository? _instance;
   static SmokingConfigRepository get instance => _instance ??= SmokingConfigRepository._internal();
-  
+
   SmokingConfigRepository._internal();
+
+  Box<SmokingConfigEntity>? _box;
+
+  Box<SmokingConfigEntity> get box {
+    _box ??= ObjectBoxService.instance.store.box<SmokingConfigEntity>();
+    return _box!;
+  }
 
   Future<SmokingConfigEntity?> getConfig() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
-      
-      return await isar.smokingConfigEntitys
-          .filter()
-          .userIdEqualTo(userId)
-          .findFirst();
+      final query = box.query(SmokingConfigEntity_.userId.equals(userId)).build();
+      final result = query.findFirst();
+      query.close();
+      return result;
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar configuração do Smoking', error: e);
       return null;
@@ -29,24 +34,19 @@ class SmokingConfigRepository {
 
   Future<void> saveConfig(SmokingConfigEntity config) async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        // Verificar se já existe uma configuração com o mesmo userId
-        final existingConfig = await isar.smokingConfigEntitys
-            .filter()
-            .userIdEqualTo(config.userId)
-            .findFirst();
-        
-        if (existingConfig != null) {
-          // Reutilizar o ID interno do Isar para atualizar em vez de criar nova
-          config.id = existingConfig.id;
-        }
-        
-        config.touch();
-        await isar.smokingConfigEntitys.put(config);
-      });
-      
+      // Verificar se já existe uma configuração com o mesmo userId
+      final query = box.query(SmokingConfigEntity_.userId.equals(config.userId)).build();
+      final existingConfig = query.findFirst();
+      query.close();
+
+      if (existingConfig != null) {
+        // Reutilizar o ID para atualizar em vez de criar nova
+        config.id = existingConfig.id;
+      }
+
+      config.touch();
+      box.put(config);
+
       LoggerService.instance.i('Configuração do Smoking salva com sucesso');
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Smoking', error: e);
@@ -57,15 +57,14 @@ class SmokingConfigRepository {
   Future<void> deleteConfig() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.smokingConfigEntitys
-            .filter()
-            .userIdEqualTo(userId)
-            .deleteAll();
-      });
-      
+      final query = box.query(SmokingConfigEntity_.userId.equals(userId)).build();
+      final existing = query.findFirst();
+      query.close();
+
+      if (existing != null) {
+        box.remove(existing.id);
+      }
+
       LoggerService.instance.i('Configuração do Smoking removida com sucesso');
     } catch (e) {
       LoggerService.instance.e('Erro ao remover configuração do Smoking', error: e);
@@ -75,12 +74,7 @@ class SmokingConfigRepository {
 
   Future<void> clearAll() async {
     try {
-      final isar = IsarService.instance.database;
-      
-      await isar.writeTxn(() async {
-        await isar.smokingConfigEntitys.clear();
-      });
-      
+      box.removeAll();
       LoggerService.instance.i('Todas as configurações do Smoking foram limpas');
     } catch (e) {
       LoggerService.instance.e('Erro ao limpar configurações do Smoking', error: e);

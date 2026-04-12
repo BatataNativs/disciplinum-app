@@ -1,6 +1,7 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/services/reading_migration_checker.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -10,37 +11,39 @@ class ReadingGamificationRepository {
   static ReadingGamificationRepository get instance => _instance ??= ReadingGamificationRepository._();
   ReadingGamificationRepository._();
 
-  Isar get _isar => IsarService.instance.database;
+  Box<ReadingGamificationEntity> get _box => ObjectBoxService.instance.store.box<ReadingGamificationEntity>();
 
   Future<void> saveReadingState(ReadingGamificationEntity entity) async {
     try {
-      await _isar.writeTxn(() async {
-        await _isar.readingGamificationEntitys.put(entity);
-      });
-      LoggerService.instance.gamification('✅ Estado Reading gamificação salvo com Isar');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Reading gamificação', error: e);
+      final existingEntity = _box.get(1);
+      if (existingEntity != null) {
+        entity.id = existingEntity.id;
+      } else {
+        entity.id = 1;
+      }
+      _box.put(entity);
+      LoggerService.instance.gamification('✅ Estado Reading gamificação salvo com ObjectBox');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao salvar estado Reading gamificação', error: e, stackTrace: stackTrace);
     }
   }
 
   Future<ReadingGamificationEntity?> getReadingState() async {
     try {
       // Pega o primeiro registro (sempre 1 para simplificar como outros módulos)
-      return await _isar.readingGamificationEntitys.get(1);
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Reading gamificação', error: e);
+      return _box.get(1);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar estado Reading gamificação', error: e, stackTrace: stackTrace);
       return null;
     }
   }
 
   Future<void> clearReadingState() async {
     try {
-      await _isar.writeTxn(() async {
-        await _isar.readingGamificationEntitys.clear();
-      });
+      _box.removeAll();
       LoggerService.instance.gamification('🗑️ Estado Reading gamificação limpo');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar estado Reading gamificação', error: e);
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao limpar estado Reading gamificação', error: e, stackTrace: stackTrace);
     }
   }
 

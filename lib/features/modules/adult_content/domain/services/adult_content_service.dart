@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 
 /// Configurações de controle de conteúdo adulto
 class AdultContentConfig {
@@ -95,7 +95,7 @@ class AdultContentService {
   static const String _statsKey = 'adult_content_stats';
   static const String _blockedAppsKey = 'blocked_adult_apps';
 
-  final IsarPreferencesRepository _prefs;
+  final ObjectBoxPreferencesRepository _prefs;
 
   AdultContentConfig? _config;
   AdultContentStats? _stats;

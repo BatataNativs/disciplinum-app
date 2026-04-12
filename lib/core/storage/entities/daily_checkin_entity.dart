@@ -1,25 +1,41 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
-part 'daily_checkin_entity.g.dart';
-
-/// Entidade para persistir check-ins diários (ex: Smoking, Binge Eating)
-/// Substitui o uso de SharedPreferences para este fim.
-@Collection()
+@Entity()
 class DailyCheckin {
-  Id? id;
+  @Id()
+  int id = 0;
 
-  @Index(composite: [CompositeIndex('dateStr')], unique: true)
-  @enumerated
-  late NicheId nicheId;
+  @Unique()
+  String nicheIdDate; // Formato: "nicheId_yyyy-MM-dd"
 
-  @Index()
-  late String dateStr; // Formato yyyy-MM-dd
+  // Armazenado como int para ObjectBox
+  int nicheIdIndex;
+  
+  // Transient - não armazenado no banco
+  @Transient()
+  NicheId get nicheId => NicheId.values[nicheIdIndex];
+  
+  String dateStr;
+  DateTime createdAt;
 
-  late DateTime createdAt;
+  // Construtor padrão necessário para ObjectBox
+  DailyCheckin()
+      : nicheIdDate = '',
+        nicheIdIndex = 0,
+        dateStr = '',
+        createdAt = DateTime.now();
 
-  DailyCheckin({
-    required this.nicheId,
-    required this.dateStr,
-  }) : createdAt = DateTime.now();
+  // Factory method para criar instâncias validadas
+  factory DailyCheckin.create({
+    required NicheId nicheId,
+    required String dateStr,
+  }) {
+    final entity = DailyCheckin();
+    entity.nicheIdIndex = nicheId.index;
+    entity.nicheIdDate = '${nicheId.index}_$dateStr';
+    entity.dateStr = dateStr;
+    entity.createdAt = DateTime.now();
+    return entity;
+  }
 }

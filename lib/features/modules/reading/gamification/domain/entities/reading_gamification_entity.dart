@@ -1,32 +1,18 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'dart:convert';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_module_state.dart';
 
-part 'reading_gamification_entity.g.dart';
-
-@collection
+@Entity()
 class ReadingGamificationEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// Lista de insígnias conquistadas (JSON)
   String earnedInsignias = '[]';
-
-  /// Lista de medalhas conquistadas (JSON)
   String earnedMedalhas = '[]';
-
-  /// Dias consecutivos de leitura
   int consecutiveDays = 0;
-
-  /// Data da última leitura
   DateTime? lastReadingDate;
-
-  /// Data de início do hábito
   DateTime? startDate;
-
-  /// Data de criação do registro
   DateTime createdAt = DateTime.now();
-
-  /// Data da última atualização
   DateTime updatedAt = DateTime.now();
 
   ReadingGamificationEntity();
@@ -46,7 +32,7 @@ class ReadingGamificationEntity {
 
   factory ReadingGamificationEntity.fromJson(Map<String, dynamic> json) {
     final entity = ReadingGamificationEntity();
-    entity.id = json['id'] ?? Isar.autoIncrement;
+    entity.id = json['id'] ?? 0;
     entity.earnedInsignias = json['earnedInsignias'] ?? '[]';
     entity.earnedMedalhas = json['earnedMedalhas'] ?? '[]';
     entity.consecutiveDays = json['consecutiveDays'] ?? 0;

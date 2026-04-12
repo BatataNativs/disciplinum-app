@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/core/storage/isar_preferences_repository.dart';
-import 'package:disciplinum/core/database/isar_service.dart';
+import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Mantive o alias 'fln' para segurança
@@ -156,7 +156,7 @@ Future<void> initNotifications() async {
     },
   );
 
-  final prefs = IsarPreferencesRepository(IsarService.instance.database);
+  final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
   NotificationService.soundEnabled =
       await prefs.getBool('settings_sound_enabled') ?? true;
 }
@@ -247,7 +247,7 @@ class NotificationService {
 
   static Future<void> setSoundEnabled(bool value) async {
     soundEnabled = value;
-    final prefs = IsarPreferencesRepository(IsarService.instance.database);
+    final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     await prefs.setBool('settings_sound_enabled', value);
   }
 

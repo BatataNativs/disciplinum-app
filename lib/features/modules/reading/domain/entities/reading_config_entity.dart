@@ -1,12 +1,11 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 
-part 'reading_config_entity.g.dart';
-
-@collection
+@Entity()
 class ReadingConfigEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Unique()
   String userId;
 
   bool enableNotifications = true;
@@ -14,16 +13,14 @@ class ReadingConfigEntity {
   int reminderMinute = 0;
   bool enableDailyReminder = true;
   bool enableStreakReminder = true;
-  bool isModuleActive = false; // Estado de ativação do módulo
+  bool isModuleActive = false;
   
-  // Estatísticas de streak
   int currentStreak = 0;
   DateTime? lastReadingDate;
   DateTime? longestStreakStart;
   DateTime? longestStreakEnd;
   int longestStreakDays = 0;
   
-  // Metas
   int dailyPagesGoal = 20;
   int weeklyBooksGoal = 1;
   

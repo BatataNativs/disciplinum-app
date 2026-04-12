@@ -1,32 +1,17 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 
-part 'focus_interval_entity.g.dart';
-
-@collection
+@Entity()
 class FocusIntervalEntity {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  /// ID do nicho/módulo
-  @Index()
   int nicheId;
-
-  /// Horário de início - armazenado como int para Isar
   int startHour;
-
-  /// Minuto de início - armazenado como int para Isar
   int startMinute;
-
-  /// Horário de fim - armazenado como int para Isar
   int endHour;
-
-  /// Minuto de fim - armazenado como int para Isar
   int endMinute;
-
-  /// Data de criação
   DateTime createdAt = DateTime.now();
-
-  /// Data da última atualização
   DateTime updatedAt = DateTime.now();
 
   FocusIntervalEntity({
