@@ -6,7 +6,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Configurações de controle de procrastinação
 class ProcrastinationConfig {
-  final bool isEnabled;
+  final bool isModuleActive;
   final int dailyFocusMinutes;
   final bool enableNotifications;
   final TimeOfDay reminderTime;
@@ -19,7 +19,7 @@ class ProcrastinationConfig {
   final int blockDurationMinutes;
 
   const ProcrastinationConfig({
-    required this.isEnabled,
+    required this.isModuleActive,
     this.dailyFocusMinutes = 120,
     this.enableNotifications = true,
     this.reminderTime = const TimeOfDay(hour: 9, minute: 0),
@@ -33,7 +33,7 @@ class ProcrastinationConfig {
   });
 
   Map<String, dynamic> toJson() => {
-        'isEnabled': isEnabled,
+        'isModuleActive': isModuleActive,
         'dailyFocusMinutes': dailyFocusMinutes,
         'enableNotifications': enableNotifications,
         'reminderHour': reminderTime.hour,
@@ -48,7 +48,7 @@ class ProcrastinationConfig {
       };
 
   factory ProcrastinationConfig.fromJson(Map<String, dynamic> json) => ProcrastinationConfig(
-        isEnabled: json['isEnabled'] ?? false,
+        isModuleActive: json['isModuleActive'] ?? json['isEnabled'] ?? false,
         dailyFocusMinutes: json['dailyFocusMinutes'] ?? 120,
         enableNotifications: json['enableNotifications'] ?? true,
         reminderTime: TimeOfDay(
@@ -65,7 +65,7 @@ class ProcrastinationConfig {
       );
 
   ProcrastinationConfig copyWith({
-    bool? isEnabled,
+    bool? isModuleActive,
     int? dailyFocusMinutes,
     bool? enableNotifications,
     TimeOfDay? reminderTime,
@@ -78,7 +78,7 @@ class ProcrastinationConfig {
     int? blockDurationMinutes,
   }) {
     return ProcrastinationConfig(
-      isEnabled: isEnabled ?? this.isEnabled,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       dailyFocusMinutes: dailyFocusMinutes ?? this.dailyFocusMinutes,
       enableNotifications: enableNotifications ?? this.enableNotifications,
       reminderTime: reminderTime ?? this.reminderTime,
@@ -93,12 +93,12 @@ class ProcrastinationConfig {
   }
 }
 
-/// Service para Procrastination usando Isar puro (sem IsarPreferencesRepository)
-class ProcrastinationServiceIsar {
-  static ProcrastinationServiceIsar? _instance;
-  static ProcrastinationServiceIsar get instance => _instance ??= ProcrastinationServiceIsar._internal();
+/// Service para Procrastination usando ObjectBox
+class ProcrastinationServiceLocal {
+  static ProcrastinationServiceLocal? _instance;
+  static ProcrastinationServiceLocal get instance => _instance ??= ProcrastinationServiceLocal._internal();
   
-  ProcrastinationServiceIsar._internal();
+  ProcrastinationServiceLocal._internal();
 
   final ProcrastinationConfigRepository _repository = ProcrastinationConfigRepository.instance;
 
@@ -109,7 +109,7 @@ class ProcrastinationServiceIsar {
       if (entity == null) {
         // Configuração padrão
         final defaultConfig = const ProcrastinationConfig(
-          isEnabled: false,
+          isModuleActive: false,
           dailyFocusMinutes: 120,
         );
         
@@ -118,7 +118,7 @@ class ProcrastinationServiceIsar {
       }
       
       return ProcrastinationConfig(
-        isEnabled: entity.isEnabled,
+        isModuleActive: entity.isModuleActive,
         dailyFocusMinutes: entity.dailyFocusMinutes,
         enableNotifications: entity.enableNotifications,
         reminderTime: TimeOfDay(
@@ -145,7 +145,7 @@ class ProcrastinationServiceIsar {
       
       final entity = ProcrastinationConfigEntity(userId: userId);
       
-      entity.isEnabled = config.isEnabled;
+      entity.isModuleActive = config.isModuleActive;
       entity.dailyFocusMinutes = config.dailyFocusMinutes;
       entity.enableNotifications = config.enableNotifications;
       entity.reminderHour = config.reminderTime.hour;
@@ -163,6 +163,17 @@ class ProcrastinationServiceIsar {
       LoggerService.instance.i('Configuração do Procrastination salva com sucesso');
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Procrastination', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> setModuleActive(bool isActive) async {
+    try {
+      final config = await getConfig();
+      final updated = config.copyWith(isModuleActive: isActive);
+      await saveConfig(updated);
+    } catch (e) {
+      LoggerService.instance.e('Erro ao alternar ativação do Procrastination', error: e);
       rethrow;
     }
   }

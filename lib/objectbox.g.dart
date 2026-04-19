@@ -53,7 +53,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(1, 5862028340878048232),
       name: 'AdultContentConfigEntity',
-      lastPropertyId: const obx_int.IdUid(14, 5604827144786904008),
+      lastPropertyId: const obx_int.IdUid(15, 2277983935762031465),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -67,11 +67,6 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 2080,
             indexId: const obx_int.IdUid(1, 3652867144864117723)),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 8820898495627876665),
-            name: 'isEnabled',
-            type: 1,
-            flags: 0),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(4, 7012128481887047896),
             name: 'blockedUntil',
@@ -126,6 +121,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(14, 5604827144786904008),
             name: 'updatedAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(15, 2277983935762031465),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -158,7 +158,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(3, 1158992819704477116),
       name: 'BingeEatingConfigEntity',
-      lastPropertyId: const obx_int.IdUid(19, 28591169566181194),
+      lastPropertyId: const obx_int.IdUid(20, 4126342200966542998),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -172,11 +172,6 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 2080,
             indexId: const obx_int.IdUid(3, 7797215197708003065)),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 647440064871159633),
-            name: 'isEnabled',
-            type: 1,
-            flags: 0),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(4, 7592714407478594348),
             name: 'blockedUntil',
@@ -256,6 +251,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(19, 28591169566181194),
             name: 'updatedAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(20, 4126342200966542998),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -442,7 +442,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(7, 2086015864739639362),
       name: 'DietGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(9, 7275333137182534396),
+      lastPropertyId: const obx_int.IdUid(10, 3260401015620420719),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -481,14 +481,14 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 8834367110618788162),
-            name: 'isActive',
-            type: 1,
-            flags: 0),
-        obx_int.ModelProperty(
             id: const obx_int.IdUid(9, 7275333137182534396),
             name: 'createdAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 3260401015620420719),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -496,7 +496,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(8, 5424680500814092839),
       name: 'FocusConfigEntity',
-      lastPropertyId: const obx_int.IdUid(13, 2708119507636253377),
+      lastPropertyId: const obx_int.IdUid(14, 661061912330446132),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -510,11 +510,6 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 2080,
             indexId: const obx_int.IdUid(6, 4265824719438360692)),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 4892002387071429020),
-            name: 'isEnabled',
-            type: 1,
-            flags: 0),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(4, 3803329227860620185),
             name: 'enableNotifications',
@@ -564,6 +559,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(13, 2708119507636253377),
             name: 'updatedAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(14, 661061912330446132),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -937,7 +937,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(15, 1643001185235498565),
       name: 'MoneySavingGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(13, 1955740427732626054),
+      lastPropertyId: const obx_int.IdUid(14, 8098801384580673588),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -996,14 +996,14 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(12, 2056872517003564685),
-            name: 'isActive',
-            type: 1,
-            flags: 0),
-        obx_int.ModelProperty(
             id: const obx_int.IdUid(13, 1955740427732626054),
             name: 'createdAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(14, 8098801384580673588),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -1060,7 +1060,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(17, 3645098228014749518),
       name: 'ProcrastinationConfigEntity',
-      lastPropertyId: const obx_int.IdUid(16, 8888179628487260263),
+      lastPropertyId: const obx_int.IdUid(17, 5769593197777471779),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1074,11 +1074,6 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 2080,
             indexId: const obx_int.IdUid(9, 4131442131524149166)),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 7267836942977453190),
-            name: 'isEnabled',
-            type: 1,
-            flags: 0),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(4, 3906238973442985174),
             name: 'dailyFocusMinutes',
@@ -1143,6 +1138,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(16, 8888179628487260263),
             name: 'updatedAt',
             type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(17, 5769593197777471779),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -1150,7 +1150,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(18, 5095643737946990206),
       name: 'ProcrastinationGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(8, 7824424846268507068),
+      lastPropertyId: const obx_int.IdUid(9, 3869169349945285657),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1189,8 +1189,8 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 7824424846268507068),
-            name: 'isActive',
+            id: const obx_int.IdUid(9, 3869169349945285657),
+            name: 'isModuleActive',
             type: 1,
             flags: 0)
       ],
@@ -1383,7 +1383,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(21, 4474491518977462271),
       name: 'ReadingGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(362, 9106924274354727886),
+      lastPropertyId: const obx_int.IdUid(363, 3227279810805088385),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1435,6 +1435,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(362, 9106924274354727886),
             name: 'earnedMedalhasList',
             type: 30,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(363, 3227279810805088385),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -1606,7 +1611,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(24, 3192982284859847257),
       name: 'SpendingGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(8, 5771927870652221646),
+      lastPropertyId: const obx_int.IdUid(9, 2634722686623917096),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1645,8 +1650,8 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 5771927870652221646),
-            name: 'isActive',
+            id: const obx_int.IdUid(9, 2634722686623917096),
+            name: 'isModuleActive',
             type: 1,
             flags: 0)
       ],
@@ -1655,7 +1660,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(25, 3033775199755736131),
       name: 'UserModuleState',
-      lastPropertyId: const obx_int.IdUid(11, 3235058301607962263),
+      lastPropertyId: const obx_int.IdUid(12, 3941177683512410176),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1672,11 +1677,6 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(3, 8076630449443774933),
             name: 'nicheId',
             type: 6,
-            flags: 0),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(4, 7903244453111586861),
-            name: 'isActive',
-            type: 1,
             flags: 0),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(5, 6037052118683852389),
@@ -1712,6 +1712,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(11, 3235058301607962263),
             name: 'additionalData',
             type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 3941177683512410176),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -1813,7 +1818,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(28, 4979012430700118840),
       name: 'AdultContentGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(8, 4533138519864534927),
+      lastPropertyId: const obx_int.IdUid(9, 7543766625762352082),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1852,8 +1857,8 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 4533138519864534927),
-            name: 'isActive',
+            id: const obx_int.IdUid(9, 7543766625762352082),
+            name: 'isModuleActive',
             type: 1,
             flags: 0)
       ],
@@ -1862,7 +1867,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(29, 655631407098066490),
       name: 'BingeEatingGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(8, 4212719432358809315),
+      lastPropertyId: const obx_int.IdUid(9, 4352210805338846627),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1901,8 +1906,8 @@ final _entities = <obx_int.ModelEntity>[
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 4212719432358809315),
-            name: 'isActive',
+            id: const obx_int.IdUid(9, 4352210805338846627),
+            name: 'isModuleActive',
             type: 1,
             flags: 0)
       ],
@@ -2588,7 +2593,18 @@ obx_int.ModelDefinition getObjectBoxModel() {
         6385668805778952904,
         7213906720675825642,
         8406537452576644872,
-        8318536361510931910
+        8318536361510931910,
+        8820898495627876665,
+        4533138519864534927,
+        647440064871159633,
+        4212719432358809315,
+        8834367110618788162,
+        4892002387071429020,
+        2056872517003564685,
+        7267836942977453190,
+        7824424846268507068,
+        5771927870652221646,
+        7903244453111586861
       ],
       retiredRelationUids: const [],
       modelVersion: 5,
@@ -2614,10 +2630,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .map(fbb.writeString)
               .toList(growable: false));
           final appLockMessageOffset = fbb.writeString(object.appLockMessage);
-          fbb.startTable(15);
+          fbb.startTable(16);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
-          fbb.addBool(2, object.isEnabled);
           fbb.addInt64(3, object.blockedUntil?.millisecondsSinceEpoch);
           fbb.addOffset(4, blockReasonOffset);
           fbb.addInt64(5, object.dailyLimitMinutes);
@@ -2629,6 +2644,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(11, object.appLockCooldownMinutes);
           fbb.addInt64(12, object.createdAt.millisecondsSinceEpoch);
           fbb.addInt64(13, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addBool(14, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -2641,8 +2657,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .vTableGet(buffer, rootOffset, 6, '');
           final object = AdultContentConfigEntity(userId: userIdParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
-            ..isEnabled =
-                const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false)
             ..blockedUntil = blockedUntilValue == null
                 ? null
                 : DateTime.fromMillisecondsSinceEpoch(blockedUntilValue)
@@ -2667,7 +2681,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 28, 0))
             ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
-                const fb.Int64Reader().vTableGet(buffer, rootOffset, 30, 0));
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 30, 0))
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 32, false);
 
           return object;
         }),
@@ -2724,10 +2740,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .map(fbb.writeString)
               .toList(growable: false));
           final appLockMessageOffset = fbb.writeString(object.appLockMessage);
-          fbb.startTable(20);
+          fbb.startTable(21);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
-          fbb.addBool(2, object.isEnabled);
           fbb.addInt64(3, object.blockedUntil?.millisecondsSinceEpoch);
           fbb.addOffset(4, blockReasonOffset);
           fbb.addInt64(5, object.dailyLimitMinutes);
@@ -2744,6 +2759,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(16, object.appLockCooldownMinutes);
           fbb.addInt64(17, object.createdAt.millisecondsSinceEpoch);
           fbb.addInt64(18, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addBool(19, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -2756,8 +2772,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .vTableGet(buffer, rootOffset, 6, '');
           final object = BingeEatingConfigEntity(userId: userIdParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
-            ..isEnabled =
-                const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false)
             ..blockedUntil = blockedUntilValue == null
                 ? null
                 : DateTime.fromMillisecondsSinceEpoch(blockedUntilValue)
@@ -2796,7 +2810,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 38, 0))
             ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
-                const fb.Int64Reader().vTableGet(buffer, rootOffset, 40, 0));
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 40, 0))
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 42, false);
 
           return object;
         }),
@@ -2972,7 +2988,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final userIdOffset = fbb.writeString(object.userId);
           final earnedInsigniasOffset = fbb.writeString(object.earnedInsignias);
           final earnedMedalhasOffset = fbb.writeString(object.earnedMedalhas);
-          fbb.startTable(10);
+          fbb.startTable(11);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
           fbb.addOffset(2, earnedInsigniasOffset);
@@ -2980,8 +2996,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(4, object.consecutiveDays);
           fbb.addInt64(5, object.disciplinumCount);
           fbb.addInt64(6, object.lastUpdated.millisecondsSinceEpoch);
-          fbb.addBool(7, object.isActive);
           fbb.addInt64(8, object.createdAt.millisecondsSinceEpoch);
+          fbb.addBool(9, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3002,8 +3018,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0);
           final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
-          final isActiveParam =
-              const fb.BoolReader().vTableGet(buffer, rootOffset, 18, false);
+          final isModuleActiveParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 22, false);
           final object = DietGamificationEntity(
               userId: userIdParam,
               earnedInsignias: earnedInsigniasParam,
@@ -3011,7 +3027,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               consecutiveDays: consecutiveDaysParam,
               disciplinumCount: disciplinumCountParam,
               lastUpdated: lastUpdatedParam,
-              isActive: isActiveParam)
+              isModuleActive: isModuleActiveParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 20, 0));
@@ -3028,10 +3044,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
         },
         objectToFB: (FocusConfigEntity object, fb.Builder fbb) {
           final userIdOffset = fbb.writeString(object.userId);
-          fbb.startTable(14);
+          fbb.startTable(15);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
-          fbb.addBool(2, object.isEnabled);
           fbb.addBool(3, object.enableNotifications);
           fbb.addInt64(4, object.dailyGoalMinutes);
           fbb.addInt64(5, object.reminderHour);
@@ -3042,6 +3057,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(10, object.longestFocusSession);
           fbb.addInt64(11, object.createdAt.millisecondsSinceEpoch);
           fbb.addInt64(12, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addBool(13, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3054,8 +3070,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .vTableGet(buffer, rootOffset, 6, '');
           final object = FocusConfigEntity(userId: userIdParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
-            ..isEnabled =
-                const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false)
             ..enableNotifications =
                 const fb.BoolReader().vTableGet(buffer, rootOffset, 10, false)
             ..dailyGoalMinutes =
@@ -3076,7 +3090,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 26, 0))
             ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
-                const fb.Int64Reader().vTableGet(buffer, rootOffset, 28, 0));
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 28, 0))
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 30, false);
 
           return object;
         }),
@@ -3479,7 +3495,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final userIdOffset = fbb.writeString(object.userId);
           final earnedInsigniasOffset = fbb.writeString(object.earnedInsignias);
           final earnedMedalhasOffset = fbb.writeString(object.earnedMedalhas);
-          fbb.startTable(14);
+          fbb.startTable(15);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
           fbb.addOffset(2, earnedInsigniasOffset);
@@ -3491,8 +3507,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(8, object.lastSavingDate?.millisecondsSinceEpoch);
           fbb.addInt64(9, object.startDate?.millisecondsSinceEpoch);
           fbb.addInt64(10, object.lastUpdated.millisecondsSinceEpoch);
-          fbb.addBool(11, object.isActive);
           fbb.addInt64(12, object.createdAt.millisecondsSinceEpoch);
+          fbb.addBool(13, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3527,8 +3543,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               : DateTime.fromMillisecondsSinceEpoch(startDateValue);
           final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 24, 0));
-          final isActiveParam =
-              const fb.BoolReader().vTableGet(buffer, rootOffset, 26, false);
+          final isModuleActiveParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 30, false);
           final object = MoneySavingGamificationEntity(
               userId: userIdParam,
               earnedInsignias: earnedInsigniasParam,
@@ -3540,7 +3556,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               lastSavingDate: lastSavingDateParam,
               startDate: startDateParam,
               lastUpdated: lastUpdatedParam,
-              isActive: isActiveParam)
+              isModuleActive: isModuleActiveParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 28, 0));
@@ -3614,10 +3630,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final userIdOffset = fbb.writeString(object.userId);
           final blockedAppsOffset = fbb.writeList(
               object.blockedApps.map(fbb.writeString).toList(growable: false));
-          fbb.startTable(17);
+          fbb.startTable(18);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
-          fbb.addBool(2, object.isEnabled);
           fbb.addInt64(3, object.dailyFocusMinutes);
           fbb.addBool(4, object.enableNotifications);
           fbb.addInt64(5, object.reminderHour);
@@ -3631,6 +3646,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(13, object.blockDurationMinutes);
           fbb.addInt64(14, object.createdAt.millisecondsSinceEpoch);
           fbb.addInt64(15, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addBool(16, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3643,8 +3659,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .vTableGet(buffer, rootOffset, 6, '');
           final object = ProcrastinationConfigEntity(userId: userIdParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
-            ..isEnabled =
-                const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false)
             ..dailyFocusMinutes =
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0)
             ..enableNotifications =
@@ -3673,7 +3687,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..createdAt = DateTime.fromMillisecondsSinceEpoch(
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 32, 0))
             ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
-                const fb.Int64Reader().vTableGet(buffer, rootOffset, 34, 0));
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 34, 0))
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 36, false);
 
           return object;
         }),
@@ -3694,7 +3710,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final earnedMedalhasOffset = fbb.writeList(object.earnedMedalhas
               .map(fbb.writeString)
               .toList(growable: false));
-          fbb.startTable(9);
+          fbb.startTable(10);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
           fbb.addOffset(2, earnedInsigniasOffset);
@@ -3702,7 +3718,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(4, object.consecutiveDays);
           fbb.addInt64(5, object.disciplinumCount);
           fbb.addInt64(6, object.lastUpdated.millisecondsSinceEpoch);
-          fbb.addBool(7, object.isActive);
+          fbb.addBool(8, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3725,8 +3741,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0);
           final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
-          final isActiveParam =
-              const fb.BoolReader().vTableGet(buffer, rootOffset, 18, false);
+          final isModuleActiveParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 20, false);
           final object = ProcrastinationGamificationEntity(
               userId: userIdParam,
               earnedInsignias: earnedInsigniasParam,
@@ -3734,7 +3750,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               consecutiveDays: consecutiveDaysParam,
               disciplinumCount: disciplinumCountParam,
               lastUpdated: lastUpdatedParam,
-              isActive: isActiveParam)
+              isModuleActive: isModuleActiveParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
           return object;
@@ -3924,7 +3940,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .earnedMedalhasList
               .map(fbb.writeString)
               .toList(growable: false));
-          fbb.startTable(363);
+          fbb.startTable(364);
           fbb.addInt64(0, object.id);
           fbb.addInt64(4, object.lastReadingDate?.millisecondsSinceEpoch);
           fbb.addInt64(6, object.createdAt.millisecondsSinceEpoch);
@@ -3935,6 +3951,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(359, object.startDate?.millisecondsSinceEpoch);
           fbb.addOffset(360, earnedInsigniasListOffset);
           fbb.addOffset(361, earnedMedalhasListOffset);
+          fbb.addBool(362, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -3970,7 +3987,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..earnedMedalhasList = const fb.ListReader<String>(
                     fb.StringReader(asciiOptimization: true),
                     lazy: false)
-                .vTableGet(buffer, rootOffset, 726, []);
+                .vTableGet(buffer, rootOffset, 726, [])
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 728, false);
 
           return object;
         }),
@@ -4165,7 +4184,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               final earnedMedalhasOffset = fbb.writeList(object.earnedMedalhas
                   .map(fbb.writeString)
                   .toList(growable: false));
-              fbb.startTable(9);
+              fbb.startTable(10);
               fbb.addInt64(0, object.id);
               fbb.addOffset(1, userIdOffset);
               fbb.addOffset(2, earnedInsigniasOffset);
@@ -4173,7 +4192,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               fbb.addInt64(4, object.consecutiveMonths);
               fbb.addInt64(5, object.disciplinumCount);
               fbb.addInt64(6, object.lastUpdated.millisecondsSinceEpoch);
-              fbb.addBool(7, object.isActive);
+              fbb.addBool(8, object.isModuleActive);
               fbb.finish(fbb.endTable());
               return object.id;
             },
@@ -4196,8 +4215,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
                   const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0);
               final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
                   const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
-              final isActiveParam = const fb.BoolReader()
-                  .vTableGet(buffer, rootOffset, 18, false);
+              final isModuleActiveParam = const fb.BoolReader()
+                  .vTableGet(buffer, rootOffset, 20, false);
               final object = SpendingGamificationEntity(
                   userId: userIdParam,
                   earnedInsignias: earnedInsigniasParam,
@@ -4205,7 +4224,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                   consecutiveMonths: consecutiveMonthsParam,
                   disciplinumCount: disciplinumCountParam,
                   lastUpdated: lastUpdatedParam,
-                  isActive: isActiveParam)
+                  isModuleActive: isModuleActiveParam)
                 ..id =
                     const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
@@ -4227,11 +4246,10 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final additionalDataOffset = object.additionalData == null
               ? null
               : fbb.writeString(object.additionalData!);
-          fbb.startTable(12);
+          fbb.startTable(13);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
           fbb.addInt64(2, object.nicheId);
-          fbb.addBool(3, object.isActive);
           fbb.addInt64(4, object.consecutiveDays);
           fbb.addInt64(5, object.lastAccessDate.millisecondsSinceEpoch);
           fbb.addInt64(6, object.createdAt.millisecondsSinceEpoch);
@@ -4239,6 +4257,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(8, object.focusPeriodsRespected);
           fbb.addOffset(9, maxMedalOffset);
           fbb.addOffset(10, additionalDataOffset);
+          fbb.addBool(11, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -4252,8 +4271,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
                 .vTableGet(buffer, rootOffset, 6, '')
             ..nicheId =
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0)
-            ..isActive =
-                const fb.BoolReader().vTableGet(buffer, rootOffset, 10, false)
             ..consecutiveDays =
                 const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0)
             ..lastAccessDate = DateTime.fromMillisecondsSinceEpoch(
@@ -4267,7 +4284,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..maxMedal = const fb.StringReader(asciiOptimization: true)
                 .vTableGetNullable(buffer, rootOffset, 22)
             ..additionalData = const fb.StringReader(asciiOptimization: true)
-                .vTableGetNullable(buffer, rootOffset, 24);
+                .vTableGetNullable(buffer, rootOffset, 24)
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 26, false);
 
           return object;
         }),
@@ -4399,7 +4418,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final earnedMedalhasOffset = fbb.writeList(object.earnedMedalhas
               .map(fbb.writeString)
               .toList(growable: false));
-          fbb.startTable(9);
+          fbb.startTable(10);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, userIdOffset);
           fbb.addOffset(2, earnedInsigniasOffset);
@@ -4407,7 +4426,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(4, object.consecutiveDays);
           fbb.addInt64(5, object.disciplinumCount);
           fbb.addInt64(6, object.lastUpdated.millisecondsSinceEpoch);
-          fbb.addBool(7, object.isActive);
+          fbb.addBool(8, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -4430,8 +4449,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0);
           final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
-          final isActiveParam =
-              const fb.BoolReader().vTableGet(buffer, rootOffset, 18, false);
+          final isModuleActiveParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 20, false);
           final object = AdultContentGamificationEntity(
               userId: userIdParam,
               earnedInsignias: earnedInsigniasParam,
@@ -4439,7 +4458,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               consecutiveDays: consecutiveDaysParam,
               disciplinumCount: disciplinumCountParam,
               lastUpdated: lastUpdatedParam,
-              isActive: isActiveParam)
+              isModuleActive: isModuleActiveParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
           return object;
@@ -4461,7 +4480,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               final earnedMedalhasOffset = fbb.writeList(object.earnedMedalhas
                   .map(fbb.writeString)
                   .toList(growable: false));
-              fbb.startTable(9);
+              fbb.startTable(10);
               fbb.addInt64(0, object.id);
               fbb.addOffset(1, userIdOffset);
               fbb.addOffset(2, earnedInsigniasOffset);
@@ -4469,7 +4488,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               fbb.addInt64(4, object.consecutivePositiveDays);
               fbb.addInt64(5, object.disciplinumCount);
               fbb.addInt64(6, object.lastUpdated.millisecondsSinceEpoch);
-              fbb.addBool(7, object.isActive);
+              fbb.addBool(8, object.isModuleActive);
               fbb.finish(fbb.endTable());
               return object.id;
             },
@@ -4492,8 +4511,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
                   const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0);
               final lastUpdatedParam = DateTime.fromMillisecondsSinceEpoch(
                   const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
-              final isActiveParam = const fb.BoolReader()
-                  .vTableGet(buffer, rootOffset, 18, false);
+              final isModuleActiveParam = const fb.BoolReader()
+                  .vTableGet(buffer, rootOffset, 20, false);
               final object = BingeEatingGamificationEntity(
                   userId: userIdParam,
                   earnedInsignias: earnedInsigniasParam,
@@ -4501,7 +4520,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                   consecutivePositiveDays: consecutivePositiveDaysParam,
                   disciplinumCount: disciplinumCountParam,
                   lastUpdated: lastUpdatedParam,
-                  isActive: isActiveParam)
+                  isModuleActive: isModuleActiveParam)
                 ..id =
                     const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
@@ -4765,60 +4784,61 @@ class AdultContentConfigEntity_ {
   static final userId = obx.QueryStringProperty<AdultContentConfigEntity>(
       _entities[0].properties[1]);
 
-  /// See [AdultContentConfigEntity.isEnabled].
-  static final isEnabled = obx.QueryBooleanProperty<AdultContentConfigEntity>(
-      _entities[0].properties[2]);
-
   /// See [AdultContentConfigEntity.blockedUntil].
   static final blockedUntil = obx.QueryDateProperty<AdultContentConfigEntity>(
-      _entities[0].properties[3]);
+      _entities[0].properties[2]);
 
   /// See [AdultContentConfigEntity.blockReason].
   static final blockReason = obx.QueryStringProperty<AdultContentConfigEntity>(
-      _entities[0].properties[4]);
+      _entities[0].properties[3]);
 
   /// See [AdultContentConfigEntity.dailyLimitMinutes].
   static final dailyLimitMinutes =
       obx.QueryIntegerProperty<AdultContentConfigEntity>(
-          _entities[0].properties[5]);
+          _entities[0].properties[4]);
 
   /// See [AdultContentConfigEntity.requirePassword].
   static final requirePassword =
       obx.QueryBooleanProperty<AdultContentConfigEntity>(
-          _entities[0].properties[6]);
+          _entities[0].properties[5]);
 
   /// See [AdultContentConfigEntity.enableAppLock].
   static final enableAppLock =
       obx.QueryBooleanProperty<AdultContentConfigEntity>(
-          _entities[0].properties[7]);
+          _entities[0].properties[6]);
 
   /// See [AdultContentConfigEntity.monitoredApps].
   static final monitoredApps =
       obx.QueryStringVectorProperty<AdultContentConfigEntity>(
-          _entities[0].properties[8]);
+          _entities[0].properties[7]);
 
   /// See [AdultContentConfigEntity.appLockRequirePassword].
   static final appLockRequirePassword =
       obx.QueryBooleanProperty<AdultContentConfigEntity>(
-          _entities[0].properties[9]);
+          _entities[0].properties[8]);
 
   /// See [AdultContentConfigEntity.appLockMessage].
   static final appLockMessage =
       obx.QueryStringProperty<AdultContentConfigEntity>(
-          _entities[0].properties[10]);
+          _entities[0].properties[9]);
 
   /// See [AdultContentConfigEntity.appLockCooldownMinutes].
   static final appLockCooldownMinutes =
       obx.QueryIntegerProperty<AdultContentConfigEntity>(
-          _entities[0].properties[11]);
+          _entities[0].properties[10]);
 
   /// See [AdultContentConfigEntity.createdAt].
   static final createdAt = obx.QueryDateProperty<AdultContentConfigEntity>(
-      _entities[0].properties[12]);
+      _entities[0].properties[11]);
 
   /// See [AdultContentConfigEntity.updatedAt].
   static final updatedAt = obx.QueryDateProperty<AdultContentConfigEntity>(
-      _entities[0].properties[13]);
+      _entities[0].properties[12]);
+
+  /// See [AdultContentConfigEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<AdultContentConfigEntity>(
+          _entities[0].properties[13]);
 }
 
 /// [AppPreference] entity fields to define ObjectBox queries.
@@ -4846,84 +4866,85 @@ class BingeEatingConfigEntity_ {
   static final userId = obx.QueryStringProperty<BingeEatingConfigEntity>(
       _entities[2].properties[1]);
 
-  /// See [BingeEatingConfigEntity.isEnabled].
-  static final isEnabled = obx.QueryBooleanProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[2]);
-
   /// See [BingeEatingConfigEntity.blockedUntil].
   static final blockedUntil = obx.QueryDateProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[3]);
+      _entities[2].properties[2]);
 
   /// See [BingeEatingConfigEntity.blockReason].
   static final blockReason = obx.QueryStringProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[4]);
+      _entities[2].properties[3]);
 
   /// See [BingeEatingConfigEntity.dailyLimitMinutes].
   static final dailyLimitMinutes =
       obx.QueryIntegerProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[5]);
+          _entities[2].properties[4]);
 
   /// See [BingeEatingConfigEntity.requirePassword].
   static final requirePassword =
       obx.QueryBooleanProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[6]);
+          _entities[2].properties[5]);
 
   /// See [BingeEatingConfigEntity.triggerFoods].
   static final triggerFoods =
       obx.QueryStringVectorProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[7]);
+          _entities[2].properties[6]);
 
   /// See [BingeEatingConfigEntity.copingStrategies].
   static final copingStrategies =
       obx.QueryStringVectorProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[8]);
+          _entities[2].properties[7]);
 
   /// See [BingeEatingConfigEntity.enableNotifications].
   static final enableNotifications =
       obx.QueryBooleanProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[9]);
+          _entities[2].properties[8]);
 
   /// See [BingeEatingConfigEntity.reminderHour].
   static final reminderHour = obx.QueryIntegerProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[10]);
+      _entities[2].properties[9]);
 
   /// See [BingeEatingConfigEntity.reminderMinute].
   static final reminderMinute =
       obx.QueryIntegerProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[11]);
+          _entities[2].properties[10]);
 
   /// See [BingeEatingConfigEntity.enableAppLock].
   static final enableAppLock =
       obx.QueryBooleanProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[12]);
+          _entities[2].properties[11]);
 
   /// See [BingeEatingConfigEntity.monitoredApps].
   static final monitoredApps =
       obx.QueryStringVectorProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[13]);
+          _entities[2].properties[12]);
 
   /// See [BingeEatingConfigEntity.appLockRequirePassword].
   static final appLockRequirePassword =
       obx.QueryBooleanProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[14]);
+          _entities[2].properties[13]);
 
   /// See [BingeEatingConfigEntity.appLockMessage].
   static final appLockMessage =
       obx.QueryStringProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[15]);
+          _entities[2].properties[14]);
 
   /// See [BingeEatingConfigEntity.appLockCooldownMinutes].
   static final appLockCooldownMinutes =
       obx.QueryIntegerProperty<BingeEatingConfigEntity>(
-          _entities[2].properties[16]);
+          _entities[2].properties[15]);
 
   /// See [BingeEatingConfigEntity.createdAt].
   static final createdAt = obx.QueryDateProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[17]);
+      _entities[2].properties[16]);
 
   /// See [BingeEatingConfigEntity.updatedAt].
   static final updatedAt = obx.QueryDateProperty<BingeEatingConfigEntity>(
-      _entities[2].properties[18]);
+      _entities[2].properties[17]);
+
+  /// See [BingeEatingConfigEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<BingeEatingConfigEntity>(
+          _entities[2].properties[18]);
 }
 
 /// [DailyCheckin] entity fields to define ObjectBox queries.
@@ -5088,13 +5109,14 @@ class DietGamificationEntity_ {
   static final lastUpdated =
       obx.QueryDateProperty<DietGamificationEntity>(_entities[6].properties[6]);
 
-  /// See [DietGamificationEntity.isActive].
-  static final isActive = obx.QueryBooleanProperty<DietGamificationEntity>(
-      _entities[6].properties[7]);
-
   /// See [DietGamificationEntity.createdAt].
   static final createdAt =
-      obx.QueryDateProperty<DietGamificationEntity>(_entities[6].properties[8]);
+      obx.QueryDateProperty<DietGamificationEntity>(_entities[6].properties[7]);
+
+  /// See [DietGamificationEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<DietGamificationEntity>(
+          _entities[6].properties[8]);
 }
 
 /// [FocusConfigEntity] entity fields to define ObjectBox queries.
@@ -5107,49 +5129,49 @@ class FocusConfigEntity_ {
   static final userId =
       obx.QueryStringProperty<FocusConfigEntity>(_entities[7].properties[1]);
 
-  /// See [FocusConfigEntity.isEnabled].
-  static final isEnabled =
-      obx.QueryBooleanProperty<FocusConfigEntity>(_entities[7].properties[2]);
-
   /// See [FocusConfigEntity.enableNotifications].
   static final enableNotifications =
-      obx.QueryBooleanProperty<FocusConfigEntity>(_entities[7].properties[3]);
+      obx.QueryBooleanProperty<FocusConfigEntity>(_entities[7].properties[2]);
 
   /// See [FocusConfigEntity.dailyGoalMinutes].
   static final dailyGoalMinutes =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[4]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[3]);
 
   /// See [FocusConfigEntity.reminderHour].
   static final reminderHour =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[5]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[4]);
 
   /// See [FocusConfigEntity.reminderMinute].
   static final reminderMinute =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[6]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[5]);
 
   /// See [FocusConfigEntity.streakDays].
   static final streakDays =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[7]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[6]);
 
   /// See [FocusConfigEntity.lastFocusDate].
   static final lastFocusDate =
-      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[8]);
+      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[7]);
 
   /// See [FocusConfigEntity.totalFocusMinutes].
   static final totalFocusMinutes =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[9]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[8]);
 
   /// See [FocusConfigEntity.longestFocusSession].
   static final longestFocusSession =
-      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[10]);
+      obx.QueryIntegerProperty<FocusConfigEntity>(_entities[7].properties[9]);
 
   /// See [FocusConfigEntity.createdAt].
   static final createdAt =
-      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[11]);
+      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[10]);
 
   /// See [FocusConfigEntity.updatedAt].
   static final updatedAt =
-      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[12]);
+      obx.QueryDateProperty<FocusConfigEntity>(_entities[7].properties[11]);
+
+  /// See [FocusConfigEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<FocusConfigEntity>(_entities[7].properties[12]);
 }
 
 /// [FocusGamificationEntity] entity fields to define ObjectBox queries.
@@ -5487,14 +5509,14 @@ class MoneySavingGamificationEntity_ {
       obx.QueryDateProperty<MoneySavingGamificationEntity>(
           _entities[14].properties[10]);
 
-  /// See [MoneySavingGamificationEntity.isActive].
-  static final isActive =
-      obx.QueryBooleanProperty<MoneySavingGamificationEntity>(
-          _entities[14].properties[11]);
-
   /// See [MoneySavingGamificationEntity.createdAt].
   static final createdAt = obx.QueryDateProperty<MoneySavingGamificationEntity>(
-      _entities[14].properties[12]);
+      _entities[14].properties[11]);
+
+  /// See [MoneySavingGamificationEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<MoneySavingGamificationEntity>(
+          _entities[14].properties[12]);
 }
 
 /// [MonitoringState] entity fields to define ObjectBox queries.
@@ -5542,73 +5564,73 @@ class ProcrastinationConfigEntity_ {
   static final userId = obx.QueryStringProperty<ProcrastinationConfigEntity>(
       _entities[16].properties[1]);
 
-  /// See [ProcrastinationConfigEntity.isEnabled].
-  static final isEnabled =
-      obx.QueryBooleanProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[2]);
-
   /// See [ProcrastinationConfigEntity.dailyFocusMinutes].
   static final dailyFocusMinutes =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[3]);
+          _entities[16].properties[2]);
 
   /// See [ProcrastinationConfigEntity.enableNotifications].
   static final enableNotifications =
       obx.QueryBooleanProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[4]);
+          _entities[16].properties[3]);
 
   /// See [ProcrastinationConfigEntity.reminderHour].
   static final reminderHour =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[5]);
+          _entities[16].properties[4]);
 
   /// See [ProcrastinationConfigEntity.reminderMinute].
   static final reminderMinute =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[6]);
+          _entities[16].properties[5]);
 
   /// See [ProcrastinationConfigEntity.streakDays].
   static final streakDays =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[7]);
+          _entities[16].properties[6]);
 
   /// See [ProcrastinationConfigEntity.lastFocusDate].
   static final lastFocusDate =
       obx.QueryDateProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[8]);
+          _entities[16].properties[7]);
 
   /// See [ProcrastinationConfigEntity.totalFocusMinutes].
   static final totalFocusMinutes =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[9]);
+          _entities[16].properties[8]);
 
   /// See [ProcrastinationConfigEntity.longestFocusSession].
   static final longestFocusSession =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[10]);
+          _entities[16].properties[9]);
 
   /// See [ProcrastinationConfigEntity.enableAppBlocking].
   static final enableAppBlocking =
       obx.QueryBooleanProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[11]);
+          _entities[16].properties[10]);
 
   /// See [ProcrastinationConfigEntity.blockedApps].
   static final blockedApps =
       obx.QueryStringVectorProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[12]);
+          _entities[16].properties[11]);
 
   /// See [ProcrastinationConfigEntity.blockDurationMinutes].
   static final blockDurationMinutes =
       obx.QueryIntegerProperty<ProcrastinationConfigEntity>(
-          _entities[16].properties[13]);
+          _entities[16].properties[12]);
 
   /// See [ProcrastinationConfigEntity.createdAt].
   static final createdAt = obx.QueryDateProperty<ProcrastinationConfigEntity>(
-      _entities[16].properties[14]);
+      _entities[16].properties[13]);
 
   /// See [ProcrastinationConfigEntity.updatedAt].
   static final updatedAt = obx.QueryDateProperty<ProcrastinationConfigEntity>(
-      _entities[16].properties[15]);
+      _entities[16].properties[14]);
+
+  /// See [ProcrastinationConfigEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<ProcrastinationConfigEntity>(
+          _entities[16].properties[15]);
 }
 
 /// [ProcrastinationGamificationEntity] entity fields to define ObjectBox queries.
@@ -5647,8 +5669,8 @@ class ProcrastinationGamificationEntity_ {
       obx.QueryDateProperty<ProcrastinationGamificationEntity>(
           _entities[17].properties[6]);
 
-  /// See [ProcrastinationGamificationEntity.isActive].
-  static final isActive =
+  /// See [ProcrastinationGamificationEntity.isModuleActive].
+  static final isModuleActive =
       obx.QueryBooleanProperty<ProcrastinationGamificationEntity>(
           _entities[17].properties[7]);
 }
@@ -5842,6 +5864,11 @@ class ReadingGamificationEntity_ {
   static final earnedMedalhasList =
       obx.QueryStringVectorProperty<ReadingGamificationEntity>(
           _entities[20].properties[9]);
+
+  /// See [ReadingGamificationEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<ReadingGamificationEntity>(
+          _entities[20].properties[10]);
 }
 
 /// [SmokingConfigEntity] entity fields to define ObjectBox queries.
@@ -6008,9 +6035,10 @@ class SpendingGamificationEntity_ {
   static final lastUpdated = obx.QueryDateProperty<SpendingGamificationEntity>(
       _entities[23].properties[6]);
 
-  /// See [SpendingGamificationEntity.isActive].
-  static final isActive = obx.QueryBooleanProperty<SpendingGamificationEntity>(
-      _entities[23].properties[7]);
+  /// See [SpendingGamificationEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<SpendingGamificationEntity>(
+          _entities[23].properties[7]);
 }
 
 /// [UserModuleState] entity fields to define ObjectBox queries.
@@ -6027,37 +6055,37 @@ class UserModuleState_ {
   static final nicheId =
       obx.QueryIntegerProperty<UserModuleState>(_entities[24].properties[2]);
 
-  /// See [UserModuleState.isActive].
-  static final isActive =
-      obx.QueryBooleanProperty<UserModuleState>(_entities[24].properties[3]);
-
   /// See [UserModuleState.consecutiveDays].
   static final consecutiveDays =
-      obx.QueryIntegerProperty<UserModuleState>(_entities[24].properties[4]);
+      obx.QueryIntegerProperty<UserModuleState>(_entities[24].properties[3]);
 
   /// See [UserModuleState.lastAccessDate].
   static final lastAccessDate =
-      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[5]);
+      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[4]);
 
   /// See [UserModuleState.createdAt].
   static final createdAt =
-      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[6]);
+      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[5]);
 
   /// See [UserModuleState.updatedAt].
   static final updatedAt =
-      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[7]);
+      obx.QueryDateProperty<UserModuleState>(_entities[24].properties[6]);
 
   /// See [UserModuleState.focusPeriodsRespected].
   static final focusPeriodsRespected =
-      obx.QueryIntegerProperty<UserModuleState>(_entities[24].properties[8]);
+      obx.QueryIntegerProperty<UserModuleState>(_entities[24].properties[7]);
 
   /// See [UserModuleState.maxMedal].
   static final maxMedal =
-      obx.QueryStringProperty<UserModuleState>(_entities[24].properties[9]);
+      obx.QueryStringProperty<UserModuleState>(_entities[24].properties[8]);
 
   /// See [UserModuleState.additionalData].
   static final additionalData =
-      obx.QueryStringProperty<UserModuleState>(_entities[24].properties[10]);
+      obx.QueryStringProperty<UserModuleState>(_entities[24].properties[9]);
+
+  /// See [UserModuleState.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<UserModuleState>(_entities[24].properties[10]);
 }
 
 /// [IapEntitlement] entity fields to define ObjectBox queries.
@@ -6161,8 +6189,8 @@ class AdultContentGamificationEntity_ {
       obx.QueryDateProperty<AdultContentGamificationEntity>(
           _entities[27].properties[6]);
 
-  /// See [AdultContentGamificationEntity.isActive].
-  static final isActive =
+  /// See [AdultContentGamificationEntity.isModuleActive].
+  static final isModuleActive =
       obx.QueryBooleanProperty<AdultContentGamificationEntity>(
           _entities[27].properties[7]);
 }
@@ -6202,8 +6230,8 @@ class BingeEatingGamificationEntity_ {
       obx.QueryDateProperty<BingeEatingGamificationEntity>(
           _entities[28].properties[6]);
 
-  /// See [BingeEatingGamificationEntity.isActive].
-  static final isActive =
+  /// See [BingeEatingGamificationEntity.isModuleActive].
+  static final isModuleActive =
       obx.QueryBooleanProperty<BingeEatingGamificationEntity>(
           _entities[28].properties[7]);
 }

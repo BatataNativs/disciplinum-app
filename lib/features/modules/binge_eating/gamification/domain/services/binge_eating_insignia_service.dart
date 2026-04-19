@@ -47,7 +47,7 @@ class BingeEatingInsigniaService implements ModuleInsigniaInterface {
         consecutivePositiveDays: _consecutivePositiveDays,
         disciplinumCount: _earnedInsignias.where((id) => id == 'disciplinum').length,
         updatedAt: DateTime.now(),
-        isActive: true,
+        isModuleActive: true,
       );
       
       await _repository.saveBingeEatingState(currentState);
@@ -182,7 +182,7 @@ class BingeEatingInsigniaService implements ModuleInsigniaInterface {
   }
 
   /// Verifica se o módulo está ativo
-  bool get isActive => _earnedInsignias.isNotEmpty;
+  bool get isModuleActive => _earnedInsignias.isNotEmpty;
 
   /// Concede insignia madeira ao ativar o módulo
   Future<void> activateModule() async {

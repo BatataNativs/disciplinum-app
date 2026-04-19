@@ -233,7 +233,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
   
   int get respectedPeriods => _currentState?.respectedPeriodsCount ?? 0;
   int get disciplinumCount => _currentState?.respectedPeriodsCount ?? 0;
-  bool get isActive => _currentState?.isActive ?? false;
+  bool get isModuleActive => _currentState?.isModuleActive ?? false;
   bool get isInStreak => (_currentState?.respectedPeriodsCount ?? 0) > 0;
 
   FocusInsignia? get currentInsignia {
@@ -379,7 +379,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
         'disciplinumCount': 0,
         'earnedInsignias': <String>[],
         'earnedMedalhas': <String>[],
-        'isActive': false,
+        'isModuleActive': false,
         'isInStreak': false,
       };
     }
@@ -391,7 +391,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
       'disciplinumCount': disciplinumCount,
       'earnedInsignias': _currentState!.earnedInsignias,
       'earnedMedalhas': _currentState!.earnedMedalhas,
-      'isActive': _currentState!.isActive,
+      'isModuleActive': _currentState!.isModuleActive,
       'isInStreak': isInStreak,
       'lastUpdated': _currentState!.lastUpdated.toIso8601String(),
     };

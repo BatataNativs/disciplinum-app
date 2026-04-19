@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_isar.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
 import 'package:disciplinum/features/app_lock/domain/entities/app_lock_event.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -13,7 +13,7 @@ class AdultContentAppLockService {
   
   AdultContentAppLockService._internal();
 
-  final AdultContentServiceIsar _adultService = AdultContentServiceIsar.instance;
+  final AdultContentServiceLocal _adultService = AdultContentServiceLocal.instance;
 
   /// Verifica se um app deve ser bloqueado pelo AdultContent
   Future<bool> shouldBlockApp(String packageName) async {
@@ -21,7 +21,7 @@ class AdultContentAppLockService {
       final config = await _adultService.getConfig();
       
       // Verifica se AppLock está habilitado e o módulo está ativo
-      if (!config.enableAppLock || !config.isEnabled) {
+      if (!config.enableAppLock || !config.isModuleActive) {
         return false;
       }
       

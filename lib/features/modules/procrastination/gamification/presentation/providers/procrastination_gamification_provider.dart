@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/repositories/procrastination_gamification_repository.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/notifiers/procrastination_gamification_notifier.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
 /// Re-export do provider do notifier (plugin architecture)
 export 'package:disciplinum/features/modules/procrastination/presentation/notifiers/procrastination_gamification_notifier.dart'
@@ -30,6 +31,6 @@ final procrastinationStreakProvider = Provider<int>((ref) {
 
 /// Provider para verificar se o módulo está ativo
 final procrastinationActiveProvider = Provider<bool>((ref) {
-  final state = ref.watch(procrastinationGamificationNotifierProvider);
-  return state.isModuleActive;
+  final state = ref.watch(procrastinationControllerIsarProvider);
+  return state.config?.isModuleActive ?? false;
 });

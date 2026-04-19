@@ -184,7 +184,7 @@ class ProcrastinationGamificationRepository {
           'disciplinumCount': 0,
           'earnedInsignias': [],
           'earnedMedalhas': [],
-          'isActive': false,
+          'isModuleActive': false,
           'lastUpdated': DateTime.now().toIso8601String(),
           'version': '1.0',
         };
@@ -194,8 +194,8 @@ class ProcrastinationGamificationRepository {
         'disciplinumCount': state.disciplinumCount,
         'earnedInsignias': state.earnedInsignias,
         'earnedMedalhas': state.earnedMedalhas,
-        'isActive': state.isActive,
-        'lastUpdated': state.lastUpdated.toIso8601String(),
+        'isModuleActive': state.isModuleActive,
+        'lastUpdated': state.updatedAt.toIso8601String(),
         'version': '1.0',
       };
     } catch (e) {
@@ -204,7 +204,7 @@ class ProcrastinationGamificationRepository {
         'disciplinumCount': 0,
         'earnedInsignias': [],
         'earnedMedalhas': [],
-        'isActive': false,
+        'isModuleActive': false,
         'lastUpdated': DateTime.now().toIso8601String(),
         'version': '1.0',
         'error': e.toString(),

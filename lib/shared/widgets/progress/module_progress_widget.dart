@@ -26,7 +26,7 @@ class ModuleProgressWidget extends ConsumerWidget {
     final niche = NicheRepository.getById(nicheId);
     final gamificationState = ref.watch(moduleGamificationProvider(nicheId));
     
-    final isActive = gamificationState.isActive;
+    final isActive = gamificationState.isModuleActive;
     final consecutiveDays = gamificationState.consecutiveDays;
     
     return Card(

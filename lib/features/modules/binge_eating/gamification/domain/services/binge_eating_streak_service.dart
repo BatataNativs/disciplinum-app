@@ -141,12 +141,12 @@ class BingeEatingStreakService {
     int consecutivePositiveDays = 0,
     DateTime? lastPositiveDay,
     int disciplinumCount = 0,
-    bool isActive = false,
+    bool isModuleActive = false,
   }) {
     return BingeEatingModuleState(
       consecutivePositiveDays: consecutivePositiveDays,
       disciplinumCount: disciplinumCount,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 

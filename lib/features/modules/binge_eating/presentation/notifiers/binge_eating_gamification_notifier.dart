@@ -55,7 +55,7 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
         state = state.copyWith(
           gamification: gamification, 
           isLoading: false,
-          isModuleActive: gamification.isActive,
+          isModuleActive: gamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -71,7 +71,7 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
     
     try {
       final currentState = state.gamification ?? BingeEatingModuleState.initial();
-      final newState = currentState.copyWith(isActive: true);
+      final newState = currentState.copyWith(isModuleActive: true);
       
       await _repository.saveBingeEatingState(newState);
       await _repository.syncWithSupabase(newState);
@@ -88,7 +88,7 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
     
     try {
       final currentState = state.gamification ?? BingeEatingModuleState.initial();
-      final newState = currentState.copyWith(isActive: false);
+      final newState = currentState.copyWith(isModuleActive: false);
       
       await _repository.saveBingeEatingState(newState);
       await _repository.syncWithSupabase(newState);

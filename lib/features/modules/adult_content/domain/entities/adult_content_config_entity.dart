@@ -8,7 +8,7 @@ class AdultContentConfigEntity {
   @Unique()
   String userId;
 
-  bool isEnabled = false;
+  bool isModuleActive = false;
   DateTime? blockedUntil;
   String? blockReason;
   int dailyLimitMinutes = 60;
@@ -29,7 +29,7 @@ class AdultContentConfigEntity {
 
   AdultContentConfigEntity copyWith({
     String? userId,
-    bool? isEnabled,
+    bool? isModuleActive,
     DateTime? blockedUntil,
     String? blockReason,
     int? dailyLimitMinutes,
@@ -43,7 +43,7 @@ class AdultContentConfigEntity {
     DateTime? updatedAt,
   }) {
     final entity = AdultContentConfigEntity(userId: userId ?? this.userId);
-    entity.isEnabled = isEnabled ?? this.isEnabled;
+    entity.isModuleActive = isModuleActive ?? this.isModuleActive;
     entity.blockedUntil = blockedUntil ?? this.blockedUntil;
     entity.blockReason = blockReason ?? this.blockReason;
     entity.dailyLimitMinutes = dailyLimitMinutes ?? this.dailyLimitMinutes;

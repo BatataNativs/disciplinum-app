@@ -22,7 +22,7 @@ class DietModuleState implements ModuleStateContract {
   final List<String> earnedMedalhas;
   final int consecutiveDays;
   final int disciplinumCount;
-  final bool isActive;
+  final bool isModuleActive;
   final String currentStageId;
 
   DietModuleState({
@@ -32,7 +32,7 @@ class DietModuleState implements ModuleStateContract {
     this.earnedMedalhas = const [],
     this.consecutiveDays = 0,
     this.disciplinumCount = 0,
-    this.isActive = false,
+    this.isModuleActive = false,
     this.currentStageId = 'bronze',
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -46,7 +46,7 @@ class DietModuleState implements ModuleStateContract {
       earnedMedalhas: const [],
       consecutiveDays: 0,
       disciplinumCount: 0,
-      isActive: false,
+      isModuleActive: false,
       currentStageId: 'bronze',
     );
   }
@@ -60,7 +60,7 @@ class DietModuleState implements ModuleStateContract {
     List<String>? earnedMedalhas,
     int? consecutiveDays,
     int? disciplinumCount,
-    bool? isActive,
+    bool? isModuleActive,
     String? currentStageId,
   }) {
     return DietModuleState(
@@ -70,7 +70,7 @@ class DietModuleState implements ModuleStateContract {
       earnedMedalhas: earnedMedalhas ?? this.earnedMedalhas,
       consecutiveDays: consecutiveDays ?? this.consecutiveDays,
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStageId: currentStageId ?? this.currentStageId,
     );
   }
@@ -87,7 +87,7 @@ class DietModuleState implements ModuleStateContract {
       ..setField('earned_medalhas', earnedMedalhas)
       ..setField('consecutive_days', consecutiveDays)
       ..setField('disciplinum_count', disciplinumCount)
-      ..setField('is_active', isActive)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1]);
@@ -145,7 +145,7 @@ class DietModuleState implements ModuleStateContract {
               [],
       consecutiveDays: json['consecutive_days'] as int? ?? 0,
       disciplinumCount: json['disciplinum_count'] as int? ?? 0,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

@@ -14,8 +14,8 @@ class HealthDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Usando provider local do Smoking
     final smokingState = ref.watch(stopSmokingControllerProvider);
-    final isActive = smokingState.smokingData?.isActive ?? false;
-    final effectiveDuration = isActive ? settings.timeSmokeFree : Duration.zero;
+    final isModuleActive = smokingState.smokingData?.isModuleActive ?? false;
+    final effectiveDuration = isModuleActive ? settings.timeSmokeFree : Duration.zero;
 
     return Scaffold(
       body: Container(

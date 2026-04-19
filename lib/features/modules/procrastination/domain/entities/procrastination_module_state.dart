@@ -24,7 +24,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
   final int disciplinumCount;
   final int totalTasksCompleted;
   final int totalFocusMinutes;
-  final bool isActive;
+  final bool isModuleActive;
   final String currentStageId;
 
   ProcrastinationModuleState({
@@ -36,7 +36,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
     this.disciplinumCount = 0,
     this.totalTasksCompleted = 0,
     this.totalFocusMinutes = 0,
-    this.isActive = false,
+    this.isModuleActive = false,
     this.currentStageId = 'bronze',
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -52,7 +52,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
       disciplinumCount: 0,
       totalTasksCompleted: 0,
       totalFocusMinutes: 0,
-      isActive: false,
+      isModuleActive: false,
       currentStageId: 'bronze',
     );
   }
@@ -71,7 +71,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
     int? disciplinumCount,
     int? totalTasksCompleted,
     int? totalFocusMinutes,
-    bool? isActive,
+    bool? isModuleActive,
     String? currentStageId,
   }) {
     return ProcrastinationModuleState(
@@ -83,7 +83,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
       totalTasksCompleted: totalTasksCompleted ?? this.totalTasksCompleted,
       totalFocusMinutes: totalFocusMinutes ?? this.totalFocusMinutes,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStageId: currentStageId ?? this.currentStageId,
     );
   }
@@ -102,7 +102,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
       ..setField('disciplinum_count', disciplinumCount)
       ..setField('total_tasks_completed', totalTasksCompleted)
       ..setField('total_focus_minutes', totalFocusMinutes)
-      ..setField('is_active', isActive)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1])
@@ -164,7 +164,7 @@ class ProcrastinationModuleState implements ModuleStateContract {
       disciplinumCount: json['disciplinum_count'] as int? ?? 0,
       totalTasksCompleted: json['total_tasks_completed'] as int? ?? 0,
       totalFocusMinutes: json['total_focus_minutes'] as int? ?? 0,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

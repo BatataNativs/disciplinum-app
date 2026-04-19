@@ -70,7 +70,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
         setState(() {
           _selectedApps.clear();
           _selectedApps.addAll(apps);
-          _gamificationRunning = status?.isActive ?? false;
+          _gamificationRunning = status?.isModuleActive ?? false;
           _loadingData = false;
         });
 
@@ -177,7 +177,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     });
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
-      isActive: true,
+      isModuleActive: true,
     );
     // Usando provider local do AdultContent
     ref.read(adultContentServiceIsarProvider);
@@ -238,6 +238,12 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
         _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
+
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.adultContent,
+        isModuleActive: false,
+      );
 
       if (_pageController.hasClients) {
         _pageController.animateToPage(0,

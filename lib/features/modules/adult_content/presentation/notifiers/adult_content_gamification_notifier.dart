@@ -52,7 +52,7 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
         state = state.copyWith(
           gamification: gamification, 
           isLoading: false,
-          isModuleActive: gamification.isActive,
+          isModuleActive: gamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -66,7 +66,7 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentState = state.gamification ?? AdultContentModuleState.initial();
-      final newState = currentState.copyWith(isActive: true);
+      final newState = currentState.copyWith(isModuleActive: true);
       await _repository.saveAdultContentState(newState);
       await _repository.syncWithSupabase(newState);
       await loadGamification();
@@ -79,7 +79,7 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentState = state.gamification ?? AdultContentModuleState.initial();
-      final newState = currentState.copyWith(isActive: false);
+      final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveAdultContentState(newState);
       await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);

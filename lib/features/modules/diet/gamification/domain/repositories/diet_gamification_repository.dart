@@ -154,7 +154,7 @@ class DietGamificationRepository {
         earnedMedalhas: [],
         consecutiveDays: 0,
         disciplinumCount: 0,
-        isActive: false,
+        isModuleActive: false,
       );
 
       await saveDietState(defaultState);
@@ -169,7 +169,7 @@ class DietGamificationRepository {
         earnedMedalhas: [],
         consecutiveDays: 0,
         disciplinumCount: 0,
-        isActive: false,
+        isModuleActive: false,
       );
     }
   }
@@ -184,7 +184,7 @@ class DietGamificationRepository {
           earnedMedalhas: [], // Remove todas as medalhas
           consecutiveDays: 0,
           disciplinumCount: 0,
-          isActive: false,
+          isModuleActive: false,
         );
         
         await saveDietState(resetState);

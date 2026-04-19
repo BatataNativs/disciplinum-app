@@ -95,7 +95,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           _selectedApps.addAll(apps);
           _focusStart = start;
           _focusEnd = end;
-          _gamificationRunning = status?.isActive ?? false;
+          _gamificationRunning = status?.isModuleActive ?? false;
           _loadingData = false;
         });
 
@@ -218,6 +218,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     bool granted = await NotificationService.requestPermission();
     if (granted == true) {
       _startGamificationCycle();
+      if (mounted) {
+        setState(() {
+          _selectedIndex = 1;
+        });
+      }
     } else {
       _showNotificationSettingsDialog();
     }
@@ -230,8 +235,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     });
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
-      isActive: true,
+      isModuleActive: true,
     );
+    // Persiste também no Isar local
+    ref.read(focusControllerIsarProvider.notifier).setModuleActive(true);
     // Incrementa streak ao iniciar ciclo de gamificação
     final focusController = ref.read(focusControllerIsarProvider.notifier);
     focusController.incrementStreak();
@@ -289,23 +296,24 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         deactivate: true,
       );
 
-      // Obtém o estado atual do módulo
-      final focusState = ref.read(focusControllerIsarProvider);
-      final gamificationStatus = focusState.config?.isEnabled ?? false;
-
-      setState(() {
-        _gamificationRunning = gamificationStatus;
-        _selectedIndex = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedIndex = 0;
+        });
+      }
 
       if (_pageController.hasClients) {
         _pageController.animateToPage(0,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic);
       }
-      await ref.read(cloudSyncServiceProvider).saveModuleStatus(
-        nicheId: _niche.nicheId,
-        isActive: false,
+      
+      await ref.read(focusControllerIsarProvider.notifier).setModuleActive(false);
+
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.focus,
+        isModuleActive: false,
       );
 
       if (mounted) {
@@ -458,6 +466,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final isModuleActive = ref.watch(focusActiveProvider);
+
     if (_loadingData) {
       return Scaffold(
         appBar: AppBar(title: Text(_niche.name), centerTitle: true),
@@ -525,7 +535,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   
                   // Botões apenas na aba 1
                   if (_selectedIndex == 1)
-                    _buildBottomButtons(isDark),
+                    _buildBottomButtons(isDark, isModuleActive),
                 ],
               ),
             ),
@@ -536,7 +546,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     );
   }
 
-  Widget _buildBottomButtons(bool isDark) {
+  Widget _buildBottomButtons(bool isDark, bool isModuleActive) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -592,15 +602,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ModernStartButton(
-                  icon: _gamificationRunning
+                  icon: isModuleActive
                       ? Icons.power_settings_new
                       : Icons.power_off,
-                  label: _gamificationRunning
+                  label: isModuleActive
                       ? 'Desativar módulo'
                       : 'Ativar módulo',
-                  color: _gamificationRunning ? Colors.red : Colors.green,
+                  color: isModuleActive ? Colors.red : Colors.green,
                   isDark: isDark,
-                  onTap: _gamificationRunning
+                  onTap: isModuleActive
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
                 ),

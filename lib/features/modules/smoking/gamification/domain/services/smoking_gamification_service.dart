@@ -215,7 +215,7 @@ class SmokingGamificationService implements ModuleGamificationInterface {
   
   int get consecutivePositiveDays => _currentState?.consecutivePositiveDays ?? 0;
   int get disciplinumCount => _currentState?.disciplinumCount ?? 0;
-  bool get isActive => _currentState != null;
+  bool get isModuleActive => _currentState?.isModuleActive ?? false;
   bool get isInStreak => (_currentState?.consecutivePositiveDays ?? 0) > 0;
 
   /// Obtém progresso para próxima insignia
@@ -261,7 +261,7 @@ class SmokingGamificationService implements ModuleGamificationInterface {
         'disciplinumCount': 0,
         'earnedInsignias': <String>[],
         'earnedMedalhas': <String>[],
-        'isActive': false,
+        'isModuleActive': false,
         'isInStreak': false,
       };
     }
@@ -273,7 +273,7 @@ class SmokingGamificationService implements ModuleGamificationInterface {
       'disciplinumCount': disciplinumCount,
       'earnedInsignias': _currentState!.earnedInsignias,
       'earnedMedalhas': _currentState!.earnedMedalhas,
-      'isActive': true,
+      'isModuleActive': isModuleActive,
       'isInStreak': isInStreak,
       'lastPositiveCheckIn': _currentState!.lastPositiveCheckIn?.toIso8601String(),
       'startDate': _currentState!.startDate?.toIso8601String(),

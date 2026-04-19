@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/features/modules/reading/presentation/notifiers/reading_gamification_notifier.dart';
-import 'package:disciplinum/features/modules/reading/data/repositories/reading_config_repository.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -111,8 +109,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final gamificationState = ref.watch(readingGamificationStateProvider);
-    final isActive = gamificationState.gamification != null;
+    final isActive = ref.watch(readingActiveProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -202,8 +199,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   children: [
                     _buildHowItWorks(context),
                     // Aba da Estante + Botões
-                    Expanded(
-                      child: Column(
+                    Column(
                         children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -236,7 +232,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                         _buildReminderSection(isDark),
                         _buildBottomButtons(isDark, isActive),
                       ],
-                    ),
                     ),
                   ],
                 ),
@@ -488,7 +483,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Desativar Módulo'),
-          content: const Text('Ao desativar, seu progresso será mantido mas pausado.\n\nDeseja continuar?'),
+          content: const Text('Ao desativar, seu progresso e gamificação serão resetados.\n\nDeseja continuar?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -507,11 +502,14 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         HapticFeedback.heavyImpact();
         
         // Implementando lógica de desativação local
-        final notifier = ref.read(readingGamificationNotifierProvider.notifier);
-        notifier.clearGamification(); // Limpa o estado da gamificação
+        // Salvar estado desativado em configuração
+        await ref.read(readingControllerIsarProvider.notifier).setModuleActive(false);
         
-        // Salvar estado desativado em configuração local
-        await ReadingConfigRepository.instance.setModuleActive(ref.read(currentUserIdProvider), false);
+        // Sincronizar com a nuvem
+        ref.read(cloudSyncServiceProvider).saveModuleStatus(
+          nicheId: NicheId.reading,
+          isModuleActive: false,
+        );
         
         if (mounted) {
           setState(() {}); // Rebuild para atualizar UI
@@ -521,15 +519,18 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       HapticFeedback.lightImpact();
       
       // Implementando lógica de ativação local
-      final notifier = ref.read(readingGamificationNotifierProvider.notifier);
-      await notifier.loadGamification();
+      // Salvar estado ativado em configuração
+      await ref.read(readingControllerIsarProvider.notifier).setModuleActive(true);
       
-      // Salvar estado ativado em configuração local
-      await ReadingConfigRepository.instance.setModuleActive(ref.read(currentUserIdProvider), true);
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.reading,
+        isModuleActive: true,
+      );
       
-      setState(() {
-        isActive = true;
-      });
+      if (mounted) {
+        setState(() {}); // Rebuild para atualizar UI
+      }
     }
   }
 

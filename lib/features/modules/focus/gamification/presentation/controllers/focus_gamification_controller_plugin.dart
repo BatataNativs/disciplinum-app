@@ -32,7 +32,7 @@ class FocusGamificationController extends ChangeNotifier {
   int get disciplinumCount => _moduleState?.disciplinumCount ?? 0;
   List<String> get earnedInsignias => _moduleState?.earnedInsignias ?? [];
   List<String> get earnedMedalhas => _moduleState?.earnedMedalhas ?? [];
-  bool get isActive => _moduleState?.isActive ?? false;
+  bool get isModuleActive => _moduleState?.isModuleActive ?? false;
 
   /// Carrega o estado do módulo Focus
   Future<void> loadModuleState() async {
@@ -50,7 +50,7 @@ class FocusGamificationController extends ChangeNotifier {
         habitType: 'state_loaded',
         metadata: {
           'streak': _moduleState!.respectedPeriods,
-          'active': _moduleState!.isActive,
+          'active': _moduleState!.isModuleActive,
           'disciplinum_count': _moduleState!.disciplinumCount,
         },
       );
@@ -183,7 +183,7 @@ class FocusGamificationController extends ChangeNotifier {
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
-          isActive: true,
+          isModuleActive: true,
         );
       }
 
@@ -220,7 +220,7 @@ class FocusGamificationController extends ChangeNotifier {
       if (_moduleState != null) {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
-          isActive: false,
+          isModuleActive: false,
         );
 
         await _repository.saveFocusState(_moduleState!);

@@ -25,7 +25,7 @@ class SpendingModuleState implements ModuleStateContract {
   final double totalMoneySaved;
   final int totalExpensesAvoided;
   final double monthlyBudget;
-  final bool isActive;
+  final bool isModuleActive;
   final String currentStageId;
   final int consecutiveMonths;
 
@@ -39,7 +39,7 @@ class SpendingModuleState implements ModuleStateContract {
     this.totalMoneySaved = 0.0,
     this.totalExpensesAvoided = 0,
     this.monthlyBudget = 0.0,
-    this.isActive = false,
+    this.isModuleActive = false,
     this.currentStageId = 'bronze',
     this.consecutiveMonths = 0,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -57,7 +57,7 @@ class SpendingModuleState implements ModuleStateContract {
       totalMoneySaved: 0.0,
       totalExpensesAvoided: 0,
       monthlyBudget: 0.0,
-      isActive: false,
+      isModuleActive: false,
       currentStageId: 'bronze',
     );
   }
@@ -74,7 +74,7 @@ class SpendingModuleState implements ModuleStateContract {
     double? totalMoneySaved,
     int? totalExpensesAvoided,
     double? monthlyBudget,
-    bool? isActive,
+    bool? isModuleActive,
     String? currentStageId,
     int? consecutiveMonths,
   }) {
@@ -88,7 +88,7 @@ class SpendingModuleState implements ModuleStateContract {
       totalMoneySaved: totalMoneySaved ?? this.totalMoneySaved,
       totalExpensesAvoided: totalExpensesAvoided ?? this.totalExpensesAvoided,
       monthlyBudget: monthlyBudget ?? this.monthlyBudget,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStageId: currentStageId ?? this.currentStageId,
       consecutiveMonths: consecutiveMonths ?? this.consecutiveMonths,
     );
@@ -109,7 +109,7 @@ class SpendingModuleState implements ModuleStateContract {
       ..setField('total_money_saved', totalMoneySaved)
       ..setField('total_expenses_avoided', totalExpensesAvoided)
       ..setField('monthly_budget', monthlyBudget)
-      ..setField('is_active', isActive)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1])
@@ -172,7 +172,7 @@ class SpendingModuleState implements ModuleStateContract {
       totalMoneySaved: (json['total_money_saved'] as num?)?.toDouble() ?? 0.0,
       totalExpensesAvoided: json['total_expenses_avoided'] as int? ?? 0,
       monthlyBudget: (json['monthly_budget'] as num?)?.toDouble() ?? 0.0,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

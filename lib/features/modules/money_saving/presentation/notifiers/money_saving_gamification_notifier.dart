@@ -31,7 +31,7 @@ class MoneySavingGamificationState {
   int get bestStreak => moduleState?.bestStreak ?? 0;
   double get totalSavedAmount => moduleState?.totalSavedAmount ?? 0.0;
   int get disciplinumCount => moduleState?.disciplinumCount ?? 0;
-  bool get isActive => moduleState?.isActive ?? false;
+  bool get isModuleActive => moduleState?.isModuleActive ?? false;
   DateTime? get lastSavingDate => moduleState?.lastSavingDate;
   List<String> get earnedInsignias => moduleState?.earnedInsignias ?? [];
   List<String> get earnedMedalhas => moduleState?.earnedMedalhas ?? [];
@@ -57,7 +57,7 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
   Future<void> activateModule() async {
     try {
       final current = state.moduleState ?? MoneySavingModuleState();
-      final updated = current.copyWith(isActive: true);
+      final updated = current.copyWith(isModuleActive: true);
       await _repository.saveMoneySavingState(updated);
       
       // Desbloqueia insígnia Madeira por ativar o módulo
@@ -73,7 +73,7 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     try {
       final current = state.moduleState;
       if (current != null) {
-        final updated = current.copyWith(isActive: false);
+        final updated = current.copyWith(isModuleActive: false);
         await _repository.saveMoneySavingState(updated);
         await loadGamification(); // Recarrega para atualizar o estado
       }

@@ -120,12 +120,11 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   activeIconColor: activeIconColor,
                   inactiveIconColor: inactiveIconColor,
                 ),
-                // --- NOVO ÍCONE: LOJINHA (COM ASSET) ---
+                // --- NOVO ÍCONE: LOJINHA ---
                 _buildIconItem(
                   context,
                   ref,
                   index: 2,
-                  // Ajuste o caminho conforme sua estrutura de pastas (ex: assets/images/...)
                   assetPath: 'assets/icons/icone_carrinho_compra.png',
                   isActive: currentIndex == 2,
                   activeIndicatorColor: activeIndicatorColor,

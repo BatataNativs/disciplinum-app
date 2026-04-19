@@ -1,42 +1,37 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/focus/domain/services/focus_service_isar.dart';
-import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
+import 'package:disciplinum/features/modules/reading/domain/services/reading_service_local.dart';
 
-/// Estado do Focus
-class FocusState {
+/// Estado do Reading
+class ReadingState {
   final bool isLoading;
   final String? error;
-  final FocusConfig? config;
-  final Map<int, TimeOfDayRange> focusIntervals;
+  final ReadingConfig? config;
 
-  const FocusState({
+  const ReadingState({
     this.isLoading = false,
     this.error,
     this.config,
-    this.focusIntervals = const {},
   });
 
-  FocusState copyWith({
+  ReadingState copyWith({
     bool? isLoading,
     String? error,
-    FocusConfig? config,
-    Map<int, TimeOfDayRange>? focusIntervals,
+    ReadingConfig? config,
   }) {
-    return FocusState(
+    return ReadingState(
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
       config: config ?? this.config,
-      focusIntervals: focusIntervals ?? this.focusIntervals,
     );
   }
 }
 
-/// Controller Riverpod para Focus usando Isar puro
-class FocusControllerIsar extends StateNotifier<FocusState> {
-  final FocusServiceIsar _service;
+/// Controller Riverpod para Reading usando ObjectBox
+class ReadingControllerLocal extends StateNotifier<ReadingState> {
+  final ReadingServiceLocal _service;
   
-  FocusControllerIsar(this._service) : super(const FocusState()) {
+  ReadingControllerLocal(this._service) : super(const ReadingState()) {
     _loadData();
   }
 
@@ -44,11 +39,9 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     state = state.copyWith(isLoading: true);
     try {
       final config = await _service.getConfig();
-      final intervals = await _service.getAllFocusIntervals();
       
       state = state.copyWith(
         config: config,
-        focusIntervals: intervals,
         isLoading: false,
       );
     } catch (e) {
@@ -59,7 +52,7 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
-  Future<void> updateConfig(FocusConfig config) async {
+  Future<void> updateConfig(ReadingConfig config) async {
     state = state.copyWith(isLoading: true);
     try {
       await _service.saveConfig(config);
@@ -76,28 +69,19 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
-  Future<void> updateDailyGoal(int minutes) async {
-    state = state.copyWith(isLoading: true);
-    try {
-      await _service.updateDailyGoal(minutes);
-      await _loadData(); // Recarrega os dados
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
-  }
-
   Future<void> updateNotificationSettings({
     required bool enableNotifications,
     TimeOfDay? reminderTime,
+    bool? enableDailyReminder,
+    bool? enableStreakReminder,
   }) async {
     state = state.copyWith(isLoading: true);
     try {
       await _service.updateNotificationSettings(
         enableNotifications: enableNotifications,
         reminderTime: reminderTime,
+        enableDailyReminder: enableDailyReminder,
+        enableStreakReminder: enableStreakReminder,
       );
       await _loadData(); // Recarrega os dados
     } catch (e) {
@@ -108,15 +92,15 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
-  Future<void> recordFocusSession({
-    required int minutes,
-    required int nicheId,
+  Future<void> updateGoals({
+    int? dailyPagesGoal,
+    int? weeklyBooksGoal,
   }) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _service.recordFocusSession(
-        minutes: minutes,
-        nicheId: nicheId,
+      await _service.updateGoals(
+        dailyPagesGoal: dailyPagesGoal,
+        weeklyBooksGoal: weeklyBooksGoal,
       );
       await _loadData(); // Recarrega os dados
     } catch (e) {
@@ -127,10 +111,10 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
-  Future<void> incrementStreak() async {
+  Future<void> recordReadingSession() async {
     state = state.copyWith(isLoading: true);
     try {
-      await _service.incrementStreak();
+      await _service.recordReadingSession();
       await _loadData(); // Recarrega os dados
     } catch (e) {
       state = state.copyWith(
@@ -153,38 +137,6 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
-  Future<void> saveFocusInterval({
-    required int nicheId,
-    required TimeOfDayRange interval,
-  }) async {
-    state = state.copyWith(isLoading: true);
-    try {
-      await _service.saveFocusInterval(
-        nicheId: nicheId,
-        interval: interval,
-      );
-      await _loadData(); // Recarrega os dados
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
-  }
-
-  Future<void> removeFocusInterval(int nicheId) async {
-    state = state.copyWith(isLoading: true);
-    try {
-      await _service.removeFocusInterval(nicheId);
-      await _loadData(); // Recarrega os dados
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
-  }
-
   Future<void> clearAllData() async {
     state = state.copyWith(isLoading: true);
     try {
@@ -198,7 +150,37 @@ class FocusControllerIsar extends StateNotifier<FocusState> {
     }
   }
 
+  Future<void> setModuleActive(bool isActive) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _service.setModuleActive(isActive);
+      await _loadData();
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Verifica se deve notificar sobre streak
+  bool get shouldNotifyStreak {
+    if (state.config == null) return false;
+    return _service.shouldNotifyStreak(state.config!);
+  }
+
+  /// Getters para facilitar acesso ao config
+  bool get enableNotifications => state.config?.enableNotifications ?? false;
+  TimeOfDay get reminderTime => state.config?.reminderTime ?? const TimeOfDay(hour: 20, minute: 0);
+  bool get enableDailyReminder => state.config?.enableDailyReminder ?? false;
+  bool get enableStreakReminder => state.config?.enableStreakReminder ?? false;
+  int get currentStreak => state.config?.currentStreak ?? 0;
+  DateTime? get lastReadingDate => state.config?.lastReadingDate;
+  int get longestStreakDays => state.config?.longestStreakDays ?? 0;
+  int get dailyPagesGoal => state.config?.dailyPagesGoal ?? 20;
+  int get weeklyBooksGoal => state.config?.weeklyBooksGoal ?? 1;
 }

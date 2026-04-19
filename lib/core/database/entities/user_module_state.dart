@@ -8,7 +8,7 @@ class UserModuleState {
 
   late String userId;
   late int nicheId;
-  late bool isActive;
+  late bool isModuleActive;
   late int consecutiveDays;
   @Property(type: PropertyType.date)
   late DateTime lastAccessDate;
@@ -23,7 +23,7 @@ class UserModuleState {
   UserModuleState()
       : userId = '',
         nicheId = 0,
-        isActive = false,
+        isModuleActive = false,
         consecutiveDays = 0,
         lastAccessDate = DateTime.now(),
         createdAt = DateTime.now(),
@@ -32,13 +32,13 @@ class UserModuleState {
   factory UserModuleState.create({
     required String userId,
     required int nicheId,
-    bool isActive = false,
+    bool isModuleActive = false,
   }) {
     final now = DateTime.now();
     final entity = UserModuleState();
     entity.userId = userId;
     entity.nicheId = nicheId;
-    entity.isActive = isActive;
+    entity.isModuleActive = isModuleActive;
     entity.consecutiveDays = 0;
     entity.lastAccessDate = now;
     entity.createdAt = now;
@@ -54,7 +54,7 @@ class UserModuleState {
   UserModuleState copyWith({
     String? userId,
     int? nicheId,
-    bool? isActive,
+    bool? isModuleActive,
     int? consecutiveDays,
     DateTime? lastAccessDate,
     DateTime? createdAt,
@@ -67,7 +67,7 @@ class UserModuleState {
     entity.id = id;
     entity.userId = userId ?? this.userId;
     entity.nicheId = nicheId ?? this.nicheId;
-    entity.isActive = isActive ?? this.isActive;
+    entity.isModuleActive = isModuleActive ?? this.isModuleActive;
     entity.consecutiveDays = consecutiveDays ?? this.consecutiveDays;
     entity.lastAccessDate = lastAccessDate ?? this.lastAccessDate;
     entity.createdAt = createdAt ?? this.createdAt;

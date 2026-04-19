@@ -17,7 +17,7 @@ class MoneySavingGamificationEntity {
   DateTime? lastSavingDate;
   DateTime? startDate;
   DateTime lastUpdated = DateTime.now();
-  bool isActive = false;
+  bool isModuleActive = false;
   DateTime createdAt = DateTime.now();
 
   MoneySavingGamificationEntity({
@@ -31,7 +31,7 @@ class MoneySavingGamificationEntity {
     this.lastSavingDate,
     this.startDate,
     required this.lastUpdated,
-    this.isActive = false,
+    this.isModuleActive = false,
   }) : createdAt = DateTime.now();
 
   /// Converte de MoneySavingModuleState para Isar entity
@@ -47,7 +47,7 @@ class MoneySavingGamificationEntity {
       lastSavingDate: moduleState.lastSavingDate,
       startDate: moduleState.startDate,
       lastUpdated: moduleState.updatedAt,
-      isActive: moduleState.isActive,
+      isModuleActive: moduleState.isModuleActive,
     );
   }
 
@@ -63,7 +63,7 @@ class MoneySavingGamificationEntity {
       lastSavingDate: lastSavingDate,
       startDate: startDate,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -78,7 +78,7 @@ class MoneySavingGamificationEntity {
     DateTime? lastSavingDate,
     DateTime? startDate,
     DateTime? lastUpdated,
-    bool? isActive,
+    bool? isModuleActive,
   }) {
     return MoneySavingGamificationEntity(
       userId: userId,
@@ -91,7 +91,7 @@ class MoneySavingGamificationEntity {
       lastSavingDate: lastSavingDate ?? this.lastSavingDate,
       startDate: startDate ?? this.startDate,
       lastUpdated: lastUpdated ?? this.lastUpdated,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
     );
   }
 
@@ -105,7 +105,7 @@ class MoneySavingGamificationEntity {
         'bestStreak: $bestStreak, '
         'earnedInsignias: $earnedInsignias, '
         'earnedMedalhas: $earnedMedalhas, '
-        'isActive: $isActive'
+        'isModuleActive: $isModuleActive'
         ')';
   }
 }

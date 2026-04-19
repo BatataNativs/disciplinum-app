@@ -12,7 +12,7 @@ class AdultContentGamificationEntity {
   int consecutiveDays;
   int disciplinumCount;
   DateTime lastUpdated;
-  bool isActive;
+  bool isModuleActive;
 
   AdultContentGamificationEntity({
     required this.userId,
@@ -21,7 +21,7 @@ class AdultContentGamificationEntity {
     this.consecutiveDays = 0,
     this.disciplinumCount = 0,
     required this.lastUpdated,
-    this.isActive = true,
+    this.isModuleActive = true,
   });
 
   factory AdultContentGamificationEntity.fromModuleState(
@@ -35,7 +35,7 @@ class AdultContentGamificationEntity {
       consecutiveDays: state.consecutiveDays,
       disciplinumCount: state.disciplinumCount,
       lastUpdated: state.updatedAt,
-      isActive: state.isActive,
+      isModuleActive: state.isModuleActive,
     );
   }
 
@@ -46,7 +46,7 @@ class AdultContentGamificationEntity {
       consecutiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -62,7 +62,7 @@ class AdultContentGamificationEntity {
       'consecutive_days': consecutiveDays,
       'disciplinum_count': disciplinumCount,
       'last_updated': lastUpdated.toIso8601String(),
-      'is_active': isActive,
+      'is_module_active': isModuleActive,
     };
   }
 
@@ -74,7 +74,7 @@ class AdultContentGamificationEntity {
       consecutiveDays: json['consecutive_days'] ?? 0,
       disciplinumCount: json['disciplinum_count'] ?? 0,
       lastUpdated: DateTime.parse(json['last_updated']),
-      isActive: json['is_active'] ?? true,
+      isModuleActive: json['is_module_active'] ?? json['is_active'] ?? true,
     );
   }
 }

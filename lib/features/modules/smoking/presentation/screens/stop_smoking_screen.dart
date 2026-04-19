@@ -24,6 +24,7 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_s
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_tab_content.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_actions_widget.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart' as smoking_progress;
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
@@ -128,7 +129,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     if (mounted) {
       setState(() {
         settings = data;
-        _gamificationRunning = status?.isActive ?? false;
+        _gamificationRunning = status?.isModuleActive ?? false;
         isLoading = false;
       });
 
@@ -379,23 +380,26 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         }
       }
       LoggerService.instance.d('🔥 Iniciando ciclo de gamificação');
-      _startGamificationCycle();
+      await _startGamificationCycle();
     } else {
       LoggerService.instance.d('🔥 Mostrando diálogo de configurações de notificação');
       _showNotificationSettingsDialog();
     }
   }
 
-  void _startGamificationCycle() {
+  Future<void> _startGamificationCycle() async {
     HapticFeedback.heavyImpact();
     setState(() => _gamificationRunning = true);
-    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isActive: true);
-    // Usando provider local do Smoking
-    ref.read(stopSmokingControllerProvider);
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isModuleActive: true);
+    
+    // Ativar o módulo no SmokingGamificationNotifier (estado REAL da gamificação)
+    await ref.read(smokingGamificationNotifierProvider.notifier).activateModule();
+    
     LoggerService.instance.i('Smoking: Ciclo de gamificação iniciado');
   }
 
   Future<void> _desativarNichoMonitoramento() async {
+    LoggerService.instance.d('🔥🔥🔥 _desativarNichoMonitoramento() INICIADO');
     // Usando provider local do Smoking
     ref.read(stopSmokingControllerProvider);
     final confirmed = await showDialog<bool>(
@@ -406,12 +410,16 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       ),
     );
 
+    LoggerService.instance.d('🔥🔥🔥 Diálogo retornou: confirmed=$confirmed');
+    
     if (confirmed == true) {
+      LoggerService.instance.d('🔥🔥🔥 Usuário CONFIRMOU desativação');
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       setState(() => isLoading = true);
 
       try {
+        LoggerService.instance.d('🔥🔥🔥 Executando archiveAndReset...');
         await ref.read(smokingServiceProvider).archiveAndReset();
         await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id);
@@ -440,6 +448,17 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 curve: Curves.easeOutCubic);
           }
 
+          // Desativar no SmokingGamificationNotifier (estado REAL da gamificação)
+          LoggerService.instance.d(' Desativando no SmokingGamificationNotifier...');
+          await ref.read(smokingGamificationNotifierProvider.notifier).deactivateModule();
+          LoggerService.instance.d(' SmokingGamificationNotifier desativado com sucesso');
+
+          // Sincronizar com a nuvem
+          await ref.read(cloudSyncServiceProvider).saveModuleStatus(
+                nicheId: NicheId.smoking,
+                isModuleActive: false,
+              );
+
           if (mounted) {
             EnhancedSnackBarHelper.showError(
               context,
@@ -459,6 +478,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           );
         }
       }
+    } else {
+      LoggerService.instance.d('🔥🔥🔥 Usuário CANCELOU desativação (confirmed=$confirmed)');
     }
   }
 
@@ -677,9 +698,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     gamificationRunning: _gamificationRunning,
                     onToggleModule: () {
                       LoggerService.instance.d('🔥 Botão Ativar/Desativar Módulo pressionado');
+                      LoggerService.instance.d('🔥 _gamificationRunning atual: $_gamificationRunning');
                       if (_gamificationRunning) {
+                        LoggerService.instance.d('🔥 Chamando DESATIVAR (módulo está ativo)');
                         _desativarNichoMonitoramento();
                       } else {
+                        LoggerService.instance.d('🔥 Chamando ATIVAR (módulo está inativo)');
                         _ativarNichoMonitoramento();
                       }
                     },

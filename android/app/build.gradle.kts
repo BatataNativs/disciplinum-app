@@ -87,3 +87,15 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
+
+// Sync APKs to location where Flutter expects them (fix for AGP 8.x + Flutter)
+tasks.register<Copy>("syncFlutterApks") {
+    from(file("$buildDir/outputs/flutter-apk"))
+    into(file("${rootDir.parentFile}/build/app/outputs/flutter-apk"))
+    doFirst { file("${rootDir.parentFile}/build/app/outputs/flutter-apk").mkdirs() }
+}
+
+afterEvaluate {
+    tasks.named("assembleDebug").get().finalizedBy("syncFlutterApks")
+    tasks.named("assembleRelease").get().finalizedBy("syncFlutterApks")
+}

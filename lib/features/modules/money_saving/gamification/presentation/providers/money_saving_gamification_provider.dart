@@ -42,7 +42,7 @@ final moneySavingStreakProvider = Provider<int>((ref) {
 final moneySavingActiveProvider = Provider<bool>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   final state = ref.watch(moneySavingGamificationNotifierProvider(userId));
-  return state.isActive;
+  return state.isModuleActive;
 });
 
 /// Provider para valor total acumulado

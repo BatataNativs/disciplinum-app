@@ -65,11 +65,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: style?.copyWith(
-              fontWeight: FontWeight.w500,
-              fontSize: 15,
+          Expanded(
+            child: Text(
+              text,
+              style: style?.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+              ),
             ),
           ),
         ],
@@ -181,7 +183,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     // Fluxo normal: salva preferência e navega
-    final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
+    final prefs =
+        ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     await prefs.setBool('seen_onboarding', true);
 
     if (!mounted) return;
@@ -310,11 +313,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
-                      mainAxisAlignment: index == 2 ? MainAxisAlignment.start : MainAxisAlignment.center,
+                      mainAxisAlignment: index == 2
+                          ? MainAxisAlignment.start
+                          : MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (index == 2) const SizedBox(height: 80),
-                        if (index != 2) const Spacer(flex: 1),
+                        if (index == 0) const Spacer(flex: 1),
 
                         // --- ÁREA DO ASSET (Expandida) ---
                         Builder(builder: (context) {
@@ -347,183 +352,436 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   } else {
                                     return Center(
                                       child: SingleChildScrollView(
-                                        child: Container(
-                                          padding: const EdgeInsets.all(12),
-                                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: isDark
-                                                  ? [
-                                                      const Color(0xFF1E293B).withValues(alpha: 0.8),
-                                                      const Color(0xFF0F172A).withValues(alpha: 0.9),
-                                                    ]
-                                                  : [
-                                                      const Color(0xFFFFFFFF),
-                                                      const Color(0xFFF8FAFC),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            // Título movido para cima do container
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: isDark
+                                                      ? [
+                                                          const Color(
+                                                                  0xFF6366F1)
+                                                              .withValues(
+                                                                  alpha: 0.1),
+                                                          const Color(
+                                                                  0xFF8B5CF6)
+                                                              .withValues(
+                                                                  alpha: 0.05),
+                                                          Colors.transparent,
+                                                        ]
+                                                      : [
+                                                          const Color(
+                                                                  0xFFDBEAFE)
+                                                              .withValues(
+                                                                  alpha: 0.6),
+                                                          const Color(
+                                                                  0xFFF0F9FF)
+                                                              .withValues(
+                                                                  alpha: 0.3),
+                                                          Colors.transparent,
+                                                        ],
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Gamificação pra incentivar seu progresso',
+                                                textAlign: TextAlign.center,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineMedium
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 24,
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? const Color(0xFFFFFFFF)
+                                                      : const Color(0xFF1F2937),
+                                                  letterSpacing: -0.8,
+                                                  height: 1.2,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: (isDark
+                                                              ? const Color(
+                                                                  0xFF6366F1)
+                                                              : const Color(
+                                                                  0xFF3B82F6))
+                                                          .withValues(
+                                                              alpha: isDark
+                                                                  ? 0.4
+                                                                  : 0.25),
+                                                      offset:
+                                                          const Offset(0, 2),
+                                                      blurRadius: 8,
+                                                    ),
+                                                    Shadow(
+                                                      color: (isDark
+                                                              ? const Color(
+                                                                  0xFF6366F1)
+                                                              : const Color(
+                                                                  0xFF60A5FA))
+                                                          .withValues(
+                                                              alpha: isDark
+                                                                  ? 0.2
+                                                                  : 0.15),
+                                                      offset:
+                                                          const Offset(0, 4),
+                                                      blurRadius: 16,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: isDark
+                                                      ? [
+                                                          const Color(
+                                                                  0xFF1E293B)
+                                                              .withValues(
+                                                                  alpha: 0.8),
+                                                          const Color(
+                                                                  0xFF0F172A)
+                                                              .withValues(
+                                                                  alpha: 0.9),
+                                                        ]
+                                                      : [
+                                                          const Color(
+                                                              0xFFFFFFFF),
+                                                          const Color(
+                                                              0xFFF8FAFC),
+                                                        ],
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: (isDark
+                                                            ? Colors.black
+                                                            : const Color(
+                                                                0xFF64748B))
+                                                        .withValues(
+                                                            alpha: isDark
+                                                                ? 0.4
+                                                                : 0.12),
+                                                    blurRadius: 20,
+                                                    offset: const Offset(0, 6),
+                                                    spreadRadius: 2,
+                                                  ),
+                                                  BoxShadow(
+                                                    color: (isDark
+                                                            ? const Color(
+                                                                0xFF6366F1)
+                                                            : const Color(
+                                                                0xFF3B82F6))
+                                                        .withValues(
+                                                            alpha: isDark
+                                                                ? 0.1
+                                                                : 0.06),
+                                                    blurRadius: 30,
+                                                    offset: const Offset(0, 4),
+                                                    spreadRadius: -4,
+                                                  ),
+                                                ],
+                                                border: Border.all(
+                                                  color: (isDark
+                                                          ? const Color(
+                                                              0xFF334155)
+                                                          : const Color(
+                                                              0xFFE2E8F0))
+                                                      .withValues(
+                                                          alpha: isDark
+                                                              ? 0.5
+                                                              : 0.8),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  // Badge Medalhas
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: isDark
+                                                            ? [
+                                                                const Color(
+                                                                        0xFFF59E0B)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.2),
+                                                                const Color(
+                                                                        0xFFD97706)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.1),
+                                                              ]
+                                                            : [
+                                                                const Color(
+                                                                        0xFFFEF3C7)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.8),
+                                                                const Color(
+                                                                        0xFFFDE68A)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.5),
+                                                              ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                      border: Border.all(
+                                                        color: (isDark
+                                                                ? const Color(
+                                                                    0xFFF59E0B)
+                                                                : const Color(
+                                                                    0xFFD97706))
+                                                            .withValues(
+                                                                alpha: isDark
+                                                                    ? 0.4
+                                                                    : 0.3),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Medalhas',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            Color(0xFFD97706),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Wrap(
+                                                    spacing: 12,
+                                                    runSpacing: 6,
+                                                    alignment:
+                                                        WrapAlignment.center,
+                                                    children: [
+                                                      _buildMedalLarge(
+                                                          'assets/gamification/medals/smoking/bronze.png',
+                                                          'Bronze'),
+                                                      _buildMedalLarge(
+                                                          'assets/gamification/medals/smoking/silver.png',
+                                                          'Prata'),
+                                                      _buildMedalLarge(
+                                                          'assets/gamification/medals/smoking/gold.png',
+                                                          'Ouro'),
+                                                      _buildMedalLarge(
+                                                          'assets/gamification/medals/smoking/diamond.png',
+                                                          'Diamante'),
                                                     ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(16),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: (isDark
-                                                        ? Colors.black
-                                                        : const Color(0xFF64748B))
-                                                    .withValues(alpha: isDark ? 0.4 : 0.12),
-                                                blurRadius: 20,
-                                                offset: const Offset(0, 6),
-                                                spreadRadius: 2,
-                                              ),
-                                              BoxShadow(
-                                                color: (isDark
-                                                        ? const Color(0xFF6366F1)
-                                                        : const Color(0xFF3B82F6))
-                                                    .withValues(alpha: isDark ? 0.1 : 0.06),
-                                                blurRadius: 30,
-                                                offset: const Offset(0, 4),
-                                                spreadRadius: -4,
-                                              ),
-                                            ],
-                                            border: Border.all(
-                                              color: (isDark
-                                                      ? const Color(0xFF334155)
-                                                      : const Color(0xFFE2E8F0))
-                                                  .withValues(alpha: isDark ? 0.5 : 0.8),
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              // Badge Medalhas
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: isDark
-                                                        ? [
-                                                            const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                                                            const Color(0xFFD97706).withValues(alpha: 0.1),
-                                                          ]
-                                                        : [
-                                                            const Color(0xFFFEF3C7).withValues(alpha: 0.8),
-                                                            const Color(0xFFFDE68A).withValues(alpha: 0.5),
-                                                          ],
                                                   ),
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  border: Border.all(
-                                                    color: (isDark
-                                                            ? const Color(0xFFF59E0B)
-                                                            : const Color(0xFFD97706))
-                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
-                                                    width: 1,
+                                                  const SizedBox(height: 12),
+                                                  // Badge Insígnias
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: isDark
+                                                            ? [
+                                                                const Color(
+                                                                        0xFF6366F1)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.2),
+                                                                const Color(
+                                                                        0xFF8B5CF6)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.1),
+                                                              ]
+                                                            : [
+                                                                const Color(
+                                                                        0xFFDBEAFE)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.8),
+                                                                const Color(
+                                                                        0xFFF0F9FF)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.5),
+                                                              ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                      border: Border.all(
+                                                        color: (isDark
+                                                                ? const Color(
+                                                                    0xFF6366F1)
+                                                                : const Color(
+                                                                    0xFF3B82F6))
+                                                            .withValues(
+                                                                alpha: isDark
+                                                                    ? 0.4
+                                                                    : 0.3),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Insígnias',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            Color(0xFF6366F1),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                                child: const Text(
-                                                  'Medalhas',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFFD97706),
+                                                  const SizedBox(height: 10),
+                                                  // Primeira fileira: 8 insígnias
+                                                  Wrap(
+                                                    spacing: 6,
+                                                    runSpacing: 6,
+                                                    alignment:
+                                                        WrapAlignment.center,
+                                                    children: [
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/madeira.png',
+                                                          'Madeira'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/ferro.png',
+                                                          'Ferro'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/aluminio.png',
+                                                          'Alumínio'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/bronze.png',
+                                                          'Bronze'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/latao.png',
+                                                          'Latão'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/prata.png',
+                                                          'Prata'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/ouro.png',
+                                                          'Ouro'),
+                                                      _buildMedal(
+                                                          'assets/gamification/insignias/smoking/diamante.png',
+                                                          'Diamante'),
+                                                    ],
                                                   ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Wrap(
-                                                spacing: 12,
-                                                runSpacing: 6,
-                                                alignment: WrapAlignment.center,
-                                                children: [
-                                                  _buildMedalLarge('assets/gamification/medals/smoking/bronze.png', 'Bronze'),
-                                                  _buildMedalLarge('assets/gamification/medals/smoking/silver.png', 'Prata'),
-                                                  _buildMedalLarge('assets/gamification/medals/smoking/gold.png', 'Ouro'),
-                                                  _buildMedalLarge('assets/gamification/medals/smoking/diamond.png', 'Diamante'),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 12),
-                                              // Badge Insígnias
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: isDark
-                                                        ? [
-                                                            const Color(0xFF6366F1).withValues(alpha: 0.2),
-                                                            const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                                                          ]
-                                                        : [
-                                                            const Color(0xFFDBEAFE).withValues(alpha: 0.8),
-                                                            const Color(0xFFF0F9FF).withValues(alpha: 0.5),
-                                                          ],
-                                                  ),
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  border: Border.all(
-                                                    color: (isDark
-                                                            ? const Color(0xFF6366F1)
-                                                            : const Color(0xFF3B82F6))
-                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Insígnias',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF6366F1),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              // Primeira fileira: 8 insígnias
-                                              Wrap(
-                                                spacing: 6,
-                                                runSpacing: 6,
-                                                alignment: WrapAlignment.center,
-                                                children: [
-                                                  _buildMedal('assets/insignias/escudo_madeira.png', 'Madeira'),
-                                                  _buildMedal('assets/insignias/escudo_ferro.png', 'Ferro'),
-                                                  _buildMedal('assets/insignias/escudo_aluminio.png', 'Alumínio'),
-                                                  _buildMedal('assets/insignias/escudo_bronze.png', 'Bronze'),
-                                                  _buildMedal('assets/insignias/escudo_latao.png', 'Latão'),
-                                                  _buildMedal('assets/insignias/escudo_prata.png', 'Prata'),
-                                                  _buildMedal('assets/insignias/escudo_ouro.png', 'Ouro'),
-                                                  _buildMedal('assets/insignias/escudo_diamante.png', 'Diamante'),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 8),
-                                              // Disciplinum sozinha embaixo com destaque
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: isDark
-                                                        ? [
-                                                            const Color(0xFF10B981).withValues(alpha: 0.15),
-                                                            const Color(0xFF34D399).withValues(alpha: 0.08),
-                                                          ]
-                                                        : [
-                                                            const Color(0xFFD1FAE5).withValues(alpha: 0.8),
-                                                            const Color(0xFFECFDF5).withValues(alpha: 0.5),
-                                                          ],
-                                                  ),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  border: Border.all(
-                                                    color: (isDark
-                                                            ? const Color(0xFF10B981)
-                                                            : const Color(0xFF10B981))
-                                                        .withValues(alpha: isDark ? 0.4 : 0.3),
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: _buildMedal('assets/insignias/escudo_disciplinum.png', 'Disciplinum'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
+                                                  const SizedBox(height: 8),
+                                                  // Disciplinum sozinha embaixo com destaque
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: isDark
+                                                            ? [
+                                                                const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        208,
+                                                                        244,
+                                                                        252)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.15),
+                                                                const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        255,
+                                                                        255,
+                                                                        255)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.08),
+                                                              ]
+                                                            : [
+                                                                const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        208,
+                                                                        244,
+                                                                        252)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.15),
+                                                                const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        255,
+                                                                        255,
+                                                                        255)
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.08),
+                                                              ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      border: Border.all(
+                                                        color: (isDark
+                                                                ? const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    16,
+                                                                    143,
+                                                                    185)
+                                                                : const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    16,
+                                                                    131,
+                                                                    185))
+                                                            .withValues(
+                                                                alpha: isDark
+                                                                    ? 0.4
+                                                                    : 0.3),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: _buildMedal(
+                                                        'assets/gamification/insignias/smoking/disciplinum.png',
+                                                        'Disciplinum'),
+                                                  ), // Container
+                                                ], // Column children
+                                              ), // Column
+                                            ), // Container
+                                          ], // Column children
+                                        ), // Column
+                                      ), // SingleChildScrollView
+                                    ); // Center
                                   }
                                 }),
                               ),
@@ -541,13 +799,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (index == 0) {
                               pageTitle = 'Disciplina, foco e bons hábitos';
                             } else if (index == 1) {
-                              pageTitle = 'Gamificação pra incentivar seu progresso';
+                              pageTitle =
+                                  'Gamificação pra incentivar seu progresso';
                             } else {
                               pageTitle = 'Atenção!';
                             }
 
+                            // Não mostrar título na área do título para página 1 (ele será mostrado na área do asset)
+                            if (index == 1) {
+                              return const SizedBox.shrink();
+                            }
+
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 gradient: LinearGradient(
@@ -555,13 +820,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   end: Alignment.bottomRight,
                                   colors: isDark
                                       ? [
-                                          const Color(0xFF6366F1).withValues(alpha: 0.1),
-                                          const Color(0xFF8B5CF6).withValues(alpha: 0.05),
+                                          const Color(0xFF6366F1)
+                                              .withValues(alpha: 0.1),
+                                          const Color(0xFF8B5CF6)
+                                              .withValues(alpha: 0.05),
                                           Colors.transparent,
                                         ]
                                       : [
-                                          const Color(0xFFDBEAFE).withValues(alpha: 0.6),
-                                          const Color(0xFFF0F9FF).withValues(alpha: 0.3),
+                                          const Color(0xFFDBEAFE)
+                                              .withValues(alpha: 0.6),
+                                          const Color(0xFFF0F9FF)
+                                              .withValues(alpha: 0.3),
                                           Colors.transparent,
                                         ],
                                 ),
@@ -569,10 +838,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               child: Text(
                                 pageTitle,
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 24,
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? const Color(0xFFFFFFFF)
                                       : const Color(0xFF1F2937),
                                   letterSpacing: -0.8,
@@ -582,7 +855,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       color: (isDark
                                               ? const Color(0xFF6366F1)
                                               : const Color(0xFF3B82F6))
-                                          .withValues(alpha: isDark ? 0.4 : 0.25),
+                                          .withValues(
+                                              alpha: isDark ? 0.4 : 0.25),
                                       offset: const Offset(0, 2),
                                       blurRadius: 8,
                                     ),
@@ -590,7 +864,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       color: (isDark
                                               ? const Color(0xFF6366F1)
                                               : const Color(0xFF60A5FA))
-                                          .withValues(alpha: isDark ? 0.2 : 0.15),
+                                          .withValues(
+                                              alpha: isDark ? 0.2 : 0.15),
                                       offset: const Offset(0, 4),
                                       blurRadius: 16,
                                     ),
@@ -609,67 +884,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Builder(builder: (context) {
                             final bodyStyle =
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? const Color(0xFF94A3B8).withValues(alpha: 0.9)
-                                  : const Color(0xFF4B5563).withValues(alpha: 0.85),
-                              height: 1.4,
-                              fontSize: 15,
-                              letterSpacing: 0.1,
-                            );
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? const Color(0xFF94A3B8)
+                                              .withValues(alpha: 0.9)
+                                          : const Color(0xFF4B5563)
+                                              .withValues(alpha: 0.85),
+                                      height: 1.4,
+                                      fontSize: 15,
+                                      letterSpacing: 0.1,
+                                    );
 
                             if (index == 0) {
-                              return Container(
-                                padding: const EdgeInsets.all(24),
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: isDark
-                                        ? [
-                                            const Color(0xFF1E293B).withValues(alpha: 0.8),
-                                            const Color(0xFF0F172A).withValues(alpha: 0.9),
-                                          ]
-                                        : [
-                                            const Color(0xFFFFFFFF),
-                                            const Color(0xFFF8FAFC),
-                                          ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (isDark
-                                              ? Colors.black
-                                              : const Color(0xFF64748B))
-                                          .withValues(alpha: isDark ? 0.4 : 0.12),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 8),
-                                      spreadRadius: 2,
-                                    ),
-                                    BoxShadow(
-                                      color: (isDark
-                                              ? const Color(0xFF6366F1)
-                                              : const Color(0xFF3B82F6))
-                                          .withValues(alpha: isDark ? 0.1 : 0.06),
-                                      blurRadius: 40,
-                                      offset: const Offset(0, 4),
-                                      spreadRadius: -4,
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: (isDark
-                                            ? const Color(0xFF334155)
-                                            : const Color(0xFFE2E8F0))
-                                        .withValues(alpha: isDark ? 0.5 : 0.8),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Column(
+                              return Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     'Transforme seus hábitos diários\ne seja mais disciplinado!',
-                                    textAlign: TextAlign.center,
+                                    textAlign: TextAlign.left,
                                     style: bodyStyle?.copyWith(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
@@ -680,17 +912,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   ),
                                   const SizedBox(height: 20),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: isDark
                                             ? [
-                                                const Color(0xFF6366F1).withValues(alpha: 0.15),
-                                                const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                                                const Color(0xFF6366F1)
+                                                    .withValues(alpha: 0.15),
+                                                const Color(0xFF8B5CF6)
+                                                    .withValues(alpha: 0.08),
                                               ]
                                             : [
-                                                const Color(0xFFDBEAFE).withValues(alpha: 0.8),
-                                                const Color(0xFFF0F9FF).withValues(alpha: 0.5),
+                                                const Color(0xFFDBEAFE)
+                                                    .withValues(alpha: 0.8),
+                                                const Color(0xFFF0F9FF)
+                                                    .withValues(alpha: 0.5),
                                               ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -698,7 +935,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         color: (isDark
                                                 ? const Color(0xFF6366F1)
                                                 : const Color(0xFF3B82F6))
-                                            .withValues(alpha: isDark ? 0.3 : 0.2),
+                                            .withValues(
+                                                alpha: isDark ? 0.3 : 0.2),
                                         width: 1,
                                       ),
                                     ),
@@ -706,11 +944,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       'Este app pode te ajudar a:',
                                       textAlign: TextAlign.center,
                                       style: bodyStyle?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 15,
-                                          color: isDark
-                                              ? const Color(0xFF818CF8)
-                                              : const Color(0xFF1D4ED8),
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: isDark
+                                            ? const Color(0xFF818CF8)
+                                            : const Color(0xFF1D4ED8),
                                       ),
                                     ),
                                   ),
@@ -737,39 +975,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                             'Evitar procrastinação', bodyStyle),
                                         const SizedBox(height: 16),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: isDark
                                                   ? [
-                                                      const Color(0xFF10B981).withValues(alpha: 0.15),
-                                                      const Color(0xFF34D399).withValues(alpha: 0.08),
+                                                      const Color(0xFF10B981)
+                                                          .withValues(
+                                                              alpha: 0.15),
+                                                      const Color(0xFF34D399)
+                                                          .withValues(
+                                                              alpha: 0.08),
                                                     ]
                                                   : [
-                                                      const Color(0xFFD1FAE5).withValues(alpha: 0.8),
-                                                      const Color(0xFFECFDF5).withValues(alpha: 0.5),
+                                                      const Color(0xFFD1FAE5)
+                                                          .withValues(
+                                                              alpha: 0.8),
+                                                      const Color(0xFFECFDF5)
+                                                          .withValues(
+                                                              alpha: 0.5),
                                                     ],
                                             ),
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             border: Border.all(
                                               color: (isDark
                                                       ? const Color(0xFF10B981)
                                                       : const Color(0xFF10B981))
-                                                  .withValues(alpha: isDark ? 0.4 : 0.3),
+                                                  .withValues(
+                                                      alpha:
+                                                          isDark ? 0.4 : 0.3),
                                               width: 1,
                                             ),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(
-                                                Icons.add_circle_outline_rounded,
-                                                size: 18,
-                                                color: (isDark
-                                                        ? const Color(0xFF10B981)
-                                                        : const Color(0xFF059669))
-                                                    .withValues(alpha: 0.9),
-                                              ),
                                               const SizedBox(width: 8),
                                               Text(
                                                 'E muito mais!',
@@ -788,24 +1030,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                                   ),
                                 ],
-                              ),
                               );
                             } else if (index == 1) {
                               return Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 2),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: isDark
                                             ? [
-                                                const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                                                const Color(0xFFD97706).withValues(alpha: 0.08),
+                                                const Color(0xFFF59E0B)
+                                                    .withValues(alpha: 0.15),
+                                                const Color(0xFFD97706)
+                                                    .withValues(alpha: 0.08),
                                               ]
                                             : [
-                                                const Color(0xFFFEF3C7).withValues(alpha: 0.6),
-                                                const Color(0xFFFDE68A).withValues(alpha: 0.3),
+                                                const Color(0xFFFEF3C7)
+                                                    .withValues(alpha: 0.6),
+                                                const Color(0xFFFDE68A)
+                                                    .withValues(alpha: 0.3),
                                               ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -813,7 +1059,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         color: (isDark
                                                 ? const Color(0xFFF59E0B)
                                                 : const Color(0xFFD97706))
-                                            .withValues(alpha: isDark ? 0.4 : 0.3),
+                                            .withValues(
+                                                alpha: isDark ? 0.4 : 0.3),
                                         width: 1,
                                       ),
                                     ),
@@ -827,9 +1074,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                           'Recompensas Fictícias*',
                                           style: bodyStyle?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: Theme.of(context).brightness == Brightness.dark
-                                                ? Colors.white
-                                                : Colors.black,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.white
+                                                    : Colors.black,
                                             fontSize: 13,
                                           ),
                                         ),
@@ -847,8 +1096,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                             bodyStyle),
                                         _buildListItem(
                                             'Motive-se visualmente', bodyStyle),
-                                        _buildListItem(
-                                            'Acompanhe sua evolução',
+                                        _buildListItem('Acompanhe sua evolução',
                                             bodyStyle),
                                         _buildListItem(
                                             'Mantenha sua disciplina viva e constante!',
@@ -867,10 +1115,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   children: [
                                     const TextSpan(
                                       text:
-                                          'Este app é uma ferramenta\nde apoio à disciplina a aos bons hábitos,\nele não foi feito e nem tem a intenção de substituir o acompanhamento de um profissional de saúde ou terapeuta.\n Use-o com responsabilidade e sabedoria.\n\n',
+                                          'Este app é uma ferramenta de apoio à disciplina e aos bons hábitos.\n\nEle não substitui (e nem tem a intenção de substituir) o acompanhamento de um profissional de saúde ou terapeuta, na sua busca por tratamento real e homologado.\n\n',
                                     ),
                                     const TextSpan(
-                                      text: 'Para saber mais sobre\ncomo funciona, ',
+                                      text:
+                                          'Use-o com responsabilidade e sabedoria, como uma ferramente de controle, incentivo e motivação.\n\n',
+                                    ),
+                                    const TextSpan(
+                                      text:
+                                          'Para saber em detalhes\ncomo o app funciona, ',
                                     ),
                                     TextSpan(
                                       text: 'clique aqui',

@@ -15,6 +15,7 @@ class SmokingGamificationEntity {
   DateTime? startDate;
   double dailyCost = 0.0;
   double packCost = 0.0;
+  bool isModuleActive = false;
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 
@@ -30,6 +31,7 @@ class SmokingGamificationEntity {
     entity.startDate = moduleState.startDate;
     entity.dailyCost = moduleState.dailyCost;
     entity.packCost = moduleState.packCost;
+    entity.isModuleActive = moduleState.isModuleActive;
     entity.updatedAt = moduleState.updatedAt;
     return entity;
   }
@@ -44,6 +46,7 @@ class SmokingGamificationEntity {
       startDate: startDate,
       dailyCost: dailyCost,
       packCost: packCost,
+      isModuleActive: isModuleActive,
       updatedAt: updatedAt,
     );
   }
@@ -59,6 +62,7 @@ class SmokingGamificationEntity {
       'startDate': startDate?.toIso8601String(),
       'dailyCost': dailyCost,
       'packCost': packCost,
+      'isModuleActive': isModuleActive,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -79,6 +83,7 @@ class SmokingGamificationEntity {
         : null;
     entity.dailyCost = (json['dailyCost'] ?? 0.0).toDouble();
     entity.packCost = (json['packCost'] ?? 0.0).toDouble();
+    entity.isModuleActive = json['isModuleActive'] ?? false;
     entity.createdAt = json['createdAt'] != null
         ? DateTime.parse(json['createdAt'])
         : DateTime.now();

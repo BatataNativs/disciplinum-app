@@ -110,8 +110,18 @@ flutter:
     - assets/opening/disciplinado.png
     - assets/opening/warning1.png
     - assets/opening/warning2.png
+    - assets/auth/
     - assets/images/
-    - assets/gamification/insignias/
+    - assets/icons/
+    - assets/gamification/insignias/avoidAdultContent/
+    - assets/gamification/insignias/bingeEating/
+    - assets/gamification/insignias/diet/
+    - assets/gamification/insignias/focus/
+    - assets/gamification/insignias/moneySaving/
+    - assets/gamification/insignias/procrastination/
+    - assets/gamification/insignias/reading/
+    - assets/gamification/insignias/smoking/
+    - assets/gamification/insignias/spending/
     - assets/gamification/medals/
     - assets/gamification/medals/smoking/
     - assets/gamification/trofeus/

@@ -24,7 +24,7 @@ class AdultContentModuleState implements ModuleStateContract {
   final int disciplinumCount;
   final DateTime? lastBlockedDate;
   final DateTime? startDate;
-  final bool isActive;
+  final bool isModuleActive;
   final String currentStageId;
 
   AdultContentModuleState({
@@ -36,7 +36,7 @@ class AdultContentModuleState implements ModuleStateContract {
     this.disciplinumCount = 0,
     this.lastBlockedDate,
     this.startDate,
-    this.isActive = false,
+    this.isModuleActive = false,
     this.currentStageId = 'bronze',
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -50,7 +50,7 @@ class AdultContentModuleState implements ModuleStateContract {
       earnedMedalhas: const [],
       consecutiveDays: 0,
       disciplinumCount: 0,
-      isActive: false,
+      isModuleActive: false,
       currentStageId: 'bronze',
     );
   }
@@ -66,7 +66,7 @@ class AdultContentModuleState implements ModuleStateContract {
     int? disciplinumCount,
     DateTime? lastBlockedDate,
     DateTime? startDate,
-    bool? isActive,
+    bool? isModuleActive,
     String? currentStageId,
   }) {
     return AdultContentModuleState(
@@ -78,7 +78,7 @@ class AdultContentModuleState implements ModuleStateContract {
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
       lastBlockedDate: lastBlockedDate ?? this.lastBlockedDate,
       startDate: startDate ?? this.startDate,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStageId: currentStageId ?? this.currentStageId,
     );
   }
@@ -97,7 +97,7 @@ class AdultContentModuleState implements ModuleStateContract {
       ..setField('disciplinum_count', disciplinumCount)
       ..setField('last_blocked_date', lastBlockedDate?.toIso8601String())
       ..setField('start_date', startDate?.toIso8601String())
-      ..setField('is_active', isActive)
+      ..setField('is_module_active', isModuleActive)
       ..setField('current_stage_id', currentStageId)
       ..setField('last_updated', updatedAt.toIso8601String());
 
@@ -160,7 +160,7 @@ class AdultContentModuleState implements ModuleStateContract {
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

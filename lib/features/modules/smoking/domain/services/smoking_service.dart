@@ -46,12 +46,12 @@ class SmokingService {
       'user_id': userId,
       'module_id': 'smoking',
       'smoking_pack_price': settings.packPrice,
-      'smoking_packs_per_day': settings.packsPerDay,
+      'smoking_packs_per_day': settings.packsPerDay.round(), // Converte para int
       'smoking_quit_date': settings.quitDate?.toIso8601String(),
       'smoking_currency': settings.currency,
       // Preserva o histórico ao salvar novas configurações
       'last_pack_price': settings.lastPackPrice,
-      'last_packs_per_day': settings.lastPacksPerDay,
+      'last_packs_per_day': settings.lastPacksPerDay?.round(), // Converte para int se não null
       'last_quit_date': settings.lastQuitDate?.toIso8601String(),
       'last_currency': settings.lastCurrency,
       'last_saved_total': settings.lastSavedTotal,
@@ -83,11 +83,11 @@ class SmokingService {
 
       // 1. Move dados para o histórico (LAST)
       'last_pack_price': current.packPrice,
-      'last_packs_per_day': current.packsPerDay,
+      'last_packs_per_day': current.packsPerDay.round(), // Converte para int
       'last_quit_date': current.quitDate?.toIso8601String(),
       'last_currency': current.currency,
       'last_saved_total':
-          current.moneySavedTotal, // Calcula o total economizado até agora
+          current.moneySavedTotal.toDouble(), // Garante que é double
       'last_end_date': now.toIso8601String(), // Data do reset
 
       // 2. RESETA os dados atuais para o padrão (para não puxar velharia na tela)

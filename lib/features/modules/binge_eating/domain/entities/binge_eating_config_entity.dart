@@ -8,7 +8,7 @@ class BingeEatingConfigEntity {
   @Unique()
   String userId;
 
-  bool isEnabled = false;
+  bool isModuleActive = false;
   DateTime? blockedUntil;
   String? blockReason;
   int dailyLimitMinutes = 60;
@@ -34,7 +34,7 @@ class BingeEatingConfigEntity {
 
   BingeEatingConfigEntity copyWith({
     String? userId,
-    bool? isEnabled,
+    bool? isModuleActive,
     DateTime? blockedUntil,
     String? blockReason,
     int? dailyLimitMinutes,
@@ -53,7 +53,7 @@ class BingeEatingConfigEntity {
     DateTime? updatedAt,
   }) {
     final entity = BingeEatingConfigEntity(userId: userId ?? this.userId);
-    entity.isEnabled = isEnabled ?? this.isEnabled;
+    entity.isModuleActive = isModuleActive ?? this.isModuleActive;
     entity.blockedUntil = blockedUntil ?? this.blockedUntil;
     entity.blockReason = blockReason ?? this.blockReason;
     entity.dailyLimitMinutes = dailyLimitMinutes ?? this.dailyLimitMinutes;

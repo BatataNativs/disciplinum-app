@@ -13,7 +13,7 @@ class DietGamificationEntity {
   int consecutiveDays = 0;
   int disciplinumCount = 0;
   DateTime lastUpdated = DateTime.now();
-  bool isActive = false;
+  bool isModuleActive = false;
   DateTime createdAt = DateTime.now();
 
   DietGamificationEntity({
@@ -23,7 +23,7 @@ class DietGamificationEntity {
     this.consecutiveDays = 0,
     this.disciplinumCount = 0,
     required this.lastUpdated,
-    this.isActive = false,
+    this.isModuleActive = false,
   }) : createdAt = DateTime.now();
 
   /// Converte de DietModuleState para Isar entity
@@ -38,7 +38,7 @@ class DietGamificationEntity {
       consecutiveDays: moduleState['consecutiveDays'] ?? 0,
       disciplinumCount: moduleState['disciplinumCount'] ?? 0,
       lastUpdated: DateTime.parse(moduleState['lastUpdated'] ?? DateTime.now().toIso8601String()),
-      isActive: moduleState['isActive'] ?? false,
+      isModuleActive: moduleState['isModuleActive'] ?? moduleState['isActive'] ?? false,
     );
   }
 
@@ -50,7 +50,7 @@ class DietGamificationEntity {
       consecutiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -66,7 +66,7 @@ class DietGamificationEntity {
     int? consecutiveDays,
     int? disciplinumCount,
     DateTime? lastUpdated,
-    bool? isActive,
+    bool? isModuleActive,
   }) {
     return DietGamificationEntity(
       userId: userId,
@@ -75,7 +75,7 @@ class DietGamificationEntity {
       consecutiveDays: consecutiveDays ?? this.consecutiveDays,
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
       lastUpdated: lastUpdated ?? this.lastUpdated,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
     );
   }
 
@@ -87,7 +87,7 @@ class DietGamificationEntity {
         'disciplinumCount: $disciplinumCount, '
         'earnedInsignias: $earnedInsignias, '
         'earnedMedalhas: $earnedMedalhas, '
-        'isActive: $isActive'
+        'isModuleActive: $isModuleActive'
         ')';
   }
 }

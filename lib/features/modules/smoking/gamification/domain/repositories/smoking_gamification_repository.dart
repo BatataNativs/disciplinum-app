@@ -25,28 +25,21 @@ class SmokingGamificationRepository {
   Future<void> saveSmokingState(SmokingModuleState state) async {
     try {
       // Converte SmokingModuleState para SmokingGamificationEntity
-      final entity = SmokingGamificationEntity();
-      entity.earnedInsigniasList = state.earnedInsignias;
-      entity.earnedMedalhasList = state.earnedMedalhas;
-      entity.consecutivePositiveDays = state.consecutivePositiveDays;
-      entity.disciplinumCount = state.disciplinumCount;
-      entity.lastPositiveCheckIn = state.lastPositiveCheckIn;
-      entity.startDate = state.startDate;
-      entity.dailyCost = state.dailyCost;
-      entity.packCost = state.packCost;
+      final entity = SmokingGamificationEntity.fromModuleState(state);
       
-      final existingEntity = box.get(1);
-      if (existingEntity != null) {
-        entity.id = existingEntity.id;
+      // Verifica se já existe entidade (usamos ID fixo 1 para sempre ter só um registro)
+      final existing = box.query().build().findFirst();
+      if (existing != null) {
+        entity.id = existing.id; // Reusa o ID existente
       } else {
-        entity.id = 1;
+        entity.id = 0; // ObjectBox gera novo ID automaticamente
       }
       entity.touch();
 
       // Salva no ObjectBox
       box.put(entity);
 
-      LoggerService.instance.gamification('✅ Estado Smoking salvo com ObjectBox');
+      LoggerService.instance.gamification('✅ Estado Smoking salvo com ObjectBox (isModuleActive: ${state.isModuleActive})');
     } catch (e, stackTrace) {
       LoggerService.instance.e('Erro ao salvar estado Smoking com ObjectBox', error: e, stackTrace: stackTrace);
     }
@@ -55,14 +48,14 @@ class SmokingGamificationRepository {
   /// Carrega o estado salvo do módulo Smoking
   Future<SmokingModuleState?> getSmokingState() async {
     try {
-      final entity = box.get(1); // Pega o primeiro registro (id=1)
+      // Busca o primeiro registro (deve ter apenas um)
+      final entity = box.query().build().findFirst();
       
       if (entity != null) {
-        // Usa o construtor fromJson com os dados da entity
-        final jsonData = entity.toJson();
-        final newState = SmokingModuleState.fromJson(jsonData);
+        // Usa toModuleState que agora inclui isModuleActive
+        final newState = entity.toModuleState();
         
-        LoggerService.instance.gamification('✅ Estado Smoking carregado com ObjectBox');
+        LoggerService.instance.gamification('✅ Estado Smoking carregado com ObjectBox (isModuleActive: ${newState.isModuleActive})');
         return newState;
       }
       return null;

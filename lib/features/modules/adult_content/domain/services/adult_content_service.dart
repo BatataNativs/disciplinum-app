@@ -4,14 +4,14 @@ import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 
 /// Configurações de controle de conteúdo adulto
 class AdultContentConfig {
-  final bool isEnabled;
+  final bool isModuleActive;
   final DateTime? blockedUntil;
   final String? blockReason;
   final int dailyLimitMinutes;
   final bool requirePassword;
 
   const AdultContentConfig({
-    required this.isEnabled,
+    required this.isModuleActive,
     this.blockedUntil,
     this.blockReason,
     this.dailyLimitMinutes = 60,
@@ -19,7 +19,7 @@ class AdultContentConfig {
   });
 
   Map<String, dynamic> toJson() => {
-        'isEnabled': isEnabled,
+        'isModuleActive': isModuleActive,
         'blockedUntil': blockedUntil?.toIso8601String(),
         'blockReason': blockReason,
         'dailyLimitMinutes': dailyLimitMinutes,
@@ -27,7 +27,7 @@ class AdultContentConfig {
       };
 
   factory AdultContentConfig.fromJson(Map<String, dynamic> json) => AdultContentConfig(
-        isEnabled: json['isEnabled'] ?? false,
+        isModuleActive: json['isModuleActive'] ?? json['isEnabled'] ?? false,
         blockedUntil: json['blockedUntil'] != null ? DateTime.parse(json['blockedUntil']) : null,
         blockReason: json['blockReason'],
         dailyLimitMinutes: json['dailyLimitMinutes'] ?? 60,
@@ -35,14 +35,14 @@ class AdultContentConfig {
       );
 
   AdultContentConfig copyWith({
-    bool? isEnabled,
+    bool? isModuleActive,
     DateTime? blockedUntil,
     String? blockReason,
     int? dailyLimitMinutes,
     bool? requirePassword,
   }) {
     return AdultContentConfig(
-      isEnabled: isEnabled ?? this.isEnabled,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       blockedUntil: blockedUntil ?? this.blockedUntil,
       blockReason: blockReason ?? this.blockReason,
       dailyLimitMinutes: dailyLimitMinutes ?? this.dailyLimitMinutes,
@@ -108,7 +108,7 @@ class AdultContentService {
   }
 
   /// Configuração atual de controle
-  AdultContentConfig get config => _config ?? AdultContentConfig(isEnabled: false);
+  AdultContentConfig get config => _config ?? AdultContentConfig(isModuleActive: false);
 
   /// Estatísticas atuais de uso
   AdultContentStats get stats => _stats ?? AdultContentStats(
@@ -128,7 +128,7 @@ class AdultContentService {
     bool requirePassword = false,
   }) async {
     final newConfig = AdultContentConfig(
-      isEnabled: true,
+      isModuleActive: true,
       blockReason: reason,
       blockedUntil: blockedUntil,
       dailyLimitMinutes: dailyLimitMinutes ?? 60,
@@ -142,7 +142,7 @@ class AdultContentService {
   /// Desativa o bloqueio de conteúdo adulto
   Future<void> disableBlocking() async {
     final newConfig = AdultContentConfig(
-      isEnabled: false,
+      isModuleActive: false,
       blockReason: null,
       blockedUntil: null,
       dailyLimitMinutes: 60,
@@ -155,7 +155,7 @@ class AdultContentService {
 
   /// Verifica se o acesso a um aplicativo deve ser bloqueado
   Future<bool> checkAccess(String packageName) async {
-    if (!config.isEnabled) return true;
+    if (!config.isModuleActive) return true;
 
     // Verifica se está na lista de bloqueio
     if (_blockedApps.contains(packageName)) {

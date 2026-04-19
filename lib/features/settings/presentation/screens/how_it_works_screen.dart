@@ -36,7 +36,8 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.close, color: isDark ? Colors.white : Colors.black),
+                    icon: Icon(Icons.close,
+                        color: isDark ? Colors.white : Colors.black),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Spacer(),
@@ -145,16 +146,18 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
 
   Widget _buildHeader(int index, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
-    
+
     switch (index) {
       case 0:
         return Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image(image: AssetImage('assets/logo.png'), width: 80, height: 80),
-                Image(image: AssetImage('assets/icons/app_monitoring.png'), width: 60, height: 60),
+                Image.asset('assets/logo.png', width: 80, height: 80),
+                const SizedBox(width: 16),
+                Image.asset('assets/icons/app_monitoring.png',
+                    width: 60, height: 60),
               ],
             ),
             const SizedBox(height: 16),
@@ -235,15 +238,42 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               style: textStyle?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _buildModuleItem('🚭 Parar de Fumar', 'Alertas e incentivo em horários críticos. Além de estatísticas de economia financeira gerada e saúde', textStyle),
-            _buildModuleItem('💰 Controle de Gastos', 'Monitore apps de compras e seja orientado a sair se os abrir', textStyle),
-            _buildModuleItem('🎯 Foco e Produtividade', 'Evite distrações, não abrindo apps selecionados durante período de foco definido', textStyle),
-            _buildModuleItem('🍎 Manter Dieta', 'Lembretes para refeições (30 minutos antes, pra você ter tempo de aprontar ou esquentar sua refeição)', textStyle),
-            _buildModuleItem('🔒 Evitar Conteúdo Adulto', 'Ajuda a evitar consumo de conteúdo adulto, **bloqueando acesso** a conteúdo adulto', textStyle),
-            _buildModuleItem('⏰ Evitar Procrastinação', 'Organização e gestão de tempo. Te ajudando a se organizar com lembretes, notas e alarmes', textStyle),
-            _buildModuleItem('📚 Leitura', 'Estimular o hábito da leitura e organização de livros. O módulo tem uma "estante" pra você ir alimentando com os livros que está lendo (nome, autor, quantidade de páginas..), e vai vendo o quanto já leu, o quanto falta, estatísticas sobre sues gostos e preferências, etc.', textStyle),
-            _buildModuleItem('🍔 Compulsão Alimentar', 'Ajuda a evitar fastfoods e deliveries por impulso, monitorando apps de delivery e te orientando a sair se os abrir', textStyle),
-            _buildModuleItem('🐖 Desafio da Poupança', 'Forma divertida de aprender a economizar dinheiro. Você cria meta de valor que quer juntar, e um prazo. Aí você vai inserindo no app informações sobre seus aportes em alguma conta ou "cofrinho" de algum app de banco e vê, num sistema de quadradinhos em linhas e colunas de fácil visualização, e vai acompanhando o quanto já juntou, o quanto falta, e projeções de tempo necessário para você atingir a meta ', textStyle),
+            _buildModuleItem(
+                '🚭 Parar de Fumar',
+                'Alertas e incentivo em horários críticos. Além de estatísticas de economia financeira gerada e saúde',
+                textStyle),
+            _buildModuleItem(
+                '💰 Controle de Gastos',
+                'Monitore apps de compras e seja orientado a sair se os abrir',
+                textStyle),
+            _buildModuleItem(
+                '🎯 Foco e Produtividade',
+                'Evite distrações, não abrindo apps selecionados durante período de foco definido',
+                textStyle),
+            _buildModuleItem(
+                '🍎 Manter Dieta',
+                'Lembretes para refeições (30 minutos antes, pra você ter tempo de aprontar ou esquentar sua refeição)',
+                textStyle),
+            _buildModuleItem(
+                '🔒 Evitar Conteúdo Adulto',
+                'Ajuda a evitar consumo de conteúdo adulto, **bloqueando acesso** a conteúdo adulto',
+                textStyle),
+            _buildModuleItem(
+                '⏰ Evitar Procrastinação',
+                'Organização e gestão de tempo. Te ajudando a se organizar com lembretes, notas e alarmes',
+                textStyle),
+            _buildModuleItem(
+                '📚 Leitura',
+                'Estimular o hábito da leitura e organização de livros. O módulo tem uma "estante" pra você ir alimentando com os livros que está lendo (nome, autor, quantidade de páginas..), e vai vendo o quanto já leu, o quanto falta, estatísticas sobre sues gostos e preferências, etc.',
+                textStyle),
+            _buildModuleItem(
+                '🍔 Compulsão Alimentar',
+                'Ajuda a evitar fastfoods e deliveries por impulso, monitorando apps de delivery e te orientando a sair se os abrir',
+                textStyle),
+            _buildModuleItem(
+                '🐖 Desafio da Poupança',
+                'Forma divertida de aprender a economizar dinheiro. Você cria meta de valor que quer juntar, e um prazo. Aí você vai inserindo no app informações sobre seus aportes em alguma conta ou "cofrinho" de algum app de banco e vê, num sistema de quadradinhos em linhas e colunas de fácil visualização, e vai acompanhando o quanto já juntou, o quanto falta, e projeções de tempo necessário para você atingir a meta ',
+                textStyle),
           ],
         );
       case 1:
@@ -255,7 +285,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            
+
             // Medalhas
             Container(
               padding: const EdgeInsets.all(16),
@@ -267,18 +297,19 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('🏅 Medalhas de Progresso', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('🏅 Medalhas de Progresso',
+                      style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  _buildMedalItem('🥉 Bronze', '3 dias sem falhar'),
-                  _buildMedalItem('🥈 Prata', '7 dias consecutivos'),
-                  _buildMedalItem('🥇 Ouro', '14 dias de disciplina'),
-                  _buildMedalItem('💎 Diamante', '30 dias imbatível'),
+                  _buildMedalItem('🥉 Bronze', 'Bronze'),
+                  _buildMedalItem('🥈 Prata', 'Prata'),
+                  _buildMedalItem('🥇 Ouro', 'Ouro'),
+                  _buildMedalItem('💎 Diamante', 'Diamante'),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Insígnias
             Container(
               padding: const EdgeInsets.all(16),
@@ -290,17 +321,27 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('🛡️ Insígnias', style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('🛡️ Insígnias',
+                      style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  _buildMedalItem('Madeira', 'Ao configurar e ativar o módulo', 'assets/insignias/escudo_madeira.png'),
-                  _buildMedalItem('Ferro', 'Primeiro dia de foco', 'assets/insignias/escudo_ferro.png'),
-                  _buildMedalItem('Alumínio', 'Iniciando consistência', 'assets/insignias/escudo_aluminio.png'),
-                  _buildMedalItem('Bronze', 'Dedicado à disciplina', 'assets/insignias/escudo_bronze.png'),
-                  _buildMedalItem('Latão', 'Avançando com foco', 'assets/insignias/escudo_latao.png'),
-                  _buildMedalItem('Prata', 'Controle e maestria', 'assets/insignias/escudo_prata.png'),
-                  _buildMedalItem('Ouro', 'Enorme disciplina', 'assets/insignias/escudo_ouro.png'),
-                  _buildMedalItem('Diamante', 'Lendário e inabalável', 'assets/insignias/escudo_diamante.png'),
-                  _buildMedalItem('Disciplinum', 'Supremo absoluto', 'assets/insignias/escudo_disciplinum.png'),
+                  _buildMedalItem('Madeira', 'Madeira',
+                      'assets/gamification/insignias/focus/madeira.png'),
+                  _buildMedalItem('Ferro', 'Ferro',
+                      'assets/gamification/insignias/focus/ferro.png'),
+                  _buildMedalItem('Alumínio', 'Alumínio',
+                      'assets/gamification/insignias/focus/aluminio.png'),
+                  _buildMedalItem('Bronze', 'Bronze',
+                      'assets/gamification/insignias/focus/bronze.png'),
+                  _buildMedalItem('Latão', 'Latão',
+                      'assets/gamification/insignias/focus/latao.png'),
+                  _buildMedalItem('Prata', 'Prata',
+                      'assets/gamification/insignias/focus/prata.png'),
+                  _buildMedalItem('Ouro', 'Ouro',
+                      'assets/gamification/insignias/focus/ouro.png'),
+                  _buildMedalItem('Diamante', 'Diamante',
+                      'assets/gamification/insignias/focus/diamante.png'),
+                  _buildMedalItem('Disciplinum', 'Disciplinum',
+                      'assets/gamification/insignias/focus/disciplinum.png'),
                 ],
               ),
             ),
@@ -309,32 +350,6 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
       case 2:
         return Column(
           children: [
-Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Janela de 30 Segundos',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ao abrir um app monitorado, você terá 30 segundos para fechá-lo. Se permanecer aberto, seu progresso será reiniciado.',
-                    style: textStyle,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -344,11 +359,13 @@ Container(
               ),
               child: Column(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.red, size: 32),
                   const SizedBox(height: 2),
                   Text(
                     'Progresso Reiniciado',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
+                    style: textStyle?.copyWith(
+                        fontWeight: FontWeight.bold, color: Colors.red),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -360,36 +377,38 @@ Container(
                 ],
               ),
             ),
-
-                        Container(
+            const SizedBox(height: 8),
+            Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
-                  Icon(Icons.lightbulb_rounded, color: const Color(0xFF6366F1), size: 24),
+                  Icon(Icons.lightbulb_rounded,
+                      color: const Color(0xFF6366F1), size: 24),
                   const SizedBox(height: 2),
                   Text(
                     'Dica:',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                    style: textStyle?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF6366F1)),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Use a pausa temporária de notificações, ("Pausar notificações" em Configurações, quando precisar usar um app monitorado sem interromper seu progresso (sem desativar o módulo).'
-                    'Lembre-se de usar isso somente quando extremamente necessário e raramente. Pois, usar o app com isso ligado permanentemente foge do propósito do aplicativo, e é uma forma de atrasar sua autorregulação e disciplina.',
+                    'Lembre-se de usar isso somente quando extremamente necessário e raramente.',
                     style: textStyle?.copyWith(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            
             const SizedBox(height: 8),
-                        
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -399,29 +418,24 @@ Container(
               ),
               child: Column(
                 children: [
-                  Icon(Icons.schedule_rounded, color: Colors.green, size: 32),
+                  Icon(Icons.check_circle_outline_rounded,
+                      color: Colors.green, size: 32),
                   const SizedBox(height: 2),
                   Text(
-                    'Dias de Tolerância (sobre check-in diário)',
-                    style: textStyle?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
+                    'Vários módulos habilitados',
+                    style: textStyle?.copyWith(
+                        fontWeight: FontWeight.bold, color: Colors.green),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Para te ajudar a manter a disciplina, o app te dá alguns dias de tolerância quando você não consegue fazer o check-in diário (via notificação de algum módulo):\n\n'
-                    '• Menos de 7 dias de disciplina: 1 dia de tolerância\n'
-                    '• Entre 7 e 29 dias: 2 dias de tolerância\n'
-                    '• Entre 30 e 99 dias: 3 dias de tolerância\n'
-                    '• 100 dias ou mais: 5 dias de tolerância\n\n'
-                    'Se você ficar sem fazer o check-in diário além desses dias, seu progresso na gamificação e nas estatísticas daquele módulo será reiniciado. Use a seu favor!',
+                    'Você pode habilitar vários módulos ao mesmo tempo, mas lembre-se que cada módulo tem sua própria estatística e gamificação.',
                     style: textStyle?.copyWith(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            
-
           ],
         );
       default:
@@ -447,7 +461,8 @@ Container(
     );
   }
 
-  Widget _buildMedalItem(String title, String description, [String? assetPath]) {
+  Widget _buildMedalItem(String title, String description,
+      [String? assetPath]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

@@ -92,6 +92,12 @@ class _MoneySavingChallengeScreenState
       final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
       await notifier.activateModule();
 
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.moneySavingChallenge,
+        isModuleActive: true,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Desafio ativado! Boa sorte! 🚀')),
@@ -116,6 +122,12 @@ class _MoneySavingChallengeScreenState
       // Desativa módulo usando provider local
       final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
       await notifier.deactivateModule();
+
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.moneySavingChallenge,
+        isModuleActive: false,
+      );
 
       // Deleta todos os desafios
       await _service.deleteAllChallenges();

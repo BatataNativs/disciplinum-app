@@ -8,7 +8,7 @@ class ProcrastinationConfigEntity {
   @Unique()
   String userId;
 
-  bool isEnabled = false;
+  bool isModuleActive = false;
   int dailyFocusMinutes = 120;
   bool enableNotifications = true;
   int reminderHour = 9;
@@ -32,7 +32,7 @@ class ProcrastinationConfigEntity {
 
   ProcrastinationConfigEntity copyWith({
     String? userId,
-    bool? isEnabled,
+    bool? isModuleActive,
     int? dailyFocusMinutes,
     bool? enableNotifications,
     int? reminderHour,
@@ -48,7 +48,7 @@ class ProcrastinationConfigEntity {
     DateTime? updatedAt,
   }) {
     final entity = ProcrastinationConfigEntity(userId: userId ?? this.userId);
-    entity.isEnabled = isEnabled ?? this.isEnabled;
+    entity.isModuleActive = isModuleActive ?? this.isModuleActive;
     entity.dailyFocusMinutes = dailyFocusMinutes ?? this.dailyFocusMinutes;
     entity.enableNotifications = enableNotifications ?? this.enableNotifications;
     entity.reminderHour = reminderHour ?? this.reminderHour;

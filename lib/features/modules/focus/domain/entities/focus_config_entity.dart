@@ -8,7 +8,7 @@ class FocusConfigEntity {
   @Unique()
   String userId;
 
-  bool isEnabled = false;
+  bool isModuleActive = false;
   bool enableNotifications = true;
   int dailyGoalMinutes = 120;
   int reminderHour = 9;
@@ -28,7 +28,7 @@ class FocusConfigEntity {
 
   FocusConfigEntity copyWith({
     String? userId,
-    bool? isEnabled,
+    bool? isModuleActive,
     bool? enableNotifications,
     int? dailyGoalMinutes,
     int? reminderHour,
@@ -42,7 +42,7 @@ class FocusConfigEntity {
   }) {
     final entity = FocusConfigEntity(userId: userId ?? this.userId);
     entity.id = id;
-    entity.isEnabled = isEnabled ?? this.isEnabled;
+    entity.isModuleActive = isModuleActive ?? this.isModuleActive;
     entity.enableNotifications = enableNotifications ?? this.enableNotifications;
     entity.dailyGoalMinutes = dailyGoalMinutes ?? this.dailyGoalMinutes;
     entity.reminderHour = reminderHour ?? this.reminderHour;

@@ -29,6 +29,7 @@ class SmokingModuleState implements ModuleStateContract {
   final String currentStageId;
   final Map<String, List<String>> customMessages;
   final String? customMainMessage;
+  final bool isModuleActive;
 
   SmokingModuleState({
     DateTime? createdAt,
@@ -44,6 +45,7 @@ class SmokingModuleState implements ModuleStateContract {
     this.currentStageId = 'bronze',
     this.customMessages = const {},
     this.customMainMessage,
+    this.isModuleActive = false,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -59,6 +61,7 @@ class SmokingModuleState implements ModuleStateContract {
       dailyCost: 0.0,
       packCost: 0.0,
       currentStageId: 'bronze',
+      isModuleActive: false,
     );
   }
 
@@ -78,6 +81,7 @@ class SmokingModuleState implements ModuleStateContract {
     String? currentStageId,
     Map<String, List<String>>? customMessages,
     String? customMainMessage,
+    bool? isModuleActive,
   }) {
     return SmokingModuleState(
       createdAt: createdAt,
@@ -93,6 +97,7 @@ class SmokingModuleState implements ModuleStateContract {
       currentStageId: currentStageId ?? this.currentStageId,
       customMessages: customMessages ?? this.customMessages,
       customMainMessage: customMainMessage ?? this.customMainMessage,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
     );
   }
 
@@ -114,6 +119,7 @@ class SmokingModuleState implements ModuleStateContract {
       ..setField('pack_cost', packCost)
       ..setField('total_money_saved', totalMoneySaved)
       ..setField('total_days_without_smoking', totalDaysWithoutSmoking)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1]);
@@ -201,6 +207,7 @@ class SmokingModuleState implements ModuleStateContract {
       dailyCost: (json['daily_cost'] as num?)?.toDouble() ?? 0.0,
       packCost: (json['pack_cost'] as num?)?.toDouble() ?? 0.0,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
     );
   }
 

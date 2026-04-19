@@ -24,6 +24,7 @@ class ReadingModuleState implements ModuleStateContract {
   final DateTime? lastReadingDate;
   final DateTime? startDate;
   final String currentStageId;
+  final bool isModuleActive;
 
   ReadingModuleState({
     DateTime? createdAt,
@@ -34,6 +35,7 @@ class ReadingModuleState implements ModuleStateContract {
     this.lastReadingDate,
     this.startDate,
     this.currentStageId = 'bronze',
+    this.isModuleActive = false,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -46,6 +48,7 @@ class ReadingModuleState implements ModuleStateContract {
       earnedMedalhas: const [],
       consecutiveDays: 0,
       currentStageId: 'bronze',
+      isModuleActive: false,
     );
   }
 
@@ -60,6 +63,7 @@ class ReadingModuleState implements ModuleStateContract {
     DateTime? lastReadingDate,
     DateTime? startDate,
     String? currentStageId,
+    bool? isModuleActive,
   }) {
     return ReadingModuleState(
       createdAt: createdAt,
@@ -70,6 +74,7 @@ class ReadingModuleState implements ModuleStateContract {
       lastReadingDate: lastReadingDate ?? this.lastReadingDate,
       startDate: startDate ?? this.startDate,
       currentStageId: currentStageId ?? this.currentStageId,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
     );
   }
 
@@ -86,6 +91,7 @@ class ReadingModuleState implements ModuleStateContract {
       ..setField('consecutive_days', consecutiveDays)
       ..setField('last_reading_date', lastReadingDate?.toIso8601String())
       ..setField('start_date', startDate?.toIso8601String())
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1]);
@@ -149,6 +155,7 @@ class ReadingModuleState implements ModuleStateContract {
           ? DateTime.parse(json['start_date'] as String)
           : null,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
     );
   }
 

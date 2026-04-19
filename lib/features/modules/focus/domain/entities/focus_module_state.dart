@@ -28,7 +28,7 @@ class FocusModuleState implements ModuleStateContract {
   final String currentStageId;
   final List<String> unlockedAchievements;
   final List<String> respectedPeriods;
-  final bool isActive;
+  final bool isModuleActive;
 
   FocusModuleState({
     DateTime? createdAt,
@@ -42,7 +42,7 @@ class FocusModuleState implements ModuleStateContract {
     this.currentStageId = 'bronze',
     this.unlockedAchievements = const [],
     this.respectedPeriods = const [],
-    this.isActive = false,
+    this.isModuleActive = false,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -60,7 +60,7 @@ class FocusModuleState implements ModuleStateContract {
       currentStageId: 'bronze',
       unlockedAchievements: const [],
       respectedPeriods: const [],
-      isActive: false,
+      isModuleActive: false,
     );
   }
 
@@ -81,7 +81,7 @@ class FocusModuleState implements ModuleStateContract {
     String? currentStageId,
     List<String>? unlockedAchievements,
     List<String>? respectedPeriods,
-    bool? isActive,
+    bool? isModuleActive,
   }) {
     return FocusModuleState(
       createdAt: createdAt,
@@ -95,7 +95,7 @@ class FocusModuleState implements ModuleStateContract {
       currentStageId: currentStageId ?? this.currentStageId,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
       respectedPeriods: respectedPeriods ?? this.respectedPeriods,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
     );
   }
 
@@ -114,6 +114,7 @@ class FocusModuleState implements ModuleStateContract {
       ..setField('current_streak_days', currentStreakDays)
       ..setField('longest_streak_days', longestStreakDays)
       ..setField('unlocked_achievements', unlockedAchievements)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1]);
@@ -185,7 +186,7 @@ class FocusModuleState implements ModuleStateContract {
                   ?.map((e) => e as String)
                   .toList() ??
               [],
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
     );
   }
 

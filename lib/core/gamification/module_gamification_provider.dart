@@ -5,26 +5,26 @@ import 'package:disciplinum/core/di/providers.dart';
 
 /// Estado de gamificação para um módulo específico
 class ModuleGamificationState {
-  final bool isActive;
+  final bool isModuleActive;
   final int consecutiveDays;
   final DateTime? lastCheckIn;
   final Map<String, dynamic> additionalData;
 
   const ModuleGamificationState({
-    this.isActive = false,
+    this.isModuleActive = false,
     this.consecutiveDays = 0,
     this.lastCheckIn,
     this.additionalData = const {},
   });
 
   ModuleGamificationState copyWith({
-    bool? isActive,
+    bool? isModuleActive,
     int? consecutiveDays,
     DateTime? lastCheckIn,
     Map<String, dynamic>? additionalData,
   }) {
     return ModuleGamificationState(
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       consecutiveDays: consecutiveDays ?? this.consecutiveDays,
       lastCheckIn: lastCheckIn ?? this.lastCheckIn,
       additionalData: additionalData ?? this.additionalData,
@@ -58,17 +58,17 @@ class ModuleGamificationNotifier extends StateNotifier<ModuleGamificationState> 
       final moduleStatus = await _cloudSync.loadModuleStatus(_nicheId);
       
       state = state.copyWith(
-        isActive: moduleStatus?.isActive ?? false,
+        isModuleActive: moduleStatus?.isModuleActive ?? false,
         consecutiveDays: moduleStatus?.consecutiveDays ?? 0,
       );
     } catch (e) {
-      state = state.copyWith(isActive: false);
+      state = state.copyWith(isModuleActive: false);
     }
   }
 
   /// Atualiza status ativo
   void setActive(bool value) {
-    state = state.copyWith(isActive: value);
+    state = state.copyWith(isModuleActive: value);
   }
 
   /// Atualiza dias consecutivos

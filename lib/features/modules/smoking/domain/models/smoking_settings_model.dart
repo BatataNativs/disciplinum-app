@@ -4,7 +4,7 @@ class SmokingSettingsModel {
   final int cigarettesPerPack;
   final DateTime startDate;
   final DateTime? quitDate;
-  final bool isActive;
+  final bool isModuleActive;
   
   // Legacy fields for compatibility
   final String currency;
@@ -21,7 +21,7 @@ class SmokingSettingsModel {
     required this.cigarettesPerPack,
     required this.startDate,
     this.quitDate,
-    this.isActive = true,
+    this.isModuleActive = true,
     this.currency = 'R\$',
     this.lastPackPrice,
     this.lastPacksPerDay,
@@ -53,7 +53,7 @@ class SmokingSettingsModel {
     int? cigarettesPerPack,
     DateTime? startDate,
     DateTime? quitDate,
-    bool? isActive,
+    bool? isModuleActive,
     String? currency,
     double? lastPackPrice,
     double? lastPacksPerDay,
@@ -68,7 +68,7 @@ class SmokingSettingsModel {
       cigarettesPerPack: cigarettesPerPack ?? this.cigarettesPerPack,
       startDate: startDate ?? this.startDate,
       quitDate: quitDate ?? this.quitDate,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currency: currency ?? this.currency,
       lastPackPrice: lastPackPrice ?? this.lastPackPrice,
       lastPacksPerDay: lastPacksPerDay ?? this.lastPacksPerDay,
@@ -85,7 +85,7 @@ class SmokingSettingsModel {
     'cigarettesPerPack': cigarettesPerPack,
     'startDate': startDate.toIso8601String(),
     'quitDate': quitDate?.toIso8601String(),
-    'isActive': isActive,
+    'isModuleActive': isModuleActive,
     'currency': currency,
     'lastPackPrice': lastPackPrice,
     'lastPacksPerDay': lastPacksPerDay,
@@ -96,18 +96,34 @@ class SmokingSettingsModel {
   };
 
   factory SmokingSettingsModel.fromJson(Map<String, dynamic> json) => SmokingSettingsModel(
-    dailyCigarettes: json['dailyCigarettes']?.toInt() ?? 20,
-    pricePerPack: json['pricePerPack']?.toDouble() ?? 10.0,
+    // Campos atuais (do Supabase user_module_settings)
+    dailyCigarettes: json['smoking_packs_per_day']?.toInt() ?? json['dailyCigarettes']?.toInt() ?? 20,
+    pricePerPack: json['smoking_pack_price']?.toDouble() ?? json['pricePerPack']?.toDouble() ?? 10.0,
     cigarettesPerPack: json['cigarettesPerPack']?.toInt() ?? 20,
-    startDate: DateTime.parse(json['startDate'] ?? DateTime.now().toIso8601String()),
-    quitDate: json['quitDate'] != null ? DateTime.parse(json['quitDate']) : null,
-    isActive: json['isActive'] ?? true,
-    currency: json['currency'] ?? 'R\$',
-    lastPackPrice: json['lastPackPrice']?.toDouble(),
-    lastPacksPerDay: json['lastPacksPerDay']?.toDouble(),
-    lastQuitDate: json['lastQuitDate'] != null ? DateTime.parse(json['lastQuitDate']) : null,
-    lastCurrency: json['lastCurrency'],
-    lastSavedTotal: json['lastSavedTotal']?.toDouble(),
-    lastEndDate: json['lastEndDate'] != null ? DateTime.parse(json['lastEndDate']) : null,
+    startDate: json['startDate'] != null 
+        ? DateTime.parse(json['startDate']) 
+        : DateTime.now(),
+    quitDate: json['smoking_quit_date'] != null 
+        ? DateTime.parse(json['smoking_quit_date']) 
+        : json['quitDate'] != null 
+            ? DateTime.parse(json['quitDate']) 
+            : null,
+    isModuleActive: json['isModuleActive'] ?? json['is_active'] ?? true,
+    currency: json['smoking_currency'] ?? json['currency'] ?? 'R\$',
+    // Campos de histórico (last_*)
+    lastPackPrice: json['last_pack_price']?.toDouble() ?? json['lastPackPrice']?.toDouble(),
+    lastPacksPerDay: json['last_packs_per_day']?.toDouble() ?? json['lastPacksPerDay']?.toDouble(),
+    lastQuitDate: json['last_quit_date'] != null 
+        ? DateTime.parse(json['last_quit_date']) 
+        : json['lastQuitDate'] != null 
+            ? DateTime.parse(json['lastQuitDate']) 
+            : null,
+    lastCurrency: json['last_currency'] ?? json['lastCurrency'],
+    lastSavedTotal: json['last_saved_total']?.toDouble() ?? json['lastSavedTotal']?.toDouble(),
+    lastEndDate: json['last_end_date'] != null 
+        ? DateTime.parse(json['last_end_date']) 
+        : json['lastEndDate'] != null 
+            ? DateTime.parse(json['lastEndDate']) 
+            : null,
   );
 }

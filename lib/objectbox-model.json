@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:5862028340878048232",
-      "lastPropertyId": "14:5604827144786904008",
+      "lastPropertyId": "15:2277983935762031465",
       "name": "AdultContentConfigEntity",
       "properties": [
         {
@@ -20,11 +20,6 @@
           "type": 9,
           "flags": 2080,
           "indexId": "1:3652867144864117723"
-        },
-        {
-          "id": "3:8820898495627876665",
-          "name": "isEnabled",
-          "type": 1
         },
         {
           "id": "4:7012128481887047896",
@@ -80,6 +75,11 @@
           "id": "14:5604827144786904008",
           "name": "updatedAt",
           "type": 10
+        },
+        {
+          "id": "15:2277983935762031465",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -112,7 +112,7 @@
     },
     {
       "id": "3:1158992819704477116",
-      "lastPropertyId": "19:28591169566181194",
+      "lastPropertyId": "20:4126342200966542998",
       "name": "BingeEatingConfigEntity",
       "properties": [
         {
@@ -127,11 +127,6 @@
           "type": 9,
           "flags": 2080,
           "indexId": "3:7797215197708003065"
-        },
-        {
-          "id": "3:647440064871159633",
-          "name": "isEnabled",
-          "type": 1
         },
         {
           "id": "4:7592714407478594348",
@@ -212,6 +207,11 @@
           "id": "19:28591169566181194",
           "name": "updatedAt",
           "type": 10
+        },
+        {
+          "id": "20:4126342200966542998",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -399,7 +399,7 @@
     },
     {
       "id": "7:2086015864739639362",
-      "lastPropertyId": "9:7275333137182534396",
+      "lastPropertyId": "10:3260401015620420719",
       "name": "DietGamificationEntity",
       "properties": [
         {
@@ -439,21 +439,21 @@
           "type": 10
         },
         {
-          "id": "8:8834367110618788162",
-          "name": "isActive",
-          "type": 1
-        },
-        {
           "id": "9:7275333137182534396",
           "name": "createdAt",
           "type": 10
+        },
+        {
+          "id": "10:3260401015620420719",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
     },
     {
       "id": "8:5424680500814092839",
-      "lastPropertyId": "13:2708119507636253377",
+      "lastPropertyId": "14:661061912330446132",
       "name": "FocusConfigEntity",
       "properties": [
         {
@@ -468,11 +468,6 @@
           "type": 9,
           "flags": 2080,
           "indexId": "6:4265824719438360692"
-        },
-        {
-          "id": "3:4892002387071429020",
-          "name": "isEnabled",
-          "type": 1
         },
         {
           "id": "4:3803329227860620185",
@@ -523,6 +518,11 @@
           "id": "13:2708119507636253377",
           "name": "updatedAt",
           "type": 10
+        },
+        {
+          "id": "14:661061912330446132",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -897,7 +897,7 @@
     },
     {
       "id": "15:1643001185235498565",
-      "lastPropertyId": "13:1955740427732626054",
+      "lastPropertyId": "14:8098801384580673588",
       "name": "MoneySavingGamificationEntity",
       "properties": [
         {
@@ -957,14 +957,14 @@
           "type": 10
         },
         {
-          "id": "12:2056872517003564685",
-          "name": "isActive",
-          "type": 1
-        },
-        {
           "id": "13:1955740427732626054",
           "name": "createdAt",
           "type": 10
+        },
+        {
+          "id": "14:8098801384580673588",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -1020,7 +1020,7 @@
     },
     {
       "id": "17:3645098228014749518",
-      "lastPropertyId": "16:8888179628487260263",
+      "lastPropertyId": "17:5769593197777471779",
       "name": "ProcrastinationConfigEntity",
       "properties": [
         {
@@ -1035,11 +1035,6 @@
           "type": 9,
           "flags": 2080,
           "indexId": "9:4131442131524149166"
-        },
-        {
-          "id": "3:7267836942977453190",
-          "name": "isEnabled",
-          "type": 1
         },
         {
           "id": "4:3906238973442985174",
@@ -1105,13 +1100,18 @@
           "id": "16:8888179628487260263",
           "name": "updatedAt",
           "type": 10
+        },
+        {
+          "id": "17:5769593197777471779",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
     },
     {
       "id": "18:5095643737946990206",
-      "lastPropertyId": "8:7824424846268507068",
+      "lastPropertyId": "9:3869169349945285657",
       "name": "ProcrastinationGamificationEntity",
       "properties": [
         {
@@ -1151,8 +1151,8 @@
           "type": 10
         },
         {
-          "id": "8:7824424846268507068",
-          "name": "isActive",
+          "id": "9:3869169349945285657",
+          "name": "isModuleActive",
           "type": 1
         }
       ],
@@ -1345,7 +1345,7 @@
     },
     {
       "id": "21:4474491518977462271",
-      "lastPropertyId": "362:9106924274354727886",
+      "lastPropertyId": "363:3227279810805088385",
       "name": "ReadingGamificationEntity",
       "properties": [
         {
@@ -1398,6 +1398,11 @@
           "id": "362:9106924274354727886",
           "name": "earnedMedalhasList",
           "type": 30
+        },
+        {
+          "id": "363:3227279810805088385",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -1569,7 +1574,7 @@
     },
     {
       "id": "24:3192982284859847257",
-      "lastPropertyId": "8:5771927870652221646",
+      "lastPropertyId": "9:2634722686623917096",
       "name": "SpendingGamificationEntity",
       "properties": [
         {
@@ -1609,8 +1614,8 @@
           "type": 10
         },
         {
-          "id": "8:5771927870652221646",
-          "name": "isActive",
+          "id": "9:2634722686623917096",
+          "name": "isModuleActive",
           "type": 1
         }
       ],
@@ -1618,7 +1623,7 @@
     },
     {
       "id": "25:3033775199755736131",
-      "lastPropertyId": "11:3235058301607962263",
+      "lastPropertyId": "12:3941177683512410176",
       "name": "UserModuleState",
       "properties": [
         {
@@ -1636,11 +1641,6 @@
           "id": "3:8076630449443774933",
           "name": "nicheId",
           "type": 6
-        },
-        {
-          "id": "4:7903244453111586861",
-          "name": "isActive",
-          "type": 1
         },
         {
           "id": "5:6037052118683852389",
@@ -1676,6 +1676,11 @@
           "id": "11:3235058301607962263",
           "name": "additionalData",
           "type": 9
+        },
+        {
+          "id": "12:3941177683512410176",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []
@@ -1777,7 +1782,7 @@
     },
     {
       "id": "28:4979012430700118840",
-      "lastPropertyId": "8:4533138519864534927",
+      "lastPropertyId": "9:7543766625762352082",
       "name": "AdultContentGamificationEntity",
       "properties": [
         {
@@ -1817,8 +1822,8 @@
           "type": 10
         },
         {
-          "id": "8:4533138519864534927",
-          "name": "isActive",
+          "id": "9:7543766625762352082",
+          "name": "isModuleActive",
           "type": 1
         }
       ],
@@ -1826,7 +1831,7 @@
     },
     {
       "id": "29:655631407098066490",
-      "lastPropertyId": "8:4212719432358809315",
+      "lastPropertyId": "9:4352210805338846627",
       "name": "BingeEatingGamificationEntity",
       "properties": [
         {
@@ -1866,8 +1871,8 @@
           "type": 10
         },
         {
-          "id": "8:4212719432358809315",
-          "name": "isActive",
+          "id": "9:4352210805338846627",
+          "name": "isModuleActive",
           "type": 1
         }
       ],
@@ -2523,7 +2528,18 @@
     6385668805778952904,
     7213906720675825642,
     8406537452576644872,
-    8318536361510931910
+    8318536361510931910,
+    8820898495627876665,
+    4533138519864534927,
+    647440064871159633,
+    4212719432358809315,
+    8834367110618788162,
+    4892002387071429020,
+    2056872517003564685,
+    7267836942977453190,
+    7824424846268507068,
+    5771927870652221646,
+    7903244453111586861
   ],
   "retiredRelationUids": [],
   "version": 1

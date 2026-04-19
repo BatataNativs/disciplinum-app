@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/di/riverpod_wrapper.dart';
 import 'package:disciplinum/features/home/presentation/screens/home_screen.dart';
 
 /// Configuração principal do App com Riverpod
@@ -21,13 +20,8 @@ class RiverpodApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RiverpodWrapper.wrapWithProviders(
+    return ProviderScope(
       child: child,
-      // Overrides podem ser adicionados aqui para testes ou configurações específicas
-      overrides: [
-        // Exemplo de override:
-        // localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
-      ],
     );
   }
 }

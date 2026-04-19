@@ -142,13 +142,13 @@ class AdultContentStreakService {
     int consecutiveDays = 0,
     DateTime? lastFreeDay,
     int disciplinumCount = 0,
-    bool isActive = false,
+    bool isModuleActive = false,
   }) {
     return AdultContentModuleState(
       updatedAt: updatedAt,
       consecutiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 

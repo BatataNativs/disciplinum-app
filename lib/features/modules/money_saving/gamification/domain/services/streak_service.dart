@@ -142,12 +142,12 @@ class MoneySavingStreakService {
     int consecutiveDays = 0,
     DateTime? lastSavingDate,
     int completedChallenges = 0,
-    bool isActive = false,
+    bool isModuleActive = false,
   }) {
     return MoneySavingModuleState(
       consecutiveDays: consecutiveDays,
       lastSavingDate: lastSavingDate,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 

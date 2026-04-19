@@ -14,6 +14,7 @@ class ReadingGamificationEntity {
   DateTime? startDate;
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
+  bool isModuleActive = false;
 
   ReadingGamificationEntity();
 
@@ -27,6 +28,7 @@ class ReadingGamificationEntity {
       'startDate': startDate?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isModuleActive': isModuleActive,
     };
   }
 
@@ -40,6 +42,7 @@ class ReadingGamificationEntity {
     entity.startDate = json['startDate'] != null ? DateTime.parse(json['startDate']) : null;
     entity.createdAt = json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now();
     entity.updatedAt = json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now();
+    entity.isModuleActive = json['isModuleActive'] ?? json['isActive'] ?? false;
     return entity;
   }
 
@@ -84,6 +87,7 @@ class ReadingGamificationEntity {
     entity.lastReadingDate = moduleState.lastReadingDate;
     entity.startDate = moduleState.startDate;
     entity.updatedAt = moduleState.updatedAt;
+    entity.isModuleActive = moduleState.isModuleActive;
     return entity;
   }
 
@@ -96,6 +100,7 @@ class ReadingGamificationEntity {
       lastReadingDate: lastReadingDate,
       startDate: startDate,
       updatedAt: updatedAt,
+      isModuleActive: isModuleActive,
     );
   }
 }

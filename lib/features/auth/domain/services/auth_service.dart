@@ -52,6 +52,26 @@ class AuthService extends StateNotifier<AuthState> {
 
   AuthService(this._prefs, _) : super(const AuthState()) {
     _initializeAuth();
+    _listenToAuthChanges();
+  }
+
+  void _listenToAuthChanges() {
+    supabase.auth.onAuthStateChange.listen((data) async {
+      final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
+      
+      LoggerService.instance.i('Supabase Auth Event: ${event.name}');
+      
+      if (session?.user != null) {
+        if (state.currentUser?.id != session!.user.id) {
+          await _handleUserSession(session.user);
+        }
+      } else {
+        if (state.currentUser != null) {
+          state = const AuthState();
+        }
+      }
+    });
   }
 
   // Getters para compatibilidade
@@ -277,19 +297,17 @@ class AuthService extends StateNotifier<AuthState> {
   /// Manipula sessão do usuário
   Future<void> _handleUserSession(User user) async {
     try {
-      state = state.copyWith(currentUser: user);
-
-      // Carrega perfil do usuário
+      // Carrega perfil do usuário antes de atualizar o estado para evitar múltiplos rebuilds
       final profile = await supabase
           .from('users')
           .select()
           .eq('id', user.id)
           .maybeSingle();
 
-      state = state.copyWith(userProfile: profile);
-
-      // Salva sessão localmente (simplificado por enquanto)
-      LoggerService.instance.i('Sessão do usuário salva localmente');
+      state = state.copyWith(
+        currentUser: user,
+        userProfile: profile,
+      );
 
       // Inicializa serviços dependentes
       await _initializeDependentServices();
@@ -297,6 +315,10 @@ class AuthService extends StateNotifier<AuthState> {
       LoggerService.instance.i('Sessão do usuário configurada: ${user.email}');
     } catch (e) {
       LoggerService.instance.e('Erro ao configurar sessão do usuário', error: e);
+      // Fallback: garante que pelo menos o usuário base seja setado em caso de erro no perfil
+      if (state.currentUser == null) {
+        state = state.copyWith(currentUser: user);
+      }
     }
   }
 

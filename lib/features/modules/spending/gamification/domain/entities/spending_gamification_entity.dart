@@ -12,7 +12,7 @@ class SpendingGamificationEntity {
   int consecutiveMonths;
   int disciplinumCount;
   DateTime lastUpdated;
-  bool isActive;
+  bool isModuleActive;
 
   SpendingGamificationEntity({
     required this.userId,
@@ -21,7 +21,7 @@ class SpendingGamificationEntity {
     this.consecutiveMonths = 0,
     this.disciplinumCount = 0,
     required this.lastUpdated,
-    this.isActive = true,
+    this.isModuleActive = true,
   });
 
   factory SpendingGamificationEntity.fromModuleState(
@@ -35,7 +35,7 @@ class SpendingGamificationEntity {
       consecutiveMonths: state.consecutiveMonths,
       disciplinumCount: state.disciplinumCount,
       lastUpdated: state.updatedAt,
-      isActive: state.isActive,
+      isModuleActive: state.isModuleActive,
     );
   }
 
@@ -46,7 +46,7 @@ class SpendingGamificationEntity {
       consecutiveMonths: consecutiveMonths,
       disciplinumCount: disciplinumCount,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -62,7 +62,7 @@ class SpendingGamificationEntity {
       'consecutive_months': consecutiveMonths,
       'disciplinum_count': disciplinumCount,
       'last_updated': lastUpdated.toIso8601String(),
-      'is_active': isActive,
+      'is_module_active': isModuleActive,
     };
   }
 
@@ -74,7 +74,7 @@ class SpendingGamificationEntity {
       consecutiveMonths: json['consecutive_months'] ?? 0,
       disciplinumCount: json['disciplinum_count'] ?? 0,
       lastUpdated: DateTime.parse(json['last_updated']),
-      isActive: json['is_active'] ?? true,
+      isModuleActive: json['is_module_active'] ?? json['is_active'] ?? true,
     );
   }
 }

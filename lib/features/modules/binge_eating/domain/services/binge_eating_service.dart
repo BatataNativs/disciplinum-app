@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 /// Configurações de controle de compulsão alimentar
 class BingeEatingConfig {
-  final bool isEnabled;
+  final bool isModuleActive;
   final DateTime? blockedUntil;
   final String? blockReason;
   final int dailyLimitMinutes;
@@ -17,7 +17,7 @@ class BingeEatingConfig {
   final TimeOfDay reminderTime;
 
   const BingeEatingConfig({
-    required this.isEnabled,
+    required this.isModuleActive,
     this.blockedUntil,
     this.blockReason,
     this.dailyLimitMinutes = 60,
@@ -30,7 +30,7 @@ class BingeEatingConfig {
 
   Map<String, dynamic> toMap() {
     return {
-      'isEnabled': isEnabled,
+      'isModuleActive': isModuleActive,
       'blockedUntil': blockedUntil?.toIso8601String(),
       'blockReason': blockReason,
       'dailyLimitMinutes': dailyLimitMinutes,
@@ -44,7 +44,7 @@ class BingeEatingConfig {
 
   factory BingeEatingConfig.fromMap(Map<String, dynamic> map) {
     return BingeEatingConfig(
-      isEnabled: map['isEnabled'] ?? false,
+      isModuleActive: map['isModuleActive'] ?? map['isEnabled'] ?? false,
       blockedUntil: map['blockedUntil'] != null 
           ? DateTime.parse(map['blockedUntil'])
           : null,
@@ -67,7 +67,7 @@ class BingeEatingConfig {
   }
 
   BingeEatingConfig copyWith({
-    bool? isEnabled,
+    bool? isModuleActive,
     DateTime? blockedUntil,
     String? blockReason,
     int? dailyLimitMinutes,
@@ -78,7 +78,7 @@ class BingeEatingConfig {
     TimeOfDay? reminderTime,
   }) {
     return BingeEatingConfig(
-      isEnabled: isEnabled ?? this.isEnabled,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       blockedUntil: blockedUntil ?? this.blockedUntil,
       blockReason: blockReason ?? this.blockReason,
       dailyLimitMinutes: dailyLimitMinutes ?? this.dailyLimitMinutes,
@@ -166,7 +166,7 @@ class BingeEatingService {
   BingeEatingConfig get config => _config;
   BingeHabit? get habit => _habit;
   List<BingeEpisode> get episodes => List.unmodifiable(_episodes);
-  bool get isEnabled => _config.isEnabled;
+  bool get isModuleActive => _config.isModuleActive;
 
   // Configuração
   Future<void> updateConfig(BingeEatingConfig newConfig) async {
@@ -288,13 +288,13 @@ class BingeEatingService {
     try {
       final data = await _repository.getString(_configKey);
       if (data == null || data.isEmpty) {
-        _config = const BingeEatingConfig(isEnabled: false);
+        _config = const BingeEatingConfig(isModuleActive: false);
         return;
       }
       _config = BingeEatingConfig.fromMap(jsonDecode(data));
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar config: $e');
-      _config = const BingeEatingConfig(isEnabled: false);
+      _config = const BingeEatingConfig(isModuleActive: false);
     }
   }
 

@@ -69,7 +69,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       // Usando provider local do Spending via gamification repository
       final spendingRepo = ref.read(moneySavingGamificationRepositoryProvider);
       final moduleState = await spendingRepo.getMoneySavingState();
-      final isRunning = moduleState?.isActive ?? false;
+      final isRunning = moduleState?.isModuleActive ?? false;
       LoggerService.instance.i('SpendingScreen: Controller ativo: $isRunning');
       
       if (mounted) {
@@ -148,7 +148,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     });
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: NicheId.spending,
-      isActive: true,
+      isModuleActive: true,
     );
     // Ativa o notifier do Spending
     final notifier = ref.read(spendingGamificationNotifierProvider.notifier);
@@ -222,7 +222,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     }
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: NicheId.spending,
-      isActive: false,
+      isModuleActive: false,
     );
 
     if (!mounted) return;

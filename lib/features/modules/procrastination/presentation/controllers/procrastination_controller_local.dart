@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_isar.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_local.dart';
 
 /// Estado do Procrastination
 class ProcrastinationState {
@@ -27,11 +27,11 @@ class ProcrastinationState {
   }
 }
 
-/// Controller Riverpod para Procrastination usando Isar puro
-class ProcrastinationControllerIsar extends StateNotifier<ProcrastinationState> {
-  final ProcrastinationServiceIsar _service;
+/// Controller Riverpod para Procrastination usando ObjectBox
+class ProcrastinationControllerLocal extends StateNotifier<ProcrastinationState> {
+  final ProcrastinationServiceLocal _service;
   
-  ProcrastinationControllerIsar(this._service) : super(const ProcrastinationState()) {
+  ProcrastinationControllerLocal(this._service) : super(const ProcrastinationState()) {
     _loadData();
   }
 
@@ -150,6 +150,19 @@ class ProcrastinationControllerIsar extends StateNotifier<ProcrastinationState> 
     }
   }
 
+  Future<void> setModuleActive(bool isActive) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _service.setModuleActive(isActive);
+      await _loadData();
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
   Future<void> clearAllData() async {
     state = state.copyWith(isLoading: true);
     try {
@@ -173,7 +186,7 @@ class ProcrastinationControllerIsar extends StateNotifier<ProcrastinationState> 
   }
 
   /// Getters para facilitar acesso ao config
-  bool get isEnabled => state.config?.isEnabled ?? false;
+  bool get isModuleActive => state.config?.isModuleActive ?? false;
   int get dailyFocusMinutes => state.config?.dailyFocusMinutes ?? 120;
   bool get enableNotifications => state.config?.enableNotifications ?? false;
   TimeOfDay get reminderTime => state.config?.reminderTime ?? const TimeOfDay(hour: 9, minute: 0);

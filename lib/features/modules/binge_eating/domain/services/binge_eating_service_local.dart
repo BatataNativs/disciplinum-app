@@ -1,15 +1,20 @@
-import 'package:disciplinum/features/modules/adult_content/data/repositories/adult_content_config_repository.dart';
-import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
+import 'package:flutter/material.dart';
+import 'package:disciplinum/features/modules/binge_eating/data/repositories/binge_eating_config_repository.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-/// Configurações de controle de conteúdo adulto
-class AdultContentConfig {
-  final bool isEnabled;
+/// Configurações de controle de compulsão alimentar
+class BingeEatingConfig {
+  final bool isModuleActive;
   final DateTime? blockedUntil;
   final String? blockReason;
   final int dailyLimitMinutes;
   final bool requirePassword;
+  final List<String> triggerFoods;
+  final List<String> copingStrategies;
+  final bool enableNotifications;
+  final TimeOfDay reminderTime;
   
   // AppLock Configuration
   final bool enableAppLock;
@@ -18,25 +23,34 @@ class AdultContentConfig {
   final String appLockMessage;
   final int appLockCooldownMinutes;
 
-  const AdultContentConfig({
-    required this.isEnabled,
+  const BingeEatingConfig({
+    required this.isModuleActive,
     this.blockedUntil,
     this.blockReason,
     this.dailyLimitMinutes = 60,
     this.requirePassword = false,
+    this.triggerFoods = const [],
+    this.copingStrategies = const [],
+    this.enableNotifications = true,
+    this.reminderTime = const TimeOfDay(hour: 20, minute: 0),
     this.enableAppLock = false,
     this.monitoredApps = const [],
     this.appLockRequirePassword = false,
-    this.appLockMessage = "Pare! Você está tentando acessar conteúdo adulto durante seu período de controle.",
-    this.appLockCooldownMinutes = 10,
+    this.appLockMessage = "Pare! Você está tentando acessar um app durante seu momento de controle alimentar.",
+    this.appLockCooldownMinutes = 5,
   });
 
   Map<String, dynamic> toJson() => {
-        'isEnabled': isEnabled,
+        'isModuleActive': isModuleActive,
         'blockedUntil': blockedUntil?.toIso8601String(),
         'blockReason': blockReason,
         'dailyLimitMinutes': dailyLimitMinutes,
         'requirePassword': requirePassword,
+        'triggerFoods': triggerFoods,
+        'copingStrategies': copingStrategies,
+        'enableNotifications': enableNotifications,
+        'reminderHour': reminderTime.hour,
+        'reminderMinute': reminderTime.minute,
         'enableAppLock': enableAppLock,
         'monitoredApps': monitoredApps,
         'appLockRequirePassword': appLockRequirePassword,
@@ -44,37 +58,52 @@ class AdultContentConfig {
         'appLockCooldownMinutes': appLockCooldownMinutes,
       };
 
-  factory AdultContentConfig.fromJson(Map<String, dynamic> json) => AdultContentConfig(
-        isEnabled: json['isEnabled'] ?? false,
+  factory BingeEatingConfig.fromJson(Map<String, dynamic> json) => BingeEatingConfig(
+        isModuleActive: json['isModuleActive'] ?? json['isEnabled'] ?? false,
         blockedUntil: json['blockedUntil'] != null ? DateTime.parse(json['blockedUntil']) : null,
         blockReason: json['blockReason'],
         dailyLimitMinutes: json['dailyLimitMinutes'] ?? 60,
         requirePassword: json['requirePassword'] ?? false,
+        triggerFoods: List<String>.from(json['triggerFoods'] ?? []),
+        copingStrategies: List<String>.from(json['copingStrategies'] ?? []),
+        enableNotifications: json['enableNotifications'] ?? true,
+        reminderTime: TimeOfDay(
+          hour: json['reminderHour'] ?? 20,
+          minute: json['reminderMinute'] ?? 0,
+        ),
         enableAppLock: json['enableAppLock'] ?? false,
         monitoredApps: List<String>.from(json['monitoredApps'] ?? []),
         appLockRequirePassword: json['appLockRequirePassword'] ?? false,
-        appLockMessage: json['appLockMessage'] ?? "Pare! Você está tentando acessar conteúdo adulto durante seu período de controle.",
-        appLockCooldownMinutes: json['appLockCooldownMinutes'] ?? 10,
+        appLockMessage: json['appLockMessage'] ?? "Pare! Você está tentando acessar um app durante seu momento de controle alimentar.",
+        appLockCooldownMinutes: json['appLockCooldownMinutes'] ?? 5,
       );
 
-  AdultContentConfig copyWith({
-    bool? isEnabled,
+  BingeEatingConfig copyWith({
+    bool? isModuleActive,
     DateTime? blockedUntil,
     String? blockReason,
     int? dailyLimitMinutes,
     bool? requirePassword,
+    List<String>? triggerFoods,
+    List<String>? copingStrategies,
+    bool? enableNotifications,
+    TimeOfDay? reminderTime,
     bool? enableAppLock,
     List<String>? monitoredApps,
     bool? appLockRequirePassword,
     String? appLockMessage,
     int? appLockCooldownMinutes,
   }) {
-    return AdultContentConfig(
-      isEnabled: isEnabled ?? this.isEnabled,
+    return BingeEatingConfig(
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       blockedUntil: blockedUntil ?? this.blockedUntil,
       blockReason: blockReason ?? this.blockReason,
       dailyLimitMinutes: dailyLimitMinutes ?? this.dailyLimitMinutes,
       requirePassword: requirePassword ?? this.requirePassword,
+      triggerFoods: triggerFoods ?? this.triggerFoods,
+      copingStrategies: copingStrategies ?? this.copingStrategies,
+      enableNotifications: enableNotifications ?? this.enableNotifications,
+      reminderTime: reminderTime ?? this.reminderTime,
       enableAppLock: enableAppLock ?? this.enableAppLock,
       monitoredApps: monitoredApps ?? this.monitoredApps,
       appLockRequirePassword: appLockRequirePassword ?? this.appLockRequirePassword,
@@ -84,63 +113,76 @@ class AdultContentConfig {
   }
 }
 
-/// Service para Adult Content usando Isar puro (sem IsarPreferencesRepository)
-class AdultContentServiceIsar {
-  static AdultContentServiceIsar? _instance;
-  static AdultContentServiceIsar get instance => _instance ??= AdultContentServiceIsar._internal();
+/// Service para BingeEating usando ObjectBox
+class BingeEatingServiceLocal {
+  static BingeEatingServiceLocal? _instance;
+  static BingeEatingServiceLocal get instance => _instance ??= BingeEatingServiceLocal._internal();
   
-  AdultContentServiceIsar._internal();
+  BingeEatingServiceLocal._internal();
 
-  final AdultContentConfigRepository _repository = AdultContentConfigRepository.instance;
+  final BingeEatingConfigRepository _repository = BingeEatingConfigRepository.instance;
 
-  Future<AdultContentConfig> getConfig() async {
+  Future<BingeEatingConfig> getConfig() async {
     try {
       final entity = await _repository.getConfig();
       
       if (entity == null) {
         // Configuração padrão
-        final defaultConfig = AdultContentConfig(
-          isEnabled: false,
+        final defaultConfig = BingeEatingConfig(
+          isModuleActive: false,
           dailyLimitMinutes: 60,
           requirePassword: false,
+          enableNotifications: true,
         );
         
         await saveConfig(defaultConfig);
         return defaultConfig;
       }
       
-      return AdultContentConfig(
-        isEnabled: entity.isEnabled,
+      return BingeEatingConfig(
+        isModuleActive: entity.isModuleActive,
         blockedUntil: entity.blockedUntil,
         blockReason: entity.blockReason,
         dailyLimitMinutes: entity.dailyLimitMinutes,
         requirePassword: entity.requirePassword,
+        triggerFoods: entity.triggerFoods,
+        copingStrategies: entity.copingStrategies,
+        enableNotifications: entity.enableNotifications,
+        reminderTime: TimeOfDay(
+          hour: entity.reminderHour,
+          minute: entity.reminderMinute,
+        ),
       );
     } catch (e) {
-      LoggerService.instance.e('Erro ao carregar configuração do Adult Content', error: e);
+      LoggerService.instance.e('Erro ao carregar configuração do BingeEating', error: e);
       rethrow;
     }
   }
 
-  Future<void> saveConfig(AdultContentConfig config) async {
+  Future<void> saveConfig(BingeEatingConfig config) async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
       
-      final entity = AdultContentConfigEntity(
+      final entity = BingeEatingConfigEntity(
         userId: userId,
       );
       
-      entity.isEnabled = config.isEnabled;
+      entity.isModuleActive = config.isModuleActive;
       entity.blockedUntil = config.blockedUntil;
       entity.blockReason = config.blockReason;
       entity.dailyLimitMinutes = config.dailyLimitMinutes;
       entity.requirePassword = config.requirePassword;
+      entity.triggerFoods = config.triggerFoods;
+      entity.copingStrategies = config.copingStrategies;
+      entity.enableNotifications = config.enableNotifications;
+      entity.reminderHour = config.reminderTime.hour;
+      entity.reminderMinute = config.reminderTime.minute;
       
       await _repository.saveConfig(entity);
       
-      LoggerService.instance.i('Configuração do Adult Content salva com sucesso');
+      LoggerService.instance.i('Configuração do BingeEating salva com sucesso');
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar configuração do Adult Content', error: e);
+      LoggerService.instance.e('Erro ao salvar configuração do BingeEating', error: e);
       rethrow;
     }
   }
@@ -153,16 +195,16 @@ class AdultContentServiceIsar {
       final currentConfig = await getConfig();
       
       final blockedConfig = currentConfig.copyWith(
-        isEnabled: false,
+        isModuleActive: false,
         blockReason: reason,
         blockedUntil: until,
       );
       
       await saveConfig(blockedConfig);
       
-      LoggerService.instance.i('Conteúdo adulto bloqueado: $reason');
+      LoggerService.instance.i('Conteúdo de compulsão alimentar bloqueado: $reason');
     } catch (e) {
-      LoggerService.instance.e('Erro ao bloquear conteúdo adulto', error: e);
+      LoggerService.instance.e('Erro ao bloquear conteúdo de compulsão alimentar', error: e);
       rethrow;
     }
   }
@@ -172,16 +214,16 @@ class AdultContentServiceIsar {
       final currentConfig = await getConfig();
       
       final unblockedConfig = currentConfig.copyWith(
-        isEnabled: true,
+        isModuleActive: true,
         blockReason: null,
         blockedUntil: null,
       );
       
       await saveConfig(unblockedConfig);
       
-      LoggerService.instance.i('Conteúdo adulto desbloqueado');
+      LoggerService.instance.i('Conteúdo de compulsão alimentar desbloqueado');
     } catch (e) {
-      LoggerService.instance.e('Erro ao desbloquear conteúdo adulto', error: e);
+      LoggerService.instance.e('Erro ao desbloquear conteúdo de compulsão alimentar', error: e);
       rethrow;
     }
   }
@@ -220,6 +262,61 @@ class AdultContentServiceIsar {
     }
   }
 
+  Future<void> updateTriggerFoods(List<String> foods) async {
+    try {
+      final currentConfig = await getConfig();
+      
+      final updatedConfig = currentConfig.copyWith(
+        triggerFoods: foods,
+      );
+      
+      await saveConfig(updatedConfig);
+      
+      LoggerService.instance.i('Alimentos gatilho atualizados: ${foods.length} itens');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar alimentos gatilho', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> updateCopingStrategies(List<String> strategies) async {
+    try {
+      final currentConfig = await getConfig();
+      
+      final updatedConfig = currentConfig.copyWith(
+        copingStrategies: strategies,
+      );
+      
+      await saveConfig(updatedConfig);
+      
+      LoggerService.instance.i('Estratégias de enfrentamento atualizadas: ${strategies.length} itens');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar estratégias de enfrentamento', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> updateNotificationSettings({
+    required bool enableNotifications,
+    TimeOfDay? reminderTime,
+  }) async {
+    try {
+      final currentConfig = await getConfig();
+      
+      final updatedConfig = currentConfig.copyWith(
+        enableNotifications: enableNotifications,
+        reminderTime: reminderTime ?? currentConfig.reminderTime,
+      );
+      
+      await saveConfig(updatedConfig);
+      
+      LoggerService.instance.i('Configurações de notificação atualizadas');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar configurações de notificação', error: e);
+      rethrow;
+    }
+  }
+
   // ============ MÉTODOS APPLOCK ============
 
   Future<void> updateAppLockSettings({
@@ -242,7 +339,7 @@ class AdultContentServiceIsar {
       
       await saveConfig(updatedConfig);
       
-      LoggerService.instance.i('Configurações de AppLock atualizadas para Adult Content');
+      LoggerService.instance.i('Configurações de AppLock atualizadas');
     } catch (e) {
       LoggerService.instance.e('Erro ao atualizar configurações de AppLock', error: e);
       rethrow;
@@ -288,9 +385,9 @@ class AdultContentServiceIsar {
   Future<void> clearAllData() async {
     try {
       await _repository.clearAll();
-      LoggerService.instance.i('Todos os dados do Adult Content foram limpos');
+      LoggerService.instance.i('Todos os dados do BingeEating foram limpos');
     } catch (e) {
-      LoggerService.instance.e('Erro ao limpar dados do Adult Content', error: e);
+      LoggerService.instance.e('Erro ao limpar dados do BingeEating', error: e);
       rethrow;
     }
   }

@@ -118,12 +118,12 @@ class DietConfig {
   }
 }
 
-/// Service para Diet usando Isar puro (sem IsarPreferencesRepository)
-class DietServiceIsar {
-  static DietServiceIsar? _instance;
-  static DietServiceIsar get instance => _instance ??= DietServiceIsar._internal();
+/// Service para Diet usando ObjectBox
+class DietServiceLocal {
+  static DietServiceLocal? _instance;
+  static DietServiceLocal get instance => _instance ??= DietServiceLocal._internal();
   
-  DietServiceIsar._internal();
+  DietServiceLocal._internal();
 
   final DietConfigRepository _repository = DietConfigRepository.instance;
 

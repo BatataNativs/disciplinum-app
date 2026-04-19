@@ -70,7 +70,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         setState(() {
           _times.clear();
           _times.addAll(times);
-          _gamificationRunning = status?.isActive ?? false;
+          _gamificationRunning = status?.isModuleActive ?? false;
           _loadingData = false;
         });
 
@@ -128,7 +128,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     });
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
-      isActive: true,
+      isModuleActive: true,
     );
     // Usando provider local do Diet - CORRETO: usar .notifier
     final dietController = ref.read(dietControllerIsarProvider.notifier);
@@ -200,7 +200,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
       await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(nicheId: _niche.id + 100);
       await ref.read(cloudSyncServiceProvider).saveModuleStatus(
-          nicheId: _niche.nicheId, isActive: false);
+          nicheId: _niche.nicheId, isModuleActive: false);
 
       if (mounted) {
         setState(() {

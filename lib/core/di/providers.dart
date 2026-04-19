@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
-import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_isar.dart';
-import 'package:disciplinum/features/modules/procrastination/presentation/controllers/procrastination_controller_isar.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_local.dart';
+import 'package:disciplinum/features/modules/procrastination/presentation/controllers/procrastination_controller_local.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/app_monitoring_service.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
@@ -28,20 +28,20 @@ import 'package:disciplinum/features/modules/reading/gamification/data/repositor
 
 
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
-import 'package:disciplinum/features/modules/reading/domain/services/reading_service_isar.dart';
-import 'package:disciplinum/features/modules/reading/presentation/controllers/reading_controller_isar.dart';
+import 'package:disciplinum/features/modules/reading/domain/services/reading_service_local.dart';
+import 'package:disciplinum/features/modules/reading/presentation/controllers/reading_controller_local.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service_wrapper.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/controllers/stop_smoking_controller.dart';
-import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_isar.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service.dart';
 import 'package:disciplinum/features/modules/focus/domain/services/focus_service.dart';
-import 'package:disciplinum/features/modules/focus/domain/services/focus_service_isar.dart';
-import 'package:disciplinum/features/modules/focus/presentation/controllers/focus_controller_isar.dart';
+import 'package:disciplinum/features/modules/focus/domain/services/focus_service_local.dart';
+import 'package:disciplinum/features/modules/focus/presentation/controllers/focus_controller.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service.dart';
-import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_isar.dart';
-import 'package:disciplinum/features/modules/adult_content/presentation/controllers/adult_content_controller_isar.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
+import 'package:disciplinum/features/modules/adult_content/presentation/controllers/adult_content_controller_local.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/presentation/providers/adult_content_gamification_provider.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/providers/binge_eating_gamification_provider.dart';
 import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
@@ -51,8 +51,8 @@ import 'package:disciplinum/features/modules/smoking/gamification/presentation/p
 import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/diet_service_isar.dart';
-import 'package:disciplinum/features/modules/diet/presentation/controllers/diet_controller_isar.dart';
+import 'package:disciplinum/features/modules/diet/domain/services/diet_service_local.dart';
+import 'package:disciplinum/features/modules/diet/presentation/controllers/diet_controller_local.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
@@ -89,14 +89,15 @@ final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((r
 
 /// Provider para SmokingCheckinService
 final smokingCheckinServiceProvider = Provider<SmokingCheckinService>((ref) {
-  // SmokingCheckinService ainda usa SharedPreferences e precisa de migração futura
-  // Por enquanto, desabilitado para evitar erros de compilação
-  throw UnimplementedError('SmokingCheckinService temporariamente desabilitado - migração pendente');
+  final objectBoxService = ref.watch(objectBoxServiceProvider);
+  final cloudSync = ref.watch(cloudSyncServiceProvider);
+  // SmokingCheckinService 100% ObjectBox - zero SharedPreferences
+  return SmokingCheckinService(objectBoxService, cloudSync);
 });
 
-/// Provider para BingeEatingServiceIsar
-final bingeEatingServiceIsarProvider = Provider<BingeEatingServiceIsar>((ref) {
-  return BingeEatingServiceIsar.instance;
+/// Provider para BingeEatingServiceLocal
+final bingeEatingServiceIsarProvider = Provider<BingeEatingServiceLocal>((ref) {
+  return BingeEatingServiceLocal.instance;
 });
 
 /// Provider para BingeEatingService (legado)
@@ -182,15 +183,15 @@ final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
 
 // ============= AUTH SERVICES =============
 
-/// Provider para AdultContentServiceIsar
-final adultContentServiceIsarProvider = Provider<AdultContentServiceIsar>((ref) {
-  return AdultContentServiceIsar.instance;
+/// Provider para AdultContentServiceLocal
+final adultContentServiceIsarProvider = Provider<AdultContentServiceLocal>((ref) {
+  return AdultContentServiceLocal.instance;
 });
 
-/// Provider para AdultContentControllerIsar
-final adultContentControllerIsarProvider = StateNotifierProvider<AdultContentControllerIsar, AdultContentState>((ref) {
+/// Provider para AdultContentControllerLocal
+final adultContentControllerIsarProvider = StateNotifierProvider<AdultContentControllerLocal, AdultContentState>((ref) {
   final service = ref.watch(adultContentServiceIsarProvider);
-  return AdultContentControllerIsar(service);
+  return AdultContentControllerLocal(service);
 });
 
 /// Provider para AdultContentService (legado)
@@ -199,15 +200,15 @@ final adultContentServiceProvider = Provider<AdultContentService>((ref) {
   return AdultContentService(repository);
 });
 
-/// Provider para DietServiceIsar
-final dietServiceIsarProvider = Provider<DietServiceIsar>((ref) {
-  return DietServiceIsar.instance;
+/// Provider para DietServiceLocal
+final dietServiceIsarProvider = Provider<DietServiceLocal>((ref) {
+  return DietServiceLocal.instance;
 });
 
-/// Provider para DietControllerIsar
-final dietControllerIsarProvider = StateNotifierProvider<DietControllerIsar, DietState>((ref) {
+/// Provider para DietControllerLocal
+final dietControllerIsarProvider = StateNotifierProvider<DietControllerLocal, DietState>((ref) {
   final service = ref.watch(dietServiceIsarProvider);
-  return DietControllerIsar(service);
+  return DietControllerLocal(service);
 });
 
 /// Provider para DietService (legado)
@@ -216,15 +217,15 @@ final dietServiceProvider = Provider<DietService>((ref) {
   return DietService(repository);
 });
 
-/// Provider para ProcrastinationServiceIsar
-final procrastinationServiceIsarProvider = Provider<ProcrastinationServiceIsar>((ref) {
-  return ProcrastinationServiceIsar.instance;
+/// Provider para ProcrastinationServiceLocal
+final procrastinationServiceIsarProvider = Provider<ProcrastinationServiceLocal>((ref) {
+  return ProcrastinationServiceLocal.instance;
 });
 
-/// Provider para ProcrastinationControllerIsar
-final procrastinationControllerIsarProvider = StateNotifierProvider<ProcrastinationControllerIsar, ProcrastinationState>((ref) {
+/// Provider para ProcrastinationControllerLocal
+final procrastinationControllerIsarProvider = StateNotifierProvider<ProcrastinationControllerLocal, ProcrastinationState>((ref) {
   final service = ref.watch(procrastinationServiceIsarProvider);
-  return ProcrastinationControllerIsar(service);
+  return ProcrastinationControllerLocal(service);
 });
 
 /// Provider para ProcrastinationService (serviço de listas de tarefas)
@@ -252,26 +253,26 @@ final focusServiceProvider = Provider<FocusService>((ref) {
   );
 });
 
-/// Provider para FocusServiceIsar
-final focusServiceIsarProvider = Provider<FocusServiceIsar>((ref) {
-  return FocusServiceIsar.instance;
+/// Provider para FocusServiceLocal
+final focusServiceIsarProvider = Provider<FocusServiceLocal>((ref) {
+  return FocusServiceLocal.instance;
 });
 
-/// Provider para FocusControllerIsar
-final focusControllerIsarProvider = StateNotifierProvider<FocusControllerIsar, FocusState>((ref) {
+/// Provider para FocusController
+final focusControllerIsarProvider = StateNotifierProvider<FocusController, FocusState>((ref) {
   final service = ref.watch(focusServiceIsarProvider);
-  return FocusControllerIsar(service);
+  return FocusController(service);
 });
 
-/// Provider para ReadingServiceIsar
-final readingServiceIsarProvider = Provider<ReadingServiceIsar>((ref) {
-  return ReadingServiceIsar.instance;
+/// Provider para ReadingServiceLocal
+final readingServiceIsarProvider = Provider<ReadingServiceLocal>((ref) {
+  return ReadingServiceLocal.instance;
 });
 
-/// Provider para ReadingControllerIsar
-final readingControllerIsarProvider = StateNotifierProvider<ReadingControllerIsar, ReadingState>((ref) {
+/// Provider para ReadingControllerLocal
+final readingControllerIsarProvider = StateNotifierProvider<ReadingControllerLocal, ReadingState>((ref) {
   final service = ref.watch(readingServiceIsarProvider);
-  return ReadingControllerIsar(service);
+  return ReadingControllerLocal(service);
 });
 
 
@@ -355,14 +356,13 @@ final moneySavingOperationRepositoryProvider = Provider<MoneySavingGamificationR
 /// Provider para verificar se o módulo Focus está ativo
 final focusActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(focusControllerIsarProvider);
-  return state.config?.isEnabled ?? false;
+  return state.config?.isModuleActive ?? false;
 });
 
 /// Provider para verificar se o módulo Reading está ativo
 final readingActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(readingControllerIsarProvider);
-  // Reading é considerado ativo se notificações estão habilitadas ou há streak
-  return state.config?.enableNotifications == true || (state.config?.currentStreak ?? 0) > 0;
+  return state.config?.isModuleActive ?? false;
 });
 
 /// Provider combinado para obter lista de módulos ativos (gamificação fragmentada)

@@ -12,7 +12,7 @@ class ProcrastinationGamificationEntity {
   int consecutiveDays;
   int disciplinumCount;
   DateTime lastUpdated;
-  bool isActive;
+  bool isModuleActive;
 
   ProcrastinationGamificationEntity({
     required this.userId,
@@ -21,7 +21,7 @@ class ProcrastinationGamificationEntity {
     this.consecutiveDays = 0,
     this.disciplinumCount = 0,
     required this.lastUpdated,
-    this.isActive = true,
+    this.isModuleActive = true,
   });
 
   factory ProcrastinationGamificationEntity.fromModuleState(
@@ -35,7 +35,7 @@ class ProcrastinationGamificationEntity {
       consecutiveDays: state.consecutiveProductiveDays,
       disciplinumCount: state.disciplinumCount,
       lastUpdated: state.updatedAt,
-      isActive: state.isActive,
+      isModuleActive: state.isModuleActive,
     );
   }
 
@@ -46,7 +46,7 @@ class ProcrastinationGamificationEntity {
       consecutiveProductiveDays: consecutiveDays,
       disciplinumCount: disciplinumCount,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 }

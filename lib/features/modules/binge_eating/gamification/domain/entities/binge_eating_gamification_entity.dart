@@ -12,7 +12,7 @@ class BingeEatingGamificationEntity {
   int consecutivePositiveDays;
   int disciplinumCount;
   DateTime lastUpdated;
-  bool isActive;
+  bool isModuleActive;
 
   BingeEatingGamificationEntity({
     required this.userId,
@@ -21,7 +21,7 @@ class BingeEatingGamificationEntity {
     this.consecutivePositiveDays = 0,
     this.disciplinumCount = 0,
     required this.lastUpdated,
-    this.isActive = true,
+    this.isModuleActive = true,
   });
 
   factory BingeEatingGamificationEntity.fromModuleState(
@@ -35,7 +35,7 @@ class BingeEatingGamificationEntity {
       consecutivePositiveDays: state.consecutivePositiveDays,
       disciplinumCount: state.disciplinumCount,
       lastUpdated: state.updatedAt,
-      isActive: state.isActive,
+      isModuleActive: state.isModuleActive,
     );
   }
 
@@ -46,7 +46,7 @@ class BingeEatingGamificationEntity {
       consecutivePositiveDays: consecutivePositiveDays,
       disciplinumCount: disciplinumCount,
       updatedAt: lastUpdated,
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -58,7 +58,7 @@ class BingeEatingGamificationEntity {
       'consecutive_positive_days': consecutivePositiveDays,
       'disciplinum_count': disciplinumCount,
       'last_updated': lastUpdated.toIso8601String(),
-      'is_active': isActive,
+      'is_module_active': isModuleActive,
     };
   }
 
@@ -70,7 +70,7 @@ class BingeEatingGamificationEntity {
       consecutivePositiveDays: json['consecutive_positive_days'] ?? 0,
       disciplinumCount: json['disciplinum_count'] ?? 0,
       lastUpdated: DateTime.parse(json['last_updated']),
-      isActive: json['is_active'] ?? true,
+      isModuleActive: json['is_module_active'] ?? json['is_active'] ?? true,
     );
   }
 
@@ -78,19 +78,19 @@ class BingeEatingGamificationEntity {
     return BingeEatingGamificationEntity(
       userId: userId,
       lastUpdated: DateTime.now(),
-      isActive: false,
+      isModuleActive: false,
     );
   }
 
   BingeEatingGamificationEntity resetProgress() {
     return BingeEatingGamificationEntity(
       userId: userId,
-      earnedInsignias: isActive ? ['madeira'] : [],
+      earnedInsignias: isModuleActive ? ['madeira'] : [],
       earnedMedalhas: [],
       consecutivePositiveDays: 0,
       disciplinumCount: 0,
       lastUpdated: DateTime.now(),
-      isActive: isActive,
+      isModuleActive: isModuleActive,
     );
   }
 
@@ -108,7 +108,7 @@ class BingeEatingGamificationEntity {
         other.consecutivePositiveDays == consecutivePositiveDays &&
         other.disciplinumCount == disciplinumCount &&
         other.lastUpdated == lastUpdated &&
-        other.isActive == isActive;
+        other.isModuleActive == isModuleActive;
   }
 
   @override
@@ -119,7 +119,7 @@ class BingeEatingGamificationEntity {
         consecutivePositiveDays.hashCode ^
         disciplinumCount.hashCode ^
         lastUpdated.hashCode ^
-        isActive.hashCode;
+        isModuleActive.hashCode;
   }
 
   @override
@@ -131,6 +131,6 @@ class BingeEatingGamificationEntity {
         'consecutivePositiveDays: $consecutivePositiveDays, '
         'disciplinumCount: $disciplinumCount, '
         'lastUpdated: $lastUpdated, '
-        'isActive: $isActive)';
+        'isModuleActive: $isModuleActive)';
   }
 }

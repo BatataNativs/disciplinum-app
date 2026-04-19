@@ -113,7 +113,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
         earnedInsignias: [], // Mantém insígnias existentes
         earnedMedalhas: _earnedMedalhas,
         respectedPeriods: [],
-        isActive: true,
+        isModuleActive: true,
       );
       
       await FocusGamificationRepository.instance.saveFocusState(currentState);

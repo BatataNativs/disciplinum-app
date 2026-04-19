@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Configurações do Focus
 class FocusConfig {
-  final bool isEnabled;
+  final bool isModuleActive;
   final bool enableNotifications;
   final int dailyGoalMinutes;
   final TimeOfDay reminderTime;
@@ -18,7 +18,7 @@ class FocusConfig {
   final int longestFocusSession;
 
   const FocusConfig({
-    required this.isEnabled,
+    required this.isModuleActive,
     this.enableNotifications = true,
     this.dailyGoalMinutes = 120,
     this.reminderTime = const TimeOfDay(hour: 9, minute: 0),
@@ -29,7 +29,7 @@ class FocusConfig {
   });
 
   Map<String, dynamic> toJson() => {
-        'isEnabled': isEnabled,
+        'isModuleActive': isModuleActive,
         'enableNotifications': enableNotifications,
         'dailyGoalMinutes': dailyGoalMinutes,
         'reminderHour': reminderTime.hour,
@@ -41,7 +41,7 @@ class FocusConfig {
       };
 
   factory FocusConfig.fromJson(Map<String, dynamic> json) => FocusConfig(
-        isEnabled: json['isEnabled'] ?? false,
+        isModuleActive: json['isModuleActive'] ?? json['isEnabled'] ?? false,
         enableNotifications: json['enableNotifications'] ?? true,
         dailyGoalMinutes: json['dailyGoalMinutes'] ?? 120,
         reminderTime: TimeOfDay(
@@ -55,7 +55,7 @@ class FocusConfig {
       );
 
   FocusConfig copyWith({
-    bool? isEnabled,
+    bool? isModuleActive,
     bool? enableNotifications,
     int? dailyGoalMinutes,
     TimeOfDay? reminderTime,
@@ -65,7 +65,7 @@ class FocusConfig {
     int? longestFocusSession,
   }) {
     return FocusConfig(
-      isEnabled: isEnabled ?? this.isEnabled,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       enableNotifications: enableNotifications ?? this.enableNotifications,
       dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
       reminderTime: reminderTime ?? this.reminderTime,
@@ -77,12 +77,12 @@ class FocusConfig {
   }
 }
 
-/// Service para Focus usando Isar puro (sem IsarPreferencesRepository)
-class FocusServiceIsar {
-  static FocusServiceIsar? _instance;
-  static FocusServiceIsar get instance => _instance ??= FocusServiceIsar._internal();
+/// Service para Focus usando ObjectBox
+class FocusServiceLocal {
+  static FocusServiceLocal? _instance;
+  static FocusServiceLocal get instance => _instance ??= FocusServiceLocal._internal();
   
-  FocusServiceIsar._internal();
+  FocusServiceLocal._internal();
 
   final FocusConfigRepository _configRepository = FocusConfigRepository.instance;
   final FocusIntervalRepository _intervalRepository = FocusIntervalRepository.instance;
@@ -94,7 +94,7 @@ class FocusServiceIsar {
       if (entity == null) {
         // Configuração padrão
         final defaultConfig = FocusConfig(
-          isEnabled: false,
+          isModuleActive: false,
           dailyGoalMinutes: 120,
           enableNotifications: true,
         );
@@ -104,7 +104,7 @@ class FocusServiceIsar {
       }
       
       return FocusConfig(
-        isEnabled: entity.isEnabled,
+        isModuleActive: entity.isModuleActive,
         enableNotifications: entity.enableNotifications,
         dailyGoalMinutes: entity.dailyGoalMinutes,
         reminderTime: TimeOfDay(
@@ -128,7 +128,7 @@ class FocusServiceIsar {
       
       final entity = FocusConfigEntity(userId: userId);
       
-      entity.isEnabled = config.isEnabled;
+      entity.isModuleActive = config.isModuleActive;
       entity.enableNotifications = config.enableNotifications;
       entity.dailyGoalMinutes = config.dailyGoalMinutes;
       entity.reminderHour = config.reminderTime.hour;
@@ -143,6 +143,23 @@ class FocusServiceIsar {
       LoggerService.instance.i('Configuração do Focus salva com sucesso');
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Focus', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> setModuleActive(bool isActive) async {
+    try {
+      final config = await getConfig();
+      final updated = config.copyWith(isModuleActive: isActive);
+      await saveConfig(updated);
+      
+      if (isActive) {
+        await incrementStreak();
+      } else {
+        await resetStreak();
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao alternar ativação do Focus', error: e);
       rethrow;
     }
   }

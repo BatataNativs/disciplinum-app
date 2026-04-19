@@ -46,7 +46,7 @@ class DietInsigniaService implements ModuleInsigniaInterface {
         earnedMedalhas: [], // Será gerenciado pelo MedalhaService
         consecutiveDays: _consecutiveDays,
         disciplinumCount: _earnedInsignias.where((id) => id == 'disciplinum').length,
-        isActive: true,
+        isModuleActive: true,
       );
       
       await _repository.saveDietState(currentState);
@@ -182,7 +182,7 @@ class DietInsigniaService implements ModuleInsigniaInterface {
   }
 
   /// Verifica se o módulo está ativo
-  bool get isActive => _earnedInsignias.isNotEmpty;
+  bool get isModuleActive => _earnedInsignias.isNotEmpty;
 
   /// Concede insignia madeira ao ativar o módulo
   Future<void> activateModule() async {

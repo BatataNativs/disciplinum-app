@@ -63,8 +63,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final service = ref.watch(procrastinationServiceProvider);
     // Usando provider local do Procrastination
-    final procrastinationState = ref.watch(procrastinationControllerIsarProvider);
-    final isActive = procrastinationState.config?.isEnabled ?? false;
+    final isActive = ref.watch(procrastinationActiveProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -335,14 +334,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
 
   Future<void> _toggleModule(bool isActive) async {
-    // Usar provider local do Procrastination
-    final notifier = ref.read(procrastinationGamificationNotifierProvider.notifier);
+    // Usar o controller centralizado
+    final controller = ref.read(procrastinationControllerIsarProvider.notifier);
 
     if (isActive) {
       final confirmed = await AppDialog.showConfirmation(
         context: context,
         title: 'Desativar módulo?',
-        content: 'Ao desativar, seu progresso de medalhas será pausado. Deseja continuar?',
+        content: 'Ao desativar, seu progresso e gamificação serão resetados. Deseja continuar?',
         confirmText: 'Sim, desativar',
         cancelText: 'Cancelar',
         isDangerous: true,
@@ -352,12 +351,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         if (!mounted) return;
         HapticFeedback.heavyImpact();
 
-        // Desativar via notifier local
-        await notifier.deactivateModule();
+        // Desativar via controller central
+        await controller.setModuleActive(false);
 
-        setState(() {
-          // O estado será atualizado automaticamente pelo gamification.isModuleActive() no build
-        });
+        // Sincronizar com a nuvem
+        ref.read(cloudSyncServiceProvider).saveModuleStatus(
+          nicheId: NicheId.procrastination,
+          isModuleActive: false,
+        );
         
         _tabController.animateTo(0);
 
@@ -386,12 +387,15 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
       }
 
       HapticFeedback.heavyImpact();
+      
+      // Ativar via controller central
+      await controller.setModuleActive(true);
+
+      // Sincronizar com a nuvem
       ref.read(cloudSyncServiceProvider).saveModuleStatus(
         nicheId: NicheId.procrastination,
-        isActive: true,
+        isModuleActive: true,
       );
-      // Ativar via notifier local
-      await notifier.activateModule();
 
       if (mounted) {
         SnackBarHelper.showSuccess(context, 'Módulo de Procrastinação ativado!');

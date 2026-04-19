@@ -32,7 +32,7 @@ class DietGamificationController extends ChangeNotifier {
   int get disciplinumCount => _moduleState?.disciplinumCount ?? 0;
   List<String> get earnedInsignias => _moduleState?.earnedInsignias ?? [];
   List<String> get earnedMedalhas => _moduleState?.earnedMedalhas ?? [];
-  bool get isActive => _moduleState?.isActive ?? false;
+  bool get isModuleActive => _moduleState?.isModuleActive ?? false;
 
   /// Carrega o estado do módulo Diet
   Future<void> loadModuleState() async {
@@ -50,7 +50,7 @@ class DietGamificationController extends ChangeNotifier {
         habitType: 'state_loaded',
         metadata: {
           'streak': _moduleState!.consecutiveDays,
-          'active': _moduleState!.isActive,
+          'active': _moduleState!.isModuleActive,
           'disciplinum_count': _moduleState!.disciplinumCount,
         },
       );
@@ -184,12 +184,12 @@ class DietGamificationController extends ChangeNotifier {
           earnedMedalhas: const [],
           consecutiveDays: 0,
           disciplinumCount: 0,
-          isActive: true,
+          isModuleActive: true,
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
-          isActive: true,
+          isModuleActive: true,
         );
       }
 
@@ -226,7 +226,7 @@ class DietGamificationController extends ChangeNotifier {
       if (_moduleState != null) {
         // Desativar estado existente
         _moduleState = _moduleState!.copyWith(
-          isActive: false,
+          isModuleActive: false,
         );
 
         await _repository.saveDietState(_moduleState!);

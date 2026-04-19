@@ -98,7 +98,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
     return {
       'moduleId': moduleId,
       'moduleName': moduleName,
-      'isActive': _currentState!.isActive,
+      'isModuleActive': _currentState!.isModuleActive,
       'consecutivePositiveDays': _currentState!.consecutivePositiveDays,
       'disciplinumCount': _currentState!.disciplinumCount,
       'earnedInsignias': _currentState!.earnedInsignias,
@@ -170,7 +170,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
   BingeEatingModuleState? get currentState => _currentState;
 
   /// Verifica se o módulo está ativo
-  bool get isActive => _currentState?.isActive ?? false;
+  bool get isModuleActive => _currentState?.isModuleActive ?? false;
 
   /// Obtém o contador de dias positivos consecutivos
   int get consecutivePositiveDays => _currentState?.consecutivePositiveDays ?? 0;
@@ -190,7 +190,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
         consecutivePositiveDays: _currentState?.consecutivePositiveDays ?? 0,
         disciplinumCount: _currentState?.disciplinumCount ?? 0,
         updatedAt: DateTime.now(),
-        isActive: earnedInsignias.isNotEmpty,
+        isModuleActive: earnedInsignias.isNotEmpty,
       );
 
       // Salva o estado atualizado
@@ -207,7 +207,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
     if (_currentState == null) return {};
 
     return {
-      'isActive': isActive,
+      'isModuleActive': isModuleActive,
       'consecutivePositiveDays': consecutivePositiveDays,
       'disciplinumCount': disciplinumCount,
       'earnedInsigniasCount': _currentState!.earnedInsignias.length,

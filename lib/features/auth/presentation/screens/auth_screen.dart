@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
-import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,7 +13,7 @@ class AuthScreen extends ConsumerStatefulWidget {
   final SupabaseClient? supabaseClient;
 
   const AuthScreen({
-    super.key, 
+    super.key,
     this.initialAuthMode = 0,
     this.supabaseClient,
   });
@@ -79,10 +78,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         _passwordController.text,
       );
       if (success && mounted) {
+        // Se conseguimos logar, apenas removemos a tela de login se ela foi sobreposta
+        // Caso contrário, o AuthWrapper na raiz já trocará para o HomeScreen
         if (Navigator.of(context).canPop()) {
-          Navigator.pop(context);
-        } else {
-          Navigator.pushReplacementNamed(context, AppRouter.home);
+          Navigator.of(context).pop();
         }
       }
     } else {
@@ -236,12 +235,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final Color inactiveToggleText =
         isDark ? Colors.black54 : const Color.fromARGB(255, 58, 58, 58);
 
-    if (authService.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(
-            context, AppRouter.home, (route) => route.isFirst);
-      });
-    }
+    // Removido o redirecionamento automático aqui para evitar conflitos de navegação
+    // O AuthWrapper no topo da árvore de widgets já gerencia a troca de Welcome -> Home
 
     return Container(
       decoration: BoxDecoration(
@@ -515,8 +510,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       onTap: isLoading ? null : _googleAuth,
       child: Image.asset(
         isDark
-            ? 'assets/Auth/android_dark_sq_na@2x.png'
-            : 'assets/Auth/android_light_sq_na@2x.png',
+            ? 'assets/auth/android_dark_sq_na.png'
+            : 'assets/auth/android_light_sq_na.png',
         width: 60,
         height: 60,
       ),

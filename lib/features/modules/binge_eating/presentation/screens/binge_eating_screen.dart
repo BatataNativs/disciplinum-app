@@ -20,7 +20,7 @@ import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/b
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/binge_eating_segmented_control.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/binge_eating_tab_content.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/binge_eating_actions_widget.dart';
-import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_isar.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
 import 'dart:async';
 
 class BingeEatingScreen extends ConsumerStatefulWidget {
@@ -84,7 +84,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
         setState(() {
           _selectedApps.clear();
           _selectedApps.addAll(apps);
-          _gamificationRunning = status?.isActive ?? false;
+          _gamificationRunning = status?.isModuleActive ?? false;
           _loadingData = false;
         });
 
@@ -173,7 +173,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     // Ativa o AppLock para os apps selecionados
     final config = await bingeEatingService.getConfig();
     final updatedConfig = config.copyWith(
-      isEnabled: true,
+      isModuleActive: true,
       enableAppLock: true,
       monitoredApps: _selectedApps,
     );
@@ -194,7 +194,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     setState(() {
       _gamificationRunning = true;
     });
-    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: _niche.nicheId, isActive: true);
+    ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: _niche.nicheId, isModuleActive: true);
     // Inicia o ciclo de gamificação local
     final bingeEatingService = ref.read(bingeEatingServiceIsarProvider);
     // Ativa notificações se configurado
@@ -251,7 +251,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       // Desativa o AppLock e o módulo
       final config = await bingeEatingService.getConfig();
       final updatedConfig = config.copyWith(
-        isEnabled: false,
+        isModuleActive: false,
         enableAppLock: false,
         monitoredApps: [],
       );
@@ -260,12 +260,18 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       _resetMedalsForModule();
 
       // Obtém o estado atual do módulo
-      final gamificationStatus = updatedConfig.isEnabled;
+      final gamificationStatus = updatedConfig.isModuleActive;
 
       setState(() {
         _gamificationRunning = gamificationStatus;
         _selectedIndex = 0;
       });
+
+      // Sincronizar com a nuvem
+      ref.read(cloudSyncServiceProvider).saveModuleStatus(
+        nicheId: NicheId.bingeEating,
+        isModuleActive: false,
+      );
 
       if (_pageController.hasClients) {
         _pageController.animateToPage(0,
@@ -285,7 +291,7 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     // Reseta as configurações para o estado inicial
     bingeEatingService.getConfig().then((config) async {
       final resetConfig = BingeEatingConfig(
-        isEnabled: false,
+        isModuleActive: false,
         enableAppLock: false,
         monitoredApps: [],
         triggerFoods: [],

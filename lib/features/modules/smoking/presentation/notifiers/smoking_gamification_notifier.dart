@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
@@ -43,30 +44,70 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   final SmokingGamificationRepository _repository;
 
   SmokingGamificationNotifier(this._repository) 
-      : super(const SmokingGamificationState());
+      : super(const SmokingGamificationState()) {
+    // Carrega automaticamente ao criar
+    _loadOnInit();
+  }
+  
+  Future<void> _loadOnInit() async {
+    await loadGamification();
+  }
 
   Future<void> loadGamification() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final gamification = await _repository.getSmokingState();
+      
+      // Verifica no Supabase se o módulo está ativo (fallback quando ObjectBox desatualizado)
+      final isActiveInSupabase = await _checkModuleActiveInSupabase();
+      
       if (gamification != null) {
+        // Se ObjectBox diz que está ativo, ou se Supabase diz que está ativo, considera ativo
+        final isActive = gamification.isModuleActive || isActiveInSupabase;
         state = state.copyWith(
           gamification: gamification, 
           isLoading: false,
-          isModuleActive: true, // Smoking sempre ativo quando tem dados
+          isModuleActive: isActive,
         );
+        
+        // Se está ativo no Supabase mas não no ObjectBox, sincroniza
+        if (isActiveInSupabase && !gamification.isModuleActive) {
+          final updated = gamification.copyWith(isModuleActive: true);
+          await _repository.saveSmokingState(updated);
+          LoggerService.instance.gamification('✅ Estado sincronizado: módulo ativo via Supabase');
+        }
       } else {
-        // Cria estado inicial
-        final initialState = SmokingModuleState.initial();
+        // Se não tem gamification, cria baseado no Supabase
+        final shouldBeActive = isActiveInSupabase;
+        final initialState = SmokingModuleState.initial().copyWith(isModuleActive: shouldBeActive);
         await _repository.saveSmokingState(initialState);
         state = state.copyWith(
           gamification: initialState,
           isLoading: false,
-          isModuleActive: false,
+          isModuleActive: shouldBeActive,
         );
       }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+  
+  /// Verifica se o módulo está ativo no Supabase
+  Future<bool> _checkModuleActiveInSupabase() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return false;
+      
+      final response = await Supabase.instance.client
+          .from('user_module_settings')
+          .select('is_active')
+          .eq('user_id', userId)
+          .eq('module_id', 'smoking')
+          .maybeSingle();
+      
+      return response?['is_active'] ?? false;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -74,7 +115,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   Future<void> activateModule() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final initialState = SmokingModuleState.initial();
+      final initialState = SmokingModuleState.initial().copyWith(isModuleActive: true);
       await _repository.saveSmokingState(initialState);
       await _repository.syncWithSupabase(initialState);
       await loadGamification();
@@ -87,7 +128,12 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   Future<void> deactivateModule() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _repository.clearSmokingState();
+      final current = state.gamification;
+      if (current != null) {
+        final updated = current.copyWith(isModuleActive: false);
+        await _repository.saveSmokingState(updated);
+        await _repository.syncWithSupabase(updated);
+      }
       state = state.copyWith(
         gamification: null,
         isModuleActive: false, 
@@ -187,8 +233,7 @@ final smokingGamificationNotifierProvider = StateNotifierProvider<
   SmokingGamificationNotifier,
   SmokingGamificationState
 >((ref) {
-  final repository = SmokingGamificationRepository.instance;
-  return SmokingGamificationNotifier(repository);
+  return SmokingGamificationNotifier(SmokingGamificationRepository.instance);
 });
 
 /// Provider conveniente

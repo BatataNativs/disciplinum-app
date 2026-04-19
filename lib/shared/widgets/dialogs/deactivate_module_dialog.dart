@@ -72,19 +72,12 @@ class DeactivateModuleDialog extends ConsumerWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(false),
           child: const Text('CANCELAR'),
         ),
         ElevatedButton(
           onPressed: () async {
-            Navigator.of(context).pop();
-            
-            // Usar service injetado ou fallback para método estático
-            if (resetService != null) {
-              await resetService!.resetProgress(nicheId.id);
-            }
-            
-            onDeactivated?.call();
+            Navigator.of(context).pop(true);
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,

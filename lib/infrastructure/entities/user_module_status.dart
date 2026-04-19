@@ -1,7 +1,7 @@
 class UserModuleStatus {
   final String userId;
   final int nicheId;
-  final bool isActive;
+  final bool isModuleActive;
   final int consecutiveDays;
   final int? focusPeriodsRespected; // NOVO: Períodos de foco respeitados
   final DateTime? lastUpdated;
@@ -11,7 +11,7 @@ class UserModuleStatus {
   UserModuleStatus({
     required this.userId,
     required this.nicheId,
-    required this.isActive,
+    required this.isModuleActive,
     this.consecutiveDays = 0,
     this.focusPeriodsRespected, // NOVO
     this.lastUpdated,
@@ -23,7 +23,7 @@ class UserModuleStatus {
     return UserModuleStatus(
       userId: json['user_id'] as String,
       nicheId: json['niche_id'] as int,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_active'] as bool? ?? json['is_module_active'] as bool? ?? false,
       consecutiveDays: json['consecutive_days'] as int? ?? 0,
       focusPeriodsRespected: json['focus_periods_respected'] as int?, // NOVO
       lastUpdated: json['last_updated'] != null
@@ -41,7 +41,7 @@ class UserModuleStatus {
     return {
       'user_id': userId,
       'niche_id': nicheId,
-      'is_active': isActive,
+      'is_active': isModuleActive,
       'consecutive_days': consecutiveDays,
       if (focusPeriodsRespected != null) 'focus_periods_respected': focusPeriodsRespected, // NOVO
       if (lastUpdated != null) 'last_updated': lastUpdated!.toIso8601String(),

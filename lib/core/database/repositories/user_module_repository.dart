@@ -42,7 +42,7 @@ class UserModuleRepository {
     try {
       return _box.query(
         UserModuleState_.userId.equals(userId)
-          .and(UserModuleState_.isActive.equals(true))
+          .and(UserModuleState_.isModuleActive.equals(true))
       ).build().find();
     } catch (e, stackTrace) {
       LoggerService.instance.e('Failed to get active modules', error: e, stackTrace: stackTrace);
@@ -71,12 +71,12 @@ class UserModuleRepository {
       moduleState ??= UserModuleState.create(
         userId: userId,
         nicheId: nicheId,
-        isActive: true,
+        isModuleActive: true,
       );
       
       // Atualiza para ativo
       moduleState = moduleState.copyWith(
-        isActive: true,
+        isModuleActive: true,
         lastAccessDate: now,
         updatedAt: now,
       );
@@ -102,7 +102,7 @@ class UserModuleRepository {
       
       // Atualiza para inativo
       moduleState = moduleState.copyWith(
-        isActive: false,
+        isModuleActive: false,
         lastAccessDate: now,
         updatedAt: now,
       );
@@ -217,7 +217,7 @@ class UserModuleRepository {
   Future<Map<String, dynamic>> getModuleStats(String userId) async {
     try {
       final allStates = await getAllModuleStates(userId);
-      final activeStates = allStates.where((state) => state.isActive).toList();
+      final activeStates = allStates.where((state) => state.isModuleActive).toList();
       
       return {
         'totalModules': allStates.length,

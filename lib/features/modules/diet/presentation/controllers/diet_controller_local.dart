@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/diet_service_isar.dart';
+import 'package:disciplinum/features/modules/diet/domain/services/diet_service_local.dart';
 
 /// Estado do Diet
 class DietState {
@@ -27,11 +27,11 @@ class DietState {
   }
 }
 
-/// Controller Riverpod para Diet usando Isar puro
-class DietControllerIsar extends StateNotifier<DietState> {
-  final DietServiceIsar _service;
+/// Controller Riverpod para Diet usando ObjectBox
+class DietControllerLocal extends StateNotifier<DietState> {
+  final DietServiceLocal _service;
   
-  DietControllerIsar(this._service) : super(const DietState()) {
+  DietControllerLocal(this._service) : super(const DietState()) {
     _loadData();
   }
 

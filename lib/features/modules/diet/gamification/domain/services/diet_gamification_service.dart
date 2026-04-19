@@ -98,7 +98,7 @@ class DietGamificationService implements ModuleGamificationInterface {
     return {
       'moduleId': moduleId,
       'moduleName': moduleName,
-      'isActive': _currentState!.isActive,
+      'isModuleActive': _currentState!.isModuleActive,
       'consecutiveDays': _currentState!.consecutiveDays,
       'disciplinumCount': _currentState!.disciplinumCount,
       'earnedInsignias': _currentState!.earnedInsignias,
@@ -170,7 +170,7 @@ class DietGamificationService implements ModuleGamificationInterface {
   DietModuleState? get currentState => _currentState;
 
   /// Verifica se o módulo está ativo
-  bool get isActive => _currentState?.isActive ?? false;
+  bool get isModuleActive => _currentState?.isModuleActive ?? false;
 
   /// Obtém as insignias conquistadas
   Future<List<String>> getEarnedInsignias() async {
@@ -206,7 +206,7 @@ class DietGamificationService implements ModuleGamificationInterface {
         earnedMedalhas: earnedMedalhas,
         consecutiveDays: _currentState?.consecutiveDays ?? 0,
         disciplinumCount: _currentState?.disciplinumCount ?? 0,
-        isActive: earnedInsignias.isNotEmpty,
+        isModuleActive: earnedInsignias.isNotEmpty,
       );
 
       // Salva o estado atualizado
@@ -223,7 +223,7 @@ class DietGamificationService implements ModuleGamificationInterface {
     if (_currentState == null) return {};
 
     return {
-      'isActive': isActive,
+      'isModuleActive': isModuleActive,
       'consecutiveDays': consecutiveDays,
       'disciplinumCount': disciplinumCount,
       'earnedInsigniasCount': _currentState!.earnedInsignias.length,

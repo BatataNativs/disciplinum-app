@@ -6,8 +6,8 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; // Clipboard
 
+import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
-import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; // Import do Widget
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
@@ -15,6 +15,7 @@ import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 
 import 'how_it_works_screen.dart';
+import 'sync_backup_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'secret_menu_screen.dart'; // Importe a nova tela
 
@@ -58,7 +59,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _soundEnabled = NotificationService.soundEnabled;
-  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -115,29 +115,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _sincronizarAgora() async {
-    setState(() => _isSyncing = true);
-
-    final authState = ref.read(authServiceProvider);
-    if (!authState.isAuthenticated) {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-        EnhancedSnackBarHelper.showWarning(
-            context, 'Faça login para sincronizar seus dados na nuvem.');
-      }
-      return;
-    }
-
-    final ok = await ref.read(cloudSyncServiceProvider).syncNow();
-
-    if (!mounted) return;
-    setState(() => _isSyncing = false);
-
-    if (ok) {
-      EnhancedSnackBarHelper.showSuccess(context, 'Dados sincronizados com sucesso!');
-    } else {
-      EnhancedSnackBarHelper.showError(context, 'Não foi possível sincronizar agora.');
-    }
+  void _mostrarSyncBackup() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SyncBackupScreen()),
+    );
   }
 
   void _mostrarDialogoComoFunciona() {
@@ -399,24 +381,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               settingContainer([
                 ListTile(
                   dense: true,
-                  leading: _isSyncing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : Icon(Icons.cloud_sync_outlined,
-                          color: isDark ? Colors.white70 : Colors.black54),
+                  leading: Icon(Icons.cloud_sync_outlined,
+                      color: isDark ? Colors.white70 : Colors.black54),
                   title: Text(
-                    'Sincronizar agora',
+                    'Backup e Sincronização',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  subtitle: const Text('Backup manual na nuvem'),
+                  subtitle: const Text('Backup e segurança na nuvem'),
                   trailing: const Icon(Icons.chevron_right, size: 20),
-                  onTap: _isSyncing ? null : _sincronizarAgora,
+                  onTap: _mostrarSyncBackup,
                 ),
               ]),
               sectionHeader('Suporte e Feedback'),

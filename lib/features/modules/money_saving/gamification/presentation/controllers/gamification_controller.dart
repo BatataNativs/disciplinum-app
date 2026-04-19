@@ -63,7 +63,7 @@ class MoneySavingGamificationController extends ChangeNotifier {
         habitType: 'state_loaded',
         metadata: {
           'streak': _moduleState!.consecutiveDays,
-          'active': _moduleState!.isActive,
+          'active': _moduleState!.isModuleActive,
           'check_ins': _moduleState!.completedChallenges,
         },
       );
@@ -191,12 +191,12 @@ class MoneySavingGamificationController extends ChangeNotifier {
       if (_moduleState == null) {
         // Criar novo estado
         _moduleState = MoneySavingModuleState(
-          isActive: true,
+          isModuleActive: true,
         );
       } else {
         // Ativar estado existente
         _moduleState = _moduleState!.copyWith(
-          isActive: true,
+          isModuleActive: true,
         );
       }
 
@@ -236,7 +236,7 @@ class MoneySavingGamificationController extends ChangeNotifier {
       }
 
       final updatedState = _moduleState!.copyWith(
-        isActive: false,
+        isModuleActive: false,
       );
 
       await _repository.saveMoneySavingState(updatedState);
@@ -272,7 +272,7 @@ class MoneySavingGamificationController extends ChangeNotifier {
       }
 
       final resetState = MoneySavingModuleState(
-        isActive: _moduleState?.isActive ?? false,
+        isModuleActive: _moduleState?.isModuleActive ?? false,
       );
 
       await _repository.saveMoneySavingState(resetState);

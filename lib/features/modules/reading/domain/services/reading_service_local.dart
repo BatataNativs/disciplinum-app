@@ -10,6 +10,7 @@ class ReadingConfig {
   final TimeOfDay reminderTime;
   final bool enableDailyReminder;
   final bool enableStreakReminder;
+  final bool isModuleActive;
   final int currentStreak;
   final DateTime? lastReadingDate;
   final DateTime? longestStreakStart;
@@ -17,12 +18,14 @@ class ReadingConfig {
   final int longestStreakDays;
   final int dailyPagesGoal;
   final int weeklyBooksGoal;
+  final DateTime createdAt;
 
-  const ReadingConfig({
+  ReadingConfig({
     this.enableNotifications = true,
     this.reminderTime = const TimeOfDay(hour: 20, minute: 0),
     this.enableDailyReminder = true,
     this.enableStreakReminder = true,
+    this.isModuleActive = false,
     this.currentStreak = 0,
     this.lastReadingDate,
     this.longestStreakStart,
@@ -30,7 +33,8 @@ class ReadingConfig {
     this.longestStreakDays = 0,
     this.dailyPagesGoal = 20,
     this.weeklyBooksGoal = 1,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
         'enableNotifications': enableNotifications,
@@ -38,6 +42,7 @@ class ReadingConfig {
         'reminderMinute': reminderTime.minute,
         'enableDailyReminder': enableDailyReminder,
         'enableStreakReminder': enableStreakReminder,
+        'isModuleActive': isModuleActive,
         'currentStreak': currentStreak,
         'lastReadingDate': lastReadingDate?.toIso8601String(),
         'longestStreakStart': longestStreakStart?.toIso8601String(),
@@ -45,6 +50,7 @@ class ReadingConfig {
         'longestStreakDays': longestStreakDays,
         'dailyPagesGoal': dailyPagesGoal,
         'weeklyBooksGoal': weeklyBooksGoal,
+        'createdAt': createdAt.toIso8601String(),
       };
 
   factory ReadingConfig.fromJson(Map<String, dynamic> json) => ReadingConfig(
@@ -55,6 +61,7 @@ class ReadingConfig {
         ),
         enableDailyReminder: json['enableDailyReminder'] ?? true,
         enableStreakReminder: json['enableStreakReminder'] ?? true,
+        isModuleActive: json['isModuleActive'] ?? false,
         currentStreak: json['currentStreak'] ?? 0,
         lastReadingDate: json['lastReadingDate'] != null ? DateTime.parse(json['lastReadingDate']) : null,
         longestStreakStart: json['longestStreakStart'] != null ? DateTime.parse(json['longestStreakStart']) : null,
@@ -62,6 +69,7 @@ class ReadingConfig {
         longestStreakDays: json['longestStreakDays'] ?? 0,
         dailyPagesGoal: json['dailyPagesGoal'] ?? 20,
         weeklyBooksGoal: json['weeklyBooksGoal'] ?? 1,
+        createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       );
 
   ReadingConfig copyWith({
@@ -69,6 +77,7 @@ class ReadingConfig {
     TimeOfDay? reminderTime,
     bool? enableDailyReminder,
     bool? enableStreakReminder,
+    bool? isModuleActive,
     int? currentStreak,
     DateTime? lastReadingDate,
     DateTime? longestStreakStart,
@@ -76,12 +85,14 @@ class ReadingConfig {
     int? longestStreakDays,
     int? dailyPagesGoal,
     int? weeklyBooksGoal,
+    DateTime? createdAt,
   }) {
     return ReadingConfig(
       enableNotifications: enableNotifications ?? this.enableNotifications,
       reminderTime: reminderTime ?? this.reminderTime,
       enableDailyReminder: enableDailyReminder ?? this.enableDailyReminder,
       enableStreakReminder: enableStreakReminder ?? this.enableStreakReminder,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStreak: currentStreak ?? this.currentStreak,
       lastReadingDate: lastReadingDate ?? this.lastReadingDate,
       longestStreakStart: longestStreakStart ?? this.longestStreakStart,
@@ -89,16 +100,17 @@ class ReadingConfig {
       longestStreakDays: longestStreakDays ?? this.longestStreakDays,
       dailyPagesGoal: dailyPagesGoal ?? this.dailyPagesGoal,
       weeklyBooksGoal: weeklyBooksGoal ?? this.weeklyBooksGoal,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }
 
-/// Service para Reading usando Isar puro (sem IsarPreferencesRepository)
-class ReadingServiceIsar {
-  static ReadingServiceIsar? _instance;
-  static ReadingServiceIsar get instance => _instance ??= ReadingServiceIsar._internal();
+/// Service para Reading usando ObjectBox
+class ReadingServiceLocal {
+  static ReadingServiceLocal? _instance;
+  static ReadingServiceLocal get instance => _instance ??= ReadingServiceLocal._internal();
   
-  ReadingServiceIsar._internal();
+  ReadingServiceLocal._internal();
 
   final ReadingConfigRepository _repository = ReadingConfigRepository.instance;
 
@@ -108,7 +120,7 @@ class ReadingServiceIsar {
       
       if (entity == null) {
         // Configuração padrão
-        final defaultConfig = const ReadingConfig(
+        final defaultConfig = ReadingConfig(
           enableNotifications: true,
           dailyPagesGoal: 20,
           weeklyBooksGoal: 1,
@@ -126,6 +138,7 @@ class ReadingServiceIsar {
         ),
         enableDailyReminder: entity.enableDailyReminder,
         enableStreakReminder: entity.enableStreakReminder,
+        isModuleActive: entity.isModuleActive,
         currentStreak: entity.currentStreak,
         lastReadingDate: entity.lastReadingDate,
         longestStreakStart: entity.longestStreakStart,
@@ -133,6 +146,7 @@ class ReadingServiceIsar {
         longestStreakDays: entity.longestStreakDays,
         dailyPagesGoal: entity.dailyPagesGoal,
         weeklyBooksGoal: entity.weeklyBooksGoal,
+        createdAt: entity.createdAt,
       );
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar configuração do Reading', error: e);
@@ -151,6 +165,7 @@ class ReadingServiceIsar {
       entity.reminderMinute = config.reminderTime.minute;
       entity.enableDailyReminder = config.enableDailyReminder;
       entity.enableStreakReminder = config.enableStreakReminder;
+      entity.isModuleActive = config.isModuleActive;
       entity.currentStreak = config.currentStreak;
       entity.lastReadingDate = config.lastReadingDate;
       entity.longestStreakStart = config.longestStreakStart;
@@ -158,12 +173,25 @@ class ReadingServiceIsar {
       entity.longestStreakDays = config.longestStreakDays;
       entity.dailyPagesGoal = config.dailyPagesGoal;
       entity.weeklyBooksGoal = config.weeklyBooksGoal;
+      entity.createdAt = config.createdAt;
       
       await _repository.saveConfig(entity);
       
       LoggerService.instance.i('Configuração do Reading salva com sucesso');
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Reading', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> setModuleActive(bool isActive) async {
+    try {
+      final currentConfig = await getConfig();
+      final updatedConfig = currentConfig.copyWith(isModuleActive: isActive);
+      await saveConfig(updatedConfig);
+      LoggerService.instance.i('Estado do módulo Reading atualizado para: $isActive');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar estado do módulo Reading', error: e);
       rethrow;
     }
   }

@@ -29,14 +29,20 @@ class EnhancedSnackBarHelper {
   static void _showOverlay(BuildContext context, String message,
       Color backgroundColor, IconData icon) {
     try {
+      // Capturar MediaQuery antes de criar o OverlayEntry
+      // O contexto do overlay pode não ter MediaQuery
+      final mediaQuery = MediaQuery.maybeOf(context);
+      final bottomPadding = mediaQuery?.padding.bottom ?? 0.0;
+      
       final overlay = Overlay.of(context, rootOverlay: true);
       
       late OverlayEntry entry;
       entry = OverlayEntry(
-        builder: (context) => _OverlayNotification(
+        builder: (overlayContext) => _OverlayNotification(
           message: message,
           backgroundColor: backgroundColor,
           icon: icon,
+          bottomPadding: bottomPadding,
           onDismiss: () {
             if (entry.mounted) {
               entry.remove();
@@ -46,9 +52,9 @@ class EnhancedSnackBarHelper {
       );
 
       overlay.insert(entry);
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Se não encontrar Overlay, usa LoggerService para não quebrar o app
-      LoggerService.instance.e('Snackbar não pôde ser exibido: $message', error: e);
+      LoggerService.instance.e('Snackbar não pôde ser exibido: $message', error: e, stackTrace: stackTrace);
     }
   }
 }
@@ -57,12 +63,14 @@ class _OverlayNotification extends StatefulWidget {
   final String message;
   final Color backgroundColor;
   final IconData icon;
+  final double bottomPadding;
   final VoidCallback onDismiss;
 
   const _OverlayNotification({
     required this.message,
     required this.backgroundColor,
     required this.icon,
+    required this.bottomPadding,
     required this.onDismiss,
   });
 
@@ -117,7 +125,7 @@ class _OverlayNotificationState extends State<_OverlayNotification>
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: MediaQuery.of(context).padding.bottom + 40,
+      bottom: widget.bottomPadding + 40,
       left: 20,
       right: 20,
       child: Material(

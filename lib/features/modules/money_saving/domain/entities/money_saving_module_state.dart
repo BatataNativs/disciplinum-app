@@ -26,7 +26,7 @@ class MoneySavingModuleState implements ModuleStateContract {
   final int bestStreak;
   final DateTime? lastSavingDate;
   final DateTime? startDate;
-  final bool isActive;
+  final bool isModuleActive;
   final String currentStageId;
   final int gridPercentage;
   final bool streakBroken;
@@ -42,7 +42,7 @@ class MoneySavingModuleState implements ModuleStateContract {
     this.bestStreak = 0,
     this.lastSavingDate,
     this.startDate,
-    this.isActive = false,
+    this.isModuleActive = false,
     this.currentStageId = 'bronze',
     this.gridPercentage = 0,
     this.streakBroken = false,
@@ -60,7 +60,7 @@ class MoneySavingModuleState implements ModuleStateContract {
       disciplinumCount: 0,
       totalSavedAmount: 0.0,
       bestStreak: 0,
-      isActive: false,
+      isModuleActive: false,
       currentStageId: 'bronze',
       gridPercentage: 0,
       streakBroken: false,
@@ -107,7 +107,7 @@ class MoneySavingModuleState implements ModuleStateContract {
     int? bestStreak,
     DateTime? lastSavingDate,
     DateTime? startDate,
-    bool? isActive,
+    bool? isModuleActive,
     String? currentStageId,
     int? gridPercentage,
     int? completedChallenges,
@@ -124,7 +124,7 @@ class MoneySavingModuleState implements ModuleStateContract {
       bestStreak: bestStreak ?? this.bestStreak,
       lastSavingDate: lastSavingDate ?? this.lastSavingDate,
       startDate: startDate ?? this.startDate,
-      isActive: isActive ?? this.isActive,
+      isModuleActive: isModuleActive ?? this.isModuleActive,
       currentStageId: currentStageId ?? this.currentStageId,
     );
   }
@@ -145,7 +145,7 @@ class MoneySavingModuleState implements ModuleStateContract {
       ..setField('best_streak', bestStreak)
       ..setField('last_saving_date', lastSavingDate?.toIso8601String())
       ..setField('start_date', startDate?.toIso8601String())
-      ..setField('is_active', isActive)
+      ..setField('is_module_active', isModuleActive)
       ..setStage(currentStage)
       ..setProgressMetric(progressMetrics[0])
       ..setProgressMetric(progressMetrics[1])
@@ -213,7 +213,7 @@ class MoneySavingModuleState implements ModuleStateContract {
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
-      isActive: json['is_active'] as bool? ?? false,
+      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

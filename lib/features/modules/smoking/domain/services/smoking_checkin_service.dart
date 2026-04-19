@@ -1,4 +1,3 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/objectbox.g.dart';
@@ -9,17 +8,11 @@ import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 /// Serviço responsável por registrar e carregar os check-ins diários
 /// do módulo Parar de Fumar (resposta "Sim" na notificação diária).
 class SmokingCheckinService {
-  static const String _prefsKey = 'smoking_checkin_dates';
-  
   final Box<DailyCheckin> _box;
   final CloudSyncService _cloudSync;
-  final SharedPreferences _prefs;
 
-  SmokingCheckinService(ObjectBoxService objectBoxService, this._cloudSync, this._prefs)
-      : _box = objectBoxService.store.box<DailyCheckin>() {
-    // Tentar migração ao inicializar
-    _migrateFromPrefs();
-  }
+  SmokingCheckinService(ObjectBoxService objectBoxService, this._cloudSync)
+      : _box = objectBoxService.store.box<DailyCheckin>();
 
   /// Formata DateTime como string de data (yyyy-MM-dd)
   String _dateKey(DateTime date) =>
@@ -105,42 +98,6 @@ class SmokingCheckinService {
 
     // 2. Limpa Nuvem
     await _cloudSync.clearDailyCheckins(NicheId.smoking);
-  }
-
-  // --- MÉTODOS DE MANUTENÇÃO ---
-
-  /// Migra dados do SharedPreferences para o ObjectBox (uma única vez)
-  Future<void> _migrateFromPrefs() async {
-    try {
-      if (!_prefs.containsKey(_prefsKey)) return;
-
-      final stored = _prefs.getStringList(_prefsKey) ?? [];
-      if (stored.isEmpty) return;
-
-      LoggerService.instance.i('📦 Iniciando migração de SmokingCheckins para ObjectBox (${stored.length} itens)');
-
-      for (final dateStr in stored) {
-        final nicheIdDate = '${NicheId.smoking.index}_$dateStr';
-        final exists = _box.query(DailyCheckin_.nicheIdDate.equals(nicheIdDate))
-            .build()
-            .findFirst();
-
-        if (exists == null) {
-          _box.put(
-            DailyCheckin.create(
-              nicheId: NicheId.smoking,
-              dateStr: dateStr,
-            ),
-          );
-        }
-      }
-
-      // Remover do Prefs após migração bem-sucedida
-      await _prefs.remove(_prefsKey);
-      LoggerService.instance.i('✅ Migração de SmokingCheckins concluída e Prefs limpo.');
-    } catch (e) {
-      LoggerService.instance.e('Erro durante migração de SmokingCheckins', error: e);
-    }
   }
 
   Future<void> _syncObjectBoxFromCloud(List<String> cloudDatesStr) async {
