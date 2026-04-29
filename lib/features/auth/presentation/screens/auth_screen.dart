@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/app/router/app_router.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
@@ -78,11 +79,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         _passwordController.text,
       );
       if (success && mounted) {
-        // Se conseguimos logar, apenas removemos a tela de login se ela foi sobreposta
-        // Caso contrário, o AuthWrapper na raiz já trocará para o HomeScreen
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
+        // Login bem-sucedido - navega para AuthWrapper (que leva para Home)
+        // Limpa toda a pilha de navegação para evitar voltar para auth/onboarding
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRouter.authWrapper,
+          (route) => false,
+        );
       }
     } else {
       success = await authService.signup(

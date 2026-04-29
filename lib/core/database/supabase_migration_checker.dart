@@ -32,32 +32,24 @@ class SupabaseMigrationChecker {
     try {
       final supabase = Supabase.instance.client;
       final userId = supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         LoggerService.instance.w('Usuário não autenticado para verificar RLS');
         return false;
       }
 
-      // Tenta inserir um registro de teste
+      // Tenta fazer upsert (insert ou update) - testa se consegue escrever na tabela
       final testData = {
         'user_id': userId,
-        'state_data': {'test': true},
+        'state_data': {'test': true, 'timestamp': DateTime.now().toIso8601String()},
+        'updated_at': DateTime.now().toIso8601String(),
       };
 
-      final result = await supabase
+      await supabase
           .from('smoking_gamification_states')
-          .insert(testData)
-          .select('id')
-          .maybeSingle();
+          .upsert(testData, onConflict: 'user_id');
 
-      // Se conseguiu inserir, remove o teste
-      if (result != null) {
-        await supabase
-            .from('smoking_gamification_states')
-            .delete()
-            .eq('id', result['id']);
-      }
-
+      // Se chegou aqui, as políticas RLS estão OK
       return true;
     } catch (e) {
       LoggerService.instance.e('Políticas RLS não configuradas corretamente', error: e);

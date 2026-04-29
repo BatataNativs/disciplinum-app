@@ -57,8 +57,18 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
     try {
       _setStatus(RepositoryStatus.busy);
       
+      // Busca se já existe algum objeto no box
+      final existing = box.getAll().firstOrNull;
+      
       final entity = SpendingGamificationEntity.fromModuleState('', state);
-      entity.id = 1;
+      
+      // Se já existe, usa o mesmo ID para atualizar
+      // Se não existe, usa ID 0 para deixar ObjectBox gerar novo ID
+      if (existing != null) {
+        entity.id = existing.id;
+      } else {
+        entity.id = 0; // ObjectBox vai gerar novo ID
+      }
 
       box.put(entity);
 
@@ -149,11 +159,14 @@ class SpendingModuleRepository implements ModuleRepositoryContract<SpendingModul
       
       if (currentUserId == null) throw Exception('Usuário não autenticado');
 
-      await supabase.from('spending_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      await supabase.from('spending_gamification_states').upsert(
+        {
+          'user_id': currentUserId,
+          'state_data': state.toJson(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'user_id',
+      );
 
       LoggerService.instance.gamification('☁️ SpendingModuleState sincronizado');
       _setStatus(RepositoryStatus.ready);

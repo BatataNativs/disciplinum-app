@@ -15,7 +15,7 @@ class BingeEatingSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Compulsão alimentar'];
+    final List<String> options = ['Compulsão alimentar', 'Como funciona'];
 
     return Container(
       height: 44,

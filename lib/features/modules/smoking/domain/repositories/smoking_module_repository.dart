@@ -66,6 +66,7 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
         ..startDate = state.startDate
         ..dailyCost = state.dailyCost
         ..packCost = state.packCost
+        ..isModuleActive = state.isModuleActive
         ..id = 1
         ..touch();
 
@@ -95,7 +96,7 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
       _setStatus(RepositoryStatus.ready);
 
       if (entity != null) {
-        return SmokingModuleState.fromJson(entity.toJson());
+        return entity.toModuleState();
       }
       return null;
     } catch (e) {
@@ -183,7 +184,16 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
       final supabase = Supabase.instance.client;
       final currentUserId = supabase.auth.currentUser?.id;
       
-      if (currentUserId == null) return null;
+      LoggerService.instance.gamification('🌐 loadFromRemote: userIdParam=$userId, currentUserId=$currentUserId');
+      
+      if (currentUserId == null) {
+        LoggerService.instance.w('⚠️ loadFromRemote: currentUserId é null, abortando');
+        return null;
+      }
+      
+      if (currentUserId != userId) {
+        LoggerService.instance.w('⚠️ loadFromRemote: currentUserId($currentUserId) != userId($userId)');
+      }
 
       final response = await supabase
           .from('smoking_gamification_states')
@@ -194,11 +204,16 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
       _setStatus(RepositoryStatus.ready);
       
       if (response != null && response['state_data'] != null) {
-        return SmokingModuleState.fromJson(response['state_data']);
+        final state = SmokingModuleState.fromJson(response['state_data']);
+        LoggerService.instance.gamification('✅ loadFromRemote: dados carregados - isModuleActive=${state.isModuleActive}, updatedAt=${state.updatedAt}');
+        return state;
       }
+      
+      LoggerService.instance.gamification('⚠️ loadFromRemote: nenhum dado encontrado na nuvem');
       return null;
     } catch (e) {
       _setStatus(RepositoryStatus.offline);
+      LoggerService.instance.e('❌ loadFromRemote erro: $e');
       throw RepositoryException(
         message: 'Erro ao carregar do remoto: $e',
         moduleId: moduleId,
@@ -264,31 +279,41 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
   Future<SmokingModuleState> fullSync(String userId) async {
     try {
       _setStatus(RepositoryStatus.syncing);
+      LoggerService.instance.gamification('🔄 fullSync START: userId=$userId');
+      
       final local = await loadLocal(userId);
       final remote = await loadFromRemote(userId);
+      
+      LoggerService.instance.gamification('📊 fullSync STATUS: local=${local != null ? 'EXISTS(isActive=${local.isModuleActive})' : 'NULL'}, remote=${remote != null ? 'EXISTS(isActive=${remote.isModuleActive})' : 'NULL'}');
 
       SmokingModuleState result;
       if (local == null && remote == null) {
+        LoggerService.instance.gamification('📝 fullSync PATH: local=null, remote=null -> Criando novo estado INATIVO');
         result = SmokingModuleState();
         await saveLocal(result);
         await syncToRemote(userId, result);
       } else if (local == null && remote != null) {
+        LoggerService.instance.gamification('☁️ fullSync PATH: local=null, remote=EXISTS -> Restaurando da nuvem (isActive=${remote.isModuleActive})');
         result = remote;
         await saveLocal(result);
       } else if (local != null && remote == null) {
+        LoggerService.instance.gamification('💾 fullSync PATH: local=EXISTS, remote=null -> Enviando local para nuvem');
         result = local;
         await syncToRemote(userId, result);
       } else {
+        LoggerService.instance.gamification('⚡ fullSync PATH: local=EXISTS, remote=EXISTS -> Resolvendo conflito');
         result = await resolveConflict(local!, remote!);
         await saveLocal(result);
         await syncToRemote(userId, result);
       }
 
-      LoggerService.instance.gamification('🔄 SmokingModuleState full sync completo');
+      LoggerService.instance.gamification('✅ fullSync END: result.isActive=${result.isModuleActive}');
       _setStatus(RepositoryStatus.ready);
       return result;
-    } catch (e) {
+    } catch (e, stackTrace) {
       _setStatus(RepositoryStatus.error);
+      LoggerService.instance.e('❌ fullSync ERRO: $e');
+      LoggerService.instance.d('StackTrace: $stackTrace');
       throw RepositoryException(
         message: 'Erro no full sync: $e',
         moduleId: moduleId,

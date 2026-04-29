@@ -14,11 +14,16 @@ class DnsResolver {
 
   // Cache válido por 30 minutos
   static const Duration _cacheDuration = Duration(minutes: 30);
+  static const Duration _failureBackoff = Duration(minutes: 2); // Tempo entre tentativas após falha
   static const String _cacheKey = 'dns_cache_persistent';
 
   // Cache de resoluções bem-sucedidas
   final Map<String, List<InternetAddress>> _dnsCache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
+  
+  // Rastreamento de falhas para circuit breaker
+  final Map<String, DateTime> _lastFailure = {};
+  final Map<String, int> _consecutiveFailures = {};
 
   /// Carrega cache persistente do ObjectBoxPreferencesRepository
   Future<void> _loadPersistedCache() async {
@@ -69,6 +74,16 @@ class DnsResolver {
 
   /// Resolve hostname com múltiplas estratégias
   Future<List<InternetAddress>> resolveHost(String host) async {
+    // Verificar circuit breaker - se falhou recentemente, usar cache ou falhar rápido
+    if (_shouldSkipResolution(host)) {
+      final expiredCache = _getExpiredAddresses(host);
+      if (expiredCache.isNotEmpty) {
+        LoggerService.instance.d('DNS: Usando cache expirado para $host (backoff ativo)');
+        return expiredCache;
+      }
+      throw SocketException('DNS resolution skipped for $host (backoff)');
+    }
+
     // 1. Tentar cache primeiro
     final cached = _getCachedAddresses(host);
     if (cached.isNotEmpty) {
@@ -81,11 +96,13 @@ class DnsResolver {
       final addresses = await InternetAddress.lookup(host);
       if (addresses.isNotEmpty) {
         _cacheAddresses(host, addresses);
+        _recordSuccess(host);
         LoggerService.instance.d('DNS resolvido para $host: ${addresses.first.address}');
         return addresses;
       }
     } catch (e) {
-      LoggerService.instance.w('DNS padrão falhou para $host: $e');
+      _recordFailure(host);
+      LoggerService.instance.d('DNS padrão falhou para $host: $e');
     }
 
     // 3. Tentar resolução com diferentes tipos (IPv4/IPv6)
@@ -93,11 +110,13 @@ class DnsResolver {
       final ipv4Addresses = await InternetAddress.lookup(host, type: InternetAddressType.IPv4);
       if (ipv4Addresses.isNotEmpty) {
         _cacheAddresses(host, ipv4Addresses);
+        _recordSuccess(host);
         LoggerService.instance.d('DNS IPv4 resolvido para $host: ${ipv4Addresses.first.address}');
         return ipv4Addresses;
       }
     } catch (e) {
-      LoggerService.instance.w('DNS IPv4 falhou para $host: $e');
+      _recordFailure(host);
+      LoggerService.instance.d('DNS IPv4 falhou para $host: $e');
     }
 
     // 4. Tentar com Google DNS (fallback)
@@ -105,22 +124,49 @@ class DnsResolver {
       final googleDnsAddresses = await _resolveWithGoogleDns(host);
       if (googleDnsAddresses.isNotEmpty) {
         _cacheAddresses(host, googleDnsAddresses);
+        _recordSuccess(host);
         LoggerService.instance.d('DNS Google resolvido para $host: ${googleDnsAddresses.first.address}');
         return googleDnsAddresses;
       }
     } catch (e) {
-      LoggerService.instance.w('DNS Google falhou para $host: $e');
+      _recordFailure(host);
+      LoggerService.instance.d('DNS Google falhou para $host: $e');
     }
 
     // 5. Retornar cache antigo se disponível (mesmo expirado)
     final expiredCache = _getExpiredAddresses(host);
     if (expiredCache.isNotEmpty) {
-      LoggerService.instance.w('Usando cache DNS expirado para $host');
+      LoggerService.instance.w('Usando cache DNS expirado para $host (offline mode)');
       return expiredCache;
     }
 
-    LoggerService.instance.e('DNS não conseguiu resolver $host');
+    _recordFailure(host);
+    LoggerService.instance.d('DNS não conseguiu resolver $host (dispositivo offline?)');
     throw SocketException('Failed to resolve host: $host');
+  }
+
+  /// Verifica se deve pular resolução (circuit breaker)
+  bool _shouldSkipResolution(String host) {
+    final lastFailure = _lastFailure[host];
+    if (lastFailure == null) return false;
+    
+    final failures = _consecutiveFailures[host] ?? 0;
+    if (failures < 3) return false; // Permitir até 3 falhas
+    
+    // Após 3 falhas, esperar 2 minutos antes de tentar novamente
+    return DateTime.now().difference(lastFailure) < _failureBackoff;
+  }
+
+  /// Registra falha de resolução
+  void _recordFailure(String host) {
+    _lastFailure[host] = DateTime.now();
+    _consecutiveFailures[host] = (_consecutiveFailures[host] ?? 0) + 1;
+  }
+
+  /// Registra sucesso de resolução
+  void _recordSuccess(String host) {
+    _consecutiveFailures.remove(host);
+    _lastFailure.remove(host);
   }
 
   /// Resolve usando Google DNS (8.8.8.8)

@@ -13,7 +13,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
   final bool gamificationRunning;
   final VoidCallback onToggleModule;
   final VoidCallback onSaveSettings;
-  final BuildContext context;
 
   const StopSmokingActionsWidget({
     super.key,
@@ -26,46 +25,29 @@ class StopSmokingActionsWidget extends StatelessWidget {
     required this.gamificationRunning,
     required this.onToggleModule,
     required this.onSaveSettings,
-    required this.context,
   });
 
   @override
   Widget build(BuildContext context) {
     if (selectedIndex == 0) {
-      return _buildTabActions(0);
-    } else {
+      // 0: Parar de fumar (módulo) - mostra botões de ação
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTabActions(1),
-          _buildBottomButtons(),
+          _buildTabActions(0),
+          _buildBottomButtons(context),
         ],
       );
+    } else {
+      // 1: Como funciona - mostra botão para voltar ao módulo
+      return _buildTabActions(1);
     }
   }
 
   Widget _buildTabActions(int index) {
     switch (index) {
       case 0:
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: 'Começar',
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (pageController.hasClients) {
-                pageController.animateToPage(
-                  1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                );
-              }
-            },
-          ),
-        );
-      case 1:
+        // 0: Parar de fumar (módulo) - botão de salvar
         return Padding(
           padding: const EdgeInsets.all(16),
           child: ModernStartButton(
@@ -76,12 +58,32 @@ class StopSmokingActionsWidget extends StatelessWidget {
             onTap: isSaving ? () {} : onSaveSettings,
           ),
         );
+      case 1:
+        // 1: Como funciona - botão para voltar ao módulo
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.rocket_launch_rounded,
+            label: 'Entendi!',
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: () {
+              if (pageController.hasClients) {
+                pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            },
+          ),
+        );
       default:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _buildBottomButtons() {
+  Widget _buildBottomButtons(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

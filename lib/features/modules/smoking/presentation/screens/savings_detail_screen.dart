@@ -5,6 +5,7 @@ import 'package:disciplinum/features/modules/smoking/domain/models/smoking_setti
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
 
 class SavingsDetailScreen extends ConsumerStatefulWidget {
   final SmokingSettingsModel settings;
@@ -77,7 +78,13 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
         ? _currentSettings.currency
         : (_currentSettings.lastCurrency ?? _currentSettings.currency);
     
-    LoggerService.instance.d('💰 SavingsDetailScreen: build called - activeTab=$_activeTab, currency=$cur');
+    // Usar dados do gamification state para projeções
+    final gamificationNotifier = ref.watch(smokingGamificationNotifierProvider);
+    final gamificationState = gamificationNotifier.gamification;
+    final dailyCost = gamificationState?.dailyCost ?? 0.0;
+    final consecutiveDays = gamificationState?.consecutivePositiveDays ?? 0;
+    
+    LoggerService.instance.d('💰 SavingsDetailScreen: build called - activeTab=$_activeTab, currency=$cur, dailyCost=$dailyCost, consecutiveDays=$consecutiveDays');
 
     // CORREÇÃO: Formatar moeda corretamente
     String formatCurrency(double amount, String currency) {
@@ -110,14 +117,10 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
     }
 
     final saved = _activeTab == 0
-        ? (widget.isActive ? _currentSettings.moneySavedTotal : 0.0)
+        ? (widget.isActive ? (dailyCost * consecutiveDays) : 0.0)
         : (_currentSettings.lastSavedTotal ?? 0);
 
-    final monthly = _activeTab == 0
-        ? _currentSettings.monthlySavings
-        : ((_currentSettings.lastPackPrice ?? 0) *
-            (_currentSettings.lastPacksPerDay ?? 0) *
-            30);
+    final monthly = dailyCost * 30;
 
     final yearly = monthly * 12;
 
@@ -259,17 +262,17 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                 _buildDetailRow(
                   context,
                   "Custo do Maço",
-                  formatCurrency(_activeTab == 0 ? _currentSettings.packPrice : _currentSettings.lastPackPrice!, cur),
+                  formatCurrency(_activeTab == 0 ? gamificationState?.packCost ?? _currentSettings.packPrice : _currentSettings.lastPackPrice!, cur),
                 ),
                 _buildDetailRow(
                   context,
                   "Maços/Dia (antes)",
-                  "${_activeTab == 0 ? _currentSettings.packsPerDay : _currentSettings.lastPacksPerDay}",
+                  "${_activeTab == 0 ? (dailyCost / (gamificationState?.packCost ?? 1)).toStringAsFixed(1) : _currentSettings.lastPacksPerDay}",
                 ),
                 _buildDetailRow(
                   context,
                   "Economia Diária",
-                  formatCurrency((_activeTab == 0 ? _currentSettings.packPrice : _currentSettings.lastPackPrice!) * (_activeTab == 0 ? _currentSettings.packsPerDay : _currentSettings.lastPacksPerDay!), cur),
+                  formatCurrency(dailyCost, cur),
                 ),
                 _buildDetailRow(context, "Economia Mensal",
                     formatCurrency(monthly, cur)),

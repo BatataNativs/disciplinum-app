@@ -1,5 +1,6 @@
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/contract_helpers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Estado do módulo Money Saving implementando [ModuleStateContract]
 ///
@@ -186,34 +187,58 @@ class MoneySavingModuleState implements ModuleStateContract {
   }
 
   /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory MoneySavingModuleState.fromJson(Map<String, dynamic> json) {
-    // Valida conformidade com contrato
-    ContractComplianceValidator.assertValid(json, 'money_saving');
+    // Helper para ler campo em snake_case ou camelCase
+    T? readField<T>(String snakeCase, String camelCase) {
+      return (json[snakeCase] as T?) ?? (json[camelCase] as T?);
+    }
+
+    // Verifica se é um JSON antigo (camelCase)
+    final isLegacyFormat = json.containsKey('totalSavedAmount') || json.containsKey('consecutiveDays');
+    
+    if (isLegacyFormat) {
+      LoggerService.instance.w('⚠️ MoneySavingModuleState.fromJson: Detectado formato camelCase (legacy). Migrando dados...');
+    }
+
+    // Extrai timestamps com fallback para now() se não existirem (backward compatibility)
+    final createdAt = json['created_at'] != null 
+        ? DateTime.parse(json['created_at'] as String)
+        : (json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now());
+    
+    final updatedAt = json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : (json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now());
 
     return MoneySavingModuleState(
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       earnedInsignias:
-          (json['earned_insignias'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_insignias', 'earnedInsignias'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
       earnedMedalhas:
-          (json['earned_medalhas'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_medalhas', 'earnedMedalhas'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
-      consecutiveDays: json['consecutive_days'] as int? ?? 0,
-      disciplinumCount: json['disciplinum_count'] as int? ?? 0,
-      totalSavedAmount: (json['total_saved_amount'] as num?)?.toDouble() ?? 0.0,
-      bestStreak: json['best_streak'] as int? ?? 0,
-      lastSavingDate: json['last_saving_date'] != null
-          ? DateTime.parse(json['last_saving_date'] as String)
+      consecutiveDays: readField<int>('consecutive_days', 'consecutiveDays') ?? 0,
+      disciplinumCount: readField<int>('disciplinum_count', 'disciplinumCount') ?? 0,
+      totalSavedAmount: (readField<num>('total_saved_amount', 'totalSavedAmount'))?.toDouble() ?? 0.0,
+      bestStreak: readField<int>('best_streak', 'bestStreak') ?? 0,
+      lastSavingDate: readField<String>('last_saving_date', 'lastSavingDate') != null
+          ? DateTime.parse(readField<String>('last_saving_date', 'lastSavingDate')!)
           : null,
-      startDate: json['start_date'] != null
-          ? DateTime.parse(json['start_date'] as String)
+      startDate: readField<String>('start_date', 'startDate') != null
+          ? DateTime.parse(readField<String>('start_date', 'startDate')!)
           : null,
-      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
+      isModuleActive: readField<bool>('is_module_active', 'isModuleActive') ?? 
+                      readField<bool>('is_active', 'isActive') ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

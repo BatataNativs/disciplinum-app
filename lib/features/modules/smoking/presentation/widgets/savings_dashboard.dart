@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
-class SavingsDashboard extends StatelessWidget {
+class SavingsDashboard extends ConsumerWidget {
   final SmokingSettingsModel settings;
   final bool compact;
   final bool isActive;
@@ -15,11 +18,23 @@ class SavingsDashboard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currencyFormat =
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    
+    // Usar dados do gamification state para economia real
+    final gamificationNotifier = ref.watch(smokingGamificationNotifierProvider);
+    final gamificationState = gamificationNotifier.gamification;
+    
+    LoggerService.instance.d('💰 SavingsDashboard: dailyCost=${gamificationState?.dailyCost}, consecutiveDays=${gamificationState?.consecutivePositiveDays}');
+    
     // Se o módulo não estiver rodando, a economia atual "ativa" é zero.
-    final saved = isActive ? settings.moneySavedTotal : 0.0;
+    final saved = isActive && gamificationState != null
+        ? (gamificationState.dailyCost * gamificationState.consecutivePositiveDays)
+        : 0.0;
+    
+    final dailyCost = gamificationState?.dailyCost ?? 0.0;
+    final monthly = dailyCost * 30;
 
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 20),
@@ -56,13 +71,13 @@ class SavingsDashboard extends StatelessWidget {
           if (compact) ...[
             const SizedBox(height: 8),
             Text(
-              "Mensal: ${currencyFormat.format(settings.monthlySavings)}",
+              "Mensal: ${currencyFormat.format(monthly)}",
               style: const TextStyle(color: Colors.white54, fontSize: 10),
             ),
           ] else ...[
             const SizedBox(height: 10),
             Text(
-              "Economia mensal estimada: ${currencyFormat.format(settings.monthlySavings)}",
+              "Economia mensal estimada: ${currencyFormat.format(monthly)}",
               style: const TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ]

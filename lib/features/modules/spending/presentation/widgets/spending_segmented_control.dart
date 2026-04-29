@@ -17,7 +17,7 @@ class SpendingSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Controlar Gastos'];
+    final List<String> options = ['Controlar Gastos', 'Como Funciona'];
 
     return Container(
       height: 44,

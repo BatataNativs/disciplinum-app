@@ -1,6 +1,8 @@
 import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/meal_entry_entity.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository para gerenciar registros de refeições
 class MealEntryRepository {
@@ -156,5 +158,112 @@ class MealEntryRepository {
     );
 
     await saveMeal(updated);
+  }
+
+  // ===== SINCRONIZAÇÃO COM CLOUD (Supabase) =====
+
+  /// Sincroniza todas as refeições do usuário com o Supabase
+  Future<void> syncWithSupabase(String userId) async {
+    try {
+      // Busca todas as refeições do usuário (não só de uma data)
+      final query = _box.query(MealEntryEntity_.userId.equals(userId)).build();
+      final meals = query.find();
+      query.close();
+
+      final mealsData = meals.map((meal) => {
+        'id': meal.id,
+        'user_id': userId,
+        'date': meal.date.toIso8601String(),
+        'meal_name': meal.mealName,
+        'planned_time': meal.plannedTime.toIso8601String(),
+        'actual_time': meal.actualTime?.toIso8601String(),
+        'was_on_time': meal.wasOnTime,
+        'was_completed': meal.wasCompleted,
+        'calories': meal.calories,
+        'notes': meal.notes,
+        'created_at': meal.createdAt.toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).toList();
+
+      await Supabase.instance.client.from('user_module_settings').upsert({
+        'user_id': userId,
+        'module_id': 'diet_meals',
+        'meals_data': mealsData,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id, module_id');
+
+      LoggerService.instance.i('${meals.length} refeições sincronizadas com Supabase');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao sincronizar refeições com Supabase', error: e);
+    }
+  }
+
+  /// Carrega refeições do Supabase
+  Future<List<MealEntryEntity>> loadFromSupabase(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('user_module_settings')
+          .select()
+          .eq('user_id', userId)
+          .eq('module_id', 'diet_meals')
+          .maybeSingle();
+
+      if (response == null || response['meals_data'] == null) {
+        return [];
+      }
+
+      final mealsData = response['meals_data'] as List<dynamic>;
+      final meals = mealsData.map((data) {
+        final entity = MealEntryEntity(
+          userId: userId,
+          date: DateTime.parse(data['date']),
+          mealName: data['meal_name'],
+          plannedTime: DateTime.parse(data['planned_time']),
+        );
+        entity.id = data['id'] ?? 0;
+        entity.actualTime = data['actual_time'] != null 
+            ? DateTime.parse(data['actual_time']) 
+            : null;
+        entity.wasOnTime = data['was_on_time'] ?? false;
+        entity.wasCompleted = data['was_completed'] ?? false;
+        entity.calories = data['calories'];
+        entity.notes = data['notes'];
+        entity.createdAt = data['created_at'] != null 
+            ? DateTime.parse(data['created_at']) 
+            : DateTime.now();
+        entity.updatedAt = data['updated_at'] != null 
+            ? DateTime.parse(data['updated_at']) 
+            : DateTime.now();
+        
+        return entity;
+      }).toList();
+
+      LoggerService.instance.i('${meals.length} refeições carregadas do Supabase');
+      return meals;
+    } catch (e) {
+      LoggerService.instance.e('Erro ao carregar refeições do Supabase', error: e);
+      return [];
+    }
+  }
+
+  /// Sincronização bidirecional completa
+  Future<void> performFullSync(String userId) async {
+    try {
+      // Carrega da nuvem primeiro
+      final cloudMeals = await loadFromSupabase(userId);
+      
+      if (cloudMeals.isNotEmpty) {
+        // Salva localmente
+        for (final meal in cloudMeals) {
+          _box.put(meal);
+        }
+        LoggerService.instance.i('Sincronização: ${cloudMeals.length} refeições da nuvem salvas localmente');
+      } else {
+        // Se não tem na nuvem, envia os locais
+        await syncWithSupabase(userId);
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro na sincronização completa de refeições', error: e);
+    }
   }
 }

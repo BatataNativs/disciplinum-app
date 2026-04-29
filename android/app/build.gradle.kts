@@ -1,4 +1,5 @@
 import java.util.Base64
+import org.gradle.api.file.RelativePath
 
 val dartEnvironmentVariables = mutableMapOf<String, String>()
 if (project.hasProperty("dart-defines")) {
@@ -88,14 +89,49 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
-// Sync APKs to location where Flutter expects them (fix for AGP 8.x + Flutter)
+// Workaround for Flutter AGP 8.x APK location issue
+// See: https://github.com/flutter/flutter/issues/174620
+// Flutter expects APKs at <project_root>/build/app/outputs/flutter-apk/
+// but AGP 8.x generates them at android/app/build/outputs/apk/
+val flutterOutDir = layout.buildDirectory.dir("outputs/apk").get().asFile
+val cliOutDir = file("${project.projectDir.parentFile.parentFile}/build/app/outputs/flutter-apk")
+
 tasks.register<Copy>("syncFlutterApks") {
-    from(file("$buildDir/outputs/flutter-apk"))
-    into(file("${rootDir.parentFile}/build/app/outputs/flutter-apk"))
-    doFirst { file("${rootDir.parentFile}/build/app/outputs/flutter-apk").mkdirs() }
+    group = "flutter"
+    description = "Syncs APKs to Flutter's expected location"
+
+    from(flutterOutDir) {
+        include("**/*.apk")
+    }
+    into(cliOutDir)
+
+    // Flatten directory structure - copy APKs directly to target dir
+    eachFile {
+        val segments = relativePath.segments
+        if (segments.size > 1) {
+            relativePath = RelativePath(true, segments.last())
+        }
+    }
+    includeEmptyDirs = false
+
+    doFirst {
+        cliOutDir.mkdirs()
+        logger.lifecycle("[patch] syncFlutterApks: from=$flutterOutDir -> to=$cliOutDir")
+    }
+    doLast {
+        logger.lifecycle("[patch] syncFlutterApks: done")
+    }
 }
 
+// Hook sync task to all assemble tasks
 afterEvaluate {
-    tasks.named("assembleDebug").get().finalizedBy("syncFlutterApks")
-    tasks.named("assembleRelease").get().finalizedBy("syncFlutterApks")
+    tasks.named("assembleDebug").configure {
+        finalizedBy("syncFlutterApks")
+    }
+    tasks.named("assembleRelease").configure {
+        finalizedBy("syncFlutterApks")
+    }
+    tasks.named("assembleProfile").configure {
+        finalizedBy("syncFlutterApks")
+    }
 }

@@ -2,6 +2,7 @@ import 'package:disciplinum/features/notifications/presentation/widgets/notifica
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart' show NicheId;
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -28,70 +29,87 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
-    final smokingNotifier = ref.read(smokingGamificationNotifierProvider.notifier);
-    await smokingNotifier.loadGamification();
-    final gamificationState = ref.read(smokingGamificationNotifierProvider);
-    
-    final iap = ref.read(iapServiceProvider);
+    try {
+      final smokingNotifier = ref.read(smokingGamificationNotifierProvider.notifier);
+      await smokingNotifier.loadGamification();
+      final gamificationState = ref.read(smokingGamificationNotifierProvider);
+      
+      final iap = ref.read(iapServiceProvider);
 
-    // Niche ID + 100 para motivação
-    final nicheIdMotivation = _niche.id + 100;
-    final serverTimes =
-        await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheIdMotivation);
-    // Carrega frases customizadas do estado local
-    final customMessages = gamificationState.gamification?.customMessages ?? {};
+      // Niche ID + 100 para motivação
+      final nicheIdMotivation = _niche.id + 100;
+      final serverTimes =
+          await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(nicheId: nicheIdMotivation);
+      // Carrega frases customizadas do estado local
+      final customMessages = gamificationState.gamification?.customMessages ?? {};
 
-    // Verificar desbloqueio local uma vez para todos os slots
-    final localUnlock = await ref.read(moduleUnlockRepositoryProvider).isUnlocked(
-      _niche.nicheId.id.toString(), 
-      'motivation_phrases',
-    );
-    final canCustomize = iap.isMotivationPhrasesUnlocked || localUnlock;
+      // Verificar desbloqueio local uma vez para todos os slots
+      final localUnlock = await ref.read(moduleUnlockRepositoryProvider).isUnlocked(
+        _niche.nicheId.id.toString(), 
+        'motivation_phrases',
+      );
+      final canCustomize = iap.isMotivationPhrasesUnlocked || localUnlock;
 
-    setState(() {
-      _slots = [];
+      if (mounted) {
+        setState(() {
+          _slots = [];
 
-      if (serverTimes.isEmpty) {
-        // Se não tiver nada salvo, NÃO cria slot padrão automaticamente
-        // Isso evita o problema do horário 09:00 "preso"
-        // O usuário pode adicionar manualmente se quiser
-      } else {
-        for (int i = 0; i < serverTimes.length; i++) {
-          final t = serverTimes[i];
-
-          String phraseText;
-          final nichePhrases = customMessages[_niche.nicheId.id.toString()] ?? [];
-          
-          if (canCustomize) {
-            // Se for Personalização, tenta pegar a frase customizada salva
-            phraseText = (i < nichePhrases.length)
-                ? nichePhrases[i]
-                : GamificationMessages.getModuleMessage(
-                    _niche.nicheId,
-                    isUnlocked: canCustomize,
-                    customMessages: {},
-                  );
+          if (serverTimes.isEmpty) {
+            // Se não tiver nada salvo, NÃO cria slot padrão automaticamente
+            // Isso evita o problema do horário 09:00 "preso"
+            // O usuário pode adicionar manualmente se quiser
           } else {
-            // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
-            phraseText = GamificationMessages.getModuleMessage(
-              _niche.nicheId,
-              isUnlocked: canCustomize,
-              customMessages: {},
-            );
-          }
+            for (int i = 0; i < serverTimes.length; i++) {
+              final t = serverTimes[i];
 
-          _slots.add(PhraseSlot(
-            text: phraseText,
-            time: TimeOfDay(hour: t.hour, minute: t.minute),
-          ));
-        }
+              String phraseText;
+              final nichePhrases = customMessages[_niche.nicheId.id.toString()] ?? [];
+              
+              if (canCustomize) {
+                // Se for Personalização, tenta pegar a frase customizada salva
+                phraseText = (i < nichePhrases.length)
+                    ? nichePhrases[i]
+                    : GamificationMessages.getModuleMessage(
+                        _niche.nicheId,
+                        isUnlocked: canCustomize,
+                        customMessages: {},
+                      );
+              } else {
+                // Se for free, FORÇA a frase padrão, mesmo que tenha algo customizado salvo
+                phraseText = GamificationMessages.getModuleMessage(
+                  _niche.nicheId,
+                  isUnlocked: canCustomize,
+                  customMessages: {},
+                );
+              }
+
+              _slots.add(PhraseSlot(
+                text: phraseText,
+                time: TimeOfDay(hour: t.hour, minute: t.minute),
+              ));
+            }
+          }
+          _isLoading = false;
+        });
       }
-      _isLoading = false;
-    });
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('Erro ao carregar dados de notificações', error: e, stackTrace: stackTrace);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _slots = [];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _saveData() async {
@@ -234,11 +252,18 @@ class _FrasesMotivacionaisScreenState extends ConsumerState<FrasesMotivacionaisS
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: Image.asset(
-                        'assets/icons/frasesmotivacionais.png',
+                      child: Container(
                         width: 120,
                         height: 120,
-                        fit: BoxFit.contain,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.notifications_active_rounded,
+                          size: 64,
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

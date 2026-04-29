@@ -48,19 +48,31 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
     try {
       _setStatus(RepositoryStatus.busy);
       
+      final store = ObjectBoxService.instance.store;
+      final box = store.box<ReadingGamificationEntity>();
+      
+      // Busca se já existe algum objeto no box
+      final existing = box.getAll().firstOrNull;
+      
       final entity = ReadingGamificationEntity()
         ..earnedInsigniasList = state.earnedInsignias
         ..earnedMedalhasList = state.earnedMedalhas
         ..consecutiveDays = state.consecutiveDays
         ..lastReadingDate = state.lastReadingDate
         ..startDate = state.startDate
-        ..id = 1
         ..touch();
+      
+      // Se já existe, usa o mesmo ID para atualizar
+      // Se não existe, usa ID 0 para deixar ObjectBox gerar novo ID
+      if (existing != null) {
+        entity.id = existing.id;
+      } else {
+        entity.id = 0; // ObjectBox vai gerar novo ID
+      }
 
-      final store = ObjectBoxService.instance.store;
-      store.box<ReadingGamificationEntity>().put(entity);
+      box.put(entity);
 
-      LoggerService.instance.gamification('✅ ReadingModuleState salvo localmente');
+      LoggerService.instance.gamification('✅ ReadingModuleState salvo localmente (id=${entity.id})');
       _setStatus(RepositoryStatus.ready);
       return state;
     } catch (e) {
@@ -83,9 +95,9 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
       final entity = store.box<ReadingGamificationEntity>().get(1);
 
       _setStatus(RepositoryStatus.ready);
-      
+
       if (entity != null) {
-        return ReadingModuleState.fromJson(entity.toJson());
+        return entity.toModuleState();
       }
       return null;
     } catch (e) {

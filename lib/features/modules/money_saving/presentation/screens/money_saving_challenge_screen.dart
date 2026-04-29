@@ -579,25 +579,7 @@ class _MoneySavingChallengeScreenState
               ),
               Center(
                 child: _selectedIndex == 0
-                    ? Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: ModernStartButton(
-                          icon: Icons.rocket_launch_rounded,
-                          label: 'Começar',
-                          color: const Color(0xFF6366F1),
-                          isDark: isDark,
-                          onTap: () {
-                            if (_pageController.hasClients) {
-                              _pageController.animateToPage(1,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutCubic);
-                            } else {
-                              setState(() => _selectedIndex = 1);
-                            }
-                          },
-                        ),
-                      )
-                    : MoneySavingActionsWidget(
+                    ? MoneySavingActionsWidget(
                         challenge: _challenge,
                         isDark: isDark,
                         onShowChallengesList: _showChallengesList,
@@ -614,6 +596,24 @@ class _MoneySavingChallengeScreenState
                         onToggleModule: _challenge?.isActive == true
                             ? _deactivateChallenge
                             : _activateChallenge,
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ModernStartButton(
+                          icon: Icons.rocket_launch_rounded,
+                          label: 'Entendi!',
+                          color: const Color(0xFF6366F1),
+                          isDark: isDark,
+                          onTap: () {
+                            if (_pageController.hasClients) {
+                              _pageController.animateToPage(0,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic);
+                            } else {
+                              setState(() => _selectedIndex = 0);
+                            }
+                          },
+                        ),
                       ),
               ),
             ],

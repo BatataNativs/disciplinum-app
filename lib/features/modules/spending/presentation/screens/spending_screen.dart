@@ -34,13 +34,13 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
 
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Como Funciona, 1=Controlar gastos
+  int _selectedIndex = 0; // 0=Controlar gastos, 1=Como Funciona
 
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Como Funciona"
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Controlar Gastos"
     LoggerService.instance.i('SpendingScreen: Iniciando com selectedIndex=$_selectedIndex, pageController inicializado');
     _loadAllPersistentData();
   }
@@ -77,9 +77,9 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       }
 
       // Mantém o usuário na aba atual - não força mudança para Controle
-      if (_selectedApps.isNotEmpty && _pageController.hasClients && _selectedIndex == 0) {
-        // Só avança para Controle se o usuário estiver na aba "Como Funciona" e quiser avançar
-        // Isso permite que o usuário acesse ambas as abas livremente
+      if (_selectedApps.isNotEmpty && _pageController.hasClients && _selectedIndex == 1) {
+        // Usuário está na aba "Como Funciona" com apps selecionados
+        // Permanece na aba atual, usuário pode navegar livremente
       }
       
       LoggerService.instance.i('SpendingScreen: Dados carregados com sucesso');
@@ -363,13 +363,13 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                       child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
-                          LoggerService.instance.i('SpendingScreen: PageView mudou para página $index (Como Funciona=0, Controlar Gastos=1)');
+                          LoggerService.instance.i('SpendingScreen: PageView mudou para página $index (Controlar Gastos=0, Como Funciona=1)');
                           setState(() {
                             _selectedIndex = index;
                           });
                         },
                         children: [
-                          // 0: Como Funciona
+                          // 0: Controlar Gastos (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -384,7 +384,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                               ],
                             ),
                           ),
-                          // 1: Controlar Gastos
+                          // 1: Como Funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(

@@ -1,5 +1,6 @@
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/contract_helpers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Estado do módulo Binge Eating implementando [ModuleStateContract]
 ///
@@ -127,26 +128,50 @@ class BingeEatingModuleState implements ModuleStateContract {
   }
 
   /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory BingeEatingModuleState.fromJson(Map<String, dynamic> json) {
-    // Valida conformidade com contrato
-    ContractComplianceValidator.assertValid(json, 'binge_eating');
+    // Helper para ler campo em snake_case ou camelCase
+    T? readField<T>(String snakeCase, String camelCase) {
+      return (json[snakeCase] as T?) ?? (json[camelCase] as T?);
+    }
+
+    // Verifica se é um JSON antigo (camelCase)
+    final isLegacyFormat = json.containsKey('consecutiveDays');
+    
+    if (isLegacyFormat) {
+      LoggerService.instance.w('⚠️ BingeEatingModuleState.fromJson: Detectado formato camelCase (legacy). Migrando dados...');
+    }
+
+    // Extrai timestamps com fallback para now() se não existirem (backward compatibility)
+    final createdAt = json['created_at'] != null 
+        ? DateTime.parse(json['created_at'] as String)
+        : (json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now());
+    
+    final updatedAt = json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : (json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now());
 
     return BingeEatingModuleState(
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       earnedInsignias:
-          (json['earned_insignias'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_insignias', 'earnedInsignias'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
       earnedMedalhas:
-          (json['earned_medalhas'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_medalhas', 'earnedMedalhas'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
-      consecutivePositiveDays: json['consecutive_positive_days'] as int? ?? 0,
-      disciplinumCount: json['disciplinum_count'] as int? ?? 0,
-      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
+      consecutivePositiveDays: readField<int>('consecutive_positive_days', 'consecutiveDays') ?? 0,
+      disciplinumCount: readField<int>('disciplinum_count', 'disciplinumCount') ?? 0,
+      isModuleActive: readField<bool>('is_module_active', 'isModuleActive') ?? 
+                      readField<bool>('is_active', 'isActive') ?? false,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
     );
   }

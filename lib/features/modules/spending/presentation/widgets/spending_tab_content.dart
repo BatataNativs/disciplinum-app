@@ -20,6 +20,48 @@ class SpendingTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (tabIndex) {
       case 0:
+        // 0: Controlar Gastos (módulo)
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              'Aplicativos monitorados:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (selectedApps.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Nenhum app selecionado.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              const Text(
+                'Para gerenciar gastos fixos, use o menu "Controle de gastos" → "Gastos fixos"',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            const SizedBox(height: 24),
+          ],
+        );
+      case 1:
+        // 1: Como Funciona
         return Column(
           children: [
             NicheInfoCard(
@@ -62,46 +104,6 @@ class SpendingTabContent extends StatelessWidget {
               content:
                   'Veja o resumo das contas pagas no mês, o total gasto e acompanhe sua disciplina financeira ao longo do tempo.',
             ),
-          ],
-        );
-      case 1:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            Text(
-              'Aplicativos monitorados:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (selectedApps.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Nenhum app selecionado.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              const Text(
-                'Para gerenciar gastos fixos, use o menu "Controle de gastos" → "Gastos fixos"',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            const SizedBox(height: 24),
           ],
         );
       default:

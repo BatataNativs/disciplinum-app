@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/controllers/stop_smoking_controller.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart' as smoking;
 
 /// Widget de formulário de configuração do Smoking
 class SmokingSetupForm extends ConsumerWidget {
@@ -17,6 +18,8 @@ class SmokingSetupForm extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentState = ref.watch(stopSmokingControllerProvider);
+    final gamificationState = ref.watch(smoking.smokingGamificationNotifierProvider);
+    final isModuleActive = gamificationState.isModuleActive;
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -33,22 +36,38 @@ class SmokingSetupForm extends ConsumerWidget {
             
             // Preço por maço
             TextFormField(
-              initialValue: initialSettings?.packPrice.toString() ?? '0.00',
+              initialValue: isModuleActive 
+                  ? gamificationState.gamification?.packCost.toString() ?? '0.00'
+                  : (initialSettings?.packPrice.toString() ?? '0.00'),
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              enabled: !isModuleActive,
+              style: isModuleActive 
+                  ? TextStyle(color: Colors.grey.shade600)
+                  : null,
+              decoration: InputDecoration(
                 labelText: 'Preço por Maço',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                filled: isModuleActive,
+                fillColor: isModuleActive ? Colors.grey.shade100 : null,
               ),
             ),
             const SizedBox(height: 16),
             
             // Maços por dia
             TextFormField(
-              initialValue: initialSettings?.packsPerDay.toString() ?? '1',
+              initialValue: isModuleActive 
+                  ? (gamificationState.gamification?.dailyCost ?? 0.0).toString()
+                  : (initialSettings?.packsPerDay.toString() ?? '1'),
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Maços por Dia',
-                border: OutlineInputBorder(),
+              enabled: !isModuleActive,
+              style: isModuleActive 
+                  ? TextStyle(color: Colors.grey.shade600)
+                  : null,
+              decoration: InputDecoration(
+                labelText: 'Custo Diário',
+                border: const OutlineInputBorder(),
+                filled: isModuleActive,
+                fillColor: isModuleActive ? Colors.grey.shade100 : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -56,9 +75,15 @@ class SmokingSetupForm extends ConsumerWidget {
             // Moeda
             TextFormField(
               initialValue: initialSettings?.currency ?? 'BRL',
-              decoration: const InputDecoration(
+              enabled: !isModuleActive,
+              style: isModuleActive 
+                  ? TextStyle(color: Colors.grey.shade600)
+                  : null,
+              decoration: InputDecoration(
                 labelText: 'Moeda',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                filled: isModuleActive,
+                fillColor: isModuleActive ? Colors.grey.shade100 : null,
               ),
             ),
             const SizedBox(height: 24),

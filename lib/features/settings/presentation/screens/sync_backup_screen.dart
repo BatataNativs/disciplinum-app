@@ -27,12 +27,38 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
   }
 
   Future<void> _loadLastSyncDate() async {
-    final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
-    final lastSync = await prefs.getString('last_sync_timestamp');
-    if (lastSync != null) {
+    DateTime? lastSyncDateTime;
+    String? source;
+    
+    // 1. Tenta carregar da NUVEM primeiro (para continuidade entre dispositivos)
+    try {
+      final cloudTimestamp = await ref.read(cloudSyncServiceProvider).loadLastSyncTimestamp();
+      if (cloudTimestamp != null) {
+        lastSyncDateTime = cloudTimestamp;
+        source = 'nuvem';
+        LoggerService.instance.d('☁️ Data de sync carregada da nuvem: $cloudTimestamp');
+      }
+    } catch (e) {
+      LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
+    }
+    
+    // 2. Se não achou na nuvem, tenta carregar do LOCAL
+    if (lastSyncDateTime == null) {
+      final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
+      final lastSync = await prefs.getString('last_sync_timestamp');
+      if (lastSync != null) {
+        lastSyncDateTime = DateTime.parse(lastSync);
+        source = 'local';
+        LoggerService.instance.d('💾 Data de sync carregada do local: $lastSyncDateTime');
+      }
+    }
+    
+    // 3. Atualiza a UI se encontrou alguma data
+    if (lastSyncDateTime != null && mounted) {
       setState(() {
-        _lastSyncDate = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(lastSync));
+        _lastSyncDate = DateFormat('dd/MM/yyyy HH:mm').format(lastSyncDateTime!);
       });
+      LoggerService.instance.i('📅 Data de sync exibida (fonte: $source): $_lastSyncDate');
     }
   }
 

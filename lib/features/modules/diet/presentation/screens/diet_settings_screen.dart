@@ -35,12 +35,12 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Como Funciona, 1=Ativar
+  int _selectedIndex = 0; // 0=Manter dieta, 1=Como funciona
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Manter dieta"
     _loadAllPersistentData();
   }
 
@@ -395,7 +395,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                           });
                         },
                         children: [
-                          // TAB 0: Como Funciona
+                          // TAB 0: Manter dieta (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -405,7 +405,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                               ],
                             ),
                           ),
-                          // TAB 1: Horários
+                          // TAB 1: Como funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -436,7 +436,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Manter dieta'];
+    final List<String> options = ['Manter dieta', 'Como funciona'];
 
     return Container(
       height: 44,
@@ -505,34 +505,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return Column(
-          children: [
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.schedule,
-              title: 'Preencha seus horários de refeições',
-              content:
-                  'Defina os horários para que possamos te lembrar de manter o foco na sua dieta e registrar suas refeições.',
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.notifications_outlined,
-              title: 'Em "Notificações", configure lembretes',
-              content:
-                  'Defina horários para ser lembrado de manter o foco na sua dieta e registrar suas refeições, respondendo às notificações se fez/fará ou não a refeição.',
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", veja seu progresso',
-              content:
-                  'Acompanhe o registro de refeições e visualize seu progresso geral do módulo.',
-            ),
-          ],
-        );
-      case 1:
+        // 0: Manter dieta (módulo)
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -616,6 +589,35 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
             ),
           ],
         );
+      case 1:
+        // 1: Como funciona
+        return Column(
+          children: [
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.schedule,
+              title: 'Preencha seus horários de refeições',
+              content:
+                  'Defina os horários para que possamos te lembrar de manter o foco na sua dieta e registrar suas refeições.',
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.notifications_outlined,
+              title: 'Em "Notificações", configure lembretes',
+              content:
+                  'Defina horários para ser lembrado de manter o foco na sua dieta e registrar suas refeições, respondendo às notificações se fez/fará ou não a refeição.',
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", veja seu progresso',
+              content:
+                  'Acompanhe o registro de refeições e visualize seu progresso geral do módulo.',
+            ),
+          ],
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -626,23 +628,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: 'Começar',
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
-              }
-            },
-          ),
-        );
-      case 1:
+        // 0: Manter dieta (módulo) - botão de gerenciar horários
         return SizedBox(
           width: double.infinity,
           height: 55,
@@ -657,6 +643,24 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                 MaterialPageRoute(
                     builder: (_) => const DietNotificationsScreen()),
               ).then((_) => _loadAllPersistentData());
+            },
+          ),
+        );
+      case 1:
+        // 1: Como funciona - botão para voltar ao módulo
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.rocket_launch_rounded,
+            label: 'Entendi!',
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
             },
           ),
         );

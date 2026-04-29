@@ -424,6 +424,21 @@ final pendingMedalsProvider = Provider<Future<List<String>>>((ref) async {
   return pendingMedals;
 });
 
+/// Controla se a sincronização inicial já foi realizada na sessão atual
+/// Usa StateNotifier para garantir persistência do estado durante a sessão
+class InitialSyncState extends StateNotifier<bool> {
+  InitialSyncState() : super(false);
+  
+  void markSynced() => state = true;
+  void reset() => state = false;
+  bool get hasSynced => state;
+}
+
+/// Provider para verificar se a sincronização inicial já foi feita na sessão
+final initialSyncCompletedProvider = StateNotifierProvider<InitialSyncState, bool>((ref) {
+  return InitialSyncState();
+});
+
 
 
 

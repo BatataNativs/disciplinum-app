@@ -4,6 +4,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/bootstrap.dart';
 import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/app/auth_navigation_listener.dart';
 import 'package:disciplinum/core/theme/app_themes.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:disciplinum/core/di/providers.dart';
@@ -81,17 +82,25 @@ class DisciplinumApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeController = ref.watch(themeControllerProvider);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
+    final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
     
-    return MaterialApp(
-      title: 'Disciplinum',
-      theme: AppThemes.lightTheme,
-      darkTheme: AppThemes.darkTheme,
-      themeMode: themeController.themeMode,
-      debugShowCheckedModeBanner: false,
-      initialRoute: seenOnboarding 
-          ? AppRouter.authWrapper 
-          : AppRouter.onboarding,
-      onGenerateRoute: AppRouter.generateRoute,
+    // Log para debug
+    LoggerService.instance.d('🏗️ DisciplinumApp build: seenOnboarding=$seenOnboarding, user=${authService.currentUser?.id}');
+    
+    return AuthNavigationListener(
+      child: MaterialApp(
+        title: 'Disciplinum',
+        theme: AppThemes.lightTheme,
+        darkTheme: AppThemes.darkTheme,
+        themeMode: themeController.themeMode,
+        debugShowCheckedModeBanner: false,
+        // Se usuário está logado, vai para AuthWrapper (que leva para Home)
+        // Se não viu onboarding e não está logado, vai para onboarding
+        initialRoute: (seenOnboarding || authService.currentUser != null)
+            ? AppRouter.authWrapper 
+            : AppRouter.onboarding,
+        onGenerateRoute: AppRouter.generateRoute,
+      ),
     );
   }
 }

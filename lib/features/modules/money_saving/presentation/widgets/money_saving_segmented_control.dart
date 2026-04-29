@@ -16,7 +16,7 @@ class MoneySavingSegmentedControl extends StatefulWidget {
 }
 
 class _MoneySavingSegmentedControlState extends State<MoneySavingSegmentedControl> {
-  final List<String> options = ['Como Funciona', 'Desafio da Poupança'];
+  final List<String> options = ['Desafio da Poupança', 'Como Funciona'];
 
   @override
   Widget build(BuildContext context) {

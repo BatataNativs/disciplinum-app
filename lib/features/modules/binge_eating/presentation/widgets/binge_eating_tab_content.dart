@@ -23,9 +23,11 @@ class BingeEatingTabContent extends StatelessWidget {
     
     switch (tabIndex) {
       case 0:
-        return _buildHowItWorksContent(isDark);
-      case 1:
+        // 0: Compulsão alimentar (módulo)
         return _buildCompulsionContent(context, isDark);
+      case 1:
+        // 1: Como funciona
+        return _buildHowItWorksContent(isDark);
       default:
         return const SizedBox.shrink();
     }

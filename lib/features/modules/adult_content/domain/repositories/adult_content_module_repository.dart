@@ -148,11 +148,14 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
       
       if (currentUserId == null) throw Exception('Usuário não autenticado');
 
-      await supabase.from('adult_content_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      await supabase.from('adult_content_gamification_states').upsert(
+        {
+          'user_id': currentUserId,
+          'state_data': state.toJson(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'user_id',
+      );
 
       LoggerService.instance.gamification('☁️ AdultContentModuleState sincronizado');
       _setStatus(RepositoryStatus.ready);

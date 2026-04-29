@@ -23,7 +23,7 @@ class ReadingScreen extends ConsumerStatefulWidget {
   const ReadingScreen({
     super.key,
     this.heroTag,
-    this.initialTabIndex = 0, // Default para Como Funciona
+    this.initialTabIndex = 1, // Default para Leitura (índice 1, Como funciona = índice 0)
   });
 
   @override
@@ -48,7 +48,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
 
     // Adiciona listener para recarregar dados quando mudar de aba
     _tabController.addListener(() {
-      if (_tabController.index == 1 && mounted) {
+      if (_tabController.index == 0 && mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _loadReminderData();
         });
@@ -197,8 +197,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildHowItWorks(context),
-                    // Aba da Estante + Botões
+                    // 0: Leitura (módulo) - Aba da Estante + Botões
                     Column(
                         children: [
                         Padding(
@@ -233,6 +232,8 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                         _buildBottomButtons(isDark, isActive),
                       ],
                     ),
+                    // 1: Como funciona
+                    _buildHowItWorks(context),
                   ],
                 ),
               ),
@@ -282,8 +283,8 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           ),
           dividerColor: Colors.transparent,
           tabs: const [
-            Tab(text: 'Como funciona'),
             Tab(text: 'Leitura'),
+            Tab(text: 'Como funciona'),
           ],
         ),
       ),
@@ -336,7 +337,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
             padding: const EdgeInsets.all(16),
             child: ModernStartButton(
               icon: Icons.rocket_launch_rounded,
-              label: 'Começar',
+              label: 'Entendi!',
               color: const Color(0xFF6366F1),
               isDark: isDark,
               onTap: () {

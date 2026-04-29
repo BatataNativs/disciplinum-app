@@ -9,6 +9,22 @@ import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/network/network_health_service.dart';
 import 'package:disciplinum/core/network/connectivity_fallback.dart';
 
+// Imports para sincronização de módulos (gamificação + estado)
+import 'package:disciplinum/features/modules/smoking/domain/repositories/smoking_module_repository.dart';
+import 'package:disciplinum/features/modules/reading/domain/repositories/reading_module_repository.dart';
+import 'package:disciplinum/features/modules/money_saving/domain/repositories/money_saving_module_repository.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/repositories/binge_eating_module_repository.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/repositories/adult_content_module_repository.dart';
+import 'package:disciplinum/features/modules/diet/domain/repositories/diet_module_repository.dart';
+import 'package:disciplinum/features/modules/focus/domain/repositories/focus_module_repository.dart';
+import 'package:disciplinum/features/modules/procrastination/domain/repositories/procrastination_module_repository.dart';
+import 'package:disciplinum/features/modules/spending/domain/repositories/spending_module_repository.dart';
+
+// Imports para sincronização de dados específicos
+import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
+import 'package:disciplinum/features/modules/diet/domain/repositories/meal_entry_repository.dart';
+import 'package:disciplinum/features/modules/focus/data/repositories/focus_interval_repository.dart';
+
 class CloudSyncService {
   final SupabaseClient supabase;
   final ObjectBoxPreferencesRepository? prefsRepo;
@@ -299,17 +315,38 @@ class CloudSyncService {
 
       LoggerService.instance.i('Iniciando sincronização global para o usuário $userId...');
       
-      // Sincronizar cada nicho/módulo
+      // === SINCRONIZAÇÃO DOS MÓDULOS (dados reais de gamificação) ===
+      // Cada módulo tem seu próprio repository que sincroniza com ObjectBox + Supabase
+      await _syncModule(SmokingModuleRepository.instance, userId, 'smoking');
+      await _syncModule(ReadingModuleRepository.instance, userId, 'reading');
+      await _syncModule(MoneySavingModuleRepository.instance, userId, 'money_saving');
+      await _syncModule(BingeEatingModuleRepository.instance, userId, 'binge_eating');
+      await _syncModule(AdultContentModuleRepository.instance, userId, 'adult_content');
+      await _syncModule(DietModuleRepository.instance, userId, 'diet');
+      await _syncModule(FocusModuleRepository.instance, userId, 'focus');
+      await _syncModule(ProcrastinationModuleRepository.instance, userId, 'procrastination');
+      await _syncModule(SpendingModuleRepository.instance, userId, 'spending');
+      
+      // === SINCRONIZAÇÃO DE DADOS ESPECÍFICOS (livros, refeições, intervalos) ===
+      // Dados que usam user_module_settings com module_id específico
+      await _syncSpecificData(
+        () => ReadingRepository().performFullSync(userId),
+        'reading_books',
+      );
+      await _syncSpecificData(
+        () => MealEntryRepository.instance.performFullSync(userId),
+        'diet_meals',
+      );
+      await _syncSpecificData(
+        () => FocusIntervalRepository.instance.performFullSync(),
+        'focus_intervals',
+      );
+      
+      // === SINCRONIZAÇÃO LEGADA (user_module_status, apps, horários) ===
       for (final nicheId in NicheId.values) {
         try {
-          // 1. Sincronizar Status do Módulo
-          // (Isso é apenas um exemplo de sincronização simplificada que chama o que o service já tem)
-          final cloudStatus = await loadModuleStatus(nicheId);
-          if (cloudStatus != null) {
-            // Em uma implementação real, faríamos o merge com o Isar/ObjectBox
-            // Por enquanto, apenas logamos que os dados estão acessíveis
-            LoggerService.instance.d('Status do módulo ${nicheId.id} recuperado da nuvem.');
-          }
+          // 1. Sincronizar Status do Módulo (legado)
+          await loadModuleStatus(nicheId);
 
           // 2. Sincronizar Apps do Nicho
           await loadUserNicheApps(nicheId: nicheId);
@@ -325,11 +362,49 @@ class CloudSyncService {
       // 4. Sincronizar Entitlements
       await loadEntitlements();
 
-      LoggerService.instance.i('Sincronização global concluída com sucesso.');
+      // 5. Salvar timestamp da sincronização na nuvem (para continuidade entre dispositivos)
+      final now = DateTime.now();
+      await saveLastSyncTimestamp(now);
+      
+      // Também salvar localmente para referência rápida
+      if (prefsRepo != null) {
+        await prefsRepo!.setString('last_sync_timestamp', now.toIso8601String());
+      }
+
+      LoggerService.instance.i('Sincronização global concluída com sucesso. Timestamp: $now');
       return true;
     } catch (e) {
       LoggerService.instance.e('Erro crítico durante a sincronização global', error: e);
       return false;
+    }
+  }
+
+  /// Sincroniza um módulo específico chamando seu fullSync()
+  Future<void> _syncModule(dynamic repository, String userId, String moduleName) async {
+    try {
+      LoggerService.instance.d('🔄 Sincronizando módulo: $moduleName');
+      final result = await repository.fullSync(userId);
+      
+      // Log detalhado do estado sincronizado
+      final isActive = result.isModuleActive ?? false;
+      final hasRemoteData = result.updatedAt != null && result.updatedAt!.isAfter(DateTime(2020));
+      LoggerService.instance.i('✅ Módulo $moduleName sincronizado: isActive=$isActive, hasData=$hasRemoteData, updatedAt=${result.updatedAt}');
+    } catch (e, stackTrace) {
+      // Se o módulo não existir na nuvem ou der erro, loga detalhadamente
+      LoggerService.instance.w('⚠️ Módulo $moduleName não sincronizado: $e');
+      LoggerService.instance.d('StackTrace: $stackTrace');
+    }
+  }
+
+  /// Sincroniza dados específicos de um módulo (livros, refeições, intervalos)
+  Future<void> _syncSpecificData(Future<void> Function() syncFn, String dataName) async {
+    try {
+      LoggerService.instance.d('🔄 Sincronizando dados: $dataName');
+      await syncFn();
+      LoggerService.instance.d('✅ Dados sincronizados: $dataName');
+    } catch (e) {
+      // Se os dados não existirem na nuvem ou der erro, apenas loga e continua
+      LoggerService.instance.d('⚠️ Dados $dataName não sincronizados (pode ser novo): $e');
     }
   }
 
@@ -498,6 +573,77 @@ class CloudSyncService {
       }
     } catch (e) {
       LoggerService.instance.e('Erro na sincronização de entitlements', error: e);
+    }
+  }
+
+  // --- SYNC TIMESTAMP (Para continuidade entre dispositivos) ---
+
+  /// Salva a data da última sincronização na nuvem
+  Future<void> saveLastSyncTimestamp(DateTime timestamp) async {
+    try {
+      final userId = await _getUserId();
+      if (userId == null) {
+        LoggerService.instance.w('Não foi possível salvar timestamp: usuário não autenticado');
+        return;
+      }
+
+      await supabase.from('user_module_settings').upsert({
+        'user_id': userId,
+        'module_id': 'global', // Módulo especial para metadados
+        'setting_key': 'last_sync_timestamp',
+        'setting_value': timestamp.toIso8601String(),
+        'updated_at': _localTimestamp(),
+      }, onConflict: 'user_id, module_id, setting_key');
+
+      LoggerService.instance.i('☁️ Timestamp de sync salvo na nuvem: $timestamp');
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST204') {
+        // Schema cache desatualizado - coluna ainda não visível na API
+        LoggerService.instance.w('⚠️ Schema cache desatualizado. Aguardando refresh do PostgREST...');
+      } else {
+        LoggerService.instance.w('Erro ao salvar timestamp na nuvem: $e');
+      }
+    } catch (e) {
+      LoggerService.instance.w('Erro ao salvar timestamp na nuvem: $e');
+    }
+  }
+
+  /// Carrega a data da última sincronização da nuvem
+  Future<DateTime?> loadLastSyncTimestamp() async {
+    try {
+      final userId = await _getUserId();
+      if (userId == null) {
+        LoggerService.instance.w('Não foi possível carregar timestamp: usuário não autenticado');
+        return null;
+      }
+
+      final response = await supabase
+          .from('user_module_settings')
+          .select('setting_value')
+          .eq('user_id', userId)
+          .eq('module_id', 'global')
+          .eq('setting_key', 'last_sync_timestamp')
+          .maybeSingle();
+
+      if (response != null && response['setting_value'] != null) {
+        final timestamp = DateTime.parse(response['setting_value']);
+        LoggerService.instance.i('☁️ Timestamp de sync carregado da nuvem: $timestamp');
+        return timestamp;
+      }
+
+      LoggerService.instance.d('Nenhum timestamp encontrado na nuvem');
+      return null;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST204') {
+        // Schema cache desatualizado - coluna ainda não visível na API
+        LoggerService.instance.w('⚠️ Schema cache desatualizado. Aguardando refresh do PostgREST...');
+      } else {
+        LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
+      }
+      return null;
+    } catch (e) {
+      LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
+      return null;
     }
   }
 

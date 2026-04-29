@@ -44,7 +44,7 @@ class HowItWorksSection extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: ModernStartButton(
             icon: Icons.rocket_launch_rounded,
-            label: 'Começar',
+            label: 'Entendi!',
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: onGetStarted,

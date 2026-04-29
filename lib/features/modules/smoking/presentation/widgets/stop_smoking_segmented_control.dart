@@ -15,7 +15,7 @@ class StopSmokingSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Parar de fumar'];
+    final List<String> options = ['Parar de fumar', 'Como funciona'];
 
     return Container(
       height: 44,

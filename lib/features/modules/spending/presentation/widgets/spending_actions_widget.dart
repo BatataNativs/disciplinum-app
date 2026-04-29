@@ -34,42 +34,24 @@ class SpendingActionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selectedIndex == 0) {
-      return _buildTabActions(0);
-    } else {
+      // 0: Controlar Gastos (módulo) - mostra botões de ação
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTabActions(1),
+          _buildTabActions(0),
           _buildBottomButtons(),
         ],
       );
+    } else {
+      // 1: Como Funciona - mostra botão para voltar ao módulo
+      return _buildTabActions(1);
     }
   }
 
   Widget _buildTabActions(int index) {
     switch (index) {
       case 0:
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ModernStartButton(
-              icon: Icons.rocket_launch_rounded,
-              label: 'Começar',
-              color: const Color(0xFF6366F1),
-              isDark: isDark,
-              onTap: () {
-                if (pageController.hasClients) {
-                  pageController.animateToPage(
-                    1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                  );
-                }
-              },
-            ),
-          ),
-        );
-      case 1:
+        // 0: Controlar Gastos (módulo) - botão de selecionar apps
         return Padding(
           padding: const EdgeInsets.all(16),
           child: ModernStartButton(
@@ -78,6 +60,28 @@ class SpendingActionsWidget extends StatelessWidget {
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: onOpenSelectApps,
+          ),
+        );
+      case 1:
+        // 1: Como Funciona - botão para voltar ao módulo
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ModernStartButton(
+              icon: Icons.rocket_launch_rounded,
+              label: 'Entendi!',
+              color: const Color(0xFF6366F1),
+              isDark: isDark,
+              onTap: () {
+                if (pageController.hasClients) {
+                  pageController.animateToPage(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                  );
+                }
+              },
+            ),
           ),
         );
       default:

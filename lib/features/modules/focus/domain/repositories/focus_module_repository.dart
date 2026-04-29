@@ -52,6 +52,9 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
     try {
       _setStatus(RepositoryStatus.busy);
       
+      // Busca se já existe algum objeto no box
+      final existing = _box.getAll().firstOrNull;
+      
       final entity = FocusGamificationEntity()
         ..earnedInsigniasList = state.earnedInsignias
         ..earnedMedalhasList = state.earnedMedalhas
@@ -60,8 +63,15 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
         ..currentStreakDays = state.currentStreakDays
         ..maxStreakDays = state.longestStreakDays
         ..touch();
-
-      entity.id = 1;
+      
+      // Se já existe, usa o mesmo ID para atualizar
+      // Se não existe, usa ID 0 para deixar ObjectBox gerar novo ID
+      if (existing != null) {
+        entity.id = existing.id;
+      } else {
+        entity.id = 0; // ObjectBox vai gerar novo ID
+      }
+      
       _box.put(entity);
 
       LoggerService.instance.gamification('✅ FocusModuleState salvo localmente');
@@ -171,11 +181,14 @@ class FocusModuleRepository implements ModuleRepositoryContract<FocusModuleState
       
       if (currentUserId == null) throw Exception('Usuário não autenticado');
 
-      await supabase.from('focus_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      await supabase.from('focus_gamification_states').upsert(
+        {
+          'user_id': currentUserId,
+          'state_data': state.toJson(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'user_id',
+      );
 
       LoggerService.instance.gamification('☁️ FocusModuleState sincronizado');
       _setStatus(RepositoryStatus.ready);

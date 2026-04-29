@@ -26,9 +26,11 @@ class MoneySavingTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (selectedIndex) {
       case 0:
-        return _buildHowItWorksTab();
-      case 1:
+        // 0: Desafio da Poupança (módulo)
         return _buildChallengeTab(context);
+      case 1:
+        // 1: Como Funciona
+        return _buildHowItWorksTab();
       default:
         return const SizedBox.shrink();
     }

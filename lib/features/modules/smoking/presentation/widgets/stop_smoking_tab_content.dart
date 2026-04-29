@@ -7,6 +7,7 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/smokin
 class StopSmokingTabContent extends StatelessWidget {
   final int tabIndex;
   final bool isDark;
+  final bool isModuleActive;
   final TextEditingController priceController;
   final TextEditingController packsController;
   final String selectedCurrency;
@@ -21,6 +22,7 @@ class StopSmokingTabContent extends StatelessWidget {
     super.key,
     required this.tabIndex,
     required this.isDark,
+    this.isModuleActive = false,
     required this.priceController,
     required this.packsController,
     required this.selectedCurrency,
@@ -36,9 +38,11 @@ class StopSmokingTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (tabIndex) {
       case 0:
-        return _buildHowItWorksContent();
-      case 1:
+        // 0: Parar de fumar (módulo)
         return _buildStopSmokingContent();
+      case 1:
+        // 1: Como funciona
+        return _buildHowItWorksContent();
       default:
         return const SizedBox.shrink();
     }
@@ -83,6 +87,7 @@ class StopSmokingTabContent extends StatelessWidget {
       children: [
         SmokingConsumptionSettings(
           isDark: isDark,
+          isModuleActive: isModuleActive,
           priceController: priceController,
           packsController: packsController,
           selectedCurrency: selectedCurrency,

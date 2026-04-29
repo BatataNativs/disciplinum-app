@@ -60,14 +60,19 @@ class AuthService extends StateNotifier<AuthState> {
       final AuthChangeEvent event = data.event;
       final Session? session = data.session;
       
-      LoggerService.instance.i('Supabase Auth Event: ${event.name}');
+      LoggerService.instance.i('🔐 Supabase Auth Event: ${event.name}, userId=${session?.user.id}, currentStateUserId=${state.currentUser?.id}');
       
       if (session?.user != null) {
         if (state.currentUser?.id != session!.user.id) {
+          LoggerService.instance.i('🔐 Novo usuário detectado no auth state change, configurando sessão...');
           await _handleUserSession(session.user);
+          LoggerService.instance.i('🔐 Sessão configurada com sucesso para: ${session.user.id}');
+        } else {
+          LoggerService.instance.d('🔐 Usuário já está no estado atual, ignorando evento');
         }
       } else {
         if (state.currentUser != null) {
+          LoggerService.instance.i('🔐 Sessão encerrada, limpando estado');
           state = const AuthState();
         }
       }
@@ -194,6 +199,7 @@ class AuthService extends StateNotifier<AuthState> {
   /// Login social (Google, Apple, etc.)
   Future<bool> signInWithOAuth(OAuthProvider provider) async {
     try {
+      LoggerService.instance.i('🔐 OAuth START: provider=${provider.name}');
       state = state.copyWith(isSocialLoginInProgress: true, errorMessage: null);
 
       final success = await supabase.auth.signInWithOAuth(
@@ -201,27 +207,34 @@ class AuthService extends StateNotifier<AuthState> {
         redirectTo: 'io.supabase.disciplinum://callback',
       );
 
+      LoggerService.instance.i('🔐 OAuth signInWithOAuth retornou: success=$success');
+
       if (success) {
         final user = supabase.auth.currentUser;
+        LoggerService.instance.i('🔐 OAuth success=true, currentUser=${user?.id}');
         if (user != null) {
           await _handleUserSession(user);
+        } else {
+          LoggerService.instance.w('🔐 OAuth success=true mas currentUser=null (aguardando callback...)');
         }
-        LoggerService.instance.i('Login social realizado com sucesso');
+        LoggerService.instance.i('🔐 OAuth retornando true (callback será processado pelo stream)');
         return true;
       }
       
       state = state.copyWith(errorMessage: 'Falha no login social');
+      LoggerService.instance.w('🔐 OAuth falhou (success=false)');
       return false;
     } on AuthException catch (e) {
       state = state.copyWith(errorMessage: e.message);
-      LoggerService.instance.e('Erro no login social', error: e);
+      LoggerService.instance.e('🔐 OAuth AuthException', error: e);
       return false;
     } catch (e) {
       state = state.copyWith(errorMessage: 'Erro inesperado no login social');
-      LoggerService.instance.e('Erro inesperado no login social', error: e);
+      LoggerService.instance.e('🔐 OAuth erro inesperado', error: e);
       return false;
     } finally {
       state = state.copyWith(isSocialLoginInProgress: false);
+      LoggerService.instance.d('🔐 OAuth finally: isSocialLoginInProgress=false');
     }
   }
 

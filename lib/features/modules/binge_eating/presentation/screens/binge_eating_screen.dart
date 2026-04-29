@@ -40,13 +40,13 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   bool _isLoadingData = false;
 
   late PageController _pageController;
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // 0=Compulsão alimentar, 1=Como funciona
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _pageController = PageController();
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Compulsão alimentar"
     _loadAllPersistentData();
   }
 

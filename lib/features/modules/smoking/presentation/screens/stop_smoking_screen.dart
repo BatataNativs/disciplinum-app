@@ -45,7 +45,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   TimeOfDay? _checkinTime;
 
   late PageController _pageController;
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // 0=Parar de fumar, 1=Como funciona
 
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
@@ -59,7 +59,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Parar de fumar"
     _loadSettings();
   }
 
@@ -124,26 +124,56 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   Future<void> _loadSettings() async {
     final service = ref.read(smokingServiceProvider);
     final data = await service.getSettings();
-    final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(NicheId.smoking);
+    
+    // Usa SmokingGamificationNotifier como fonte primária do status real do módulo
+    final gamificationState = ref.read(smokingGamificationNotifierProvider);
+    final bool isModuleActive = gamificationState.isModuleActive;
+    
+    // Fallback para CloudSyncService apenas se notifier não tiver dados
+    final bool moduleRunning;
+    if (!isModuleActive && gamificationState.gamification == null) {
+      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(NicheId.smoking);
+      moduleRunning = status?.isModuleActive ?? false;
+    } else {
+      moduleRunning = isModuleActive;
+    }
 
     if (mounted) {
       setState(() {
         settings = data;
-        _gamificationRunning = status?.isModuleActive ?? false;
+        _gamificationRunning = moduleRunning;
         isLoading = false;
       });
 
       if (settings != null) {
         _selectedCurrency = settings!.currency;
         
-        // Lógica inteligente: NÃO preenche campos automaticamente
-        // Usuário deve preencher manualmente para ativar o módulo
-        if (!_gamificationRunning) {
-          // Módulo não está ativo - campos vazios para preenchimento manual
-          _priceController.clear();
-          _packsController.clear();
+        // Se módulo está ativo, preencher campos com valores salvos do gamification
+        if (_gamificationRunning) {
+          final gamificationState = ref.read(smokingGamificationNotifierProvider);
+          if (gamificationState.gamification != null) {
+            // Preencher com valores salvos
+            final packCost = gamificationState.gamification!.packCost;
+            final dailyCost = gamificationState.gamification!.dailyCost;
+            
+            // Formatar preço para o formato correto (com vírgula para BRL)
+            if (_selectedCurrency == 'R\$' || _selectedCurrency == 'ARS\$') {
+              _priceController.text = packCost.toStringAsFixed(2).replaceAll('.', ',');
+            } else {
+              _priceController.text = packCost.toStringAsFixed(2);
+            }
+            
+            // Calcular packs per day a partir do dailyCost e packCost
+            final packsPerDay = packCost > 0 ? (dailyCost / packCost) : 0;
+            _packsController.text = packsPerDay.toStringAsFixed(1);
+            
+            LoggerService.instance.d('🔥 Campos preenchidos com valores salvos: packCost=$packCost, dailyCost=$dailyCost, packsPerDay=$packsPerDay');
+          } else {
+            _priceController.clear();
+            _packsController.clear();
+          }
         } else {
-          // Módulo está ativo - mostrar hints para facilitar edição
+          // Módulo não está ativo - campos vazios para preenchimento manual
           _priceController.clear();
           _packsController.clear();
         }
@@ -392,8 +422,17 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     setState(() => _gamificationRunning = true);
     ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: NicheId.smoking, isModuleActive: true);
     
+    // Calcular custo diário das configurações
+    final dailyCost = settings != null 
+        ? (settings!.packPrice * settings!.packsPerDay)
+        : 0.0;
+    final packCost = settings?.packPrice ?? 0.0;
+    
     // Ativar o módulo no SmokingGamificationNotifier (estado REAL da gamificação)
-    await ref.read(smokingGamificationNotifierProvider.notifier).activateModule();
+    await ref.read(smokingGamificationNotifierProvider.notifier).activateModule(
+      dailyCost: dailyCost,
+      packCost: packCost,
+    );
     
     LoggerService.instance.i('Smoking: Ciclo de gamificação iniciado');
   }
@@ -597,6 +636,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                           });
                         },
                         children: [
+                          // 0: Parar de fumar (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -604,6 +644,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                                 StopSmokingTabContent(
                                   tabIndex: 0,
                                   isDark: isDark,
+                                  isModuleActive: _gamificationRunning,
                                   priceController: _priceController,
                                   packsController: _packsController,
                                   selectedCurrency: _selectedCurrency,
@@ -638,6 +679,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                               ],
                             ),
                           ),
+                          // 1: Como funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -806,7 +848,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                         _selectedCurrency,
                       );
                     },
-                    context: context,
                   ),
                 ],
               ),

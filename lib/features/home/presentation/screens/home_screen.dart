@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
@@ -14,6 +15,7 @@ import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart' as smoking;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   bool _permissionsChecked = false;
+  bool _isSyncing = false;
   late final ConfettiController _confettiController;
 
   @override
@@ -34,7 +37,149 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       InstalledAppService().preload();
+      _checkAndPerformInitialSync();
     });
+  }
+
+  Future<void> _checkAndPerformInitialSync() async {
+    // Sincroniza uma vez por sessão na HomeScreen quando há usuário logado
+    // Isso garante sync a cada login (novo usuário ou mesmo usuário relogando)
+    final stackTrace = StackTrace.current.toString().split('\n').take(3).join('\n');
+    LoggerService.instance.d('🔍 _checkAndPerformInitialSync chamado de:\n$stackTrace');
+    
+    // Verifica se a HomeScreen é a rota ATIVA (não apenas construída em segundo plano)
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isCurrent) {
+      LoggerService.instance.d('⏭️ Sync pulada: HomeScreen não é a rota ativa (provavelmente AuthWrapper está mostrando outra tela)');
+      return;
+    }
+    
+    // Usa provider global para garantir que sync só aconteça uma vez por sessão
+    final hasSynced = ref.read(initialSyncCompletedProvider);
+    LoggerService.instance.d('🔍 _checkAndPerformInitialSync: _isSyncing=$_isSyncing, hasSynced=$hasSynced');
+    
+    if (_isSyncing || hasSynced) {
+      LoggerService.instance.d('⏭️ Sync pulada: já sincronizando ou já sincronizou nesta sessão');
+      return;
+    }
+    
+    final authService = ref.read(authServiceProvider);
+    final currentUserId = authService.currentUser?.id;
+    
+    LoggerService.instance.d('🔍 Usuário atual: $currentUserId');
+    
+    if (currentUserId == null) {
+      LoggerService.instance.w('⚠️ Sem usuário logado no momento do sync - aguardando...');
+      // NÃO redirecionar - deixar o AuthWrapper cuidar da navegação
+      // O didChangeDependencies listener vai chamar novamente quando o usuário estiver disponível
+      return;
+    }
+    
+    LoggerService.instance.i('🔐 Iniciando sincronização para usuário $currentUserId (rota ativa: ${route.settings.name})');
+    await _performInitialSync(currentUserId);
+  }
+
+  Future<void> _performInitialSync(String userId) async {
+    if (!mounted) return;
+    
+    setState(() => _isSyncing = true);
+    
+    try {
+      LoggerService.instance.i('🔄 =========================================================');
+      LoggerService.instance.i('🔄 INICIANDO SINCRONIZAÇÃO PARA USUÁRIO: $userId');
+      LoggerService.instance.i('🔄 =========================================================');
+      
+      final cloudSync = ref.read(cloudSyncServiceProvider);
+      
+      LoggerService.instance.i('🔄 Chamando cloudSync.syncNow()...');
+      final success = await cloudSync.syncNow();
+      LoggerService.instance.i('🔄 cloudSync.syncNow() retornou: success=$success');
+      
+      if (!mounted) {
+        LoggerService.instance.w('🔄 Widget desmontado após sync, abortando UI updates');
+        return;
+      }
+      
+      if (success) {
+        LoggerService.instance.i('✅ Sincronização reportou SUCESSO');
+        
+        // Força refresh dos providers para pegar dados sincronizados
+        LoggerService.instance.i('🔄 Invalidando providers dos módulos para recarregar dados sincronizados...');
+        ref.invalidate(activeModulesProvider);
+        ref.invalidate(smoking.smokingGamificationNotifierProvider);
+        await Future.delayed(const Duration(milliseconds: 500)); // Aguarda tempo suficiente para recarregar
+        
+        // Verifica se algum módulo foi ativado
+        final activeModules = ref.read(activeModulesProvider);
+        final hasActiveModules = activeModules.isNotEmpty;
+        
+        LoggerService.instance.i('📊 APÓS SYNC: activeModules=$activeModules, count=${activeModules.length}');
+        
+        if (hasActiveModules) {
+          LoggerService.instance.i('✅ MÓDULOS ATIVOS ENCONTRADOS: ${activeModules.map((m) => m.name).join(", ")}');
+          _showSnack('Dados sincronizados.', isSuccess: true);
+        } else {
+          LoggerService.instance.w('⚠️ NENHUM MÓDULO ATIVO APÓS SYNC! Isso é um problema!');
+          _showSnack('Sincronização concluída, mas nenhum módulo ativo foi encontrado.');
+        }
+        
+        LoggerService.instance.i('🔄 =========================================================');
+        LoggerService.instance.i('🔄 FIM DA SINCRONIZAÇÃO');
+        LoggerService.instance.i('🔄 =========================================================');
+      } else {
+        LoggerService.instance.w('⚠️ Sincronização retornou FALHA (success=false)');
+        _showSnack('Não foi possível sincronizar. Tente manualmente nas configurações.', isError: true);
+      }
+    } catch (e, stackTrace) {
+      LoggerService.instance.e('❌ ERRO CRÍTICO na sincronização', error: e);
+      LoggerService.instance.d('StackTrace: $stackTrace');
+      if (mounted) {
+        _showSnack('Erro ao sincronizar dados.', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+        // Marca como sincronizado no provider global
+        ref.read(initialSyncCompletedProvider.notifier).markSynced();
+      }
+    }
+  }
+
+  void _showSnack(String message, {bool isSuccess = false, bool isError = false}) {
+    if (!mounted) return;
+    
+    final isWhite = !isSuccess && !isError;
+    final backgroundColor = isError 
+      ? Colors.red 
+      : (isSuccess ? const Color(0xFF10B981) : Colors.white);
+    final foregroundColor = isWhite ? Colors.black87 : Colors.white;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline : (isSuccess ? Icons.cloud_done : Icons.cloud),
+              color: foregroundColor,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: foregroundColor),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -55,6 +200,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    
+    // Escuta mudanças no auth state - mas só dispara sync se ainda não foi feito
+    ref.listenManual(authServiceProvider, (previous, next) {
+      final hadUser = previous?.currentUser != null;
+      final hasUser = next.currentUser != null;
+      final hasSynced = ref.read(initialSyncCompletedProvider);
+      
+      LoggerService.instance.d('🎧 Auth state mudou: hadUser=$hadUser, hasUser=$hasUser, hasSynced=$hasSynced');
+      
+      if (!hadUser && hasUser && !hasSynced) {
+        LoggerService.instance.i('🔐 Usuário logou na HomeScreen. Disparando sync...');
+        _checkAndPerformInitialSync();
+      } else {
+        LoggerService.instance.d('⏭️ Auth listener ignorado: já sincronizou ou condições não atendidas');
+      }
+    });
+    
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (_permissionsChecked) return;
       final route = ModalRoute.of(context);
@@ -379,6 +541,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   ),
                 ),
               ],
+            ),
+            // Overlay de sincronização inicial (esmaece a tela e bloqueia interações)
+            if (_isSyncing)
+              Positioned.fill(
+                child: AbsorbPointer(
+                  absorbing: true,
+                  child: Container(
+                    color: Colors.black54,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Sincronizando dados...',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Aguarde enquanto recuperamos seus dados da nuvem',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

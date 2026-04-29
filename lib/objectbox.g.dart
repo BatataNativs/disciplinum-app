@@ -1537,7 +1537,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(23, 4764573458827263871),
       name: 'SmokingGamificationEntity',
-      lastPropertyId: const obx_int.IdUid(13, 835436570193555287),
+      lastPropertyId: const obx_int.IdUid(14, 8564130550990777517),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -1604,6 +1604,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(13, 835436570193555287),
             name: 'earnedMedalhasList',
             type: 30,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(14, 8564130550990777517),
+            name: 'isModuleActive',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -4108,7 +4113,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
               .earnedMedalhasList
               .map(fbb.writeString)
               .toList(growable: false));
-          fbb.startTable(14);
+          fbb.startTable(15);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, earnedInsigniasOffset);
           fbb.addOffset(2, earnedMedalhasOffset);
@@ -4122,6 +4127,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(10, object.updatedAt.millisecondsSinceEpoch);
           fbb.addOffset(11, earnedInsigniasListOffset);
           fbb.addOffset(12, earnedMedalhasListOffset);
+          fbb.addBool(13, object.isModuleActive);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -4163,7 +4169,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..earnedMedalhasList = const fb.ListReader<String>(
                     fb.StringReader(asciiOptimization: true),
                     lazy: false)
-                .vTableGet(buffer, rootOffset, 28, []);
+                .vTableGet(buffer, rootOffset, 28, [])
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 30, false);
 
           return object;
         }),
@@ -5999,6 +6007,11 @@ class SmokingGamificationEntity_ {
   static final earnedMedalhasList =
       obx.QueryStringVectorProperty<SmokingGamificationEntity>(
           _entities[22].properties[12]);
+
+  /// See [SmokingGamificationEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<SmokingGamificationEntity>(
+          _entities[22].properties[13]);
 }
 
 /// [SpendingGamificationEntity] entity fields to define ObjectBox queries.

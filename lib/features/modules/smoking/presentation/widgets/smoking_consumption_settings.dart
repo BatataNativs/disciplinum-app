@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class SmokingConsumptionSettings extends StatefulWidget {
   final bool isDark;
+  final bool isModuleActive;
   final TextEditingController priceController;
   final TextEditingController packsController;
   final String selectedCurrency;
@@ -13,6 +14,7 @@ class SmokingConsumptionSettings extends StatefulWidget {
   const SmokingConsumptionSettings({
     super.key,
     required this.isDark,
+    this.isModuleActive = false,
     required this.priceController,
     required this.packsController,
     required this.selectedCurrency,
@@ -88,13 +90,18 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                       controller: widget.priceController,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
+                      enabled: !widget.isModuleActive,
                       style: TextStyle(
                         fontWeight: FontWeight.bold, 
-                        color: widget.priceController.text.isNotEmpty && widget.priceController.text != '0,00'
-                            ? (widget.isDark ? Colors.white : Colors.black)
-                            : (widget.isDark ? Colors.white38 : Colors.black38),
+                        color: widget.isModuleActive
+                            ? Colors.grey.shade600
+                            : (widget.priceController.text.isNotEmpty && widget.priceController.text != '0,00'
+                                ? (widget.isDark ? Colors.white : Colors.black)
+                                : (widget.isDark ? Colors.white38 : Colors.black38)),
                       ),
                       decoration: InputDecoration(
+                        filled: widget.isModuleActive,
+                        fillColor: widget.isModuleActive ? Colors.grey.shade100 : null,
                         prefixIcon: Container(
                           margin: const EdgeInsets.only(left: 4, right: 4),
                           child: DropdownButtonHideUnderline(
@@ -192,13 +199,18 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                       controller: widget.packsController,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
+                      enabled: !widget.isModuleActive,
                       style: TextStyle(
                         fontWeight: FontWeight.bold, 
-                        color: widget.packsController.text.isNotEmpty && widget.packsController.text != '0'
-                            ? (widget.isDark ? Colors.white : Colors.black)
-                            : (widget.isDark ? Colors.white38 : Colors.black38),
+                        color: widget.isModuleActive
+                            ? Colors.grey.shade600
+                            : (widget.packsController.text.isNotEmpty && widget.packsController.text != '0'
+                                ? (widget.isDark ? Colors.white : Colors.black)
+                                : (widget.isDark ? Colors.white38 : Colors.black38)),
                       ),
                       decoration: InputDecoration(
+                        filled: widget.isModuleActive,
+                        fillColor: widget.isModuleActive ? Colors.grey.shade100 : null,
                         hintText: '0',
                         hintStyle: TextStyle(
                           color: widget.isDark ? Colors.white38 : Colors.black38,

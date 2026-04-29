@@ -1,5 +1,6 @@
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/contract_helpers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Estado do módulo Smoking implementando [ModuleStateContract]
 ///
@@ -179,35 +180,63 @@ class SmokingModuleState implements ModuleStateContract {
   bool get hasSignificantStreak => consecutivePositiveDays >= 7;
 
   /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory SmokingModuleState.fromJson(Map<String, dynamic> json) {
-    // Valida conformidade com contrato
-    ContractComplianceValidator.assertValid(json, 'smoking');
+    // Helper para ler campo em snake_case ou camelCase
+    T? readField<T>(String snakeCase, String camelCase) {
+      return (json[snakeCase] as T?) ?? (json[camelCase] as T?);
+    }
+
+    // Verifica se é um JSON antigo (camelCase)
+    final isLegacyFormat = json.containsKey('dailyCost') || json.containsKey('packCost');
+    
+    if (isLegacyFormat) {
+      LoggerService.instance.w('⚠️ SmokingModuleState.fromJson: Detectado formato camelCase (legacy). Migrando dados...');
+    }
+
+    // Extrai timestamps com fallback para now() se não existirem (backward compatibility)
+    final createdAt = json['created_at'] != null 
+        ? DateTime.parse(json['created_at'] as String)
+        : (json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now());
+    
+    final updatedAt = json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : (json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now());
+
+    // Extrai campos de dados com suporte a ambos os formatos
+    final dailyCost = (readField<num>('daily_cost', 'dailyCost'))?.toDouble() ?? 0.0;
+    final packCost = (readField<num>('pack_cost', 'packCost'))?.toDouble() ?? 0.0;
 
     return SmokingModuleState(
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       earnedInsignias:
-          (json['earned_insignias'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_insignias', 'earnedInsignias'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
       earnedMedalhas:
-          (json['earned_medalhas'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_medalhas', 'earnedMedalhas'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
-      consecutivePositiveDays: json['consecutive_positive_days'] as int? ?? 0,
-      disciplinumCount: json['disciplinum_count'] as int? ?? 0,
-      lastPositiveCheckIn: json['last_positive_check_in'] != null
-          ? DateTime.parse(json['last_positive_check_in'] as String)
+      consecutivePositiveDays: readField<int>('consecutive_positive_days', 'consecutivePositiveDays') ?? 0,
+      disciplinumCount: readField<int>('disciplinum_count', 'disciplinumCount') ?? 0,
+      lastPositiveCheckIn: readField<String>('last_positive_check_in', 'lastPositiveCheckIn') != null
+          ? DateTime.parse(readField<String>('last_positive_check_in', 'lastPositiveCheckIn')!)
           : null,
-      startDate: json['start_date'] != null
-          ? DateTime.parse(json['start_date'] as String)
+      startDate: readField<String>('start_date', 'startDate') != null
+          ? DateTime.parse(readField<String>('start_date', 'startDate')!)
           : null,
-      dailyCost: (json['daily_cost'] as num?)?.toDouble() ?? 0.0,
-      packCost: (json['pack_cost'] as num?)?.toDouble() ?? 0.0,
+      dailyCost: dailyCost,
+      packCost: packCost,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
-      isModuleActive: json['is_module_active'] as bool? ?? json['is_active'] as bool? ?? false,
+      isModuleActive: readField<bool>('is_module_active', 'isModuleActive') ?? 
+                      readField<bool>('is_active', 'isActive') ?? false,
     );
   }
 

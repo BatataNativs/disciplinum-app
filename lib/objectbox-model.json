@@ -1500,7 +1500,7 @@
     },
     {
       "id": "23:4764573458827263871",
-      "lastPropertyId": "13:835436570193555287",
+      "lastPropertyId": "14:8564130550990777517",
       "name": "SmokingGamificationEntity",
       "properties": [
         {
@@ -1568,6 +1568,11 @@
           "id": "13:835436570193555287",
           "name": "earnedMedalhasList",
           "type": 30
+        },
+        {
+          "id": "14:8564130550990777517",
+          "name": "isModuleActive",
+          "type": 1
         }
       ],
       "relations": []

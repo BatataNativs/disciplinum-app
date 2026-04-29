@@ -38,12 +38,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   // --- CONTROLADOR DE PÁGINA ---
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Como Funciona, 1=Configurações
+  int _selectedIndex = 0; // 0=Foco e produtividade, 1=Como Funciona
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Foco e produtividade"
     _loadAllPersistentData();
     
     // NOVO: Escutar mudanças na gamificação para remover intervalo quando período for cumprido
@@ -458,9 +458,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     }
   }
 
-  String _formatTime(TimeOfDay time) =>
-      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -513,28 +510,27 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         });
                       },
                       children: [
-                        // 0: Como Funciona
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: _buildTabContent(0),
-                        ),
-                        
-                        // 1: Configurações
+                        // 0: Foco e produtividade (módulo)
                         SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Column(
                             children: [
-                              _buildTabContent(1),
+                              _buildTabContent(0),
                               const SizedBox(height: 100),
                             ],
                           ),
+                        ),
+                        // 1: Como Funciona
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: _buildTabContent(1),
                         ),
                       ],
                     ),
                   ),
                   
-                  // Botões apenas na aba 1
-                  if (_selectedIndex == 1)
+                  // Botões apenas na aba 0 (módulo)
+                  if (_selectedIndex == 0)
                     _buildBottomButtons(isDark, isModuleActive),
                 ],
               ),
@@ -667,7 +663,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como Funciona', 'Foco e produtividade'];
+    final List<String> options = ['Foco e produtividade', 'Como Funciona'];
 
     return Container(
       height: 44,
@@ -736,28 +732,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return HowItWorksSection(
-          isDark: isDark,
-          onGetStarted: () => _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
-          infoCards: const [
-            InfoCardData(
-              icon: Icons.settings_outlined,
-              title: 'Em "Configurar", defina seus intervalos de foco',
-              content: 'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
-            ),
-            InfoCardData(
-              icon: Icons.notifications_outlined,
-              title: 'Notificações',
-              content: 'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
-            ),
-            InfoCardData(
-              icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", monitore seu foco',
-              content: 'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
-            ),
-          ],
-        );
-      case 1:
+        // 0: Foco e produtividade (módulo)
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -809,11 +784,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                               style: TextStyle(color: Colors.grey))
                         else
                           Text(
-                            'Das ${_formatTime(_focusStart!)} até ${_formatTime(_focusEnd!)}',
+                            '${_focusStart!.hour.toString().padLeft(2, '0')}:${_focusStart!.minute.toString().padLeft(2, '0')} - ${_focusEnd!.hour.toString().padLeft(2, '0')}:${_focusEnd!.minute.toString().padLeft(2, '0')}',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: isDark ? Colors.white : Colors.black87),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
                           ),
                         const Text(
                           'Para editar, apague este horário, e defina novamente em "Configurar"',
@@ -902,10 +878,31 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
           ],
         );
+      case 1:
+        // 1: Como Funciona
+        return HowItWorksSection(
+          isDark: isDark,
+          onGetStarted: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+          infoCards: const [
+            InfoCardData(
+              icon: Icons.settings_outlined,
+              title: 'Em "Configurar", defina seus intervalos de foco',
+              content: 'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
+            ),
+            InfoCardData(
+              icon: Icons.notifications_outlined,
+              title: 'Notificações',
+              content: 'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
+            ),
+            InfoCardData(
+              icon: Icons.bar_chart_rounded,
+              title: 'Em "Estatísticas", monitore seu foco',
+              content: 'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
+            ),
+          ],
+        );
       default:
         return const SizedBox.shrink();
     }
   }
-
 }
-

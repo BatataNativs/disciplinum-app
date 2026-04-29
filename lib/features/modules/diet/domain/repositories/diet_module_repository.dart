@@ -52,11 +52,22 @@ class DietModuleRepository implements ModuleRepositoryContract<DietModuleState> 
     try {
       _setStatus(RepositoryStatus.busy);
       
+      // Busca se já existe algum objeto no box
+      final existing = _box.getAll().firstOrNull;
+      
       final entity = DietGamificationEntity.fromModuleState('', state.toJson());
-      entity.id = 1;
+      
+      // Se já existe, usa o mesmo ID para atualizar
+      // Se não existe, usa ID 0 para deixar ObjectBox gerar novo ID
+      if (existing != null) {
+        entity.id = existing.id;
+      } else {
+        entity.id = 0; // ObjectBox vai gerar novo ID
+      }
+      
       _box.put(entity);
 
-      LoggerService.instance.gamification('✅ DietModuleState salvo localmente');
+      LoggerService.instance.gamification('✅ DietModuleState salvo localmente (id=${entity.id})');
       _setStatus(RepositoryStatus.ready);
       return state;
     } catch (e) {
@@ -142,11 +153,14 @@ class DietModuleRepository implements ModuleRepositoryContract<DietModuleState> 
       
       if (currentUserId == null) throw Exception('Usuário não autenticado');
 
-      await supabase.from('diet_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      await supabase.from('diet_gamification_states').upsert(
+        {
+          'user_id': currentUserId,
+          'state_data': state.toJson(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'user_id',
+      );
 
       LoggerService.instance.gamification('☁️ DietModuleState sincronizado');
       _setStatus(RepositoryStatus.ready);

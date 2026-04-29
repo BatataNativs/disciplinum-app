@@ -36,12 +36,12 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   bool _isLoadingData = false;
 
   late PageController _pageController;
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // 0=Evitar conteúdo adulto, 1=Como funciona
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Evitar conteúdo adulto"
     _loadAllPersistentData();
   }
 
@@ -403,6 +403,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                           });
                         },
                         children: [
+                          // 0: Evitar conteúdo adulto (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -412,6 +413,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                               ],
                             ),
                           ),
+                          // 1: Como funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -442,7 +444,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
   Widget _buildSegmentedControl() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<String> options = ['Como funciona', 'Evitar conteúdo adulto'];
+    final List<String> options = ['Evitar conteúdo adulto', 'Como funciona'];
 
     return Container(
       height: 44,
@@ -511,34 +513,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return Column(
-          children: [
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.settings_outlined,
-              title: "Em Selecionar apps, escolha os aplicativos a monitorar",
-              content:
-                  "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.notifications_outlined,
-              title: "Em Notificações, configure lembretes",
-              content:
-                  "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              isDark: isDark,
-              icon: Icons.bar_chart_rounded,
-              title: "Em Estatísticas, acompanhe sua evolução",
-              content:
-                  "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
-            ),
-          ],
-        );
-      case 1:
+        // 0: Evitar conteúdo adulto (módulo)
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -612,6 +587,35 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
               ),
           ],
         );
+      case 1:
+        // 1: Como funciona
+        return Column(
+          children: [
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.settings_outlined,
+              title: "Em Selecionar apps, escolha os aplicativos a monitorar",
+              content:
+                  "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.notifications_outlined,
+              title: "Em Notificações, configure lembretes",
+              content:
+                  "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
+            ),
+            const SizedBox(height: 16),
+            NicheInfoCard(
+              isDark: isDark,
+              icon: Icons.bar_chart_rounded,
+              title: "Em Estatísticas, acompanhe sua evolução",
+              content:
+                  "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
+            ),
+          ],
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -622,23 +626,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: "Começar",
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
-              }
-            },
-          ),
-        );
-      case 1:
+        // 0: Evitar conteúdo adulto (módulo) - botão de selecionar apps
         return SizedBox(
           width: double.infinity,
           height: 55,
@@ -648,6 +636,24 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: _openSelectApps,
+          ),
+        );
+      case 1:
+        // 1: Como funciona - botão para voltar ao módulo
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.rocket_launch_rounded,
+            label: "Entendi!",
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: () {
+              if (_pageController.hasClients) {
+                _pageController.animateToPage(0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic);
+              }
+            },
           ),
         );
       default:

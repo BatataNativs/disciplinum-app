@@ -27,34 +27,18 @@ class BingeEatingActionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selectedIndex == 0) {
-      return _buildTabActions(0);
-    } else {
+      // 0: Compulsão alimentar (módulo) - mostra botões de ação
       return _buildBottomButtons();
+    } else {
+      // 1: Como funciona - mostra botão para voltar ao módulo
+      return _buildTabActions(1);
     }
   }
 
   Widget _buildTabActions(int index) {
     switch (index) {
       case 0:
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: "Começar",
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (pageController.hasClients) {
-                pageController.animateToPage(
-                  1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                );
-              }
-            },
-          ),
-        );
-      case 1:
+        // 0: Compulsão alimentar (módulo) - botão de selecionar apps
         return Padding(
           padding: const EdgeInsets.all(16),
           child: ModernStartButton(
@@ -63,6 +47,26 @@ class BingeEatingActionsWidget extends StatelessWidget {
             color: const Color(0xFF6366F1),
             isDark: isDark,
             onTap: onSelectApps,
+          ),
+        );
+      case 1:
+        // 1: Como funciona - botão para voltar ao módulo
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ModernStartButton(
+            icon: Icons.rocket_launch_rounded,
+            label: "Entendi!",
+            color: const Color(0xFF6366F1),
+            isDark: isDark,
+            onTap: () {
+              if (pageController.hasClients) {
+                pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            },
           ),
         );
       default:

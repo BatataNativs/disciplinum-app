@@ -22,8 +22,12 @@ final smokingStreakProvider = Provider<int>((ref) {
 });
 
 /// Provider para verificar se o módulo Smoking está ativo
+/// Retorna true se: está explicitamente ativo OU ainda está carregando
+/// Isso evita que a home screen mostre "Sem módulos ativos" durante o carregamento
 final smokingActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(smokingGamificationNotifierProvider);
+  // Se ainda está carregando, assume que pode estar ativo (não esconde o módulo)
+  if (state.isLoading) return true;
   return state.isModuleActive;
 });
 

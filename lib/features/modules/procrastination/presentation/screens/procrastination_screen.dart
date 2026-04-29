@@ -30,7 +30,7 @@ class ProcrastinationScreen extends ConsumerStatefulWidget {
   const ProcrastinationScreen({
     super.key,
     this.heroTag,
-    this.initialTabIndex = 0,
+    this.initialTabIndex = 1, // Default para Evitar procrastinação (índice 1, Como funciona = índice 0)
   });
 
   @override
@@ -89,7 +89,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               // Segmented Control (2 opcoes)
               CustomSegmentedControl(
                 controller: _tabController,
-                tabs: const ['Como funciona', 'Evitar procrastinação'],
+                tabs: const ['Evitar procrastinação', 'Como funciona'],
                 isDark: isDark,
               ),
 
@@ -98,9 +98,10 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
+                    _buildTasksView(isDark, service, isActive),
                     HowItWorksSection(
                       isDark: isDark,
-                      onGetStarted: () => _tabController.animateTo(1),
+                      onGetStarted: () => _tabController.animateTo(0),
                       infoCards: const [
                         InfoCardData(
                           icon: Icons.checklist_rounded,
@@ -119,7 +120,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                         ),
                       ],
                     ),
-                    _buildTasksView(isDark, service, isActive),
                   ],
                 ),
               ),

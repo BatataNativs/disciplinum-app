@@ -1,5 +1,6 @@
 import 'package:disciplinum/core/modules/contracts/module_contracts.dart';
 import 'package:disciplinum/core/modules/contracts/contract_helpers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Estado do módulo Focus implementando [ModuleStateContract]
 /// 
@@ -154,35 +155,58 @@ class FocusModuleState implements ModuleStateContract {
   }
 
   /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory FocusModuleState.fromJson(Map<String, dynamic> json) {
-    // Valida conformidade com contrato
-    ContractComplianceValidator.assertValid(json, 'focus');
+    // Helper para ler campo em snake_case ou camelCase
+    T? readField<T>(String snakeCase, String camelCase) {
+      return (json[snakeCase] as T?) ?? (json[camelCase] as T?);
+    }
+
+    // Verifica se é um JSON antigo (camelCase)
+    final isLegacyFormat = json.containsKey('sessionsCompleted') || json.containsKey('totalFocusMinutes');
+    
+    if (isLegacyFormat) {
+      LoggerService.instance.w('⚠️ FocusModuleState.fromJson: Detectado formato camelCase (legacy). Migrando dados...');
+    }
+
+    // Extrai timestamps com fallback para now() se não existirem (backward compatibility)
+    final createdAt = json['created_at'] != null 
+        ? DateTime.parse(json['created_at'] as String)
+        : (json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now());
+    
+    final updatedAt = json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : (json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now());
 
     return FocusModuleState(
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       earnedInsignias:
-          (json['earned_insignias'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_insignias', 'earnedInsignias'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
       earnedMedalhas:
-          (json['earned_medalhas'] as List<dynamic>?)
+          (readField<List<dynamic>>('earned_medalhas', 'earnedMedalhas'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
-      sessionsCompleted: json['sessions_completed'] as int? ?? 0,
-      totalFocusMinutes: json['total_focus_minutes'] as int? ?? 0,
-      currentStreakDays: json['current_streak_days'] as int? ?? 0,
-      longestStreakDays: json['longest_streak_days'] as int? ?? 0,
+      sessionsCompleted: readField<int>('sessions_completed', 'sessionsCompleted') ?? 0,
+      totalFocusMinutes: readField<int>('total_focus_minutes', 'totalFocusMinutes') ?? 0,
+      currentStreakDays: readField<int>('current_streak_days', 'currentStreakDays') ?? 0,
+      longestStreakDays: readField<int>('longest_streak_days', 'longestStreakDays') ?? 0,
       currentStageId: json['stage']?['id'] as String? ?? 'bronze',
       unlockedAchievements:
-          (json['unlocked_achievements'] as List<dynamic>?)
+          (readField<List<dynamic>>('unlocked_achievements', 'unlockedAchievements'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
       respectedPeriods:
-          (json['respected_periods'] as List<dynamic>?)
+          (readField<List<dynamic>>('respected_periods', 'respectedPeriods'))
                   ?.map((e) => e as String)
                   .toList() ??
               [],
