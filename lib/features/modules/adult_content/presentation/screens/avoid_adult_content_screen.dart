@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/features/modules/adult_content/presentation/screens/avoid_adult_content_notifications_screen.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -430,11 +429,8 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                 ),
               ),
               _selectedIndex == 0
-                  ? Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _buildTabActions(0),
-                    )
-                  : _buildBottomButtons(isDark),
+                  ? _buildBottomButtons(isDark)
+                  : const SizedBox.shrink(),
             ],
           ),
         ),
@@ -621,46 +617,6 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     }
   }
 
-
-  Widget _buildTabActions(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    switch (index) {
-      case 0:
-        // 0: Evitar conteúdo adulto (módulo) - botão de selecionar apps
-        return SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: ModernStartButton(
-            icon: Icons.apps_rounded,
-            label: "Selecionar aplicativos",
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: _openSelectApps,
-          ),
-        );
-      case 1:
-        // 1: Como funciona - botão para voltar ao módulo
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: "Entendi!",
-            color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic);
-              }
-            },
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
   Widget _buildBottomButtons(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -681,24 +637,6 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _openSelectApps,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_outlined,
-                  label: "Notificações",
-                  color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const AvoidAdultContentNotificationsScreen(),
-                      ),
-                    );
-                  },
                 ),
               ),
             ],

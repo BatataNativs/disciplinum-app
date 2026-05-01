@@ -1,37 +1,37 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_medalha.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_medal.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 
 /// Service de medalhas específico do módulo Binge Eating
 /// Implementa a interface base com lógica específica do Binge Eating
-class BingeEatingMedalhaService implements ModuleMedalhaInterface {
+class BingeEatingMedalService implements ModuleMedalhaInterface {
   final BingeEatingGamificationRepository _repository;
-  final List<String> _earnedMedalhas = [];
+  final List<String> _earnedMedals = [];
   int _disciplinumCount = 0;
 
-  BingeEatingMedalhaService(this._repository);
+  BingeEatingMedalService(this._repository);
 
   Future<void> initialize() async {
     try {
       final state = await _repository.getBingeEatingState();
       if (state != null) {
-        _earnedMedalhas.clear();
-        _earnedMedalhas.addAll(state.earnedMedalhas);
+        _earnedMedals.clear();
+        _earnedMedals.addAll(state.earnedMedalhas);
         _disciplinumCount = state.disciplinumCount;
-        LoggerService.instance.gamification('BingeEatingMedalhaService inicializado');
+        LoggerService.instance.gamification('BingeEatingMedalService inicializado');
       }
     } catch (e) {
-      LoggerService.instance.e('Erro ao inicializar BingeEatingMedalhaService', error: e);
+      LoggerService.instance.e('Erro ao inicializar BingeEatingMedalService', error: e);
     }
   }
 
   Future<void> updateFromModuleState(dynamic state) async {
     if (state is BingeEatingModuleState) {
-      _earnedMedalhas.clear();
-      _earnedMedalhas.addAll(state.earnedMedalhas);
+      _earnedMedals.clear();
+      _earnedMedals.addAll(state.earnedMedalhas);
       _disciplinumCount = state.disciplinumCount;
     }
   }
@@ -45,27 +45,27 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
       final currentState = await _repository.getBingeEatingState();
       if (currentState != null) {
         final updatedState = currentState.copyWith(
-          earnedMedalhas: _earnedMedalhas,
+          earnedMedalhas: _earnedMedals,
           disciplinumCount: _disciplinumCount,
         );
         
         await _repository.saveBingeEatingState(updatedState);
-        LoggerService.instance.gamification('Estado BingeEatingMedalhaService salvo');
+        LoggerService.instance.gamification('Estado BingeEatingMedalService salvo');
       }
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado BingeEatingMedalhaService', error: e);
+      LoggerService.instance.e('Erro ao salvar estado BingeEatingMedalService', error: e);
     }
   }
 
   @override
   List<String> getAllMedalhaIds() {
-    return BingeEatingMedalha.values.map((medalha) => medalha.name).toList();
+    return BingeEatingMedal.values.map((medal) => medal.name).toList();
   }
 
   @override
   String getMedalhaName(String medalhaId) {
     try {
-      return BingeEatingMedalha.values.firstWhere((m) => m.name == medalhaId).nameBr;
+      return BingeEatingMedal.values.firstWhere((m) => m.name == medalhaId).nameBr;
     } catch (e) {
       return medalhaId;
     }
@@ -74,8 +74,8 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaAsset(String medalhaId) {
     try {
-      final medalha = BingeEatingMedalha.values.firstWhere((m) => m.name == medalhaId);
-      return medalha.asset;
+      final medal = BingeEatingMedal.values.firstWhere((m) => m.name == medalhaId);
+      return medal.asset;
     } catch (e) {
       return 'assets/medalhas/binge_eating/$medalhaId.png';
     }
@@ -84,8 +84,8 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaRequirement(String medalhaId) {
     try {
-      final medalha = BingeEatingMedalha.values.firstWhere((m) => m.name == medalhaId);
-      return medalha.description;
+      final medal = BingeEatingMedal.values.firstWhere((m) => m.name == medalhaId);
+      return medal.description;
     } catch (e) {
       return 'Requisito não encontrado';
     }
@@ -93,25 +93,25 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   Future<bool> hasEarnedMedalha(String medalhaId) async {
-    return _earnedMedalhas.contains(medalhaId);
+    return _earnedMedals.contains(medalhaId);
   }
 
   @override
   Future<void> awardMedalha(String medalhaId) async {
-    if (!_earnedMedalhas.contains(medalhaId)) {
-      _earnedMedalhas.add(medalhaId);
+    if (!_earnedMedals.contains(medalhaId)) {
+      _earnedMedals.add(medalhaId);
       
       LoggerService.instance.gamification('Medalha concedida no Binge Eating: $medalhaId');
       
       // Implementa celebração da medalha
-      await _showMedalhaCelebration(medalhaId);
+      await _showMedalCelebration(medalhaId);
     }
   }
 
   @override
   Future<void> revokeMedalha(String medalhaId) async {
-    if (_earnedMedalhas.contains(medalhaId)) {
-      _earnedMedalhas.remove(medalhaId);
+    if (_earnedMedals.contains(medalhaId)) {
+      _earnedMedals.remove(medalhaId);
       
       LoggerService.instance.gamification('Medalha revogada no Binge Eating: $medalhaId');
     }
@@ -119,27 +119,27 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   Future<List<String>> getEarnedMedalhas() async {
-    return List.unmodifiable(_earnedMedalhas);
+    return List.unmodifiable(_earnedMedals);
   }
 
   @override
   Future<List<String>> checkForNewMedalhas(Map<String, dynamic> moduleData) async {
-    final newMedalhas = <String>[];
+    final newMedals = <String>[];
     final disciplinumCount = moduleData['disciplinumCount'] ?? _disciplinumCount;
 
-    for (final medalha in BingeEatingMedalha.values) {
-      if (!await hasEarnedMedalha(medalha.name) && medalha.canBeAwarded(disciplinumCount)) {
-        newMedalhas.add(medalha.name);
-        await awardMedalha(medalha.name);
+    for (final medal in BingeEatingMedal.values) {
+      if (!await hasEarnedMedalha(medal.name) && medal.canBeAwarded(disciplinumCount)) {
+        newMedals.add(medal.name);
+        await awardMedalha(medal.name);
       }
     }
 
-    return newMedalhas;
+    return newMedals;
   }
 
   @override
   Future<void> resetMedalhas() async {
-    _earnedMedalhas.clear();
+    _earnedMedals.clear();
     _disciplinumCount = 0;
     await _saveState();
     LoggerService.instance.gamification('Medalhas do Binge Eating resetadas');
@@ -169,7 +169,7 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
   }
 
   /// Verifica se há medalhas Disciplinum para conceder
-  void checkDisciplinumMedalhas(int disciplinumCount) async {
+  void checkDisciplinumMedals(int disciplinumCount) async {
     if (disciplinumCount >= 1 && !await hasEarnedMedalha('bronze')) {
       await awardMedalha('bronze');
     } else if (disciplinumCount >= 2 && !await hasEarnedMedalha('prata')) {
@@ -182,14 +182,14 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
   }
 
   /// Implementa celebração da medalha
-  Future<void> _showMedalhaCelebration(String medalhaId) async {
+  Future<void> _showMedalCelebration(String medalhaId) async {
     try {
       // Envia notificação de conquista
-      final medalhaName = getMedalhaName(medalhaId);
-      LoggerService.instance.gamification('Celebrando medalha Binge Eating: $medalhaName');
+      final medalName = getMedalhaName(medalhaId);
+      LoggerService.instance.gamification('Celebrando medalha Binge Eating: $medalName');
       
       // Implementa celebração visual completa
-      LoggerService.instance.gamification('Medalha conquistada no Binge Eating: $medalhaName');
+      LoggerService.instance.gamification('Medalha conquistada no Binge Eating: $medalName');
       
       // Usa serviços existentes do projeto
       try {
@@ -205,7 +205,7 @@ class BingeEatingMedalhaService implements ModuleMedalhaInterface {
         LoggerService.instance.w('Feedback tátil não disponível', error: e);
       }
       
-      LoggerService.instance.gamification('Celebração visual completa para medalha: $medalhaName');
+      LoggerService.instance.gamification('Celebração visual completa para medalha: $medalName');
       
     } catch (e) {
       LoggerService.instance.e('Erro ao mostrar celebração de medalha Binge Eating', error: e);

@@ -13,7 +13,7 @@ class AppLockButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: () => _showAppLockTest(context),
       icon: const Icon(Icons.security),
-      label: const Text('🧪 Testar Tela de Bloqueio'),
+      label: const Text('Testar Tela Lock'),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.cyan.withValues(alpha: 0.2),
         foregroundColor: Colors.cyan,

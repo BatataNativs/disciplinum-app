@@ -46,3 +46,21 @@ final focusHasMedalhaProvider = Provider.family<bool, String>((ref, medalhaId) {
   final state = ref.watch(focusGamificationNotifierProvider);
   return state.earnedMedalhas.contains(medalhaId);
 });
+
+/// Provider para insígnias conquistadas
+final focusInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(focusGamificationNotifierProvider);
+  return state.earnedInsignias;
+});
+
+/// Provider para medalhas conquistadas
+final focusMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(focusGamificationNotifierProvider);
+  return state.earnedMedalhas;
+});
+
+/// Provider para contagem de Disciplinum
+final focusDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(focusGamificationNotifierProvider);
+  return state.earnedInsignias.where((i) => i == 'disciplinum').length;
+});

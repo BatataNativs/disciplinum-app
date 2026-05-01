@@ -102,3 +102,27 @@ final readingGamificationNotifierProvider = StateNotifierProvider<ReadingGamific
 final readingGamificationStateProvider = Provider<ReadingGamificationState>((ref) {
   return ref.watch(readingGamificationNotifierProvider);
 });
+
+/// Provider para o streak do Reading
+final readingStreakProvider = Provider<int>((ref) {
+  final state = ref.watch(readingGamificationNotifierProvider);
+  return state.currentStreak;
+});
+
+/// Provider para insígnias conquistadas
+final readingInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(readingGamificationNotifierProvider);
+  return state.earnedInsigniasList;
+});
+
+/// Provider para medalhas conquistadas
+final readingMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(readingGamificationNotifierProvider);
+  return state.earnedMedalhasList;
+});
+
+/// Provider para contagem de Disciplinum
+final readingDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(readingGamificationNotifierProvider);
+  return state.earnedInsigniasList.where((i) => i == 'disciplinum').length;
+});

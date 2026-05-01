@@ -39,23 +39,23 @@ extension FocusInsigniaExtension on FocusInsignia {
   String get nameBr {
     switch (this) {
       case FocusInsignia.madeira:
-        return 'Focado Madeira';
+        return 'Madeira';
       case FocusInsignia.ferro:
-        return 'Focado Ferro';
+        return 'Ferro';
       case FocusInsignia.aluminio:
-        return 'Focado Alumínio';
+        return 'Alumínio';
       case FocusInsignia.latao:
-        return 'Focado Latão';
+        return 'Latão';
       case FocusInsignia.bronze:
-        return 'Focado Bronze';
+        return 'Bronze';
       case FocusInsignia.prata:
-        return 'Focado Prata';
+        return 'Prata';
       case FocusInsignia.ouro:
-        return 'Focado Ouro';
+        return 'Ouro';
       case FocusInsignia.diamante:
-        return 'Focado Diamante';
+        return 'Diamante';
       case FocusInsignia.disciplinum:
-        return 'Focado Disciplinum';
+        return 'Disciplinum';
     }
   }
 

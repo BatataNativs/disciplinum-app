@@ -15,8 +15,10 @@ import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 
 import 'how_it_works_screen.dart';
-import 'sync_backup_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:disciplinum/features/app_lock/domain/entities/app_lock_event.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/features/app_lock/presentation/screens/app_lock_screen.dart';
 import 'secret_menu_screen.dart'; // Importe a nova tela
 
 /// Provider para estado de pausa de notificações
@@ -115,10 +117,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  void _mostrarSyncBackup() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SyncBackupScreen()),
+  void _testarTelaLock(BuildContext context) {
+    EnhancedSnackBarHelper.showInfo(
+        context, "Dev: Remover botão de teste antes de publicar!");
+
+    final testEvent = AppLockEvent(
+      packageName: 'com.whatsapp',
+      appName: 'WhatsApp',
+      appIconBytes: null,
+      nicheId: NicheId.focus,
+      alertMessage:
+          '⏳ Atenção aos objetivos. Mantenha o foco e a disciplina para alcançar seu objetivo!',
+      timestamp: DateTime.now(),
+      onExitApp: () => Navigator.of(context).pop(),
+      onOpenApp: () => Navigator.of(context).pop(),
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AppLockScreen(lockEvent: testEvent),
+      ),
     );
   }
 
@@ -377,25 +395,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: NotificationService.openNotificationSettings,
                 ),
               ]),
-              sectionHeader('Sincronização'),
-              settingContainer([
-                ListTile(
-                  dense: true,
-                  leading: Icon(Icons.cloud_sync_outlined,
-                      color: isDark ? Colors.white70 : Colors.black54),
-                  title: Text(
-                    'Backup e Sincronização',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  subtitle: const Text('Backup e segurança na nuvem'),
-                  trailing: const Icon(Icons.chevron_right, size: 20),
-                  onTap: _mostrarSyncBackup,
-                ),
-              ]),
               sectionHeader('Suporte e Feedback'),
               settingContainer([
                 ListTile(
@@ -526,15 +525,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ),
-                  // Botão de Tema (Somente para Dev)
-                  IconButton(
-                    icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                    onPressed: () {
-                      ref.read(themeControllerProvider.notifier).toggleTheme();
-                      EnhancedSnackBarHelper.showInfo(context,
-                          "Dev, lembre-se de remover esse botão antes de publicar o app!");
-                    },
-                    color: Colors.red.withValues(alpha: 0.2),
+                  // Botões de Dev (remover antes de publicar)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Botão de Tema (Somente para Dev)
+                      IconButton(
+                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                        onPressed: () {
+                          ref.read(themeControllerProvider.notifier).toggleTheme();
+                          EnhancedSnackBarHelper.showInfo(context,
+                              "Dev: Remover botão de tema antes de publicar!");
+                        },
+                        color: Colors.red.withValues(alpha: 0.2),
+                      ),
+                      const SizedBox(width: 16),
+                      // Botão Testar Tela Lock (Somente para Dev)
+                      IconButton(
+                        icon: const Icon(Icons.shield),
+                        onPressed: () => _testarTelaLock(context),
+                        color: Colors.orange.withValues(alpha: 0.2),
+                      ),
+                    ],
                   ),
                 ],
               ),

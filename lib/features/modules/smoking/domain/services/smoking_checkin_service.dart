@@ -4,15 +4,37 @@ import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
+import 'package:disciplinum/core/events/event_bus.dart';
 
 /// Serviço responsável por registrar e carregar os check-ins diários
 /// do módulo Parar de Fumar (resposta "Sim" na notificação diária).
 class SmokingCheckinService {
   final Box<DailyCheckin> _box;
   final CloudSyncService _cloudSync;
+  final SmokingInsigniaService _insigniaService;
 
-  SmokingCheckinService(ObjectBoxService objectBoxService, this._cloudSync)
-      : _box = objectBoxService.store.box<DailyCheckin>();
+  SmokingCheckinService(
+    ObjectBoxService objectBoxService,
+    this._cloudSync,
+    this._insigniaService,
+  ) : _box = objectBoxService.store.box<DailyCheckin>() {
+    // Registra listener para eventos de check-in via notificação
+    _registerEventListeners();
+  }
+  
+  /// Registra listeners para eventos do EventBus
+  void _registerEventListeners() {
+    EventBus.instance.listen<ModuleCheckInEvent>((event) {
+      if (event.nicheId == NicheId.smoking.index && event.isPositive) {
+        LoggerService.instance.i('📥 Evento de check-in recebido para Smoking');
+        // Registra o check-in quando usuário responde "Sim" na notificação
+        recordCheckin(date: event.checkInDate);
+      }
+    });
+    
+    LoggerService.instance.i('👂 SmokingCheckinService: Listeners de eventos registrados');
+  }
 
   /// Formata DateTime como string de data (yyyy-MM-dd)
   String _dateKey(DateTime date) =>
@@ -39,16 +61,52 @@ class SmokingCheckinService {
           ),
         );
         LoggerService.instance.i('✅ Check-in local registrado para $dateStr (Smoking)');
+        
+        // 2. Após registrar check-in, atualiza gamificação
+        // Carrega todos os check-ins para calcular dias consecutivos
+        final allCheckins = await loadCheckins();
+        final consecutiveDays = _calculateConsecutiveDays(allCheckins);
+        
+        // Atualiza insígnias, medalhas e marcos de saúde
+        await _insigniaService.updateFromCheckIns(consecutiveDays);
+        
+        LoggerService.instance.i('🎮 Gamificação atualizada: $consecutiveDays dias consecutivos');
       }
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar check-in no ObjectBox', error: e);
     }
 
-    // 2. Persiste na nuvem
+    // 3. Persiste na nuvem
     await _cloudSync.saveDailyCheckin(
       nicheId: NicheId.smoking,
       dateStr: dateStr,
     );
+  }
+
+  /// Calcula dias consecutivos a partir de uma lista de check-ins
+  int _calculateConsecutiveDays(List<DateTime> checkins) {
+    if (checkins.isEmpty) return 0;
+    
+    // Ordena check-ins do mais recente para o mais antigo
+    final sorted = checkins.toList()..sort((a, b) => b.compareTo(a));
+    
+    // Conta dias consecutivos a partir de hoje
+    int consecutive = 0;
+    var currentDate = DateTime.now();
+    
+    for (final checkin in sorted) {
+      final checkinDate = DateTime(checkin.year, checkin.month, checkin.day);
+      final expectedDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+      
+      if (checkinDate.isAtSameMomentAs(expectedDate)) {
+        consecutive++;
+        currentDate = currentDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    
+    return consecutive;
   }
 
   /// Carrega todas as datas de check-in.

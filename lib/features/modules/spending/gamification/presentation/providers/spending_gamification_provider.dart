@@ -33,3 +33,21 @@ final spendingActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(spendingGamificationNotifierProvider);
   return state.isModuleActive;
 });
+
+/// Provider para insígnias conquistadas
+final spendingInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(spendingGamificationNotifierProvider);
+  return state.earnedInsignias;
+});
+
+/// Provider para medalhas conquistadas
+final spendingMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(spendingGamificationNotifierProvider);
+  return state.earnedMedalhas;
+});
+
+/// Provider para contagem de Disciplinum
+final spendingDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(spendingGamificationNotifierProvider);
+  return state.earnedInsignias.where((i) => i == 'disciplinum').length;
+});

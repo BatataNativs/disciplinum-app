@@ -1,7 +1,5 @@
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:disciplinum/shared/widgets/cards/neon_card.dart';
-import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
+import 'package:disciplinum/shared/widgets/common/glowing_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
@@ -82,11 +80,6 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Editor de Mensagem Personalizada
-                NotificationMessageEditor(nicheId: NicheId.reading),
-
-                const SizedBox(height: 24),
-
                 // Card de Lembrete Diário
                 NeonCard(
                   padding: const EdgeInsets.all(20),
@@ -105,7 +98,7 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Escolha o melhor horário para sua leitura diária.',
+                        'Escolha o melhor horário para ser lembrado do início da sua leitura diária.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,

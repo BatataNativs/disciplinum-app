@@ -301,7 +301,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Proteja seu progresso',
+          'Salve e sincronize \nseus dados',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 28,

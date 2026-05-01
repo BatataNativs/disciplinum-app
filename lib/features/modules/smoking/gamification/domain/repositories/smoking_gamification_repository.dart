@@ -71,17 +71,9 @@ class SmokingGamificationRepository {
         // Usa toModuleState que agora inclui isModuleActive
         final newState = entity.toModuleState();
         
-        // CORREÇÃO: Detecta e corrige estado inconsistente (inativo mas com custo configurado)
-        if (!newState.isModuleActive && newState.dailyCost > 0) {
-          final stackTrace = StackTrace.current.toString().split('\n').take(5).join('\n');
-          LoggerService.instance.gamification('🚨🚨🚨 ESTADO INCONSISTENTE DETECTADO! isModuleActive=false mas dailyCost=${newState.dailyCost}\n🚨 Corrigindo automaticamente para isModuleActive=true...\n🚨 Quem chamou:\n$stackTrace');
-          
-          // Corrige o estado - se tem custo configurado, o módulo deveria estar ativo
-          final correctedState = newState.copyWith(isModuleActive: true);
-          await saveSmokingState(correctedState);
-          LoggerService.instance.gamification('✅ Estado corrigido e salvo: isModuleActive=true, dailyCost=${correctedState.dailyCost}');
-          return correctedState;
-        }
+        // NOTA: Removida a "correção automática" que forçava isModuleActive=true quando dailyCost > 0
+        // O usuário pode ter configurado o custo e depois desativado o módulo - esse estado é válido!
+        // Respeitamos a preferência do usuário: se ele desativou, permanece desativado.
         
         LoggerService.instance.gamification('✅ Estado Smoking carregado com ObjectBox (isModuleActive: ${newState.isModuleActive}, dailyCost: ${newState.dailyCost})');
         return newState;
@@ -245,5 +237,27 @@ class SmokingGamificationRepository {
   /// Verifica se Supabase está disponível
   Future<bool> get supabaseAvailable async {
     return await SupabaseMigrationChecker.instance.checkMigrationStatus() == MigrationStatus.complete;
+  }
+
+  /// Retorna dados de gamificação para notificações motivacionais
+  /// 
+  /// Retorna um mapa com:
+  /// - insignias: Lista de IDs de insígnias conquistadas
+  /// - medalhas: Lista de IDs de medalhas conquistadas
+  /// - consecutiveDays: Dias consecutivos sem fumar
+  Future<Map<String, dynamic>?> getGamificationData() async {
+    try {
+      final state = await getSmokingState();
+      if (state == null) return null;
+
+      return {
+        'insignias': state.earnedInsignias,
+        'medalhas': state.earnedMedalhas,
+        'consecutiveDays': state.consecutivePositiveDays,
+      };
+    } catch (e) {
+      LoggerService.instance.e('Erro ao buscar dados de gamificação', error: e);
+      return null;
+    }
   }
 }

@@ -33,3 +33,21 @@ final adultContentActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(adultContentGamificationNotifierProvider);
   return state.isModuleActive;
 });
+
+/// Provider para insígnias conquistadas
+final adultContentEarnedInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(adultContentGamificationNotifierProvider);
+  return state.earnedInsignias;
+});
+
+/// Provider para medalhas conquistadas
+final adultContentEarnedMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(adultContentGamificationNotifierProvider);
+  return state.earnedMedalhas;
+});
+
+/// Provider para contagem de Disciplinum
+final adultContentDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(adultContentGamificationNotifierProvider);
+  return state.disciplinumCount;
+});

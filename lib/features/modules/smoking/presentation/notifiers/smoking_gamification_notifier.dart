@@ -119,6 +119,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         isModuleActive: true,
         dailyCost: dailyCost,
         packCost: packCost,
+        earnedInsignias: const ['madeira'], // Insígnia Madeira ao ativar o módulo
       );
       
       await _repository.syncWithSupabase(initialState);
@@ -136,22 +137,34 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         isLoading: false,
         isModuleActive: true,
       );
-      LoggerService.instance.gamification('✅ Módulo ativado: isModuleActive=true, dailyCost=$dailyCost, packCost=$packCost');
+      LoggerService.instance.gamification('✅ Módulo ativado: isModuleActive=true, dailyCost=$dailyCost, packCost=$packCost, insignias=[madeira]');
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   /// Desativa o módulo (limpa dados)
+  /// Mantém apenas a insígnia Madeira, remove todas as outras insígnias e medalhas
   Future<void> deactivateModule() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      LoggerService.instance.gamification('🛑 deactivateModule chamado - salvando isModuleActive=false');
+      LoggerService.instance.gamification('🛑 deactivateModule chamado - resetando progresso mantendo apenas Madeira');
       final current = state.gamification;
       if (current != null) {
-        final updated = current.copyWith(isModuleActive: false);
+        // Preserva apenas a insígnia Madeira, remove todas as outras e zera medalhas
+        final hasMadeira = current.earnedInsignias.contains('madeira');
+        
+        final updated = current.copyWith(
+          isModuleActive: false,
+          earnedInsignias: hasMadeira ? ['madeira'] : [], // Mantém só Madeira
+          earnedMedalhas: [], // Zera medalhas
+          consecutivePositiveDays: 0,
+          disciplinumCount: 0,
+        );
+        
         await _repository.saveSmokingState(updated);
         await _repository.syncWithSupabase(updated);
+        LoggerService.instance.gamification('🛑 Progresso resetado: mantida apenas Madeira=$hasMadeira, medalhas zeradas');
       }
       
       // Também atualiza o user_module_status para manter consistência com CloudSyncService
@@ -166,7 +179,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         isModuleActive: false, 
         isLoading: false
       );
-      LoggerService.instance.gamification('🛑 Módulo desativado e sincronizado');
+      LoggerService.instance.gamification('🛑 Módulo desativado, sincronizado e progresso resetado (Madeira mantida)');
     } catch (e) {
       LoggerService.instance.e('❌ Erro em deactivateModule', error: e);
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -178,7 +191,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       LoggerService.instance.gamification('🔄 resetProgress chamado - limpando e resetando progresso');
       // Preserva a insígnia Madeira e o status ativo (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.contains('madeira') ?? false;
       final wasActive = current?.isModuleActive ?? false;
       final dailyCost = current?.dailyCost ?? 0.0;
       final packCost = current?.packCost ?? 0.0;
@@ -192,13 +205,16 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         isModuleActive: wasActive,  // PRESERVA o status ativo!
         dailyCost: dailyCost,       // PRESERVA o custo diário!
         packCost: packCost,         // PRESERVA o custo do maço!
-        earnedInsignias: hasMadeira ? ['Madeira'] : [],
+        earnedInsignias: hasMadeira ? ['madeira'] : [], // Mantém só Madeira (minúsculo)
+        earnedMedalhas: [],         // ZERA medalhas
+        disciplinumCount: 0,        // ZERA contador
+        consecutivePositiveDays: 0, // ZERA streak
       );
       
       await _repository.saveSmokingState(initialState);
       await _repository.syncWithSupabase(initialState);
       
-      LoggerService.instance.gamification('✅ Progresso resetado mantendo isModuleActive=$wasActive');
+      LoggerService.instance.gamification('✅ Progresso resetado mantendo Madeira=$hasMadeira, medalhas zeradas, isModuleActive=$wasActive');
       
       await loadGamification();
     } catch (e) {

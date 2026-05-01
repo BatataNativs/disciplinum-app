@@ -68,13 +68,13 @@ extension MoneySavingMedalEntityExtension on MoneySavingMedalEntity {
   String get nameBr {
     switch (this) {
       case MoneySavingMedalEntity.bronze:
-        return 'Bronze';
+        return 'Medalha de Bronze';
       case MoneySavingMedalEntity.prata:
-        return 'Prata';
+        return 'Medalha de Prata';
       case MoneySavingMedalEntity.ouro:
-        return 'Ouro';
+        return 'Medalha de Ouro';
       case MoneySavingMedalEntity.diamante:
-        return 'Diamante';
+        return 'Medalha de Diamante';
     }
   }
 
@@ -150,5 +150,11 @@ extension MoneySavingMedalEntityExtension on MoneySavingMedalEntity {
       case MoneySavingMedalEntity.diamante:
         return '#B9F2FF'; // Azul claro
     }
+  }
+
+  /// Verifica se esta medalha pode ser concedida com base nos desafios concluídos
+  /// [completedChallenges] - número de desafios concluídos
+  bool canBeAwarded(int completedChallenges) {
+    return completedChallenges >= requiredChallenges;
   }
 }

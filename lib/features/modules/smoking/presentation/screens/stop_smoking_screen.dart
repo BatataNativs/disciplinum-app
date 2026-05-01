@@ -25,6 +25,7 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_s
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_actions_widget.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart' as smoking_progress;
 import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
@@ -737,6 +738,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     pageController: _pageController,
                     onOpenCheckInManager: _openCheckInManager,
                     onShowStatisticsMenu: _showStatisticsMenu,
+                    onOpenNotifications: _openNotificationsScreen,
                     gamificationRunning: _gamificationRunning,
                     onToggleModule: () {
                       LoggerService.instance.d('🔥 Botão Ativar/Desativar Módulo pressionado');
@@ -964,8 +966,10 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Você receberá uma notificação no horário configurado perguntando se você fumou ou não. '
-              'Responder todos os dias é mostre a si mesmo que você é capaz!',
+              'Você receberá uma notificação diária no horário configurado para confirmar que '
+              'manteve a disciplina. Toque em "Sim!" quando não fumar, ou "Não, tive recaída" '
+              'se necessário. Além disso, receberá frases motivacionais 3x ao dia '
+              '(manhã, tarde e noite).',
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? Colors.white70 : Colors.black54,
@@ -1125,6 +1129,15 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+
+  void _openNotificationsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SmokingNotificationsScreen(),
       ),
     );
   }

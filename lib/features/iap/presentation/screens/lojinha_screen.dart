@@ -226,19 +226,6 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
               onPreviewTap: () =>
                   _showPreview(context), // Usa mesmo preview do dark mode
             ),
-            const SizedBox(height: 12),
-
-            // --- ITEM 6: Notificações ---
-            _buildProductItem(
-              context,
-              title: "Notificações Personalizáveis",
-              description: "Personalize os textos das notificações.",
-              price: iapState.isCustomNotifUnlocked ? "Adquirido" : "R\$ 2,99",
-              icon: Icons.notifications_active_rounded,
-              color: Colors.teal,
-              isAcquired: iapState.isCustomNotifUnlocked,
-              onTap: () => _handleBuyAction(() => iapNotifier.buyCustomNotif(), "Notificações"),
-            ),
           ],
         ),
       ),

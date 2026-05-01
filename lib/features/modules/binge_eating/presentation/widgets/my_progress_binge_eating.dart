@@ -2,25 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/providers/binge_eating_gamification_provider.dart';
-
-// Temporário - classe substituta
-class GamificationMedal {
-  final String name;
-  final String asset;
-  
-  const GamificationMedal({required this.name, required this.asset});
-  
-  // Getter para compatibilidade
-  String get nameBr => name;
-  
-  // Assets corrigidos - organizados por módulo
-  static const bronze = GamificationMedal(name: 'bronze', asset: 'assets/gamification/medals/bingeEating/bronze.png');
-  static const prata = GamificationMedal(name: 'prata', asset: 'assets/gamification/medals/bingeEating/silver.png');
-  static const ouro = GamificationMedal(name: 'ouro', asset: 'assets/gamification/medals/bingeEating/gold.png');
-  static const diamante = GamificationMedal(name: 'diamante', asset: 'assets/gamification/medals/bingeEating/diamond.png');
-  
-  static const List<GamificationMedal> values = [bronze, prata, ouro, diamante];
-}
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_insignia.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/entities/binge_eating_medal.dart';
 
 class MyProgressBingeEating extends ConsumerWidget {
   const MyProgressBingeEating({super.key});
@@ -28,22 +11,9 @@ class MyProgressBingeEating extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dias = ref.watch(bingeEatingStreakProvider);
-
-    return _BingeEatingProgressDetailScreen(
-      title: 'Compulsão alimentar',
-      dias: dias,
-    );
-  }
-}
-
-class _BingeEatingProgressDetailScreen extends ConsumerWidget {
-  final String title;
-  final int dias;
-
-  const _BingeEatingProgressDetailScreen({required this.title, required this.dias});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+    final disciplinumCount = ref.watch(bingeEatingDisciplinumCountProvider);
+    final earnedInsignias = ref.watch(bingeEatingInsigniasProvider);
+    final earnedMedalhas = ref.watch(bingeEatingMedalhasProvider);
     final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
@@ -65,8 +35,9 @@ class _BingeEatingProgressDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Text(
-              title,
+              'Olá, $firstName!',
               style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -74,16 +45,60 @@ class _BingeEatingProgressDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo',
+              'Seu progresso no módulo: Controle da Compulsão Alimentar',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
+
+            // Streak atual
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Colors.orange.shade400,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$dias dias',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'sem compulsão alimentar',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // INSÍGNIAS
             const Text(
-              'Medalhas',
+              'Insígnias',
               style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey),
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por dias de controle',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             Container(
@@ -98,42 +113,94 @@ class _BingeEatingProgressDetailScreen extends ConsumerWidget {
                 crossAxisCount: 3,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
-                  final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                childAspectRatio: 0.75,
+                children: BingeEatingInsignia.values.map((insignia) {
+                  final isEarned = earnedInsignias.contains(insignia.name);
+
+                  return _AwardItem(
+                    asset: insignia.asset,
+                    label: insignia.nameBr,
+                    isEarned: isEarned,
+                    requirement: insignia.requirementDescription,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // MEDALHAS
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por insígnias Disciplinum',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.9,
+                children: BingeEatingMedal.values.map((medal) {
+                  final isEarned = earnedMedalhas.contains(medal.name) ||
+                      medal.canBeAwardedFromList(earnedInsignias);
 
                   return _AwardItem(
                     asset: medal.asset,
                     label: medal.nameBr,
                     isEarned: isEarned,
-                    requirement: _getMedalRequirement(medal),
+                    requirement: medal.requirementDescription,
                   );
                 }).toList(),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Contador de Disciplinum
+            if (disciplinumCount > 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$disciplinumCount insígnia${disciplinumCount > 1 ? 's' : ''} Disciplinum conquistada${disciplinumCount > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
-  }
-
-  String _getMedalRequirement(GamificationMedal medal) {
-    switch (medal) {
-      case GamificationMedal.bronze:
-        return '3 dias consecutivos';
-      case GamificationMedal.prata:
-        return '5 dias consecutivos';
-      case GamificationMedal.ouro:
-        return '7 dias consecutivos';
-      case GamificationMedal.diamante:
-        return '10 dias consecutivos';
-      default:
-        return 'Requisito não definido';
-    }
   }
 }
 

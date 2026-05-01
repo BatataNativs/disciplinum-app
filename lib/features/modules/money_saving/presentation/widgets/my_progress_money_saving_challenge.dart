@@ -2,25 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/presentation/providers/money_saving_gamification_provider.dart';
-
-// Temporário - classe substituta
-class GamificationMedal {
-  final String name;
-  final String asset;
-  
-  const GamificationMedal({required this.name, required this.asset});
-  
-  // Getter para compatibilidade
-  String get nameBr => name;
-  
-  // Assets corrigidos - organizados por módulo
-  static const bronze = GamificationMedal(name: 'bronze', asset: 'assets/gamification/medals/moneySaving/bronze.png');
-  static const prata = GamificationMedal(name: 'prata', asset: 'assets/gamification/medals/moneySaving/silver.png');
-  static const ouro = GamificationMedal(name: 'ouro', asset: 'assets/gamification/medals/moneySaving/gold.png');
-  static const diamante = GamificationMedal(name: 'diamante', asset: 'assets/gamification/medals/moneySaving/diamond.png');
-  
-  static const List<GamificationMedal> values = [bronze, prata, ouro, diamante];
-}
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_insignia.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_medal.dart';
 
 class MyProgressMoneySavingChallenge extends ConsumerWidget {
   const MyProgressMoneySavingChallenge({super.key});
@@ -28,28 +11,18 @@ class MyProgressMoneySavingChallenge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dias = ref.watch(moneySavingStreakProvider);
-
-    return _MoneySavingProgressDetailScreen(
-      title: 'Desafio da poupança',
-      dias: dias,
-    );
-  }
-}
-
-class _MoneySavingProgressDetailScreen extends ConsumerWidget {
-  final String title;
-  final int dias;
-
-  const _MoneySavingProgressDetailScreen({required this.title, required this.dias});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+    final totalSaved = ref.watch(moneySavingTotalProvider);
+    final earnedInsignias = ref.watch(moneySavingInsigniasProvider);
+    final earnedMedalhas = ref.watch(moneySavingMedalhasProvider);
     final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
     String fullName = authService.userProfile?['name'] ?? 'Usuário';
     String firstName = fullName.split(' ').first;
     if (firstName.isEmpty) firstName = 'Usuário';
+
+    // Conta desafios concluídos (insígnias Disciplinum)
+    final completedChallenges = MoneySavingInsignia.countDisciplinumInsignias(earnedInsignias);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -65,8 +38,9 @@ class _MoneySavingProgressDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Text(
-              title,
+              'Olá, $firstName!',
               style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -74,16 +48,62 @@ class _MoneySavingProgressDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo',
+              'Seu progresso no módulo: Desafio da Poupança',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
+
+            // Streak e Total
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.savings_rounded,
+                    color: Colors.green.shade400,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'R\$ ${totalSaved.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '$dias dias economizando',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // INSÍGNIAS
             const Text(
-              'Medalhas',
+              'Insígnias',
               style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey),
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por progresso no desafio',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             Container(
@@ -98,42 +118,94 @@ class _MoneySavingProgressDetailScreen extends ConsumerWidget {
                 crossAxisCount: 3,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.8,
-                children: GamificationMedal.values.map((medal) {
-                  final isEarned =
-                      (medal == GamificationMedal.bronze && dias >= 3) ||
-                          (medal == GamificationMedal.prata && dias >= 5) ||
-                          (medal == GamificationMedal.ouro && dias >= 7) ||
-                          (medal == GamificationMedal.diamante && dias >= 10);
+                childAspectRatio: 0.75,
+                children: MoneySavingInsignia.values.map((insignia) {
+                  final isEarned = earnedInsignias.contains(insignia.name);
+
+                  return _AwardItem(
+                    asset: insignia.asset,
+                    label: insignia.name,
+                    isEarned: isEarned,
+                    requirement: insignia.requirementDescription,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // MEDALHAS
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por desafios concluídos',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.9,
+                children: MoneySavingMedalEntity.values.map((medal) {
+                  final isEarned = earnedMedalhas.contains(medal.name) ||
+                      medal.canBeAwarded(completedChallenges);
 
                   return _AwardItem(
                     asset: medal.asset,
                     label: medal.nameBr,
                     isEarned: isEarned,
-                    requirement: _getMedalRequirement(medal),
+                    requirement: medal.requirementDescription,
                   );
                 }).toList(),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Contador de Desafios Concluídos
+            if (completedChallenges > 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$completedChallenges desafio${completedChallenges > 1 ? 's' : ''} concluído${completedChallenges > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
-  }
-
-  String _getMedalRequirement(GamificationMedal medal) {
-    switch (medal) {
-      case GamificationMedal.bronze:
-        return '3 dias consecutivos';
-      case GamificationMedal.prata:
-        return '5 dias consecutivos';
-      case GamificationMedal.ouro:
-        return '7 dias consecutivos';
-      case GamificationMedal.diamante:
-        return '10 dias consecutivos';
-      default:
-        return 'Requisito não definido';
-    }
   }
 }
 

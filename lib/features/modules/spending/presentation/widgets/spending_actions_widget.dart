@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
-import 'package:disciplinum/features/modules/spending/presentation/screens/spending_notifications_screen.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_expenses_screen.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_bills_stats_screen.dart';
@@ -112,23 +111,6 @@ class SpendingActionsWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notificações',
-                  color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const SpendingNotificationsScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),

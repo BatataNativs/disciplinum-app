@@ -43,11 +43,11 @@ extension SmokingMedalhaEntityExtension on SmokingMedalhaEntity {
       case SmokingMedalhaEntity.bronze:
         return '${prefix}bronze.png';
       case SmokingMedalhaEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case SmokingMedalhaEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case SmokingMedalhaEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

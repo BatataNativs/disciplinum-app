@@ -10,8 +10,7 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:disciplinum/features/modules/focus/presentation/widgets.dart' as focus_progress;
-import 'package:disciplinum/features/modules/focus/presentation/screens/focus_notifications_screen.dart';
+import 'package:disciplinum/features/modules/focus/presentation/widgets/my_progress_focus.dart' as focus_progress;
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
@@ -562,23 +561,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   color: const Color(0xFF6366F1),
                   isDark: isDark,
                   onTap: _pickFocusInterval,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notificações',
-                  color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FocusNotificationsScreen(),
-                      ),
-                    );
-                  },
                 ),
               ),
             ],

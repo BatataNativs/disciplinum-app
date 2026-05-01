@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/features/modules/adult_content/gamification/presentation/providers/adult_content_gamification_provider.dart';
-import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_insignia.dart';
-import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_medal.dart';
+import 'package:disciplinum/features/modules/focus/gamification/presentation/providers/focus_gamification_provider.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
 
-class MyProgressAdultContent extends ConsumerWidget {
-  const MyProgressAdultContent({super.key});
+class MyProgressFocus extends ConsumerWidget {
+  const MyProgressFocus({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dias = ref.watch(adultContentStreakProvider);
-    final disciplinumCount = ref.watch(adultContentDisciplinumCountProvider);
-    final earnedInsignias = ref.watch(adultContentEarnedInsigniasProvider);
-    final earnedMedalhas = ref.watch(adultContentEarnedMedalhasProvider);
+    final dias = ref.watch(focusStreakProvider);
+    final totalMinutes = ref.watch(focusTotalMinutesProvider);
+    final disciplinumCount = ref.watch(focusDisciplinumCountProvider);
+    final earnedInsignias = ref.watch(focusInsigniasProvider);
+    final earnedMedalhas = ref.watch(focusMedalhasProvider);
     final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
@@ -45,7 +46,7 @@ class MyProgressAdultContent extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo: Evitar Conteúdo Adulto',
+              'Seu progresso no módulo: Foco e Produtividade',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
@@ -60,27 +61,29 @@ class MyProgressAdultContent extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.local_fire_department_rounded,
-                    color: Colors.orange.shade400,
+                    Icons.timer_rounded,
+                    color: Colors.teal.shade400,
                     size: 32,
                   ),
                   const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$dias dias',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$dias dias',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      const Text(
-                        'sem acessar conteúdo adulto',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
+                        Text(
+                          '${(totalMinutes / 60).toStringAsFixed(1)} horas de foco total',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -97,7 +100,7 @@ class MyProgressAdultContent extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Conquistas por dias sem acessar conteúdo adulto',
+              'Conquistas por períodos de foco respeitados',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
@@ -114,7 +117,7 @@ class MyProgressAdultContent extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.75,
-                children: AdultContentInsigniaEntity.values.map((insignia) {
+                children: FocusInsignia.values.map((insignia) {
                   final isEarned = earnedInsignias.contains(insignia.name);
 
                   return _AwardItem(
@@ -138,7 +141,7 @@ class MyProgressAdultContent extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Conquistas por insígnias Disciplinum',
+              'Conquistas por insígnias especiais',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
@@ -155,7 +158,7 @@ class MyProgressAdultContent extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.9,
-                children: AdultContentMedalEntity.values.map((medal) {
+                children: FocusMedalha.values.map((medal) {
                   final isEarned = earnedMedalhas.contains(medal.name) ||
                       medal.canBeAwarded(earnedInsignias);
 
@@ -219,127 +222,72 @@ class _AwardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showDetail(context),
-      child: Column(
-        children: [
-          Expanded(
-            child: ColorFiltered(
-              colorFilter: isEarned
-                  ? const ColorFilter.mode(
-                      Colors.transparent, BlendMode.multiply)
-                  : const ColorFilter.matrix(<double>[
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0,
-                      0,
-                      0,
-                      1,
-                      0,
-                    ]),
-              child: Padding(
-                padding: const EdgeInsets.all(
-                    14), // Controle o tamanho aqui (maior padding = menor imagem)
-                child: Opacity(
-                  opacity: isEarned ? 1.0 : 0.4,
-                  child: Image.asset(asset, fit: BoxFit.contain),
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Expanded(
+          flex: 3,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isEarned ? const Color(0xFF2A2A2A) : const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isEarned
+                    ? Colors.white.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.emoji_events,
+                      color: isEarned ? Colors.amber : Colors.grey,
+                      size: 32,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isEarned ? Colors.white : Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDetail(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ColorFiltered(
-              colorFilter: isEarned
-                  ? const ColorFilter.mode(
-                      Colors.transparent, BlendMode.multiply)
-                  : const ColorFilter.matrix(<double>[
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0,
-                      0,
-                      0,
-                      1,
-                      0,
-                    ]),
-              child: Opacity(
-                opacity: isEarned ? 1.0 : 0.4,
-                child: Image.asset(asset, height: 100),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              label,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isEarned 
-                ? '✅ Conquistada!\n\nRequisito:\n$requirement'
-                : 'Requisito:\n$requirement',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Ok', style: TextStyle(color: Color(0xFF6366F1))),
+        const SizedBox(height: 8),
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isEarned ? Colors.white : Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                requirement,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: isEarned ? Colors.green.shade300 : Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

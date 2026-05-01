@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_medalha.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_medal.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 
@@ -40,31 +40,33 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
     await _repository.saveMoneySavingState(newState);
   }
 
-  /// Verifica e concede novas medalhas baseadas nas insignias Disciplinum
-  Future<List<MoneySavingMedalha>> checkAndAwardMedalhas(int disciplinumCount) async {
+  /// Verifica e concede novas medalhas baseadas nos desafios concluídos
+  Future<List<MoneySavingMedalEntity>> checkAndAwardMedalhas(int completedChallenges) async {
     if (!_isInitialized || _currentState == null) {
       LoggerService.instance.w('MoneySavingMedalhaService não inicializado');
       return [];
     }
 
-    final awardedMedalhas = <MoneySavingMedalha>[];
+    final awardedMedalhas = <MoneySavingMedalEntity>[];
     final updatedMedalhas = List<String>.from(_currentState!.earnedMedalhas);
 
-    for (final medalha in MoneySavingMedalha.values) {
-      if (medalha.canBeAwarded(disciplinumCount, updatedMedalhas)) {
-        updatedMedalhas.add(medalha.name);
-        awardedMedalhas.add(medalha);
-        
-        LoggerService.instance.gamification(
-          '🏅 Medalha conquistada: ${medalha.name} ($disciplinumCount Disciplinum)'
-        );
+    for (final medalha in MoneySavingMedalEntity.values) {
+      if (medalha.canBeAwarded(completedChallenges)) {
+        if (!updatedMedalhas.contains(medalha.name)) {
+          updatedMedalhas.add(medalha.name);
+          awardedMedalhas.add(medalha);
+          
+          LoggerService.instance.gamification(
+            '🏅 Medalha conquistada: ${medalha.name} ($completedChallenges desafios)'
+          );
+        }
       }
     }
 
     if (awardedMedalhas.isNotEmpty) {
       final updatedState = _currentState!.copyWith(
         earnedMedalhas: updatedMedalhas,
-        disciplinumCount: disciplinumCount,
+        disciplinumCount: completedChallenges,
       );
       
       await updateState(updatedState);
@@ -75,7 +77,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
   }
 
   /// Concede uma medalha específica (método interno)
-  Future<bool> _awardMedalhaInternal(MoneySavingMedalha medalha) async {
+  Future<bool> _awardMedalhaInternal(MoneySavingMedalEntity medalha) async {
     if (!_isInitialized || _currentState == null) {
       LoggerService.instance.w('MoneySavingMedalhaService não inicializado');
       return false;
@@ -101,7 +103,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
   }
 
   /// Revoga uma medalha (método interno)
-  Future<bool> _revokeMedalhaInternal(MoneySavingMedalha medalha) async {
+  Future<bool> _revokeMedalhaInternal(MoneySavingMedalEntity medalha) async {
     if (!_isInitialized || _currentState == null) {
       LoggerService.instance.w('MoneySavingMedalhaService não inicializado');
       return false;
@@ -136,11 +138,16 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
   }
 
   /// Obtém a próxima medalha a ser conquistada
-  MoneySavingMedalha? getNextMedalha() {
+  MoneySavingMedalEntity? getNextMedalha() {
     if (!_isInitialized || _currentState == null) {
       return null;
     }
-    return MoneySavingMedalha.getNextMedalha(_currentState!.earnedMedalhas);
+    for (final medal in MoneySavingMedalEntity.values) {
+      if (!_currentState!.earnedMedalhas.contains(medal.name)) {
+        return medal;
+      }
+    }
+    return null;
   }
 
   /// Calcula o progresso para a próxima medalha
@@ -148,10 +155,15 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
     if (!_isInitialized || _currentState == null) {
       return 0.0;
     }
-    return MoneySavingMedalha.calculateProgress(
-      _currentState!.disciplinumCount,
-      _currentState!.earnedMedalhas,
-    );
+    final nextMedal = getNextMedalha();
+    if (nextMedal == null) return 1.0;
+    
+    final required = nextMedal.requiredChallenges;
+    if (required == 0) return 1.0;
+    
+    // Usar earnedMedalhas.length como aproximação de desafios concluídos
+    final completed = _currentState!.earnedMedalhas.length;
+    return (completed / required).clamp(0.0, 1.0);
   }
 
   /// Verifica se conquistou medalha Diamante
@@ -159,7 +171,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
     if (!_isInitialized || _currentState == null) {
       return false;
     }
-    return MoneySavingMedalha.hasDiamondMedalha(_currentState!.earnedMedalhas);
+    return _currentState!.earnedMedalhas.contains(MoneySavingMedalEntity.diamante.name);
   }
 
   /// Obtém contador de insignias Disciplinum
@@ -192,36 +204,36 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
   /// Interface ModuleMedalhaInterface implementation
   @override
   List<String> getAllMedalhaIds() {
-    return MoneySavingMedalha.getAllMedalhas().map((m) => m.name).toList();
+    return MoneySavingMedalEntity.values.map((m) => m.name).toList();
   }
 
   @override
   String getMedalhaName(String medalhaId) {
-    final medalha = MoneySavingMedalha.getAllMedalhas()
+    final medalha = MoneySavingMedalEntity.values
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     
-    return medalha?.name ?? medalhaId;
+    return medalha?.nameBr ?? medalhaId;
   }
 
   @override
   String getMedalhaAsset(String medalhaId) {
-    final medalha = MoneySavingMedalha.getAllMedalhas()
+    final medalha = MoneySavingMedalEntity.values
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     
-    return medalha?.assetPath ?? 'assets/images/medalhas/money_saving/default.png';
+    return medalha?.asset ?? 'assets/gamification/medals/money_saving/default.png';
   }
 
   @override
   String getMedalhaRequirement(String medalhaId) {
-    final medalha = MoneySavingMedalha.getAllMedalhas()
+    final medalha = MoneySavingMedalEntity.values
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     
     if (medalha == null) return 'Requisito não disponível';
     
-    return '${medalha.requiredDisciplinumInsignias} insignias Disciplinum';
+    return medalha.requirementDescription;
   }
 
   @override
@@ -234,7 +246,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   Future<void> awardMedalha(String medalhaId) async {
-    final medalha = MoneySavingMedalha.getAllMedalhas()
+    final medalha = MoneySavingMedalEntity.values
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     
@@ -245,7 +257,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   Future<void> revokeMedalha(String medalhaId) async {
-    final medalha = MoneySavingMedalha.getAllMedalhas()
+    final medalha = MoneySavingMedalEntity.values
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     

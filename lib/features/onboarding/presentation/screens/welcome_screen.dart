@@ -24,7 +24,9 @@ class WelcomeScreen extends StatelessWidget {
                   isDark
                       ? Colors.black
                       : const Color.fromARGB(255, 255, 255, 255),
-                  isDark ? Colors.black : const Color.fromARGB(255, 16, 16, 16)
+                  isDark 
+                      ? Colors.black 
+                      : const Color.fromARGB(255, 3, 0, 19)
                 ],
               ),
             ),
@@ -37,18 +39,17 @@ class WelcomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-
                   // LOGO E TÍTULO
                   Image.asset(
                     'assets/logo.png', // Garanta que o path está certo
-                    height: 100,
+                    height: 150,
                   ),
                   const SizedBox(height: 24),
                   Text(
                     'Disciplinum',
                     style: textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
+                      letterSpacing: 1.9,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -64,8 +65,6 @@ class WelcomeScreen extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-
-                  const Spacer(),
                   const SizedBox(height: 16),
 
                   // BOTÕES DE AÇÃO
@@ -87,7 +86,7 @@ class WelcomeScreen extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             const Color.fromARGB(255, 14, 180, 180),
-                        foregroundColor: Colors.white,
+                        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -133,7 +132,7 @@ class WelcomeScreen extends StatelessWidget {
                       child: const Text(
                         'Já tenho uma conta - Login',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
+                            fontSize: 16, fontWeight: FontWeight.w900),
                       ),
                     ),
                   ),

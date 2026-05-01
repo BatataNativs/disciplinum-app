@@ -120,8 +120,9 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
         ? (widget.isActive ? (dailyCost * consecutiveDays) : 0.0)
         : (_currentSettings.lastSavedTotal ?? 0);
 
-    final monthly = dailyCost * 30;
-
+    // Se na aba "Atual" com módulo desativado, zerar todas as projeções
+    final effectiveDailyCost = (_activeTab == 0 && !widget.isActive) ? 0.0 : dailyCost;
+    final monthly = effectiveDailyCost * 30;
     final yearly = monthly * 12;
 
     final double maxVal = yearly;
@@ -147,11 +148,25 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // --- TAB SELECTOR (Estilo Auth) ---
+        body: GestureDetector(
+          onHorizontalDragEnd: (details) {
+            // Swipe para esquerda -> próxima aba (Última Tentativa)
+            // Swipe para direita -> aba anterior (Atual)
+            if (details.primaryVelocity != null) {
+              if (details.primaryVelocity! < 0 && _activeTab == 0) {
+                // Swipe left, vai para aba 1
+                setState(() => _activeTab = 1);
+              } else if (details.primaryVelocity! > 0 && _activeTab == 1) {
+                // Swipe right, vai para aba 0
+                setState(() => _activeTab = 0);
+              }
+            }
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // --- TAB SELECTOR (Estilo Auth) ---
               Container(
                 height: 50,
                 width: double.infinity,
@@ -257,8 +272,54 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
               const SizedBox(height: 30),
 
               // Detailed List
-              if (_activeTab == 0 ||
-                  (_currentSettings.lastPackPrice != null)) ...[
+              if (_activeTab == 0 && !widget.isActive) ...[
+                // Aba "Atual" com módulo desativado - mostrar mensagem
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.power_off_rounded,
+                        size: 48,
+                        color: isDark ? Colors.white38 : Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Módulo Desativado",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Ative o módulo para começar a registrar sua economia atual.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (_activeTab == 1 && _currentSettings.lastPackPrice == null)
+                const Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Text(
+                    "Nenhuma tentativa anterior registrada.",
+                    style: TextStyle(
+                        fontStyle: FontStyle.italic, color: Colors.grey),
+                  ),
+                )
+              else ...[
                 _buildDetailRow(
                   context,
                   "Custo do Maço",
@@ -292,18 +353,11 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                     DateFormat('dd/MM/yyyy')
                         .format(_currentSettings.lastEndDate!),
                   ),
-              ] else
-                const Padding(
-                  padding: EdgeInsets.all(40.0),
-                  child: Text(
-                    "Configure as informações de consumo para ver os detalhes.",
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic, color: Colors.grey),
-                  ),
-                ),
+              ],
             ],
           ),
         ),
+      ),
       ),
     );
   }

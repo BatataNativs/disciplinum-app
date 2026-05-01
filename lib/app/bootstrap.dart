@@ -10,6 +10,8 @@ import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/app/startup_data.dart';
 import 'package:disciplinum/core/network/network_health_service.dart';
+import 'package:disciplinum/core/events/event_bus.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 // Import para notificações
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart'
@@ -91,12 +93,45 @@ class AppBootstrap {
   static Future<void> _initNotifications() async {
     try {
       await ns.initNotifications();
+      
+      // Registrar callbacks para check-ins dos módulos
+      _registerCheckInCallbacks();
+      
     } catch (e) {
       if (kDebugMode) {
         LoggerService.instance.e('Error initializing notifications', error: e);
       }
       // Notificações não são críticas para funcionamento básico
     }
+  }
+  
+  /// Registra callbacks para check-ins das notificações
+  static void _registerCheckInCallbacks() {
+    // Check-in Smoking - Quando usuário responde "Sim" (não fumou)
+    ns.NotificationService.onCheckInSim = (payload) async {
+      LoggerService.instance.i('✅ Check-in Smoking via notificação');
+      
+      // Emite evento para que o SmokingCheckinService processe o check-in
+      EventEmitHelper.emitModuleCheckIn(
+        nicheId: NicheId.smoking.index,
+        isPositive: true,
+        checkInDate: DateTime.now(),
+      );
+    };
+    
+    // Relapse Smoking - Quando usuário responde "Não" (fumou)
+    ns.NotificationService.onRelapseDetected = (payload) async {
+      LoggerService.instance.i('❌ Relapse Smoking detectado via notificação');
+      
+      // Emite evento de relapse
+      EventEmitHelper.emitSmokingRelapse(
+        nicheId: NicheId.smoking.index,
+        reason: 'Resposta negativa no check-in via notificação',
+        previousStreak: 0, // Será atualizado pelo listener
+      );
+    };
+    
+    LoggerService.instance.i('✅ Callbacks de check-in registrados');
   }
 
   /// Inicializa os anúncios

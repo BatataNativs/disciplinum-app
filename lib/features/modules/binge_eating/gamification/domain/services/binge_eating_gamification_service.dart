@@ -5,21 +5,21 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_insignia_service.dart';
-import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_medalha_service.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_medal_service.dart';
 
 /// Service principal de gamificação do módulo Binge Eating
 /// Orquestra todos os serviços de gamificação do módulo
 class BingeEatingGamificationService implements ModuleGamificationInterface {
   final BingeEatingGamificationRepository _repository;
   late final BingeEatingInsigniaService _insigniaService;
-  late final BingeEatingMedalhaService _medalhaService;
+  late final BingeEatingMedalService _medalService;
   
   BingeEatingModuleState? _currentState;
   bool _isInitialized = false;
 
   BingeEatingGamificationService(this._repository) {
     _insigniaService = BingeEatingInsigniaService(_repository);
-    _medalhaService = BingeEatingMedalhaService(_repository);
+    _medalService = BingeEatingMedalService(_repository);
   }
 
   @override
@@ -32,7 +32,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
   ModuleInsigniaInterface get insigniaService => _insigniaService;
 
   @override
-  ModuleMedalhaInterface get medalhaService => _medalhaService;
+  ModuleMedalhaInterface get medalhaService => _medalService;
 
   @override
   Future<void> initialize() async {
@@ -46,11 +46,11 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
       
       // Inicializa os serviços
       await _insigniaService.initialize();
-      await _medalhaService.initialize();
+      await _medalService.initialize();
       
       // Atualiza os serviços com o estado atual
       await _insigniaService.updateFromModuleState(_currentState);
-      await _medalhaService.updateFromModuleState(_currentState);
+      await _medalService.updateFromModuleState(_currentState);
       
       _isInitialized = true;
       LoggerService.instance.gamification('BingeEatingGamificationService inicializado com sucesso');
@@ -87,7 +87,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
   Future<void> resetProgress() async {
     await _repository.resetProgress();
     await _insigniaService.resetInsignias();
-    await _medalhaService.resetMedalhas();
+    await _medalService.resetMedalhas();
     await initialize();
   }
 
@@ -120,7 +120,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
     });
 
     // Verifica novas medalhas
-    _medalhaService.checkDisciplinumMedalhas(_currentState!.disciplinumCount);
+    _medalService.checkDisciplinumMedals(_currentState!.disciplinumCount);
 
     // Atualiza o estado se houver novas conquistas
     if (newInsignias.isNotEmpty) {
@@ -138,7 +138,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
   Future<void> updateFromModuleState(BingeEatingModuleState state) async {
     _currentState = state;
     await _insigniaService.updateFromModuleState(state);
-    await _medalhaService.updateFromModuleState(state);
+    await _medalService.updateFromModuleState(state);
   }
 
   /// Ativa o módulo (concede insignia madeira)
@@ -155,8 +155,8 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
 
   /// Processa uma recaída (reseta progresso)
   Future<void> processRelapse() async {
-    await _insigniaService.processRelapse();
-    await _medalhaService.resetMedalhas();
+    await _medalService.resetMedalhas();
+    await _medalService.resetMedalhas();
     await _updateCurrentState();
   }
 
@@ -182,7 +182,7 @@ class BingeEatingGamificationService implements ModuleGamificationInterface {
   Future<void> _updateCurrentState() async {
     try {
       final earnedInsignias = await _insigniaService.getEarnedInsignias();
-      final earnedMedalhas = await _medalhaService.getEarnedMedalhas();
+      final earnedMedalhas = await _medalService.getEarnedMedalhas();
       
       _currentState = BingeEatingModuleState(
         earnedInsignias: earnedInsignias,

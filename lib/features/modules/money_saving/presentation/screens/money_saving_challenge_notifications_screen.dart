@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/models/common/niche.dart';
-import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
-import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -20,7 +16,6 @@ class MoneySavingChallengeNotificationsScreen extends ConsumerStatefulWidget {
 
 class _MoneySavingChallengeNotificationsScreenState
     extends ConsumerState<MoneySavingChallengeNotificationsScreen> {
-  final Niche _niche = NicheRepository.getById(NicheId.moneySavingChallenge);
   late final MoneySavingChallengeService _service;
 
   MoneySavingChallengeModel? _challenge;
@@ -99,18 +94,6 @@ class _MoneySavingChallengeNotificationsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Seção: Texto da Notificação
-                    _buildSectionHeader(
-                      title: 'Texto da Notificação',
-                      subtitle:
-                          'Que chegará sempre que você abrir um dos apps selecionados para monitoramento com o módulo ativado.',
-                      icon: Icons.message_rounded,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.nicheId),
-                    const SizedBox(height: 8),
-
                     // Seção: Lembretes do Desafio
                     _buildSectionHeader(
                       title: 'Lembretes do Desafio',

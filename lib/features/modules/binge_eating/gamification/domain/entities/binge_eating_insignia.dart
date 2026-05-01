@@ -16,23 +16,23 @@ extension BingeEatingInsigniaExtension on BingeEatingInsignia {
   String get nameBr {
     switch (this) {
       case BingeEatingInsignia.madeira:
-        return 'Controle Iniciado';
+        return 'Madeira';
       case BingeEatingInsignia.ferro:
-        return 'Primeiro Dia';
+        return 'Ferro';
       case BingeEatingInsignia.aluminio:
-        return 'Dois Dias';
+        return 'Alumínio';
       case BingeEatingInsignia.latao:
-        return 'Três Dias';
+        return 'Latão';
       case BingeEatingInsignia.bronze:
-        return 'Cinco Dias';
+        return 'Bronze';
       case BingeEatingInsignia.prata:
-        return 'Dez Dias';
+        return 'Prata';
       case BingeEatingInsignia.ouro:
-        return 'Quinze Dias';
+        return 'Ouro';
       case BingeEatingInsignia.diamante:
-        return 'Vinte Dias';
+        return 'Diamante';
       case BingeEatingInsignia.disciplinum:
-        return 'Trinta Dias';
+        return 'Disciplinum';
     }
   }
 
@@ -84,18 +84,67 @@ extension BingeEatingInsigniaExtension on BingeEatingInsignia {
 
   bool canBeAwarded(List<String> earnedInsignias) {
     if (earnedInsignias.contains(name)) return false;
-    
+
     // Verifica se tem as insígnias anteriores
     final previousInsignias = <BingeEatingInsignia>[];
     for (final insignia in BingeEatingInsignia.values) {
       if (insignia == this) break;
       previousInsignias.add(insignia);
     }
-    
+
     for (final previous in previousInsignias) {
       if (!earnedInsignias.contains(previous.name)) return false;
     }
-    
+
     return true;
+  }
+
+  /// Obtém o caminho do asset
+  String get asset {
+    const prefix = 'assets/gamification/insignias/binge_eating/';
+    switch (this) {
+      case BingeEatingInsignia.madeira:
+        return '${prefix}madeira.png';
+      case BingeEatingInsignia.ferro:
+        return '${prefix}ferro.png';
+      case BingeEatingInsignia.aluminio:
+        return '${prefix}aluminio.png';
+      case BingeEatingInsignia.latao:
+        return '${prefix}latao.png';
+      case BingeEatingInsignia.bronze:
+        return '${prefix}bronze.png';
+      case BingeEatingInsignia.prata:
+        return '${prefix}prata.png';
+      case BingeEatingInsignia.ouro:
+        return '${prefix}ouro.png';
+      case BingeEatingInsignia.diamante:
+        return '${prefix}diamante.png';
+      case BingeEatingInsignia.disciplinum:
+        return '${prefix}disciplinum.png';
+    }
+  }
+
+  /// Obtém a descrição dos requisitos
+  String get requirementDescription {
+    switch (this) {
+      case BingeEatingInsignia.madeira:
+        return 'Ative o módulo Binge Eating';
+      case BingeEatingInsignia.ferro:
+        return '1 dia com check-in positivo';
+      case BingeEatingInsignia.aluminio:
+        return '2 dias com check-in positivo';
+      case BingeEatingInsignia.latao:
+        return '3 dias com check-in positivo';
+      case BingeEatingInsignia.bronze:
+        return '5 dias com check-in positivo';
+      case BingeEatingInsignia.prata:
+        return '10 dias com check-in positivo';
+      case BingeEatingInsignia.ouro:
+        return '15 dias com check-in positivo';
+      case BingeEatingInsignia.diamante:
+        return '20 dias com check-in positivo';
+      case BingeEatingInsignia.disciplinum:
+        return '30 dias com check-in positivo';
+    }
   }
 }

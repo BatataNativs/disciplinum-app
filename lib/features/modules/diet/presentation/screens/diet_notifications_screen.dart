@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/models/common/niche.dart';
-import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
-
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 
 class DietNotificationsScreen extends StatefulWidget {
@@ -15,8 +10,6 @@ class DietNotificationsScreen extends StatefulWidget {
 }
 
 class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
-  final Niche _niche = NicheRepository.getById(NicheId.diet);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -57,28 +50,6 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Seção: Texto da Notificação
-              _buildSectionHeader(
-                title: 'Texto da Notificação',
-                subtitle:
-                    'Que chegará sempre que você abrir um dos apps selecionados para monitoramento com o módulo ativado.',
-                icon: Icons.message_rounded,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 16),
-              NotificationMessageEditor(nicheId: _niche.nicheId),
-              const SizedBox(height: 16),
-
-              // Como funciona - Notificações
-              NicheInfoCard(
-                isDark: isDark,
-                icon: Icons.info_outline,
-                title: 'Como funciona',
-                content:
-                    'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados para monitoramento.',
-              ),
-              const SizedBox(height: 16),
-
               // Seção: Aviso especial
               _buildSectionHeader(
                 title: 'Aviso Importante',

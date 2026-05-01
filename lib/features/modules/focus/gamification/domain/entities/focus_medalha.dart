@@ -11,13 +11,13 @@ extension FocusMedalhaExtension on FocusMedalha {
   String get nameBr {
     switch (this) {
       case FocusMedalha.bronze:
-        return 'Foco Bronze';
+        return 'Medalha de Bronze';
       case FocusMedalha.prata:
-        return 'Foco Prata';
+        return 'Medalha de Prata';
       case FocusMedalha.ouro:
-        return 'Foco Ouro';
+        return 'Medalha de Ouro';
       case FocusMedalha.diamante:
-        return 'Foco Diamante';
+        return 'Medalha de Diamante';
     }
   }
 

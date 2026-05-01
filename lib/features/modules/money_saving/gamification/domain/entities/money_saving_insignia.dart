@@ -150,4 +150,53 @@ enum MoneySavingInsignia {
   static int countDisciplinumInsignias(List<String> earnedInsignias) {
     return earnedInsignias.where((name) => name == disciplinum.name).length;
   }
+
+  /// Obtém o caminho do asset
+  String get asset {
+    const prefix = 'assets/gamification/insignias/money_saving/';
+    switch (this) {
+      case MoneySavingInsignia.madeira:
+        return '${prefix}madeira.png';
+      case MoneySavingInsignia.ferro:
+        return '${prefix}ferro.png';
+      case MoneySavingInsignia.aluminio:
+        return '${prefix}aluminio.png';
+      case MoneySavingInsignia.latao:
+        return '${prefix}latao.png';
+      case MoneySavingInsignia.bronze:
+        return '${prefix}bronze.png';
+      case MoneySavingInsignia.prata:
+        return '${prefix}prata.png';
+      case MoneySavingInsignia.ouro:
+        return '${prefix}ouro.png';
+      case MoneySavingInsignia.diamante:
+        return '${prefix}diamante.png';
+      case MoneySavingInsignia.disciplinum:
+        return '${prefix}disciplinum.png';
+    }
+  }
+
+  /// Obtém a descrição dos requisitos
+  String get requirementDescription {
+    switch (this) {
+      case MoneySavingInsignia.madeira:
+        return 'Ative o módulo Desafio da Poupança';
+      case MoneySavingInsignia.ferro:
+        return '5% da grid de um desafio preenchida';
+      case MoneySavingInsignia.aluminio:
+        return '10% da grid de um desafio preenchida';
+      case MoneySavingInsignia.latao:
+        return '15% da grid de um desafio preenchida';
+      case MoneySavingInsignia.bronze:
+        return '20% da grid de um desafio preenchida';
+      case MoneySavingInsignia.prata:
+        return '40% da grid de um desafio preenchida';
+      case MoneySavingInsignia.ouro:
+        return '60% da grid de um desafio preenchida';
+      case MoneySavingInsignia.diamante:
+        return '80% da grid de um desafio preenchida';
+      case MoneySavingInsignia.disciplinum:
+        return '100% da grid de um desafio preenchida';
+    }
+  }
 }

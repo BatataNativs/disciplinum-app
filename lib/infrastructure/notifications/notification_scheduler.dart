@@ -10,6 +10,8 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/diet/data/repositories/diet_config_repository.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_motivational_phrase_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 
 class NotificationScheduler {
   static final NotificationScheduler _instance =
@@ -20,30 +22,38 @@ class NotificationScheduler {
 
   /// Obtém horários de check-in/notificações para um módulo específico
   /// NOTA: Apenas Smoking tem check-in diário.
-  /// Diet tem notificações de refeição (30min antes e depois).
-  /// Outros módulos usam AppLock ou métricas diferentes.
+  /// 
+  /// Busca horários da cloud (Supabase) com fallback local (ObjectBox)
   Future<List<String>> _getModuleCheckInTimes(NicheId nicheId) async {
-    try {
-      switch (nicheId) {
-        // ✅ Apenas Smoking tem check-in diário (user define horário)
-        case NicheId.smoking:
-          return ['20:00']; // Horário padrão, pode ser configurável
-          
-        // ❌ Sem check-in diário - usam AppLock ou outras métricas
-        case NicheId.adultContent:
-        case NicheId.bingeEating:
-        case NicheId.spending:
-        case NicheId.moneySavingChallenge:
-        case NicheId.focus:
-        case NicheId.procrastination:
-        case NicheId.diet:
-        case NicheId.reading:
-          return [];
+    if (nicheId == NicheId.smoking) {
+      try {
+        // Usar ProviderContainer para acessar o CloudSyncService
+        final container = ProviderContainer();
+        final cloudSyncService = container.read(cloudSyncServiceProvider);
+        final userNicheTimes = await cloudSyncService.loadUserNicheTimes(
+          nicheId: nicheId.id,
+        );
+        
+        // Converter UserNicheTime para String no formato "HH:mm"
+        final times = userNicheTimes.map((t) => 
+          '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}'
+        ).toList();
+        
+        if (times.isNotEmpty) {
+          LoggerService.instance.i('Horários de check-in carregados da cloud/local: ${times.length} horários');
+          return times;
+        } else {
+          // Fallback: horário padrão se não houver configuração
+          LoggerService.instance.w('Nenhum horário configurado, usando padrão 20:00');
+          return ['20:00'];
+        }
+      } catch (e) {
+        LoggerService.instance.e('Erro ao carregar horários de check-in', error: e);
+        // Fallback em caso de erro
+        return ['20:00'];
       }
-    } catch (e) {
-      LoggerService.instance.w('Erro ao obter horários de check-in para $nicheId: $e');
-      return [];
     }
+    return [];
   }
 
   /// Agenda notificações de refeição para o módulo Diet
@@ -202,29 +212,10 @@ class NotificationScheduler {
       }
     }
 
-    // 3. Agendar Motivações (Frases)
-    // NOTA: Frases motivacionais agora são gerenciadas localmente por cada módulo
-    // Implementação específica em cada provider de gamificação
-    final motivations = <String>[]; // Temporário
-    if (motivations.isNotEmpty) {
-      for (int i = 0; i < 10; i++) {
-        final motTimeStr = "10:00"; // Temporário
-        final motParts = motTimeStr.split(':');
-        final motTime = TimeOfDay(
-          hour: int.parse(motParts[0]),
-          minute: int.parse(motParts[1]),
-        );
-        final notifId = (nicheId.id * 1000) + 500 + i;
-        final niche = NicheRepository.getById(nicheId);
-        final phrase = "Frase motivacional padrão"; // Temporário
-
-        await NotificationService.scheduleDailyNotification(
-          id: notifId,
-          time: motTime,
-          title: 'Disciplinum: ${niche.name}',
-          body: phrase,
-        );
-      }
+    // 3. Agendar Motivações (Frases) - APENAS para Smoking
+    // Frases motivacionais contextualizadas baseadas nas conquistas do usuário
+    if (nicheId == NicheId.smoking) {
+      await _scheduleSmokingMotivationalNotifications(nicheId);
     }
 
     // 3. Agendar Desafio da Poupança (Módulo 7)
@@ -235,13 +226,11 @@ class NotificationScheduler {
 
   // NOTA: MoneySaving já implementado com provider local
   // Usa moneySavingChallengeServiceProvider via ProviderContainer
-  // Future<void> scheduleChallengeNotification(
-  //     GamificationService service, IapService iapService) async {
+
   Future<void> scheduleChallengeNotification(
       IapService iapService) async {
     try {
       // Dependency injection via ProviderContainer
-      // Note: Since NotificationScheduler is a singleton, we need to create a container
       final container = ProviderContainer();
       final challengeService = container.read(moneySavingChallengeServiceProvider);
       
@@ -295,6 +284,74 @@ class NotificationScheduler {
       }
     } catch (e) {
       LoggerService.instance.e('Erro ao agendar notificação do desafio', error: e);
+    }
+  }
+
+  /// Agenda notificações motivacionais contextualizadas para o módulo Smoking
+  ///
+  /// Busca dados de gamificação do usuário e gera frases personalizadas
+  /// baseadas nas conquistas recentes (insígnias e medalhas).
+  Future<void> _scheduleSmokingMotivationalNotifications(NicheId nicheId) async {
+    try {
+      LoggerService.instance.i('📢 Agendando notificações motivacionais do Smoking...');
+
+      // Buscar dados de gamificação do Smoking
+      final gamificationData = await SmokingGamificationRepository.instance.getGamificationData();
+
+      if (gamificationData == null) {
+        LoggerService.instance.w('Dados de gamificação do Smoking não encontrados');
+        return;
+      }
+
+      // Extrair conquistas do mapa
+      final earnedInsignias = List<String>.from(gamificationData['insignias'] ?? []);
+      final earnedMedalhas = List<String>.from(gamificationData['medalhas'] ?? []);
+      final daysWithoutSmoking = gamificationData['consecutiveDays'] ?? 0;
+
+      LoggerService.instance.i(
+        '🏆 Conquistas: ${earnedInsignias.length} insígnias, ${earnedMedalhas.length} medalhas, $daysWithoutSmoking dias'
+      );
+
+      // Horários padrão para notificações motivacionais (3x ao dia)
+      final notificationTimes = [
+        const TimeOfDay(hour: 9, minute: 0),   // Manhã
+        const TimeOfDay(hour: 14, minute: 0),  // Tarde
+        const TimeOfDay(hour: 20, minute: 0), // Noite
+      ];
+
+      // Agenda notificações para cada horário
+      for (int i = 0; i < notificationTimes.length; i++) {
+        final time = notificationTimes[i];
+
+        // Gera frase motivacional contextualizada
+        final phrase = SmokingMotivationalPhraseService().generateMotivationalPhrase(
+          earnedInsignias: earnedInsignias,
+          earnedMedalhas: earnedMedalhas,
+          daysWithoutSmoking: daysWithoutSmoking,
+          currentTime: time,
+        );
+
+        final notifId = (nicheId.id * 1000) + 500 + i;
+
+        await NotificationService.scheduleDailyNotification(
+          id: notifId,
+          time: time,
+          title: '📢 Disciplinum: Smoking',
+          body: phrase,
+        );
+
+        LoggerService.instance.i(
+          '✅ Notificação ${i + 1}/${notificationTimes.length} agendada: ${time.hour}:${time.minute.toString().padLeft(2, '0')}'
+        );
+      }
+
+      LoggerService.instance.i('✅ Notificações motivacionais do Smoking agendadas!');
+    } catch (e, stackTrace) {
+      LoggerService.instance.e(
+        'Erro ao agendar notificações motivacionais do Smoking',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

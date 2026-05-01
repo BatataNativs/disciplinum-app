@@ -68,13 +68,13 @@ extension AdultContentMedalEntityExtension on AdultContentMedalEntity {
   String get nameBr {
     switch (this) {
       case AdultContentMedalEntity.bronze:
-        return 'Bronze';
+        return 'Medalha de Bronze';
       case AdultContentMedalEntity.prata:
-        return 'Prata';
+        return 'Medalha de Prata';
       case AdultContentMedalEntity.ouro:
-        return 'Ouro';
+        return 'Medalha de Ouro';
       case AdultContentMedalEntity.diamante:
-        return 'Diamante';
+        return 'Medalha de Diamante';
     }
   }
 
@@ -149,6 +149,22 @@ extension AdultContentMedalEntityExtension on AdultContentMedalEntity {
         return '#FFD700'; // Dourado
       case AdultContentMedalEntity.diamante:
         return '#B9F2FF'; // Azul claro
+    }
+  }
+
+  /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
+  bool canBeAwarded(List<String> earnedInsignias) {
+    final disciplinumCount = earnedInsignias.where((i) => i == 'disciplinum').length;
+
+    switch (this) {
+      case AdultContentMedalEntity.bronze:
+        return disciplinumCount >= 1;
+      case AdultContentMedalEntity.prata:
+        return disciplinumCount >= 2;
+      case AdultContentMedalEntity.ouro:
+        return disciplinumCount >= 3;
+      case AdultContentMedalEntity.diamante:
+        return disciplinumCount >= 4;
     }
   }
 }

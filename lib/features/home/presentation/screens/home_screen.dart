@@ -16,6 +16,7 @@ import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart' as smoking;
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -41,9 +42,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     });
   }
 
-  Future<void> _checkAndPerformInitialSync() async {
-    // Sincroniza uma vez por sessão na HomeScreen quando há usuário logado
-    // Isso garante sync a cada login (novo usuário ou mesmo usuário relogando)
+  Future<void> _checkAndPerformInitialSync({bool isLoginEvent = false}) async {
+    // Sincronização controlada por SyncValidationService
+    // Só ocorre em: nova build, nova instalação, novo usuário, ou login (novo/re-login)
     final stackTrace = StackTrace.current.toString().split('\n').take(3).join('\n');
     LoggerService.instance.d('🔍 _checkAndPerformInitialSync chamado de:\n$stackTrace');
     
@@ -55,12 +56,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       return;
     }
     
-    // Usa provider global para garantir que sync só aconteça uma vez por sessão
-    final hasSynced = ref.read(initialSyncCompletedProvider);
-    LoggerService.instance.d('🔍 _checkAndPerformInitialSync: _isSyncing=$_isSyncing, hasSynced=$hasSynced');
-    
-    if (_isSyncing || hasSynced) {
-      LoggerService.instance.d('⏭️ Sync pulada: já sincronizando ou já sincronizou nesta sessão');
+    // Verifica se já está sincronizando
+    if (_isSyncing) {
+      LoggerService.instance.d('⏭️ Sync pulada: já está sincronizando');
       return;
     }
     
@@ -76,7 +74,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       return;
     }
     
-    LoggerService.instance.i('🔐 Iniciando sincronização para usuário $currentUserId (rota ativa: ${route.settings.name})');
+    // Verifica se deve sincronizar baseado nas regras de negócio
+    final syncState = ref.read(initialSyncCompletedProvider.notifier);
+    final checkResult = await syncState.checkShouldSync(currentUserId, isLoginEvent: isLoginEvent);
+    
+    LoggerService.instance.d('🔍 Verificação de sync: $checkResult');
+    
+    if (!checkResult.shouldSync) {
+      LoggerService.instance.i('⏭️ Sync pulada: ${checkResult.skipReason}');
+      // Marca como já sincronizado na sessão atual (mas não persiste nada novo)
+      ref.read(initialSyncCompletedProvider.notifier).markSessionSynced();
+      return;
+    }
+    
+    LoggerService.instance.i('🔐 Iniciando sincronização - Motivo: ${checkResult.reason}');
+    LoggerService.instance.i('   - Versão: ${checkResult.currentVersion}+${checkResult.currentBuild}');
+    LoggerService.instance.i('   - Usuário: $currentUserId');
+    LoggerService.instance.i('   - Rota ativa: ${route.settings.name}');
+    
     await _performInitialSync(currentUserId);
   }
 
@@ -140,8 +155,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     } finally {
       if (mounted) {
         setState(() => _isSyncing = false);
-        // Marca como sincronizado no provider global
-        ref.read(initialSyncCompletedProvider.notifier).markSynced();
+        // Marca como sincronizado no provider global (persiste build, usuário, etc)
+        await ref.read(initialSyncCompletedProvider.notifier).markSynced(userId);
       }
     }
   }
@@ -201,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    // Escuta mudanças no auth state - mas só dispara sync se ainda não foi feito
+    // Escuta mudanças no auth state
     ref.listenManual(authServiceProvider, (previous, next) {
       final hadUser = previous?.currentUser != null;
       final hasUser = next.currentUser != null;
@@ -209,11 +224,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       
       LoggerService.instance.d('🎧 Auth state mudou: hadUser=$hadUser, hasUser=$hasUser, hasSynced=$hasSynced');
       
-      if (!hadUser && hasUser && !hasSynced) {
-        LoggerService.instance.i('🔐 Usuário logou na HomeScreen. Disparando sync...');
-        _checkAndPerformInitialSync();
+      if (!hadUser && hasUser) {
+        // Usuário acabou de logar (transição de deslogado -> logado)
+        // Sempre verifica sync, mesmo que já tenha syncado antes
+        // Isso garante sync após logout + login, mesmo com mesmo usuário
+        LoggerService.instance.i('🔐 Usuário logou na HomeScreen. Forçando verificação de sync...');
+        
+        // Reseta estado da sessão e chama sync com flag de login
+        ref.read(initialSyncCompletedProvider.notifier).resetSessionOnly();
+        
+        // Passa isLoginEvent: true para garantir sync mesmo com mesmo usuário/build
+        _checkAndPerformInitialSync(isLoginEvent: true);
+      } else if (hadUser && !hasUser) {
+        // Usuário fez logout - reseta estado para próximo login
+        LoggerService.instance.i('👤 Usuário deslogou. Resetando estado de sync...');
+        ref.read(initialSyncCompletedProvider.notifier).resetSessionOnly();
       } else {
-        LoggerService.instance.d('⏭️ Auth listener ignorado: já sincronizou ou condições não atendidas');
+        LoggerService.instance.d('⏭️ Auth listener ignorado: condições não atendidas');
       }
     });
     
@@ -426,20 +453,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      extendBody: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return SmokingCelebrationWidget(
+      child: Scaffold(
+        extendBody: true,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
+                isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+              ],
+            ),
           ),
-        ),
-        child: Stack(
+          child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
             Positioned(
@@ -583,6 +611,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         ),
       ),
       bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
+      ),
     );
   }
 

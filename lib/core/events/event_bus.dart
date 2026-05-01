@@ -290,8 +290,40 @@ class UserLoggedOutEvent extends AppEvent {
   );
 }
 
+/// Evento de Check-in para módulos
+class ModuleCheckInEvent extends AppEvent {
+  final int nicheId;
+  final bool isPositive; // true = check-in positivo (não fumou, etc)
+  final DateTime checkInDate;
+  
+  ModuleCheckInEvent({
+    required this.nicheId,
+    required this.isPositive,
+    required this.checkInDate,
+    super.sessionId,
+  }) : super(
+    data: {
+      'niche_id': nicheId,
+      'is_positive': isPositive,
+      'check_in_date': checkInDate.toIso8601String(),
+    },
+  );
+}
+
 /// Helper method para facilitar emissão de eventos
 class EventEmitHelper {
+  static void emitModuleCheckIn({
+    required int nicheId,
+    required bool isPositive,
+    required DateTime checkInDate,
+  }) {
+    EventBus.instance.emit(ModuleCheckInEvent(
+      nicheId: nicheId,
+      isPositive: isPositive,
+      checkInDate: checkInDate,
+    ));
+  }
+  
   static void emitMedalEarned({
     required int nicheId,
     required String medalType,

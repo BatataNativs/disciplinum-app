@@ -21,6 +21,7 @@ class SmokingModuleState implements ModuleStateContract {
   // Campos específicos do módulo Smoking
   final List<String> earnedInsignias;
   final List<String> earnedMedalhas;
+  final List<String> earnedHealthBenefits; // Marcos de saúde alcançados
   final int consecutivePositiveDays;
   final int disciplinumCount;
   final DateTime? lastPositiveCheckIn;
@@ -37,6 +38,7 @@ class SmokingModuleState implements ModuleStateContract {
     DateTime? updatedAt,
     this.earnedInsignias = const [],
     this.earnedMedalhas = const [],
+    this.earnedHealthBenefits = const [],
     this.consecutivePositiveDays = 0,
     this.disciplinumCount = 0,
     this.lastPositiveCheckIn,
@@ -57,6 +59,7 @@ class SmokingModuleState implements ModuleStateContract {
       updatedAt: DateTime.now(),
       earnedInsignias: const [],
       earnedMedalhas: const [],
+      earnedHealthBenefits: const [],
       consecutivePositiveDays: 0,
       disciplinumCount: 0,
       dailyCost: 0.0,
@@ -73,6 +76,7 @@ class SmokingModuleState implements ModuleStateContract {
   SmokingModuleState copyWith({
     List<String>? earnedInsignias,
     List<String>? earnedMedalhas,
+    List<String>? earnedHealthBenefits,
     int? consecutivePositiveDays,
     int? disciplinumCount,
     DateTime? lastPositiveCheckIn,
@@ -89,6 +93,7 @@ class SmokingModuleState implements ModuleStateContract {
       updatedAt: DateTime.now(),
       earnedInsignias: earnedInsignias ?? this.earnedInsignias,
       earnedMedalhas: earnedMedalhas ?? this.earnedMedalhas,
+      earnedHealthBenefits: earnedHealthBenefits ?? this.earnedHealthBenefits,
       consecutivePositiveDays: consecutivePositiveDays ?? this.consecutivePositiveDays,
       disciplinumCount: disciplinumCount ?? this.disciplinumCount,
       lastPositiveCheckIn: lastPositiveCheckIn ?? this.lastPositiveCheckIn,
@@ -112,6 +117,7 @@ class SmokingModuleState implements ModuleStateContract {
     )
       ..setField('earned_insignias', earnedInsignias)
       ..setField('earned_medalhas', earnedMedalhas)
+      ..setField('earned_health_benefits', earnedHealthBenefits)
       ..setField('consecutive_positive_days', consecutivePositiveDays)
       ..setField('disciplinum_count', disciplinumCount)
       ..setField('last_positive_check_in', lastPositiveCheckIn?.toIso8601String())
@@ -224,6 +230,11 @@ class SmokingModuleState implements ModuleStateContract {
                   ?.map((e) => e as String)
                   .toList() ??
               [],
+      earnedHealthBenefits:
+          (readField<List<dynamic>>('earned_health_benefits', 'earnedHealthBenefits'))
+                  ?.map((e) => e as String)
+                  .toList() ??
+              [],
       consecutivePositiveDays: readField<int>('consecutive_positive_days', 'consecutivePositiveDays') ?? 0,
       disciplinumCount: readField<int>('disciplinum_count', 'disciplinumCount') ?? 0,
       lastPositiveCheckIn: readField<String>('last_positive_check_in', 'lastPositiveCheckIn') != null
@@ -287,5 +298,22 @@ class SmokingModuleState implements ModuleStateContract {
   /// Reseta todas as medalhas
   SmokingModuleState resetMedalhas() {
     return copyWith(earnedMedalhas: []);
+  }
+
+  /// Verifica se possui um benefício de saúde específico
+  bool hasHealthBenefit(String benefitId) {
+    return earnedHealthBenefits.contains(benefitId);
+  }
+
+  /// Concede um benefício de saúde
+  SmokingModuleState awardHealthBenefit(String benefitId) {
+    if (hasHealthBenefit(benefitId)) return this;
+    final updatedBenefits = [...earnedHealthBenefits, benefitId];
+    return copyWith(earnedHealthBenefits: updatedBenefits);
+  }
+
+  /// Reseta todos os benefícios de saúde
+  SmokingModuleState resetHealthBenefits() {
+    return copyWith(earnedHealthBenefits: []);
   }
 }

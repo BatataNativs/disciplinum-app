@@ -1,8 +1,11 @@
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medalha.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_health_benefit.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
 
 /// Service de insígnias específico do módulo Smoking
 /// Implementa a interface base com lógica específica do Smoking
@@ -126,14 +129,93 @@ class SmokingInsigniaService implements ModuleInsigniaInterface {
       final moduleData = {'consecutiveDays': consecutivePositiveDays};
       final newInsignias = await checkForNewInsignias(moduleData);
       
-      // Concede novas insígnias encontradas
+      // Concede novas insígnias encontradas e dispara celebrações
       for (final insigniaId in newInsignias) {
         await awardInsignia(insigniaId);
+        
+        // Dispara evento de celebração para a nova insígnia
+        final insignia = SmokingInsigniaEntity.values.firstWhere(
+          (i) => i.name == insigniaId,
+          orElse: () => SmokingInsigniaEntity.madeira,
+        );
+        
+        // Celebração para insígnia conquistada
+        SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+          insigniaId: insigniaId,
+          insigniaName: insignia.nameBr,
+        );
+        
+        LoggerService.instance.gamification('🎉 Celebração disparada para insígnia: ${insignia.nameBr}');
       }
+      
+      // Verifica e concede medalhas baseadas nas insígnias conquistadas
+      await _checkAndAwardMedalhas();
+      
+      // Verifica e concede novos marcos de saúde
+      await _checkAndAwardHealthBenefits(consecutivePositiveDays);
       
       await _saveState(_currentState!);
     } catch (e) {
       LoggerService.instance.e('Erro ao atualizar check-ins Smoking', error: e);
+    }
+  }
+
+  /// Verifica e concede medalhas baseadas nas insígnias Disciplinum conquistadas
+  Future<void> _checkAndAwardMedalhas() async {
+    try {
+      final currentMedalhas = _currentState?.earnedMedalhas ?? [];
+      
+      for (final medalha in SmokingMedalhaEntity.values) {
+        // Verifica se a medalha pode ser concedida e ainda não foi
+        if (medalha.canBeAwarded(_currentState?.earnedInsignias ?? []) &&
+            !currentMedalhas.contains(medalha.name)) {
+          
+          // Concede a medalha
+          _currentState = _currentState!.copyWith(
+            earnedMedalhas: [...currentMedalhas, medalha.name],
+          );
+          
+          // Dispara celebração para a medalha
+          SmokingCelebrationService.instance.celebrarMedalhaConquistada(
+            medalhaId: medalha.name,
+            medalhaName: medalha.nameBr,
+          );
+          
+          LoggerService.instance.gamification('🏆 Medalha concedida e celebrada: ${medalha.nameBr}');
+        }
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao verificar/conceder medalhas', error: e);
+    }
+  }
+
+  /// Verifica e concede novos marcos de saúde baseados nos dias sem fumar
+  Future<void> _checkAndAwardHealthBenefits(int consecutiveDays) async {
+    try {
+      final currentBenefits = _currentState?.earnedHealthBenefits ?? [];
+      
+      // Calcular tempo total em minutos desde o início
+      final totalMinutes = consecutiveDays * 24 * 60;
+      
+      for (final benefit in SmokingHealthBenefitEntity.values) {
+        // Verifica se o benefício foi atingido e ainda não foi concedido
+        if (totalMinutes >= benefit.timeInMinutes &&
+            !currentBenefits.contains(benefit.name)) {
+          
+          // Concede o benefício
+          _currentState = _currentState!.awardHealthBenefit(benefit.name);
+          
+          // Dispara celebração para o marco de saúde
+          SmokingCelebrationService.instance.celebrarMarcoSaude(
+            dias: benefit.timeInMinutes ~/ (24 * 60), // Converte para dias
+            mensagem: benefit.notificationBody,
+          );
+          
+          LoggerService.instance.gamification('❤️ Marco de saúde concedido: ${benefit.notificationTitle}');
+        }
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao verificar/conceder marcos de saúde', error: e);
     }
   }
 

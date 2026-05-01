@@ -63,7 +63,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
         ),
         const Text(
           'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
-          style: TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: 11),
         ),
         const SizedBox(height: 16),
         Container(

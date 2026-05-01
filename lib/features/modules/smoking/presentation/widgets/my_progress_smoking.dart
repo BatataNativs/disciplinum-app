@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medalha.dart';
 
 class MyProgressSmoking extends ConsumerWidget {
   const MyProgressSmoking({super.key});
@@ -10,6 +11,9 @@ class MyProgressSmoking extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dias = ref.watch(smokingStreakProvider);
+    final disciplinumCount = ref.watch(smokingDisciplinumCountProvider);
+    final earnedInsignias = ref.watch(smokingEarnedInsigniasProvider);
+    final earnedMedalhas = ref.watch(smokingEarnedMedalhasProvider);
     final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
@@ -31,25 +35,70 @@ class MyProgressSmoking extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Parar de fumar',
-              style: TextStyle(
+            // Header
+            Text(
+              'Olá, $firstName!',
+              style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white),
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo',
+              'Seu progresso no módulo: Parar de Fumar',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
+
+            // Streak atual
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Colors.orange.shade400,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$dias dias',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'sem fumar',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // INSÍGNIAS
             const Text(
-              'Medalhas',
+              'Insígnias',
               style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey),
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por dias sem fumar',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             Container(
@@ -64,39 +113,116 @@ class MyProgressSmoking extends ConsumerWidget {
                 crossAxisCount: 3,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.8,
-                children: SmokingMedalEntity.values.map((medal) {
-                  final isEarned =
-                      (medal == SmokingMedalEntity.bronze && dias >= 3) ||
-                          (medal == SmokingMedalEntity.prata && dias >= 5) ||
-                          (medal == SmokingMedalEntity.ouro && dias >= 7) ||
-                          (medal == SmokingMedalEntity.diamante && dias >= 10);
+                childAspectRatio: 0.75,
+                children: SmokingInsigniaEntity.values.map((insignia) {
+                  final isEarned = earnedInsignias.contains(insignia.name);
 
                   return _AwardItem(
-                    asset: medal.asset,
-                    label: medal.nameBr,
+                    asset: insignia.asset,
+                    label: insignia.nameBr,
                     isEarned: isEarned,
-                    requirement: _getMedalRequirement(medal),
+                    requirement: _getInsigniaRequirement(insignia),
                   );
                 }).toList(),
               ),
             ),
+            const SizedBox(height: 32),
+
+            // MEDALHAS
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por insígnias Disciplinum',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.9,
+                children: SmokingMedalhaEntity.values.map((medalha) {
+                  final isEarned = earnedMedalhas.contains(medalha.name) ||
+                      medalha.canBeAwarded(earnedInsignias);
+
+                  return _AwardItem(
+                    asset: medalha.asset,
+                    label: medalha.nameBr,
+                    isEarned: isEarned,
+                    requirement: medalha.requirementDescription,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Contador de Disciplinum
+            if (disciplinumCount > 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$disciplinumCount insígnia${disciplinumCount > 1 ? 's' : ''} Disciplinum conquistada${disciplinumCount > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  String _getMedalRequirement(SmokingMedalEntity medal) {
-    switch (medal) {
-      case SmokingMedalEntity.bronze:
-        return '3 dias consecutivos';
-      case SmokingMedalEntity.prata:
-        return '5 dias consecutivos';
-      case SmokingMedalEntity.ouro:
-        return '7 dias consecutivos';
-      case SmokingMedalEntity.diamante:
-        return '10 dias consecutivos';
+  String _getInsigniaRequirement(SmokingInsigniaEntity insignia) {
+    switch (insignia) {
+      case SmokingInsigniaEntity.madeira:
+        return 'Ative o módulo';
+      case SmokingInsigniaEntity.ferro:
+        return '1 dia sem fumar';
+      case SmokingInsigniaEntity.aluminio:
+        return '2 dias sem fumar';
+      case SmokingInsigniaEntity.latao:
+        return '3 dias sem fumar';
+      case SmokingInsigniaEntity.bronze:
+        return '5 dias sem fumar';
+      case SmokingInsigniaEntity.prata:
+        return '10 dias sem fumar';
+      case SmokingInsigniaEntity.ouro:
+        return '15 dias sem fumar';
+      case SmokingInsigniaEntity.diamante:
+        return '20 dias sem fumar';
+      case SmokingInsigniaEntity.disciplinum:
+        return '30 dias sem fumar';
     }
   }
 }

@@ -6,7 +6,17 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 // Import das telas de progresso de cada módulo
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart';
+// Módulos com widgets específicos de progresso
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart';
+import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/my_progress_binge_eating.dart';
+import 'package:disciplinum/features/modules/diet/presentation/widgets/my_progress_diet.dart';
+import 'package:disciplinum/features/modules/spending/presentation/widgets/my_progress_spending.dart';
+import 'package:disciplinum/features/modules/adult_content/presentation/widgets/my_progress_adult_content.dart';
+import 'package:disciplinum/features/modules/money_saving/presentation/widgets/my_progress_money_saving_challenge.dart';
+import 'package:disciplinum/features/modules/procrastination/presentation/widgets/my_progress_procrastination.dart';
+import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
+// Widget genérico para módulos sem tela específica
+import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart' show MyProgressFocus;
 
 class MyProgressScreen extends ConsumerWidget {
   const MyProgressScreen({super.key});
@@ -131,10 +141,17 @@ class MyProgressScreen extends ConsumerWidget {
           children: [
             // Ícone do módulo (Aumentado e sem container circular)
             Expanded(
-              child: Image.asset(
-                niche.iconPath,
-                fit: BoxFit.contain,
-              ),
+              child: niche.isEmojiIcon
+                  ? Center(
+                      child: Text(
+                        niche.iconPath,
+                        style: const TextStyle(fontSize: 48),
+                      ),
+                    )
+                  : Image.asset(
+                      niche.iconPath,
+                      fit: BoxFit.contain,
+                    ),
             ),
             const SizedBox(height: 8),
             // Nome do módulo

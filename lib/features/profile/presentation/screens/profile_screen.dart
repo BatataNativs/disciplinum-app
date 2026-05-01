@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/infrastructure/iap/iap_service.dart';
-import 'package:disciplinum/app/router/app_router.dart';
-import 'package:flutter/services.dart';
-import 'dart:async';
-import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
-import 'package:disciplinum/features/profile/presentation/widgets/account_options_dialog.dart';
-import 'package:disciplinum/features/profile/presentation/widgets/store_dialog.dart';
+import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/profile_avatar_section.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/profile_info_section.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/theme_button.dart';
-import 'package:disciplinum/features/profile/presentation/widgets/profile_action_button.dart';
-import 'package:disciplinum/features/app_lock/presentation/widgets/app_lock_button.dart';
+import 'package:disciplinum/features/profile/presentation/widgets/account_options_dialog.dart';
+import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -22,87 +18,66 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  IapService? _iapService;
-  Timer? _errorTimeout;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Configura o feedback visual para as compras nesta tela
-      _iapService = ref.read(iapServiceProvider.notifier);
-      _iapService!.onPurchaseResult = (productId, success) {
-        if (!mounted) return;
-        
-        if (success) {
-          // Cancela o timeout apenas se for sucesso
-          _errorTimeout?.cancel();
-          _errorTimeout = null;
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('🛒 Compra realizada com sucesso!')),
-          );
-        }
-        // Se não for sucesso, NÃO cancela o timeout - deixa ele mostrar erro de conexão
-      };
-    });
   }
 
   @override
   void dispose() {
-    // Cancela o timeout se existir
-    _errorTimeout?.cancel();
-    
-    // Limpa o callback usando a referência salva, sem precisar do context
-    if (_iapService != null && _iapService!.onPurchaseResult != null) {
-      _iapService!.onPurchaseResult = null;
-    }
     super.dispose();
   }
 
-  void _showAccountOptions(BuildContext context, dynamic authService) {
+  void _showAccountOptions(BuildContext context, AuthService authService) {
     showDialog(
       context: context,
       builder: (ctx) => AccountOptionsDialog(authService: authService),
     );
   }
 
-  void _showLojinhaDialog(BuildContext context, dynamic iap) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const StoreDialog(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider.notifier);
-    final iapState = ref.watch(iapServiceProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF0F0F1A),
+                  const Color(0xFF1A1A2E),
+                  const Color(0xFF16213E),
+                ]
+              : [
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 10, 60, 131),
+                  const Color.fromARGB(255, 255, 255, 255),
+                ],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
       child: Scaffold(
         extendBody: true,
         extendBodyBehindAppBar: true,
-        backgroundColor: Colors.transparent, // Scaffold Transparente
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Perfil'),
-          backgroundColor: Colors.transparent, // AppBar Transparente
+          title: const Text(
+            'Perfil',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+              fontSize: 24,
+            ),
+          ),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           systemOverlayStyle: isDark
               ? SystemUiOverlayStyle.light
-              : SystemUiOverlayStyle.dark, // Ícones da barra de status
+              : SystemUiOverlayStyle.dark,
         ),
         body: SafeArea(
           child: LayoutBuilder(
@@ -112,72 +87,106 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
-                      // --- NOVO LAYOUT: AVATAR (ESQ) + BOTÕES (DIR) ---
+                      // --- AVATAR COM GLASSMORPHISM ---
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [
+                                    Colors.white.withValues(alpha: 0.2),
+                                    Colors.white.withValues(alpha: 0.05),
+                                  ]
+                                : [
+                                    Colors.white,
+                                    Colors.white,
+                                  ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 35,
+                              spreadRadius: 6,
+                            ),
+                          ],
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : const Color.fromARGB(255, 38, 38, 38).withValues(alpha: 0.9),
+                            width: 2,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(10),
+                        child: const ProfileAvatarSection(),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // --- SEÇÃO DE INFORMAÇÕES DO PERFIL ---
+                      const ProfileInfoSection(),
+
+                      const SizedBox(height: 18),
+
+                      // --- BOTÕES DE AÇÃO EM LINHA ---
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // COLUNA ESQUERDA: AVATAR
+                          // MINHA CONTA
                           Expanded(
-                            flex: 5,
-                            child: Column(
-                              children: [
-                                const ProfileAvatarSection(),
-                              ],
+                            child: Container(
+                              height: 52,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF1F2937), Color(0xFF374151)],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.person_outline, size: 22),
+                                label: const Text(
+                                  'Minha conta',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                onPressed: () => _showAccountOptions(context, authService),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 12),
 
-                          const SizedBox(width: 16),
-
-                          // COLUNA DIREITA: BOTÕES DE AÇÃO
-                          Expanded(
-                            flex: 6,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // ESPAÇAMENTO PARA ALINHAR COM ALTURA DA FOTO DE PERFIL
-                                const SizedBox(height: 38),
-
-                                // BOTÃO DE TEMA
-                                const ThemeButton(),
-                                const SizedBox(height: 8),
-
-                                // MINHA CONTA
-                                ProfileActionButton(
-                                  label: 'Minha conta',
-                                  icon: Icons.person_outline,
-                                  onPressed: () => _showAccountOptions(context, authService),
-                                  isDark: isDark,
-                                ),
-                                const SizedBox(height: 8),
-
-                                // LOJA DO APP
-                                ProfileActionButton(
-                                  label: 'Loja do app',
-                                  icon: Icons.storefront,
-                                  onPressed: () => _showLojinhaDialog(context, iapState),
-                                  isDark: isDark,
-                                ),
-                                const SizedBox(height: 8),
-
-                                // BOTÃO DE TESTE DO APP LOCK
-                                AppLockButton(),
-                                
-                                // TEMA DO APP
-                                ThemeButton(),
-                              ],
-                            ),
-                          ),
+                          // TEMA
+                          const Expanded(child: ThemeButton()),
                         ],
                       ),
 
-                      const SizedBox(height: 20),
-
-                      // SEÇÃO DE INFORMAÇÕES DO PERFIL
-                      const ProfileInfoSection(),
+                      const SizedBox(height: 24),
 
                       if (!authService.isAuthenticated) ...[
                         const SizedBox(height: 10),
@@ -200,30 +209,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ],
 
-                      const SizedBox(height: 24),
-                      const Divider(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
-                      // --- BOTÃO MEU PROGRESSO ---
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      // --- BOTÃO CONQUISTAS ---
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [
+                                    const Color(0xFF6366F1).withValues(alpha: 0.9),
+                                    const Color(0xFF8B5CF6).withValues(alpha: 0.9),
+                                    const Color(0xFFA855F7).withValues(alpha: 0.9),
+                                  ]
+                                : [
+                                    const Color(0xFFFFFFFF).withValues(alpha: 0.95),
+                                    const Color(0xFFFFFFFF).withValues(alpha: 0.85),
+                                    const Color(0xFFFFFFFF).withValues(alpha: 0.75),
+                                  ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? const Color(0xFF6366F1).withValues(alpha: 0.5)
+                                  : Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.25)
+                                : Colors.white.withValues(alpha: 0.7),
+                            width: 2,
+                          ),
+                        ),
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isDark
-                                ? const Color.fromARGB(255, 78, 77, 77)
-                                    .withValues(alpha: 0.7)
-                                : const Color.fromARGB(255, 24, 24, 24)
-                                    .withValues(alpha: 0.7),
-                            foregroundColor: isDark
-                                ? const Color.fromARGB(255, 255, 255, 255)
-                                : const Color.fromARGB(255, 255, 255, 255),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(
-                              color: isDark
-                                  ? const Color.fromARGB(255, 255, 255, 255)
-                                  : const Color.fromARGB(255, 255, 255, 255),
-                              width: 1.5,
-                            ),
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: isDark ? Colors.white : const Color(0xFF1F2937),
+                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 36),
+                            shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(32),
                             ),
@@ -231,13 +257,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onPressed: () {
                             Navigator.pushNamed(context, AppRouter.myProgress);
                           },
-                          icon: const Icon(Icons.bar_chart_rounded, size: 28),
+                          icon: const Icon(Icons.bar_chart_rounded, size: 26),
                           label: const Text(
                             'CONQUISTAS',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.0,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.5,
                             ),
                           ),
                         ),

@@ -6,7 +6,6 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
-import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 
 class ProcrastinationNotificationsScreen extends ConsumerStatefulWidget {
   const ProcrastinationNotificationsScreen({super.key});
@@ -86,26 +85,6 @@ class _ProcrastinationNotificationsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Seção: Texto da Notificação
-                    _buildSectionHeader(
-                      title: 'Texto da Notificação',
-                      subtitle:
-                          'Que chegará sempre que você abrir um dos apps selecionados para monitoramento com o módulo ativado.',
-                      icon: Icons.message_rounded,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.nicheId),
-                    const SizedBox(height: 8),
-
-                    // Como funciona - Notificações
-                    _buildMinimalInfoCard(
-                      description:
-                          'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados para monitoramento.',
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 8),
-
                     // Seção: Lembrete Diário
                     _buildSectionHeader(
                       title: 'Lembrete Diário',
@@ -181,40 +160,6 @@ class _ProcrastinationNotificationsScreenState
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMinimalInfoCard({
-    required String description,
-    required bool isDark,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Text(
-        description,
-        style: TextStyle(
-          fontSize: 12,
-          color: const Color(0xFF64748B),
-          height: 1.4,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
     );
   }
 

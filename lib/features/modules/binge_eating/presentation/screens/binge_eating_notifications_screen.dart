@@ -5,7 +5,6 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/features/notifications/presentation/widgets/notification_message_editor.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 
 class BingeEatingNotificationsScreen extends ConsumerStatefulWidget {
@@ -87,26 +86,6 @@ class _BingeEatingNotificationsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Seção: Texto da Notificação
-                    _buildSectionHeader(
-                      title: 'Texto da Notificação',
-                      subtitle:
-                          'Que chegará sempre que você abrir um dos apps selecionados para monitoramento com o módulo ativado.',
-                      icon: Icons.message_rounded,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 16),
-                    NotificationMessageEditor(nicheId: _niche.nicheId),
-                    const SizedBox(height: 8),
-
-                    // Como funciona - Notificações
-                    _buildMinimalInfoCard(
-                      description:
-                          'A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados para monitoramento.',
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 8),
-
                     // Seção: Check-in Diário
                     _buildSectionHeader(
                       title: 'Check-in Diário',

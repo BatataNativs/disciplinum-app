@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_insignia.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_medal.dart';
 
 class MyProgressDiet extends ConsumerWidget {
@@ -10,22 +11,9 @@ class MyProgressDiet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dias = ref.watch(dietStreakProvider);
-
-    return _DietProgressDetailScreen(
-      title: 'Manter dieta',
-      dias: dias,
-    );
-  }
-}
-
-class _DietProgressDetailScreen extends ConsumerWidget {
-  final String title;
-  final int dias;
-
-  const _DietProgressDetailScreen({required this.title, required this.dias});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+    final disciplinumCount = ref.watch(dietDisciplinumCountProvider);
+    final earnedInsignias = ref.watch(dietInsigniasProvider);
+    final earnedMedalhas = ref.watch(dietMedalhasProvider);
     final authService = ref.watch(authServiceProvider);
 
     // Lógica para obter o primeiro nome
@@ -47,8 +35,9 @@ class _DietProgressDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Text(
-              title,
+              'Olá, $firstName!',
               style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -56,16 +45,60 @@ class _DietProgressDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo',
+              'Seu progresso no módulo: Manter Dieta',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
+
+            // Streak atual
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Colors.orange.shade400,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$dias dias',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'cumprindo horários de refeição',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // INSÍGNIAS
             const Text(
-              'Medalhas',
+              'Insígnias',
               style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey),
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por dias cumprindo horários',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             Container(
@@ -80,40 +113,94 @@ class _DietProgressDetailScreen extends ConsumerWidget {
                 crossAxisCount: 3,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.75,
+                children: DietInsignia.values.map((insignia) {
+                  final isEarned = earnedInsignias.contains(insignia.name);
+
+                  return _AwardItem(
+                    asset: insignia.asset,
+                    label: insignia.nameBr,
+                    isEarned: isEarned,
+                    requirement: insignia.requirementDescription,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // MEDALHAS
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por insígnias Disciplinum',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.9,
                 children: DietMedal.values.map((medal) {
-                  final isEarned =
-                      (medal == DietMedal.bronze && dias >= 3) ||
-                          (medal == DietMedal.prata && dias >= 5) ||
-                          (medal == DietMedal.ouro && dias >= 7) ||
-                          (medal == DietMedal.diamante && dias >= 10);
+                  final isEarned = earnedMedalhas.contains(medal.name) ||
+                      medal.canBeAwarded(earnedInsignias);
 
                   return _AwardItem(
                     asset: medal.asset,
                     label: medal.nameBr,
                     isEarned: isEarned,
-                    requirement: _getMedalRequirement(medal),
+                    requirement: medal.requirementDescription,
                   );
                 }).toList(),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Contador de Disciplinum
+            if (disciplinumCount > 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$disciplinumCount insígnia${disciplinumCount > 1 ? 's' : ''} Disciplinum conquistada${disciplinumCount > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
-  }
-
-  String _getMedalRequirement(DietMedal medal) {
-    switch (medal) {
-      case DietMedal.bronze:
-        return '3 dias consecutivos';
-      case DietMedal.prata:
-        return '5 dias consecutivos';
-      case DietMedal.ouro:
-        return '7 dias consecutivos';
-      case DietMedal.diamante:
-        return '10 dias consecutivos';
-    }
   }
 }
 
@@ -164,8 +251,7 @@ class _AwardItem extends StatelessWidget {
                       0,
                     ]),
               child: Padding(
-                padding: const EdgeInsets.all(
-                    14), // Controle o tamanho aqui (maior padding = menor imagem)
+                padding: const EdgeInsets.all(14),
                 child: Opacity(
                   opacity: isEarned ? 1.0 : 0.4,
                   child: Image.asset(asset, fit: BoxFit.contain),

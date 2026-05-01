@@ -68,13 +68,13 @@ extension SpendingMedalEntityExtension on SpendingMedalEntity {
   String get nameBr {
     switch (this) {
       case SpendingMedalEntity.bronze:
-        return 'Bronze';
+        return 'Medalha de Bronze';
       case SpendingMedalEntity.prata:
-        return 'Prata';
+        return 'Medalha de Prata';
       case SpendingMedalEntity.ouro:
-        return 'Ouro';
+        return 'Medalha de Ouro';
       case SpendingMedalEntity.diamante:
-        return 'Diamante';
+        return 'Medalha de Diamante';
     }
   }
 
@@ -150,5 +150,10 @@ extension SpendingMedalEntityExtension on SpendingMedalEntity {
       case SpendingMedalEntity.diamante:
         return '#B9F2FF'; // Azul claro
     }
+  }
+
+  /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
+  bool canBeAwarded(List<String> earnedInsignias) {
+    return earnedInsignias.contains(requiredInsignia);
   }
 }

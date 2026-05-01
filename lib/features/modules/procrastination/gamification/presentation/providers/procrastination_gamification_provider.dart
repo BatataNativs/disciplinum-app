@@ -34,3 +34,21 @@ final procrastinationActiveProvider = Provider<bool>((ref) {
   final state = ref.watch(procrastinationControllerIsarProvider);
   return state.config?.isModuleActive ?? false;
 });
+
+/// Provider para insígnias conquistadas
+final procrastinationInsigniasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(procrastinationGamificationNotifierProvider);
+  return state.earnedInsignias;
+});
+
+/// Provider para medalhas conquistadas
+final procrastinationMedalhasProvider = Provider<List<String>>((ref) {
+  final state = ref.watch(procrastinationGamificationNotifierProvider);
+  return state.earnedMedalhas;
+});
+
+/// Provider para contagem de Disciplinum
+final procrastinationDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(procrastinationGamificationNotifierProvider);
+  return state.disciplinumCount;
+});

@@ -28,11 +28,60 @@ enum DietInsignia {
     // Insignias devem ser concedidas em ordem
     for (final insignia in DietInsignia.values) {
       if (insignia == this) break;
-      
+
       if (!earnedInsignias.contains(insignia.name)) {
         return false;
       }
     }
     return true;
+  }
+
+  /// Obtém o caminho do asset
+  String get asset {
+    const prefix = 'assets/gamification/insignias/diet/';
+    switch (this) {
+      case DietInsignia.madeira:
+        return '${prefix}madeira.png';
+      case DietInsignia.ferro:
+        return '${prefix}ferro.png';
+      case DietInsignia.aluminio:
+        return '${prefix}aluminio.png';
+      case DietInsignia.latao:
+        return '${prefix}latao.png';
+      case DietInsignia.bronze:
+        return '${prefix}bronze.png';
+      case DietInsignia.prata:
+        return '${prefix}prata.png';
+      case DietInsignia.ouro:
+        return '${prefix}ouro.png';
+      case DietInsignia.diamante:
+        return '${prefix}diamante.png';
+      case DietInsignia.disciplinum:
+        return '${prefix}disciplinum.png';
+    }
+  }
+
+  /// Obtém a descrição dos requisitos
+  String get requirementDescription {
+    switch (this) {
+      case DietInsignia.madeira:
+        return 'Ative o módulo Dieta';
+      case DietInsignia.ferro:
+        return '1 dia com check-in positivo';
+      case DietInsignia.aluminio:
+        return '2 dias com check-in positivo';
+      case DietInsignia.latao:
+        return '4 dias com check-in positivo';
+      case DietInsignia.bronze:
+        return '8 dias com check-in positivo';
+      case DietInsignia.prata:
+        return '12 dias com check-in positivo';
+      case DietInsignia.ouro:
+        return '18 dias com check-in positivo';
+      case DietInsignia.diamante:
+        return '26 dias com check-in positivo';
+      case DietInsignia.disciplinum:
+        return '30 dias com check-in positivo';
+    }
   }
 }

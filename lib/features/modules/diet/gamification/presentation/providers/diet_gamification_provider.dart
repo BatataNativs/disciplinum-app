@@ -44,3 +44,9 @@ final dietMedalhasProvider = Provider<List<String>>((ref) {
   final state = ref.watch(dietGamificationNotifierProvider);
   return state.earnedMedalhas;
 });
+
+/// Provider para contagem de Disciplinum
+final dietDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(dietGamificationNotifierProvider);
+  return state.disciplinumCount;
+});

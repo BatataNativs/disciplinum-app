@@ -11,12 +11,14 @@ import 'package:disciplinum/features/modules/reading/gamification/domain/entitie
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 
 /// Serviço principal para gerenciamento de leitura - VERSÃO RIVERPOD
 class ReadingService {
   final ReadingRepository _repository;
   final ReadingGamificationRepository _gamificationRepository;
   final dynamic _gamificationService; // Tipo dinâmico para evitar dependência circular
+  final CloudSyncService? _cloudSync;
   late final ObjectBoxPreferencesRepository _prefs;
 
   List<ReadingBook> _books = [];
@@ -24,7 +26,7 @@ class ReadingService {
   DateTime? _lastReadingDate;
   ReadingGamificationEntity? _gamificationEntity;
 
-  ReadingService(this._repository, this._gamificationRepository, [this._gamificationService]) {
+  ReadingService(this._repository, this._gamificationRepository, [this._gamificationService, this._cloudSync]) {
     _prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     _loadData();
   }
@@ -239,11 +241,15 @@ class ReadingService {
     }
   }
 
-  /// Obtém o horário de notificação salvo
-  Future<TimeOfDay> getSavedNotificationTime() async {
+  /// Obtém o horário de notificação salvo (retorna null se não houver lembrete)
+  Future<TimeOfDay?> getSavedNotificationTime() async {
     // Implementado usando IsarPreferencesRepository
-    final hour = await _prefs.getInt('reading_notification_hour') ?? 20;
-    final minute = await _prefs.getInt('reading_notification_minute') ?? 0;
+    final hour = await _prefs.getInt('reading_notification_hour');
+    final minute = await _prefs.getInt('reading_notification_minute');
+    // Se não houver horário salvo, retorna null
+    if (hour == null || minute == null) {
+      return null;
+    }
     return TimeOfDay(hour: hour, minute: minute);
   }
 
@@ -258,9 +264,27 @@ class ReadingService {
       payload: 'reading_reminder',
     );
     
-    // Salva o horário configurado
+    // Salva o horário configurado localmente
     await _prefs.setInt('reading_notification_hour', time.hour);
     await _prefs.setInt('reading_notification_minute', time.minute);
+    
+    // Sincroniza com a cloud
+    if (_cloudSync != null) {
+      try {
+        // Remove horários antigos e adiciona o novo
+        await _cloudSync.removeAllTimesForNiche(nicheId: 10); // 10 = reading niche id
+        await _cloudSync.addUserNicheTime(
+          nicheId: 10,
+          hour: time.hour,
+          minute: time.minute,
+          phrase: '📚 Hora da leitura diária! Mantenha sua mente ativa.',
+        );
+        LoggerService.instance.i('Reading reminder synced to cloud');
+      } catch (e) {
+        LoggerService.instance.w('Failed to sync reading reminder to cloud: $e');
+        // Não falha a operação local se a sincronização falhar
+      }
+    }
     
     final timeString = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     LoggerService.instance.i('Daily reminder scheduled for $timeString');
@@ -270,6 +294,21 @@ class ReadingService {
   Future<void> cancelDailyReminder() async {
     // Implementado usando NotificationService
     await NotificationService.cancelNotification(3001);
-    LoggerService.instance.i('Daily reminder cancelled');
+    // Limpa as preferências salvas para indicar que não há lembrete ativo
+    await _prefs.remove('reading_notification_hour');
+    await _prefs.remove('reading_notification_minute');
+    
+    // Remove da cloud também
+    if (_cloudSync != null) {
+      try {
+        await _cloudSync.removeAllTimesForNiche(nicheId: 10); // 10 = reading niche id
+        LoggerService.instance.i('Reading reminder removed from cloud');
+      } catch (e) {
+        LoggerService.instance.w('Failed to remove reading reminder from cloud: $e');
+        // Não falha a operação local se a sincronização falhar
+      }
+    }
+    
+    LoggerService.instance.i('Daily reminder cancelled and preferences cleared');
   }
 }

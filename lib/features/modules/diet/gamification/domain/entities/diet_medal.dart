@@ -1,29 +1,97 @@
-enum DietMedal { bronze, prata, ouro, diamante }
+/// Entidade de medalhas específicas do módulo Diet
+/// Baseada em quantidade de insígnias Disciplinum conquistadas
+enum DietMedal {
+  bronze,     // 1 insígnia Disciplinum
+  prata,      // 2 insígnias Disciplinum
+  ouro,       // 3 insígnias Disciplinum
+  diamante    // 4 insígnias Disciplinum
+}
 
 extension DietMedalExtension on DietMedal {
-  String get nameBr {
+  /// Converte para string para armazenamento
+  String get name {
     switch (this) {
       case DietMedal.bronze:
-        return 'Bronze';
+        return 'bronze';
       case DietMedal.prata:
-        return 'Prata';
+        return 'prata';
       case DietMedal.ouro:
-        return 'Ouro';
+        return 'ouro';
       case DietMedal.diamante:
-        return 'Diamante';
+        return 'diamante';
     }
   }
 
-  String get asset {
+  /// Obtém o nome em português
+  String get nameBr {
     switch (this) {
       case DietMedal.bronze:
-        return 'assets/medal_bronze.png';
+        return 'Medalha de Bronze';
       case DietMedal.prata:
-        return 'assets/medal_silver.png';
+        return 'Medalha de Prata';
       case DietMedal.ouro:
-        return 'assets/medal_gold.png';
+        return 'Medalha de Ouro';
       case DietMedal.diamante:
-        return 'assets/medal_diamond.png';
+        return 'Medalha de Diamante';
+    }
+  }
+
+  /// Obtém o caminho do asset
+  String get asset {
+    const prefix = 'assets/gamification/medals/diet/';
+    switch (this) {
+      case DietMedal.bronze:
+        return '${prefix}bronze.png';
+      case DietMedal.prata:
+        return '${prefix}silver.png';
+      case DietMedal.ouro:
+        return '${prefix}gold.png';
+      case DietMedal.diamante:
+        return '${prefix}diamond.png';
+    }
+  }
+
+  /// Obtém a descrição dos requisitos
+  String get requirementDescription {
+    switch (this) {
+      case DietMedal.bronze:
+        return '1 insígnia Disciplinum';
+      case DietMedal.prata:
+        return '2 insígnias Disciplinum';
+      case DietMedal.ouro:
+        return '3 insígnias Disciplinum';
+      case DietMedal.diamante:
+        return '4 insígnias Disciplinum';
+    }
+  }
+
+  /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
+  bool canBeAwarded(List<String> earnedInsignias) {
+    final disciplinumCount = earnedInsignias.where((i) => i == 'disciplinum').length;
+
+    switch (this) {
+      case DietMedal.bronze:
+        return disciplinumCount >= 1;
+      case DietMedal.prata:
+        return disciplinumCount >= 2;
+      case DietMedal.ouro:
+        return disciplinumCount >= 3;
+      case DietMedal.diamante:
+        return disciplinumCount >= 4;
+    }
+  }
+
+  /// Obtém o emoji correspondente
+  String get emoji {
+    switch (this) {
+      case DietMedal.bronze:
+        return '🥉';
+      case DietMedal.prata:
+        return '🥈';
+      case DietMedal.ouro:
+        return '🥇';
+      case DietMedal.diamante:
+        return '💎';
     }
   }
 }

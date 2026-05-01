@@ -68,13 +68,13 @@ extension ProcrastinationMedalEntityExtension on ProcrastinationMedalEntity {
   String get nameBr {
     switch (this) {
       case ProcrastinationMedalEntity.bronze:
-        return 'Bronze';
+        return 'Medalha de Bronze';
       case ProcrastinationMedalEntity.prata:
-        return 'Prata';
+        return 'Medalha de Prata';
       case ProcrastinationMedalEntity.ouro:
-        return 'Ouro';
+        return 'Medalha de Ouro';
       case ProcrastinationMedalEntity.diamante:
-        return 'Diamante';
+        return 'Medalha de Diamante';
     }
   }
 
@@ -149,6 +149,22 @@ extension ProcrastinationMedalEntityExtension on ProcrastinationMedalEntity {
         return '#FFD700'; // Dourado
       case ProcrastinationMedalEntity.diamante:
         return '#B9F2FF'; // Azul claro
+    }
+  }
+
+  /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
+  bool canBeAwarded(List<String> earnedInsignias) {
+    final disciplinumCount = earnedInsignias.where((i) => i == 'disciplinum').length;
+
+    switch (this) {
+      case ProcrastinationMedalEntity.bronze:
+        return disciplinumCount >= 1;
+      case ProcrastinationMedalEntity.prata:
+        return disciplinumCount >= 2;
+      case ProcrastinationMedalEntity.ouro:
+        return disciplinumCount >= 3;
+      case ProcrastinationMedalEntity.diamante:
+        return disciplinumCount >= 4;
     }
   }
 }

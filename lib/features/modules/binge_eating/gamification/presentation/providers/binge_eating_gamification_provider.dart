@@ -38,3 +38,9 @@ final bingeEatingMedalhasProvider = Provider<List<String>>((ref) {
   final state = ref.watch(bingeEatingGamificationNotifierProvider);
   return state.earnedMedalhas;
 });
+
+/// Provider para contagem de Disciplinum
+final bingeEatingDisciplinumCountProvider = Provider<int>((ref) {
+  final state = ref.watch(bingeEatingGamificationNotifierProvider);
+  return state.disciplinumCount;
+});

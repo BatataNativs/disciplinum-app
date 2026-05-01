@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
+import 'package:disciplinum/core/modules/sync/sync_validation_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service_local.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/controllers/procrastination_controller_local.dart';
@@ -91,8 +92,9 @@ final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((r
 final smokingCheckinServiceProvider = Provider<SmokingCheckinService>((ref) {
   final objectBoxService = ref.watch(objectBoxServiceProvider);
   final cloudSync = ref.watch(cloudSyncServiceProvider);
+  final insigniaService = ref.watch(smokingInsigniaServiceProvider);
   // SmokingCheckinService 100% ObjectBox - zero SharedPreferences
-  return SmokingCheckinService(objectBoxService, cloudSync);
+  return SmokingCheckinService(objectBoxService, cloudSync, insigniaService);
 });
 
 /// Provider para BingeEatingServiceLocal
@@ -280,9 +282,9 @@ final readingControllerIsarProvider = StateNotifierProvider<ReadingControllerLoc
 final readingServiceProvider = Provider<ReadingService>((ref) {
   final repository = ref.watch(readingRepositoryProvider);
   final gamificationRepository = ref.watch(readingGamificationRepositoryProvider);
-  return ReadingService(repository, gamificationRepository, null);
+  final cloudSync = ref.watch(cloudSyncServiceProvider);
+  return ReadingService(repository, gamificationRepository, null, cloudSync);
 });
-
 
 final spendingServiceProvider = Provider<SpendingService>((ref) {
   return SpendingService(ref);
@@ -424,19 +426,58 @@ final pendingMedalsProvider = Provider<Future<List<String>>>((ref) async {
   return pendingMedals;
 });
 
-/// Controla se a sincronização inicial já foi realizada na sessão atual
-/// Usa StateNotifier para garantir persistência do estado durante a sessão
+/// Controla se a sincronização inicial já foi realizada
+/// 
+/// Agora com persistência entre sessões usando SyncValidationService.
+/// A sincronização só ocorre em:
+/// 1. Nova build (debug/profile/release)
+/// 2. Nova instalação do app
+/// 3. Novo login (usuário diferente)
+/// 4. Re-login (logout + login mesmo usuário)
 class InitialSyncState extends StateNotifier<bool> {
+  final SyncValidationService _validationService = SyncValidationService();
+  
   InitialSyncState() : super(false);
   
-  void markSynced() => state = true;
-  void reset() => state = false;
+  /// Verifica se deve sincronizar baseado nas regras de negócio
+  Future<SyncCheckResult> checkShouldSync(String? currentUserId, {bool isLoginEvent = false}) async {
+    return await _validationService.shouldSync(currentUserId, isLoginEvent: isLoginEvent);
+  }
+  
+  /// Marca a sincronização como concluída (persiste build, usuário, etc)
+  Future<void> markSynced(String? userId) async {
+    await _validationService.markSyncCompleted(userId);
+    state = true;
+  }
+  
+  /// Reseta o estado (para testes ou logout)
+  Future<void> reset() async {
+    await _validationService.resetSyncState();
+    state = false;
+  }
+  
+  /// Reseta apenas o estado em memória (sem limpar persistência)
+  void resetSessionOnly() => state = false;
+  
+  /// Marca a sessão atual como sincronizada (sem persistir - já está persistido)
+  void markSessionSynced() => state = true;
+  
   bool get hasSynced => state;
 }
 
-/// Provider para verificar se a sincronização inicial já foi feita na sessão
+/// Provider para verificar se a sincronização inicial já foi feita
+/// 
+/// Agora persiste entre sessões do app e só sincroniza quando necessário:
+/// - Nova build (debug/profile/release)
+/// - Nova instalação
+/// - Novo usuário logado
 final initialSyncCompletedProvider = StateNotifierProvider<InitialSyncState, bool>((ref) {
   return InitialSyncState();
+});
+
+/// Provider para acessar o SyncValidationService
+final syncValidationServiceProvider = Provider<SyncValidationService>((ref) {
+  return SyncValidationService();
 });
 
 

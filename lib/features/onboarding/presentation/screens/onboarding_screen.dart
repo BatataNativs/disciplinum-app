@@ -1010,17 +1010,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                             ),
                                           ),
                                           child: Row(
-                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               const SizedBox(width: 8),
-                                              Text(
-                                                'E muito mais!',
-                                                style: bodyStyle?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 14,
-                                                  color: isDark
-                                                      ? const Color(0xFF34D399)
-                                                      : const Color(0xFF047857),
+                                              Expanded(
+                                                child: Text(
+                                                  'E muito mais!',
+                                                  textAlign: TextAlign.center,
+                                                  style: bodyStyle?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 14,
+                                                    color: isDark
+                                                        ? const Color(0xFF34D399)
+                                                        : const Color(0xFF047857),
+                                                  ),
                                                 ),
                                               ),
                                             ],

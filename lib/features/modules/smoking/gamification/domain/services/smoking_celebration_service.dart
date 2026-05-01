@@ -1,6 +1,7 @@
 import 'package:disciplinum/core/audio/system_audio_service.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 
 /// Eventos específicos do módulo Smoking
 class SmokingMedalhaConquistadaEvent extends AppEvent {
@@ -90,16 +91,23 @@ class SmokingCelebrationService {
   }) async {
     try {
       LoggerService.instance.gamification('🎉 Iniciando celebração medalha: $medalhaName');
-      
+
       // Emite evento para UI mostrar confetes
       EventBus.instance.emit(SmokingMedalhaConquistadaEvent(
         medalhaId: medalhaId,
         medalhaName: medalhaName,
       ));
-      
+
       // Feedback tátil baseado na raridade da medalha
       await _playMedalhaHapticFeedback(medalhaId);
-      
+
+      // Notificação push de conquista
+      await NotificationService.showNotification(
+        id: 5002, // ID único para notificações de medalha
+        title: '🏆 Nova Medalha!',
+        body: 'Você conquistou a medalha: $medalhaName. Continue mantendo a disciplina!',
+      );
+
       LoggerService.instance.gamification('🏆 Celebração medalha $medalhaName concluída');
     } catch (e) {
       LoggerService.instance.e('Erro na celebração de medalha Smoking', error: e);
@@ -113,16 +121,23 @@ class SmokingCelebrationService {
   }) async {
     try {
       LoggerService.instance.gamification('⭐ Iniciando celebração insígnia: $insigniaName');
-      
+
       // Emite evento para UI mostrar celebração
       EventBus.instance.emit(SmokingInsigniaConquistadaEvent(
         insigniaId: insigniaId,
         insigniaName: insigniaName,
       ));
-      
+
       // Feedback tátil para insígnia
       await SystemAudioService.instance.playHapticFeedback('medio');
-      
+
+      // Notificação push de conquista
+      await NotificationService.showNotification(
+        id: 5001, // ID único para notificações de conquista
+        title: '🎉 Nova Conquista!',
+        body: 'Você conquistou a insígnia: $insigniaName. Continue mantendo a disciplina!',
+      );
+
       LoggerService.instance.gamification('✨ Celebração insígnia $insigniaName concluída');
     } catch (e) {
       LoggerService.instance.e('Erro na celebração de insígnia Smoking', error: e);
@@ -145,6 +160,13 @@ class SmokingCelebrationService {
       
       // Feedback tátil suave para marcos de saúde
       await SystemAudioService.instance.playHapticFeedback('leve');
+      
+      // Envia notificação push para marco de saúde
+      await NotificationService.showNotification(
+        id: 5003, // ID específico para marcos de saúde
+        title: '❤️ Melhoria na Saúde!',
+        body: mensagem,
+      );
       
       LoggerService.instance.gamification('🌟 Celebração saúde $dias dias concluída');
     } catch (e) {
