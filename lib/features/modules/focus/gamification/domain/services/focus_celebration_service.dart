@@ -1,5 +1,6 @@
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/gamification/services/achievement_notification_service.dart';
 
 /// Eventos específicos de celebração do módulo Focus
 class MedalhaConquistadaEvent extends AppEvent {
@@ -101,6 +102,8 @@ class FocusCelebrationService {
   Future<void> celebrarMedalhaConquistada({
     required String medalhaId,
     required String medalhaName,
+    String? medalhaDescription,
+    String? assetPath,
   }) async {
     try {
       LoggerService.instance.gamification('🎉 Iniciando celebração de medalha: $medalhaName');
@@ -116,6 +119,16 @@ class FocusCelebrationService {
       await _dispararFeedbackHaptico();
       await _dispararSomConquista();
       
+      // Notificação global de conquista
+      await AchievementNotificationService.instance.showMedalhaNotification(
+        moduleId: 'focus',
+        medalhaId: medalhaId,
+        medalhaName: medalhaName,
+        medalhaDescription: medalhaDescription,
+        assetPath: assetPath,
+        rarity: medalhaId,
+      );
+      
       LoggerService.instance.gamification('✅ Celebração de medalha concluída');
     } catch (e) {
       LoggerService.instance.e('Erro na celebração de medalha', error: e);
@@ -125,6 +138,7 @@ class FocusCelebrationService {
   /// Dispara celebração de conquista de insígnia Disciplinum
   Future<void> celebrarDisciplinumConquistado({
     required int disciplinumCount,
+    String? assetPath,
   }) async {
     try {
       LoggerService.instance.gamification('⭐ Iniciando celebração Disciplinum #$disciplinumCount');
@@ -138,6 +152,15 @@ class FocusCelebrationService {
       await _dispararConfetes(tipo: 'disciplinum', intensidade: 'alta');
       await _dispararFeedbackHaptico(intensidade: 'forte');
       await _dispararSomConquista(tipo: 'epico');
+      
+      // Notificação global de conquista
+      await AchievementNotificationService.instance.showInsigniaNotification(
+        moduleId: 'focus',
+        insigniaId: 'disciplinum_$disciplinumCount',
+        insigniaName: 'Disciplinum #$disciplinumCount',
+        insigniaDescription: 'Você completou $disciplinumCount Disciplinums!',
+        assetPath: assetPath,
+      );
       
       LoggerService.instance.gamification('✅ Celebração Disciplinum concluída');
     } catch (e) {

@@ -25,21 +25,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final readingService = ref.watch(readingServiceProvider);
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            isDark ? const Color(0xFF1A172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color.fromARGB(255, 158, 41, 178) : const Color.fromARGB(15, 255, 238, 246),
-            isDark ? const Color(0xFF2D1B69) : const Color(0xFFF5F5FF),
-          ],
-        ),
-      ),
+      color: colorScheme.surface,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -48,12 +38,12 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bar_chart_rounded,
-                  color: Color(0xFF6366F1),
+                  color: colorScheme.primary,
                   size: 20,
                 ),
               ),
@@ -61,7 +51,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
               Text(
                 'Estatísticas de Leitura',
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                 ),
@@ -71,14 +61,14 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         body: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
               final vm = _ReadingStatsVm.fromService(readingService);
-              return _buildModernStatsContent(context, vm, isDark);
+              return _buildModernStatsContent(context, vm, colorScheme);
             },
           ),
         ),
@@ -86,7 +76,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildModernStatsContent(BuildContext context, _ReadingStatsVm vm, bool isDark) {
+  Widget _buildModernStatsContent(BuildContext context, _ReadingStatsVm vm, ColorScheme colorScheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -95,49 +85,49 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
           // Cards principais modernizados
           Row(
             children: [
-              Expanded(child: _buildModernStatCard(vm.totalBooks, 'Total de Livros', Icons.menu_book_rounded, Colors.blue, isDark)),
+              Expanded(child: _buildModernStatCard(vm.totalBooks, 'Total de Livros', Icons.menu_book_rounded, Colors.blue, colorScheme)),
               const SizedBox(width: 12),
-              Expanded(child: _buildModernStatCard(vm.completedBooks, 'Concluídos', Icons.check_circle_rounded, Colors.green, isDark)),
+              Expanded(child: _buildModernStatCard(vm.completedBooks, 'Concluídos', Icons.check_circle_rounded, Colors.green, colorScheme)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildModernStatCard(vm.totalPages, 'Páginas Totais', Icons.description_rounded, Colors.orange, isDark)),
+              Expanded(child: _buildModernStatCard(vm.totalPages, 'Páginas Totais', Icons.description_rounded, Colors.orange, colorScheme)),
               const SizedBox(width: 12),
-              Expanded(child: _buildModernStatCard(vm.readPages, 'Páginas Lidas', Icons.auto_stories_rounded, Colors.purple, isDark)),
+              Expanded(child: _buildModernStatCard(vm.readPages, 'Páginas Lidas', Icons.auto_stories_rounded, Colors.purple, colorScheme)),
             ],
           ),
           const SizedBox(height: 24),
           
           // Progresso geral
-          _buildModernProgressCard(vm.averageProgress, isDark),
+          _buildModernProgressCard(vm.averageProgress, colorScheme),
           const SizedBox(height: 24),
           
           // Gráfico de progresso semanal
-          _buildWeeklyProgressChart(isDark),
+          _buildWeeklyProgressChart(colorScheme),
           const SizedBox(height: 24),
           
           // Último livro lido
-          _buildLastBookCard(vm.lastBookTitle, isDark),
+          _buildLastBookCard(vm.lastBookTitle, colorScheme),
           const SizedBox(height: 24),
           
           // Estatísticas por tema
-          _buildThemeStats(vm.themeStats, isDark),
+          _buildThemeStats(vm.themeStats, colorScheme),
         ],
       ),
     );
   }
 
-  Widget _buildModernStatCard(int value, String label, IconData icon, Color color, bool isDark) {
+  Widget _buildModernStatCard(int value, String label, IconData icon, Color color, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -168,7 +158,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
@@ -176,7 +166,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white60 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -185,15 +175,15 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildModernProgressCard(double progress, bool isDark) {
+  Widget _buildModernProgressCard(double progress, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -222,7 +212,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -238,7 +228,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                     'Média de Conclusão',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.white60 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
@@ -255,7 +245,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
               Container(
                 height: 8,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: FractionallySizedBox(
@@ -278,7 +268,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildWeeklyProgressChart(bool isDark) {
+  Widget _buildWeeklyProgressChart(ColorScheme colorScheme) {
     final weeklyData = {
       'Seg': 45,
       'Ter': 38,
@@ -292,11 +282,11 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -325,7 +315,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -338,14 +328,14 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                 alignment: BarChartAlignment.spaceAround,
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => isDark ? const Color(0xFF424242) : Colors.white,
+                    getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final day = weeklyData.keys.elementAt(group.x.toInt());
                       final pages = weeklyData.values.elementAt(group.x.toInt());
                       return BarTooltipItem(
                         '$day\n$pages páginas',
                         TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
+                          color: colorScheme.onSurface,
                           fontSize: 12,
                         ),
                       );
@@ -361,7 +351,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                         return Text(
                           value.toInt().toString(),
                           style: TextStyle(
-                            color: isDark ? Colors.white60 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: 10,
                           ),
                         );
@@ -374,12 +364,12 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        final days = weeklyData.keys.toList();
+                        final days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
                         if (value.toInt() >= 0 && value.toInt() < days.length) {
                           return Text(
                             days[value.toInt()],
                             style: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
+                              color: colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 10,
                             ),
                           );
@@ -414,15 +404,15 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildLastBookCard(String lastBookTitle, bool isDark) {
+  Widget _buildLastBookCard(String lastBookTitle, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -451,7 +441,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -480,7 +470,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -492,15 +482,15 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
     );
   }
 
-  Widget _buildThemeStats(Map<ReadingTheme, int> themeStats, bool isDark) {
+  Widget _buildThemeStats(Map<ReadingTheme, int> themeStats, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -529,7 +519,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -570,7 +560,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -578,7 +568,7 @@ class _ReadingStatsScreenState extends ConsumerState<ReadingStatsScreen> {
                           '$count livros (${percentage.toStringAsFixed(1)}%)',
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark ? Colors.white60 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],

@@ -6,7 +6,6 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/smokin
 /// Widget de conteúdo das abas
 class StopSmokingTabContent extends StatelessWidget {
   final int tabIndex;
-  final bool isDark;
   final bool isModuleActive;
   final TextEditingController priceController;
   final TextEditingController packsController;
@@ -21,7 +20,6 @@ class StopSmokingTabContent extends StatelessWidget {
   const StopSmokingTabContent({
     super.key,
     required this.tabIndex,
-    required this.isDark,
     this.isModuleActive = false,
     required this.priceController,
     required this.packsController,
@@ -52,35 +50,30 @@ class StopSmokingTabContent extends StatelessWidget {
     return Column(
       children: [
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.settings_outlined,
           title: 'Configure seu consumo',
           content: 'Preencha o custo do maço de cigarro e quantos maços você fumava por dia. Esses dados são essenciais para calcular sua economia e progresso.',
         ),
         const SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.check_box_outlined,
           title: 'Check-in diário',
           content: 'Selecione um horário para receber uma notificação diária. No horário configurado, informe se você fumou ou não naquele dia para manter sua sequência de dias sem fumar.',
         ),
         const SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.notifications_outlined,
           title: 'Notificações motivacionais',
           content: 'Configure até 8 horários para receber notificações motivacionais ao longo do dia. As frases são adaptadas automaticamente baseadas no seu tempo sem fumar.',
         ),
         const SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.emoji_events_outlined,
           title: 'Conquistas e medalhas',
           content: 'Acesse "Meu Progresso" para ver suas insígnias e medalhas conquistadas. Complete dias sem fumar para desbloquear insígnias de Ferro, Bronze, Prata, Ouro, Diamante e Disciplinum!',
         ),
         const SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.bar_chart_rounded,
           title: 'Economia e estatísticas',
           content: 'Acompanhe quanto você já economizou desde que parou de fumar, visualize projeções financeiras e veja estatísticas dos seus check-ins diários.',
@@ -93,7 +86,6 @@ class StopSmokingTabContent extends StatelessWidget {
     return Column(
       children: [
         SmokingConsumptionSettings(
-          isDark: isDark,
           isModuleActive: isModuleActive,
           priceController: priceController,
           packsController: packsController,
@@ -106,7 +98,6 @@ class StopSmokingTabContent extends StatelessWidget {
         const SizedBox(height: 6),
         NicheCheckinSection(
           checkinTime: checkinTime,
-          isDark: isDark,
           onDeleteTime: onDeleteTime,
         ),
         const SizedBox(height: 24),

@@ -12,6 +12,7 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/my_progress_binge_eating.dart' as binge_eating_progress;
+import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/widgets/binge_eating_celebration_widget.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
@@ -348,15 +349,14 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (_loadingData) {
       return Scaffold(
         appBar: AppBar(title: Text(_niche.name), centerTitle: true),
         body: Shimmer.fromColors(
-          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+          baseColor: colorScheme.surfaceContainerHighest,
+          highlightColor: colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -379,37 +379,34 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return BingeEatingCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Row
-              BingeEatingHeaderWidget(
-                niche: _niche,
-                onBackPressed: () => Navigator.pop(context),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: BingeEatingSegmentedControl(
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header Row
+                BingeEatingHeaderWidget(
+                  niche: _niche,
+                  onBackPressed: () => Navigator.pop(context),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: BingeEatingSegmentedControl(
                         selectedIndex: _selectedIndex,
                         onIndexChanged: (index) {
                           HapticFeedback.lightImpact();
@@ -475,7 +472,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                       padding: const EdgeInsets.all(16),
                       child: BingeEatingActionsWidget(
                         selectedIndex: _selectedIndex,
-                        isDark: isDark,
                         pageController: _pageController,
                         onSelectApps: _openSelectApps,
                         onNotifications: () {
@@ -498,7 +494,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                     )
                   : BingeEatingActionsWidget(
                       selectedIndex: _selectedIndex,
-                      isDark: isDark,
                       pageController: _pageController,
                       onSelectApps: _openSelectApps,
                       onNotifications: () {
@@ -518,7 +513,8 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                           ? _desativarNichoMonitoramento
                           : _ativarNichoMonitoramento,
                     ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -527,21 +523,15 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
 
 
-
-
-  
-
-
-
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -549,11 +539,11 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Estatísticas",
+              'Estatísticas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -561,7 +551,6 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
               icon: Icons.bar_chart_rounded,
               label: "Conquistas",
               color: Colors.blue,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(

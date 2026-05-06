@@ -29,8 +29,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final state = ref.watch(mealTrackingProvider);
 
     return Scaffold(
@@ -39,20 +38,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
         centerTitle: true,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255),
-            ],
-          ),
-        ),
+        color: colorScheme.surface,
         child: state.isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
@@ -63,11 +49,11 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStreakCard(isDark, state.streak),
+                      _buildStreakCard(colorScheme, state.streak),
                       const SizedBox(height: 20),
-                      _buildTodaySection(isDark, state.todayMeals),
+                      _buildTodaySection(colorScheme, state.todayMeals),
                       const SizedBox(height: 20),
-                      _buildHistorySection(isDark, state.history),
+                      _buildHistorySection(colorScheme, state.history),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -77,22 +63,24 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
     );
   }
 
-  Widget _buildStreakCard(bool isDark, int streak) {
+  Widget _buildStreakCard(ColorScheme colorScheme, int streak) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: streak > 0
-              ? [const Color(0xFF6366F1), const Color(0xFF818CF8)]
-              : [Colors.grey.shade600, Colors.grey.shade500],
+          colors: [
+            colorScheme.primary.withValues(alpha: 0.9),
+            colorScheme.primary.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (streak > 0 ? const Color(0xFF6366F1) : Colors.grey)
-                .withValues(alpha: 0.3),
-            blurRadius: 15,
+            color: colorScheme.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
@@ -136,7 +124,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
     );
   }
 
-  Widget _buildTodaySection(bool isDark, List<MealEntryEntity> meals) {
+  Widget _buildTodaySection(ColorScheme colorScheme, List<MealEntryEntity> meals) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -145,19 +133,19 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
         if (meals.isEmpty)
-          _buildEmptyState(isDark, 'Nenhum horário configurado')
+          _buildEmptyState(colorScheme, 'Nenhum horário configurado')
         else
-          ...(meals.map((meal) => _buildMealTile(meal, isDark))),
+          ...(meals.map((meal) => _buildMealTile(meal, colorScheme))),
       ],
     );
   }
 
-  Widget _buildMealTile(MealEntryEntity meal, bool isDark) {
+  Widget _buildMealTile(MealEntryEntity meal, ColorScheme colorScheme) {
     final bool isPending = !meal.wasCompleted;
     final bool isDone = meal.wasCompleted && meal.wasOnTime;
     final bool isMissed = meal.wasCompleted && !meal.wasOnTime;
@@ -175,7 +163,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
       statusIcon = Icons.access_time;
       statusText = 'Feita fora do horário';
     } else if (!meal.wasCompleted) {
-      dotColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
+      dotColor = colorScheme.onSurface.withValues(alpha: 0.4);
       statusIcon = Icons.radio_button_unchecked;
       statusText = 'Pendente';
     } else {
@@ -190,12 +178,10 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -219,14 +205,14 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   'Horário: $timeStr',
                   style: TextStyle(
                     fontSize: 13,
-                    color: isDark ? Colors.white60 : Colors.black54,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -294,7 +280,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
     );
   }
 
-  Widget _buildHistorySection(bool isDark, List<DaySummary> history) {
+  Widget _buildHistorySection(ColorScheme colorScheme, List<DaySummary> history) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -303,19 +289,19 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
         if (history.isEmpty)
-          _buildEmptyState(isDark, 'Nenhum registro encontrado')
+          _buildEmptyState(colorScheme, 'Nenhum registro encontrado')
         else
-          ...(history.reversed.map((day) => _buildDayTile(day, isDark))),
+          ...(history.reversed.map((day) => _buildDayTile(day, colorScheme))),
       ],
     );
   }
 
-  Widget _buildDayTile(DaySummary day, bool isDark) {
+  Widget _buildDayTile(DaySummary day, ColorScheme colorScheme) {
     final isToday = _isToday(day.date);
     final dateStr =
         isToday ? 'Hoje' : DateFormat('EEEE, d/MM', 'pt_BR').format(day.date);
@@ -328,12 +314,10 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -359,7 +343,7 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -382,14 +366,12 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
     );
   }
 
-  Widget _buildEmptyState(bool isDark, String text) {
+  Widget _buildEmptyState(ColorScheme colorScheme, String text) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -397,13 +379,13 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
           Icon(
             Icons.restaurant_menu,
             size: 40,
-            color: isDark ? Colors.white24 : Colors.black12,
+            color: colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
             text,
             style: TextStyle(
-              color: isDark ? Colors.white38 : Colors.black38,
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 14,
             ),
           ),

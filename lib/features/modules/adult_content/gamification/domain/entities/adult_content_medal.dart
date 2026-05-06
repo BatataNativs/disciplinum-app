@@ -80,16 +80,16 @@ extension AdultContentMedalEntityExtension on AdultContentMedalEntity {
 
   /// Obtém o caminho do asset
   String get asset {
-    const prefix = 'assets/gamification/medals/adult_content/';
+    const prefix = 'assets/gamification/medals/adultContent/';
     switch (this) {
       case AdultContentMedalEntity.bronze:
         return '${prefix}bronze.png';
       case AdultContentMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case AdultContentMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case AdultContentMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

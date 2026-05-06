@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class SmokingConsumptionSettings extends StatefulWidget {
-  final bool isDark;
   final bool isModuleActive;
   final TextEditingController priceController;
   final TextEditingController packsController;
@@ -13,7 +12,6 @@ class SmokingConsumptionSettings extends StatefulWidget {
 
   const SmokingConsumptionSettings({
     super.key,
-    required this.isDark,
     this.isModuleActive = false,
     required this.priceController,
     required this.packsController,
@@ -50,31 +48,31 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Últimas informações de consumo:',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
+            color: colorScheme.onSurface,
           ),
         ),
-        const Text(
+        Text(
           'Preencha os dados do seu consumo de cigarro no momento (ou de antes da tentativa atual de parada), salve, e ative o módulo.',
-          style: TextStyle(fontSize: 11),
+          style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.7)),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.isDark
-                ? Colors.white.withAlpha(0x0D)
-                : Colors.grey[100],
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+              color: colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
           child: Column(
@@ -82,7 +80,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Preço do maço:"),
+                  Text("Preço do maço:", style: TextStyle(color: colorScheme.onSurface)),
                   SizedBox(
                     width: 160,
                     height: 40,
@@ -92,12 +90,12 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                       textAlign: TextAlign.center,
                       enabled: !widget.isModuleActive,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold, 
+                        fontWeight: FontWeight.bold,
                         color: widget.isModuleActive
                             ? Colors.grey.shade600
                             : (widget.priceController.text.isNotEmpty && widget.priceController.text != '0,00'
-                                ? (widget.isDark ? Colors.white : Colors.black)
-                                : (widget.isDark ? Colors.white38 : Colors.black38)),
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurface.withValues(alpha: 0.4)),
                       ),
                       decoration: InputDecoration(
                         filled: widget.isModuleActive,
@@ -113,7 +111,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: widget.isDark ? Colors.white : Colors.black87,
+                                color: colorScheme.onSurface,
                               ),
                               selectedItemBuilder: (BuildContext context) {
                                 return ['R\$', 'US\$', 'EUR', 'ARS\$']
@@ -124,7 +122,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                                       item,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: widget.isDark ? Colors.white : Colors.black87,
+                                        color: colorScheme.onSurface,
                                       ),
                                     ),
                                   );
@@ -133,21 +131,13 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                               onChanged: widget.onCurrencyChanged,
                               items: ['R\$', 'US\$', 'EUR', 'ARS\$']
                                   .map<DropdownMenuItem<String>>((String value) {
-                                String currencyName = '';
-                                switch (value) {
-                                  case 'R\$':
-                                    currencyName = 'Real';
-                                    break;
-                                  case 'US\$':
-                                    currencyName = 'Dólar Americano';
-                                    break;
-                                  case 'EUR':
-                                    currencyName = 'Euro';
-                                    break;
-                                  case 'ARS\$':
-                                    currencyName = 'Peso Argentino';
-                                    break;
-                                }
+                                final currencyName = switch (value) {
+                                  'R\$' => 'Real',
+                                  'US\$' => 'Dólar Americano',
+                                  'EUR' => 'Euro',
+                                  'ARS\$' => 'Peso Argentino',
+                                  _ => '',
+                                };
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text('$value - $currencyName'),
@@ -160,7 +150,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                         hintText: '0,00',
                         hintStyle: TextStyle(
-                          color: widget.isDark ? Colors.white38 : Colors.black38,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
                           fontWeight: FontWeight.normal,
                         ),
                         border: OutlineInputBorder(
@@ -191,7 +181,7 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Maços por dia:"),
+                  Text("Maços por dia:", style: TextStyle(color: colorScheme.onSurface)),
                   SizedBox(
                     width: 80,
                     height: 40,
@@ -201,19 +191,19 @@ class _SmokingConsumptionSettingsState extends State<SmokingConsumptionSettings>
                       textAlign: TextAlign.center,
                       enabled: !widget.isModuleActive,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold, 
+                        fontWeight: FontWeight.bold,
                         color: widget.isModuleActive
                             ? Colors.grey.shade600
                             : (widget.packsController.text.isNotEmpty && widget.packsController.text != '0'
-                                ? (widget.isDark ? Colors.white : Colors.black)
-                                : (widget.isDark ? Colors.white38 : Colors.black38)),
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurface.withValues(alpha: 0.4)),
                       ),
                       decoration: InputDecoration(
                         filled: widget.isModuleActive,
                         fillColor: widget.isModuleActive ? Colors.grey.shade100 : null,
                         hintText: '0',
                         hintStyle: TextStyle(
-                          color: widget.isDark ? Colors.white38 : Colors.black38,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
                           fontWeight: FontWeight.normal,
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8),

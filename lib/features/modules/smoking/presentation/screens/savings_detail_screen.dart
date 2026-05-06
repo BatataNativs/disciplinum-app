@@ -128,7 +128,7 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
     final double maxVal = yearly;
     final double scale = maxVal > 0 ? 200 / maxVal : 0;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -136,8 +136,8 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -171,10 +171,7 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                 height: 50,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : const Color.fromARGB(255, 226, 229, 251)
-                          .withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(36),
                 ),
                 child: Stack(
@@ -190,9 +187,7 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                         child: Container(
                           margin: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.grey[900]
-                                : const Color.fromARGB(255, 121, 148, 222),
+                            color: colorScheme.primary,
                             borderRadius: BorderRadius.circular(36),
                             boxShadow: [
                               BoxShadow(
@@ -207,8 +202,8 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                     ),
                     Row(
                       children: [
-                        _buildTabButton("Atual", 0, isDark),
-                        _buildTabButton("Última tentativa", 1, isDark),
+                        _buildTabButton("Atual", 0),
+                        _buildTabButton("Última tentativa", 1),
                       ],
                     ),
                   ],
@@ -223,7 +218,7 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                     : "Economia da Última Tentativa",
                 style: TextStyle(
                     fontSize: 16,
-                    color: isDark ? Colors.white70 : Colors.grey[700]),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7)),
               ),
               Text(
                 formatCurrency(saved, cur),
@@ -231,8 +226,8 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                   fontSize: 40,
                   fontWeight: FontWeight.w900,
                   color: _activeTab == 0
-                      ? (isDark ? Colors.greenAccent : Colors.green)
-                      : (isDark ? Colors.blueGrey[300] : Colors.blueGrey),
+                      ? Colors.green
+                      : Colors.blueGrey,
                 ),
               ),
               const SizedBox(height: 40),
@@ -241,16 +236,8 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.8),
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                    )
-                  ],
                 ),
                 child: Column(
                   children: [
@@ -277,9 +264,7 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.grey.shade100,
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -287,24 +272,24 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
                       Icon(
                         Icons.power_off_rounded,
                         size: 48,
-                        color: isDark ? Colors.white38 : Colors.grey.shade400,
+                        color: colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        "Módulo Desativado",
+                        'Módulo Desativado',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Ative o módulo para começar a registrar sua economia atual.",
+                        'Ative o módulo Stop Smoking para ver suas economias.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -362,11 +347,11 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
     );
   }
 
-  Widget _buildTabButton(String text, int index, bool isDark) {
+  Widget _buildTabButton(String text, int index) {
     final isActive = _activeTab == index;
-    final Color activeToggleText = isDark ? Colors.black : Colors.white;
-    final Color inactiveToggleText =
-        isDark ? Colors.black54 : Colors.grey.shade600;
+    final colorScheme = Theme.of(context).colorScheme;
+    final Color activeToggleText = colorScheme.onPrimary;
+    final Color inactiveToggleText = colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Expanded(
       child: GestureDetector(

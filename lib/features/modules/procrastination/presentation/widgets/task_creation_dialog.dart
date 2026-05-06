@@ -82,12 +82,12 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 16),
@@ -102,12 +102,12 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
             autofocus: true,
             style: TextStyle(
               fontSize: 16,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
             decoration: InputDecoration(
               hintText: 'Nova tarefa',
               hintStyle: TextStyle(
-                color: isDark ? Colors.white54 : Colors.black38,
+                color: colorScheme.onSurface.withValues(alpha: 0.38),
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
@@ -121,12 +121,12 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
             controller: _descController,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             decoration: InputDecoration(
               hintText: 'descrição',
               hintStyle: TextStyle(
-                color: isDark ? Colors.white38 : Colors.black26,
+                color: colorScheme.onSurface.withValues(alpha: 0.26),
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
@@ -166,7 +166,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
           // Mostra data/hora selecionadas
           if (_selectedDate != null || _startTime != null) ...[
             const SizedBox(height: 8),
-            _buildSelectedDateTime(isDark),
+            _buildSelectedDateTime(colorScheme),
           ],
         ],
       ),
@@ -178,7 +178,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () {
@@ -192,13 +192,13 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
           size: 24,
           color: isActive
               ? Theme.of(context).primaryColor
-              : (isDark ? Colors.white54 : Colors.black38),
+              : colorScheme.onSurface.withValues(alpha: 0.38),
         ),
       ),
     );
   }
 
-  Widget _buildSelectedDateTime(bool isDark) {
+  Widget _buildSelectedDateTime(ColorScheme colorScheme) {
     final parts = <String>[];
 
     if (_selectedDate != null) {
@@ -219,9 +219,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
+        color: colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -229,7 +227,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
           Icon(
             Icons.event,
             size: 16,
-            color: isDark ? Colors.white54 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.54),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -237,7 +235,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
               parts.join(' • '),
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -254,7 +252,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
             child: Icon(
               Icons.close,
               size: 16,
-              color: isDark ? Colors.white38 : Colors.black38,
+              color: colorScheme.onSurface.withValues(alpha: 0.38),
             ),
           ),
         ],
@@ -396,10 +394,10 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dialog(
-      backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+      backgroundColor: colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: SingleChildScrollView(
         child: Padding(
@@ -408,12 +406,12 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header do calendário
-              _buildCalendarHeader(isDark),
+              _buildCalendarHeader(colorScheme),
 
               const SizedBox(height: 8),
 
               // Calendário
-              _buildCalendar(isDark),
+              _buildCalendar(colorScheme),
 
               const SizedBox(height: 16),
 
@@ -427,7 +425,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                           : 'Definir hora',
                       icon: Icons.access_time,
                       onTap: () => _selectTime(isStart: true),
-                      isDark: isDark,
+                      colorScheme: colorScheme,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -438,7 +436,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                           : 'Definir intervalo',
                       icon: Icons.timelapse,
                       onTap: () => _selectTime(isStart: false),
-                      isDark: isDark,
+                      colorScheme: colorScheme,
                     ),
                   ),
                 ],
@@ -447,7 +445,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
               const SizedBox(height: 12),
 
               // Repetição
-              _buildRepetitionButton(isDark),
+              _buildRepetitionButton(colorScheme),
 
               const SizedBox(height: 16),
 
@@ -460,7 +458,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                     child: Text(
                       'Cancelar',
                       style: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.black54,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -493,7 +491,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
     );
   }
 
-  Widget _buildCalendarHeader(bool isDark) {
+  Widget _buildCalendarHeader(ColorScheme colorScheme) {
     final monthYear =
         DateFormat('MMMM \'de\' yyyy', 'pt_BR').format(_focusedMonth);
 
@@ -503,7 +501,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
         IconButton(
           icon: Icon(
             Icons.chevron_left,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
           onPressed: () {
             setState(() {
@@ -519,13 +517,13 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         IconButton(
           icon: Icon(
             Icons.chevron_right,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
           onPressed: () {
             setState(() {
@@ -540,7 +538,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
     );
   }
 
-  Widget _buildCalendar(bool isDark) {
+  Widget _buildCalendar(ColorScheme colorScheme) {
     final firstDayOfMonth =
         DateTime(_focusedMonth.year, _focusedMonth.month, 1);
     final lastDayOfMonth =
@@ -560,7 +558,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white54 : Colors.black45,
+              color: colorScheme.onSurface.withValues(alpha: 0.54),
             ),
           ),
         ),
@@ -608,7 +606,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected
                       ? Colors.white
-                      : (isDark ? Colors.white : Colors.black87),
+                      : colorScheme.onSurface,
                 ),
               ),
             ),
@@ -630,7 +628,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
     required String label,
     required IconData icon,
     required VoidCallback onTap,
-    required bool isDark,
+    required ColorScheme colorScheme,
   }) {
     return InkWell(
       onTap: onTap,
@@ -638,9 +636,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -648,7 +644,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
             Icon(
               icon,
               size: 20,
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.54),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -656,7 +652,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                 label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -667,16 +663,14 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
     );
   }
 
-  Widget _buildRepetitionButton(bool isDark) {
+  Widget _buildRepetitionButton(ColorScheme colorScheme) {
     return InkWell(
       onTap: _showRepetitionDialog,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -684,7 +678,7 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
             Icon(
               Icons.repeat,
               size: 20,
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.54),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -694,14 +688,14 @@ class _DateTimePickerDialogState extends State<_DateTimePickerDialog> {
                     : _repetition.label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ),
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: isDark ? Colors.white38 : Colors.black38,
+              color: colorScheme.onSurface.withValues(alpha: 0.38),
             ),
           ],
         ),
@@ -793,10 +787,10 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dialog(
-      backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+      backgroundColor: colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: SingleChildScrollView(
         child: Padding(
@@ -817,7 +811,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -841,7 +835,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                 'Cada',
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
               ),
               const SizedBox(height: 8),
@@ -854,7 +848,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isDark ? Colors.white24 : Colors.black12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.24),
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -863,7 +857,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -882,7 +876,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: isDark ? Colors.white24 : Colors.black12,
+                          color: colorScheme.onSurface.withValues(alpha: 0.24),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -890,8 +884,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                         value: _unit,
                         isExpanded: true,
                         underline: const SizedBox(),
-                        dropdownColor:
-                            isDark ? const Color(0xFF3D3D3D) : Colors.white,
+                        dropdownColor: colorScheme.surface,
                         items: const [
                           DropdownMenuItem(value: 'day', child: Text('dia')),
                           DropdownMenuItem(
@@ -941,7 +934,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                           border: Border.all(
                             color: isSelected
                                 ? const Color(0xFF6366F1)
-                                : (isDark ? Colors.white24 : Colors.black12),
+                                : colorScheme.onSurface.withValues(alpha: 0.24),
                           ),
                         ),
                         child: Center(
@@ -952,7 +945,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                               fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
-                                  : (isDark ? Colors.white70 : Colors.black54),
+                                  : colorScheme.onSurface.withValues(alpha: 0.54),
                             ),
                           ),
                         ),
@@ -971,7 +964,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                 'Início',
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
               ),
               const SizedBox(height: 8),
@@ -983,14 +976,14 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? Colors.white24 : Colors.black12,
+                      color: colorScheme.onSurface.withValues(alpha: 0.24),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     DateFormat('d \'de\' MMMM', 'pt_BR').format(_startDate),
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -1005,7 +998,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                 'Término',
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1014,7 +1007,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
               _buildEndOption(
                 'Nunca',
                 'never',
-                isDark,
+                colorScheme,
               ),
 
               const SizedBox(height: 8),
@@ -1040,7 +1033,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                             horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: isDark ? Colors.white24 : Colors.black12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.24),
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1050,7 +1043,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                                   .format(_endDate!)
                               : 'Selecionar data',
                           style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
@@ -1077,7 +1070,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isDark ? Colors.white24 : Colors.black12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.24),
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1086,7 +1079,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -1103,7 +1096,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
                   Text(
                     'ocorrências',
                     style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -1115,7 +1108,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
     );
   }
 
-  Widget _buildEndOption(String label, String value, bool isDark) {
+  Widget _buildEndOption(String label, String value, ColorScheme colorScheme) {
     return Row(
       children: [
         Radio<String>(
@@ -1126,7 +1119,7 @@ class _RepetitionDialogState extends State<_RepetitionDialog> {
         Text(
           label,
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
       ],

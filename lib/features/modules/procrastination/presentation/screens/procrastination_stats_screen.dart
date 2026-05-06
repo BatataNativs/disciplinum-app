@@ -11,7 +11,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final service = ref.watch(procrastinationServiceProvider);
     final stats = service.getCompletedTasksStats();
 
@@ -35,16 +35,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
-          ),
-        ),
+        color: colorScheme.surface,
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -65,7 +56,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -73,7 +64,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         profileDescription,
                         style: TextStyle(
                           fontSize: 15,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                           height: 1.4,
                         ),
                         textAlign: TextAlign.center,
@@ -96,7 +87,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -104,7 +95,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                           'Em qual nível de urgência você completou suas tarefas?',
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.white54 : Colors.black45,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -166,19 +157,19 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                               '🟢 Zen',
                               greenCount,
                               UrgencyLevel.green.color,
-                              isDark,
+                              colorScheme,
                             ),
                             _buildLegendItem(
                               '🟡 Atenção',
                               yellowCount,
                               UrgencyLevel.yellow.color,
-                              isDark,
+                              colorScheme,
                             ),
                             _buildLegendItem(
                               '🔴 Urgente',
                               redCount,
                               UrgencyLevel.red.color,
-                              isDark,
+                              colorScheme,
                             ),
                           ],
                         ),
@@ -193,7 +184,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         Icon(
                           Icons.pie_chart_outline,
                           size: 64,
-                          color: isDark ? Colors.white24 : Colors.black26,
+                          color: colorScheme.onSurface.withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -201,7 +192,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white54 : Colors.black45,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -210,7 +201,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.white38 : Colors.black38,
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -230,7 +221,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -239,7 +230,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         '$totalCompleted',
                         Icons.check_circle_outline,
                         Colors.indigoAccent,
-                        isDark,
+                        colorScheme,
                       ),
                       const Divider(height: 24),
                       _buildStatRow(
@@ -247,7 +238,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         '$greenCount (${greenPercent.toStringAsFixed(0)}%)',
                         Icons.schedule,
                         UrgencyLevel.green.color,
-                        isDark,
+                        colorScheme,
                       ),
                       const SizedBox(height: 12),
                       _buildStatRow(
@@ -255,7 +246,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         '$yellowCount (${yellowPercent.toStringAsFixed(0)}%)',
                         Icons.warning_amber_rounded,
                         UrgencyLevel.yellow.color,
-                        isDark,
+                        colorScheme,
                       ),
                       const SizedBox(height: 12),
                       _buildStatRow(
@@ -263,7 +254,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                         '$redCount (${redPercent.toStringAsFixed(0)}%)',
                         Icons.alarm,
                         UrgencyLevel.red.color,
-                        isDark,
+                        colorScheme,
                       ),
                     ],
                   ),
@@ -306,7 +297,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -314,7 +305,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                               'Listas concluídas sem nenhum atraso',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? Colors.white54 : Colors.black45,
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -323,7 +314,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 16,
-                        color: isDark ? Colors.white24 : Colors.black26,
+                        color: colorScheme.onSurface.withValues(alpha: 0.3),
                       ),
                     ],
                   ),
@@ -338,7 +329,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, int count, Color color, bool isDark) {
+  Widget _buildLegendItem(String label, int count, Color color, ColorScheme colorScheme) {
     return Column(
       children: [
         Container(
@@ -354,7 +345,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: isDark ? Colors.white70 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         Text(
@@ -362,7 +353,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
       ],
@@ -370,7 +361,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
   }
 
   Widget _buildStatRow(
-      String label, String value, IconData icon, Color color, bool isDark) {
+      String label, String value, IconData icon, Color color, ColorScheme colorScheme) {
     return Row(
       children: [
         Container(
@@ -387,7 +378,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -396,7 +387,7 @@ class ProcrastinationStatsScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
       ],

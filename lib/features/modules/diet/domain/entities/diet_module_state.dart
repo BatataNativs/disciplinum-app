@@ -177,4 +177,9 @@ class DietModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory DietModuleState.fromMap(Map<String, dynamic> map) => DietModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  DietModuleState reset() => DietModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

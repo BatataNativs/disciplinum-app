@@ -20,6 +20,7 @@ import 'package:disciplinum/features/modules/focus/gamification/domain/repositor
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/theme/theme_controller.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
 import 'package:disciplinum/infrastructure/datasources/local_module_datasource.dart';
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
@@ -164,8 +165,16 @@ final currentUserIdProvider = Provider<String>((ref) {
   return authState.currentUser?.id ?? 'guest_user';
 });
 
-final themeControllerProvider = ChangeNotifierProvider<ThemeController>((ref) {
-  return ThemeController();
+/// Provider para ObjectBoxPreferencesRepository
+final objectBoxPreferencesRepositoryProvider = Provider<ObjectBoxPreferencesRepository>((ref) {
+  final objectBoxService = ref.watch(objectBoxServiceProvider);
+  return ObjectBoxPreferencesRepository(objectBoxService.store);
+});
+
+/// Provider para ThemeController (StateNotifier com múltiplos temas)
+final themeControllerProvider = StateNotifierProvider<ThemeController, AppTheme>((ref) {
+  final preferences = ref.watch(objectBoxPreferencesRepositoryProvider);
+  return ThemeController(preferences);
 });
 
 /// Provider para AppMonitoringService

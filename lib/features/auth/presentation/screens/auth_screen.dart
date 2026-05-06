@@ -225,17 +225,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final Color primaryColor = const Color.fromARGB(255, 14, 180, 180);
-    final Color toggleContainerColor =
-        isDark ? Colors.white : const Color.fromARGB(255, 255, 255, 255);
+    final Color toggleContainerColor = colorScheme.surface;
 
-    final Color activeToggleBg =
-        isDark ? Colors.grey.shade200 : const Color.fromARGB(255, 30, 30, 30);
-    final Color activeToggleText = isDark ? Colors.black : Colors.white;
-    final Color inactiveToggleText =
-        isDark ? Colors.black54 : const Color.fromARGB(255, 58, 58, 58);
+    final Color activeToggleBg = colorScheme.onSurface;
+    final Color activeToggleText = colorScheme.surface;
+    final Color inactiveToggleText = colorScheme.onSurface.withValues(alpha: 0.6);
 
     // Removido o redirecionamento automático aqui para evitar conflitos de navegação
     // O AuthWrapper no topo da árvore de widgets já gerencia a troca de Welcome -> Home
@@ -246,8 +243,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 16, 16, 16)
+                      Color.fromARGB(255, 255, 255, 255),
+                      const Color.fromARGB(255, 0, 0, 0),
           ],
         ),
       ),
@@ -393,14 +390,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     child: TextButton(
                       onPressed: () => _showForgotPasswordDialog(context),
                       style: TextButton.styleFrom(
-                        foregroundColor:
-                            isDark ? Colors.white70 : Colors.grey[700],
+                        foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       child: Text('Esqueceu a senha?',
                           style: TextStyle(
-                              color: isDark
-                                  ? Colors.white70
-                                  : const Color.fromARGB(255, 39, 38, 38))),
+                              color: colorScheme.onSurface.withValues(alpha: 0.7))),
                     ),
                   ),
                 ] else ...[
@@ -454,7 +448,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
-                _buildGoogleButton(isDark, authService.isLoading),
+                _buildGoogleButton(colorScheme, authService.isLoading),
               ],
             ),
           ),
@@ -471,9 +465,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     VoidCallback? onToggleObscure,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fillColor = isDark ? const Color(0xFF1E1E1E) : Colors.grey[100];
-    final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final fillColor = colorScheme.surfaceContainerHighest;
+    final borderColor = colorScheme.outline;
 
     return Container(
       decoration: BoxDecoration(
@@ -507,11 +501,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
-  Widget _buildGoogleButton(bool isDark, bool isLoading) {
+  Widget _buildGoogleButton(ColorScheme colorScheme, bool isLoading) {
     return GestureDetector(
       onTap: isLoading ? null : _googleAuth,
       child: Image.asset(
-        isDark
+        colorScheme.brightness == Brightness.dark
             ? 'assets/auth/android_dark_sq_na.png'
             : 'assets/auth/android_light_sq_na.png',
         width: 60,

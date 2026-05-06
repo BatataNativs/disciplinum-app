@@ -11,6 +11,7 @@ import android.content.Context
 import android.util.Log
 import com.disciplinum.app.AccessibilityMonitorService
 import com.disciplinum.app.TimerOverlayManager
+import com.disciplinum.app_lock.AppLockService
 
 class MainActivity : FlutterActivity() {
     private val ACCESSIBILITY_EVENT_CHANNEL = "com.disciplinum.app/accessibility"
@@ -21,6 +22,10 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         timerOverlayManager = TimerOverlayManager(applicationContext)
+
+        // Configura o MethodChannel do App Lock
+        AppLockService.setupChannel(flutterEngine, this)
+        AppLockService.getInstance().setCurrentActivity(this)
 
         // Event Channel para o stream de eventos
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_EVENT_CHANNEL).setStreamHandler(
@@ -70,10 +75,48 @@ class MainActivity : FlutterActivity() {
                     timerOverlayManager.update(seconds, message)
                     result.success(true)
                 }
+                "getForegroundApp" -> {
+                    // Obtém o app em foreground via UsageStats
+                    val foregroundApp = getForegroundAppFromUsageStats()
+                    result.success(foregroundApp)
+                }
                 else -> {
                     result.notImplemented()
                 }
             }
+        }
+    }
+
+    private fun getForegroundAppFromUsageStats(): String? {
+        try {
+            val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? android.app.usage.UsageStatsManager
+                ?: return null
+            
+            val endTime = System.currentTimeMillis()
+            val startTime = endTime - 1000 * 60 // Último minuto
+            
+            val usageStats = usageStatsManager.queryUsageStats(
+                android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+                startTime,
+                endTime
+            )
+            
+            if (usageStats.isNullOrEmpty()) {
+                return null
+            }
+            
+            // Encontra o app mais recente
+            var recentApp: android.app.usage.UsageStats? = null
+            for (stats in usageStats) {
+                if (recentApp == null || stats.lastTimeUsed > recentApp.lastTimeUsed) {
+                    recentApp = stats
+                }
+            }
+            
+            return recentApp?.packageName
+        } catch (e: Exception) {
+            Log.e("DisciplinumA11y", "Erro ao obter foreground app: ${e.message}")
+            return null
         }
     }
 
@@ -136,5 +179,11 @@ class MainActivity : FlutterActivity() {
             Log.e("DisciplinumA11y", "Fallback fail: ${e.message}")
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Limpa a referência da activity no AppLockService
+        AppLockService.getInstance().setCurrentActivity(null)
     }
 }

@@ -20,15 +20,13 @@ class _MoneySavingSegmentedControlState extends State<MoneySavingSegmentedContro
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -64,7 +62,7 @@ class _MoneySavingSegmentedControlState extends State<MoneySavingSegmentedContro
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,

@@ -8,7 +8,6 @@ class MoneySavingTabContent extends StatelessWidget {
   final int selectedIndex;
   final List<MoneySavingChallengeModel> challenges;
   final MoneySavingChallengeModel? activeChallenge;
-  final bool isDark;
   final String Function(double, String) formatValue;
   final Function(String) setActiveChallenge;
 
@@ -17,7 +16,6 @@ class MoneySavingTabContent extends StatelessWidget {
     required this.selectedIndex,
     required this.challenges,
     required this.activeChallenge,
-    required this.isDark,
     required this.formatValue,
     required this.setActiveChallenge,
   });
@@ -37,12 +35,11 @@ class MoneySavingTabContent extends StatelessWidget {
   }
 
   Widget _buildHowItWorksTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    return const SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           NicheInfoCard(
-            isDark: isDark,
             icon: Icons.savings_outlined,
             title: 'Em "Meus Desafios", crie seu desafio de poupar dinheiro!',
             content: '''Defina uma meta de poupança, o período e os valores mínimos e máximos de aportes que você planeja fazer.
@@ -51,16 +48,14 @@ O app gerará um grid com células marcáveis, pra você marcar cada aporte real
 Lembrando que o app Disciplinum não gerencia seu dinheiro, nem tem vínculo com bancos ou instituições financeiras.
 O app é apenas uma ferramenta de controle e organização, que reflete o que você registrar sobre seus aportes reais realizados em instituições financeiras de sua escolha.''',
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           NicheInfoCard(
-            isDark: isDark,
             icon: Icons.notifications_outlined,
             title: 'Em "Notificações", defina seus lembretes',
             content: 'Configure horários para ser lembrado de guardar dinheiro e manter o foco no seu objetivo financeiro.',
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           NicheInfoCard(
-            isDark: isDark,
             icon: Icons.bar_chart_rounded,
             title: 'Em "Estatísticas", acompanhe sua poupança',
             content: 'Visualize seu progresso no grid do desafio e veja o quanto já acumulou para realizar seu sonho.',
@@ -71,7 +66,8 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
   }
 
   Widget _buildChallengeTab(BuildContext context) {
-    if (challenges.isEmpty) return _buildEmptyState();
+    final colorScheme = Theme.of(context).colorScheme;
+    if (challenges.isEmpty) return _buildEmptyState(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -85,14 +81,13 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
           ),
           ...challenges.map((c) => ChallengeCard(
                 challenge: c,
-                isDark: isDark,
                 isActive: c.id == activeChallenge?.id,
                 formatValue: formatValue,
                 onTap: () async {
@@ -118,7 +113,7 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.white38 : Colors.black38,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -130,15 +125,16 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.only(top: 40),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -154,7 +150,7 @@ O app é apenas uma ferramenta de controle e organização, que reflete o que vo
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.5,
             ),
           ),

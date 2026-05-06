@@ -81,6 +81,9 @@ extension DietMedalExtension on DietMedal {
     }
   }
 
+  /// Descrição da medalha (alias para requirementDescription)
+  String get description => requirementDescription;
+
   /// Obtém o emoji correspondente
   String get emoji {
     switch (this) {

@@ -217,8 +217,10 @@ class FocusModuleState implements ModuleStateContract {
   /// Factory para criar a partir de Map (alias para fromJson)
   factory FocusModuleState.fromMap(Map<String, dynamic> map) => FocusModuleState.fromJson(map);
 
-  /// Reseta o estado para inicial
-  FocusModuleState reset() => FocusModuleState.initial();
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  FocusModuleState reset() => FocusModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 
   /// Verifica se tem uma insignia específica
   bool hasInsignia(String insigniaId) => earnedInsignias.contains(insigniaId);
@@ -235,6 +237,6 @@ class FocusModuleState implements ModuleStateContract {
     return null;
   }
 
-  /// Contagem de disciplinum (respectedPeriods.length)
-  int get disciplinumCount => respectedPeriods.length;
+  /// Contagem de disciplinum (quantas vezes a insígnia 'disciplinum' foi conquistada)
+  int get disciplinumCount => earnedInsignias.where((i) => i == 'disciplinum').length;
 }

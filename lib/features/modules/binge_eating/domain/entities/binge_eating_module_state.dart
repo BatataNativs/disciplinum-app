@@ -178,4 +178,9 @@ class BingeEatingModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory BingeEatingModuleState.fromMap(Map<String, dynamic> map) => BingeEatingModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  BingeEatingModuleState reset() => BingeEatingModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

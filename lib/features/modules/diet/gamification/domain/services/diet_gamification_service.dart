@@ -5,21 +5,21 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_insignia_service.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_medalha_service.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_medal_service.dart';
 
 /// Service principal de gamificação do módulo Dieta
 /// Orquestra todos os serviços de gamificação do módulo
 class DietGamificationService implements ModuleGamificationInterface {
   final DietGamificationRepository _repository;
   late final DietInsigniaService _insigniaService;
-  late final DietMedalhaService _medalhaService;
+  late final DietMedalService _medalhaService;
   
   DietModuleState? _currentState;
   bool _isInitialized = false;
 
   DietGamificationService(this._repository) {
     _insigniaService = DietInsigniaService(_repository);
-    _medalhaService = DietMedalhaService(_repository);
+    _medalhaService = DietMedalService(_repository);
   }
 
   @override

@@ -73,7 +73,7 @@ class BingeEatingInsigniaService implements ModuleInsigniaInterface {
 
   @override
   String getInsigniaAsset(String insigniaId) {
-    const prefix = 'assets/gamification/insignias/binge_eating/';
+    const prefix = 'assets/gamification/insignias/bingeEating/';
     switch (insigniaId) {
       case 'madeira':
         return '${prefix}madeira.png';

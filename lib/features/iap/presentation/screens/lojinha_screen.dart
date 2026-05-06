@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
@@ -72,40 +73,231 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final iapState = ref.watch(iapServiceProvider);
     final iapNotifier = ref.read(iapServiceProvider.notifier);
 
-    // Cores do gradiente (Mantive o fundo escuro no dark mode)
-    final gradientColors = isDark
-        ? [const Color(0xFF0F0F0F), const Color(0xFF1A1A2E)]
-        : [const Color(0xFFF5F7FA), const Color(0xFFE3EAF5)];
+    // Cores do gradiente usando colorScheme
+    final gradientColors = [
+      colorScheme.surface,
+      colorScheme.surfaceContainerHighest,
+    ];
 
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        title: const Text(
-          'Loja Disciplinum',
-          style: TextStyle(fontWeight: FontWeight.bold),
+    final currentTheme = ref.watch(themeControllerProvider);
+    final isPinkTheme = currentTheme == AppTheme.pink;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: gradientColors,
         ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: gradientColors,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        appBar: AppBar(
+          title: const Text(
+            'Loja Disciplinum',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          systemOverlayStyle:
+              MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
         ),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+        body: Stack(
           children: [
+            // --- FLORES DECORATIVAS NO PLANO DE FUNDO (tema rosa) ---
+            if (isPinkTheme) ...[
+              // == FLORES GRANDES (60-80) ==
+              Positioned(
+                top: 60,
+                right: -15,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 70,
+                    color: colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 260,
+                left: -20,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 66,
+                    color: colorScheme.secondary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 150,
+                right: -10,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.spa,
+                    size: 74,
+                    color: colorScheme.primary.withValues(alpha: 0.13),
+                  ),
+                ),
+              ),
+              // == FLORES MÉDIAS (30-45) ==
+              Positioned(
+                top: 80,
+                left: 60,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.eco,
+                    size: 40,
+                    color: colorScheme.secondary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 220,
+                right: 70,
+                child: Transform.rotate(
+                  angle: 0.7,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 36,
+                    color: colorScheme.primary.withValues(alpha: 0.20),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 450,
+                left: 40,
+                child: Transform.rotate(
+                  angle: -0.6,
+                  child: Icon(
+                    Icons.spa,
+                    size: 34,
+                    color: colorScheme.secondary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 350,
+                right: 55,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 38,
+                    color: colorScheme.primary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              // == FLORES PEQUENAS (originais) ==
+              // Canto superior esquerdo
+              Positioned(
+                top: 120,
+                left: 30,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 26,
+                    color: colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 180,
+                left: 70,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 20,
+                    color: colorScheme.secondary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              // Canto superior direito
+              Positioned(
+                top: 140,
+                right: 40,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.spa,
+                    size: 24,
+                    color: colorScheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              // Meio esquerdo
+              Positioned(
+                top: 400,
+                left: 20,
+                child: Transform.rotate(
+                  angle: 0.8,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 22,
+                    color: colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              // Meio direito
+              Positioned(
+                top: 500,
+                right: 30,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 24,
+                    color: colorScheme.secondary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              // Inferior esquerdo
+              Positioned(
+                bottom: 300,
+                left: 50,
+                child: Transform.rotate(
+                  angle: -0.5,
+                  child: Icon(
+                    Icons.eco,
+                    size: 18,
+                    color: colorScheme.secondary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              // Inferior direito
+              Positioned(
+                bottom: 250,
+                right: 40,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.spa,
+                    size: 22,
+                    color: colorScheme.primary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+            ],
+            ListView(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+              children: [
             // --- DESTAQUE: APOIE O DEV ---
-            _buildSupportDevCard(context, isDark),
+            _buildSupportDevCard(context, colorScheme),
             const SizedBox(height: 24),
 
             // --- HEADER: Disponíveis + Restaurar ---
@@ -118,7 +310,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 InkWell(
@@ -137,14 +329,14 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white70 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         const SizedBox(width: 4),
                         Icon(
                           Icons.restore_rounded,
                           size: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ],
                     ),
@@ -189,7 +381,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
               context,
               title: "Dark Mode 🌙",
               description: "Desbloqueie o tema escuro.",
-              price: iapState.isDarkModeUnlocked ? "Adquirido" : "R\$ 4,99",
+              price: iapState.isDarkModeUnlocked ? "Adquirido" : "R\$ 2,99",
               icon: Icons.dark_mode_rounded,
               color: Colors.indigoAccent,
               isAcquired: iapState.isDarkModeUnlocked,
@@ -202,14 +394,13 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
             _buildProductItem(
               context,
               title: "Tema Rosa 🌸",
-              description: "Desbloqueie o tema rosa. (Em breve)",
-              price: "Em breve",
-              icon: Icons.palette,
+              description: "Desbloqueie o tema rosa vibrante e elegante.",
+              price: iapState.isPinkThemeUnlocked ? "Adquirido" : "R\$ 2,99",
+              emoji: " 🌸",
               color: Colors.pinkAccent,
-              isAcquired: false, // Sempre não adquirido por enquanto
-              onTap: () {}, // Não implementado ainda
-              onPreviewTap: () =>
-                  _showPreview(context), // Usa mesmo preview do dark mode
+              isAcquired: iapState.isPinkThemeUnlocked,
+              onTap: () => _handleBuyAction(() => iapNotifier.buyPinkTheme(), "Tema Rosa"),
+              onPreviewTap: () => _showPreview(context),
             ),
             const SizedBox(height: 12),
 
@@ -217,25 +408,26 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
             _buildProductItem(
               context,
               title: "Tema Halloween 🎃",
-              description: "Desbloqueie o tema Halloween. (Em breve)",
-              price: "Em breve",
-              icon: Icons.palette,
+              description: "Desbloqueie o tema assustadoramente divertido.",
+              price: iapState.isHalloweenThemeUnlocked ? "Adquirido" : "R\$ 2,99",
+              emoji: " 🎃",
               color: Colors.orangeAccent,
-              isAcquired: false, // Sempre não adquirido por enquanto
-              onTap: () {}, // Não implementado ainda
-              onPreviewTap: () =>
-                  _showPreview(context), // Usa mesmo preview do dark mode
+              isAcquired: iapState.isHalloweenThemeUnlocked,
+              onTap: () => _handleBuyAction(() => iapNotifier.buyHalloweenTheme(), "Tema Halloween"),
+              onPreviewTap: () => _showPreview(context),
+            ),
+          ],
             ),
           ],
         ),
+        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 2),
       ),
-      bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 2),
     );
   }
 
   // --- WIDGETS AUXILIARES ---
 
-  Widget _buildSupportDevCard(BuildContext context, bool isDark) {
+  Widget _buildSupportDevCard(BuildContext context, ColorScheme colorScheme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -325,13 +517,15 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
     required String title,
     required String description,
     required String price,
-    required IconData icon,
+    IconData? icon,
+    String? emoji,
     required Color color,
     required bool isAcquired, // Removi o isDark daqui pois forçaremos o branco
     required VoidCallback onTap,
     VoidCallback? onPreviewTap,
     bool isDisabled = false,
   }) {
+    assert(icon != null || emoji != null, 'Deve fornecer icon ou emoji');
     final bool canInteract = !isAcquired && !isDisabled;
 
     return GestureDetector(
@@ -364,8 +558,11 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(isAcquired ? Icons.check_rounded : icon,
-                    color: color, size: 28),
+                child: isAcquired
+                    ? Icon(Icons.check_rounded, color: color, size: 28)
+                    : emoji != null
+                        ? Text(emoji, style: const TextStyle(fontSize: 28))
+                        : Icon(icon, color: color, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -491,11 +688,11 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
 
   void _mostrarModalCafezinho(BuildContext context) {
     const String chavePix = 'f3b7c116-1d53-4a51-a6a2-5de1f36e688e';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      backgroundColor: colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -513,7 +710,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -521,7 +718,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                   'Se o Disciplinum te ajuda, considere apoiar o desenvolvimento com qualquer valor via Pix!\n(chave aleatória)',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black54,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     height: 1.5,
                   ),
                 ),
@@ -529,14 +726,10 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color.fromARGB(255, 70, 64, 255)
-                            .withValues(alpha: 0.1)
-                        : const Color.fromARGB(255, 70, 64, 255)
-                            .withValues(alpha: 0.05),
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                            color: const Color.fromARGB(255, 70, 64, 255),
+                            color: colorScheme.primary,
                             width: 1,
                             style: BorderStyle.solid)
                         .scale(0.3),
@@ -549,7 +742,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
                           fontFamily: 'Courier',
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                         textAlign: TextAlign.center,
                       ),

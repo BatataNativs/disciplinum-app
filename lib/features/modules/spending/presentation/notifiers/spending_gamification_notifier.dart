@@ -66,7 +66,15 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentState = state.gamification ?? SpendingModuleState.initial();
-      final newState = currentState.copyWith(isModuleActive: true);
+      // Concede insígnia Madeira se ainda não tiver
+      final earnedInsignias = List<String>.from(currentState.earnedInsignias);
+      if (!earnedInsignias.contains('madeira')) {
+        earnedInsignias.add('madeira');
+      }
+      final newState = currentState.copyWith(
+        isModuleActive: true,
+        earnedInsignias: earnedInsignias,
+      );
       await _repository.saveSpendingState(newState);
       await _repository.syncWithSupabase(newState);
       await loadGamification();

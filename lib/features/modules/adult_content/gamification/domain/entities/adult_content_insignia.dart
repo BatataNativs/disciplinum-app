@@ -141,7 +141,7 @@ extension AdultContentInsigniaEntityExtension on AdultContentInsigniaEntity {
 
   /// Obtém o caminho do asset
   String get asset {
-    const prefix = 'assets/gamification/insignias/adult_content/';
+    const prefix = 'assets/gamification/insignias/adultContent/';
     switch (this) {
       case AdultContentInsigniaEntity.madeira:
         return '${prefix}madeira.png';

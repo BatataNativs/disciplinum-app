@@ -196,4 +196,9 @@ class ProcrastinationModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory ProcrastinationModuleState.fromMap(Map<String, dynamic> map) => ProcrastinationModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  ProcrastinationModuleState reset() => ProcrastinationModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

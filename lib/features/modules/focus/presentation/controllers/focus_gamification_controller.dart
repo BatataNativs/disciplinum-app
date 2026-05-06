@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_gamification_service.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medal.dart';
 
 /// Controller Riverpod para gamificação do Focus
 /// Substitui ChangeNotifier por StateNotifier
@@ -76,8 +76,8 @@ class FocusGamificationController extends StateNotifier<FocusGamificationState> 
 class FocusGamificationState {
   final FocusInsignia? currentInsignia;
   final List<FocusInsignia> earnedInsignias;
-  final FocusMedalha? currentMedal;
-  final List<FocusMedalha> earnedMedals;
+  final FocusMedalEntity? currentMedal;
+  final List<FocusMedalEntity> earnedMedals;
   final int respectedPeriods;
   final bool isLoading;
   final String? error;
@@ -95,8 +95,8 @@ class FocusGamificationState {
   FocusGamificationState copyWith({
     FocusInsignia? currentInsignia,
     List<FocusInsignia>? earnedInsignias,
-    FocusMedalha? currentMedal,
-    List<FocusMedalha>? earnedMedals,
+    FocusMedalEntity? currentMedal,
+    List<FocusMedalEntity>? earnedMedals,
     int? respectedPeriods,
     bool? isLoading,
     String? error,
@@ -125,7 +125,7 @@ class FocusGamificationState {
     return earnedInsignias.contains(insignia);
   }
 
-  bool hasMedal(FocusMedalha medal) {
+  bool hasMedal(FocusMedalEntity medal) {
     return earnedMedals.contains(medal);
   }
 }

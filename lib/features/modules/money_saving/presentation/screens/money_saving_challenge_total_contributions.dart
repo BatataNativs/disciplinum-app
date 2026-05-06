@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 
 class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
   const MoneySavingChallengeTotalContributionsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final service = ref.watch(moneySavingChallengeServiceProvider);
     final challenges = service.challengesList;
 
-    double totalGeneralSaved = 0;
-    List<MoneySavingChallengeModel> completedChallenges = [];
-
-    for (var c in challenges) {
-      totalGeneralSaved += c.totalSaved;
-      if (c.isComplete) {
-        completedChallenges.add(c);
-      }
+    // Calcular total geral economizado
+    double totalSaved = 0;
+    for (var challenge in challenges) {
+      totalSaved += challenge.totalSaved;
     }
+
+    // Desafios concluídos (100% progresso)
+    final completedChallenges = challenges.where((c) => c.isComplete).toList();
 
     String currency = challenges.isNotEmpty ? challenges.first.currency : 'R\$';
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Total Geral Guardado'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
+        iconTheme: IconThemeData(
+          color: colorScheme.onSurface,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -71,7 +71,7 @@ class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   FittedBox(
                     child: Text(
-                      '$currency ${totalGeneralSaved.toStringAsFixed(2)}',
+                      '$currency ${totalSaved.toStringAsFixed(2)}',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 42,
@@ -112,7 +112,7 @@ class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -126,7 +126,7 @@ class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
                   'Você ainda não completou nenhum desafio.\nContinue firme e poupe agora mesmo!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: colorScheme.onSurface.withValues(alpha: 0.4),
                     fontSize: 14,
                   ),
                 ),
@@ -142,14 +142,10 @@ class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey[100],
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white10
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: colorScheme.outline.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Row(
@@ -174,7 +170,7 @@ class MoneySavingChallengeTotalContributionsScreen extends ConsumerWidget {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               Text(

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/focus/gamification/presentation/providers/focus_gamification_provider.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medal.dart';
 
 class MyProgressFocus extends ConsumerWidget {
   const MyProgressFocus({super.key});
@@ -32,104 +32,88 @@ class MyProgressFocus extends ConsumerWidget {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text(
-              'Olá, $firstName!',
-              style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Seu progresso no módulo: Foco e Produtividade',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Text(
+                'Olá, $firstName!',
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Seu progresso no módulo: Foco e Produtividade',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
 
-            // Streak atual
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(16),
+              // Streak atual
+              _buildStatCard(
+                icon: Icons.local_fire_department,
+                value: '$dias',
+                label: 'dias consecutivos',
+                color: Colors.orange,
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.timer_rounded,
-                    color: Colors.teal.shade400,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$dias dias',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          '${(totalMinutes / 60).toStringAsFixed(1)} horas de foco total',
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              _buildStatCard(
+                icon: Icons.timer,
+                value: '${(totalMinutes / 60).floor()}h ${totalMinutes % 60}min',
+                label: 'tempo total focado',
+                color: const Color(0xFF6366F1),
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // INSÍGNIAS
-            const Text(
-              'Insígnias',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Conquistas por períodos de foco respeitados',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(24),
+              // INSÍGNIAS
+              const Text(
+                'Insígnias',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 0.75,
-                children: FocusInsignia.values.map((insignia) {
-                  final isEarned = earnedInsignias.contains(insignia.name);
+              const SizedBox(height: 4),
+              const Text(
+                'Conquistas por períodos de foco respeitados',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                  children: FocusInsignia.values.map((insignia) {
+                    final isEarned = earnedInsignias.contains(insignia.name);
 
-                  return _AwardItem(
-                    asset: insignia.asset,
-                    label: insignia.nameBr,
-                    isEarned: isEarned,
-                    requirement: insignia.requirementDescription,
-                  );
-                }).toList(),
+                    // Badge count para insígnia Disciplinum
+                    final badgeCount = (insignia.name == 'disciplinum' && disciplinumCount > 1)
+                        ? disciplinumCount
+                        : null;
+
+                    return _AwardItem(
+                      asset: insignia.asset,
+                      label: insignia.nameBr,
+                      isEarned: isEarned,
+                      requirement: insignia.requirementDescription,
+                      badgeCount: badgeCount,
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
             // MEDALHAS
             const Text(
@@ -158,7 +142,7 @@ class MyProgressFocus extends ConsumerWidget {
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.9,
-                children: FocusMedalha.values.map((medal) {
+                children: FocusMedalEntity.values.map((medal) {
                   final isEarned = earnedMedalhas.contains(medal.name) ||
                       medal.canBeAwarded(earnedInsignias);
 
@@ -203,6 +187,45 @@ class MyProgressFocus extends ConsumerWidget {
           ],
         ),
       ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -212,82 +235,170 @@ class _AwardItem extends StatelessWidget {
   final String label;
   final bool isEarned;
   final String requirement;
+  final int? badgeCount;
 
   const _AwardItem({
     required this.asset,
     required this.label,
     required this.isEarned,
     required this.requirement,
+    this.badgeCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Expanded(
-          flex: 3,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isEarned ? const Color(0xFF2A2A2A) : const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isEarned
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : Colors.white.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                asset,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.emoji_events,
-                      color: isEarned ? Colors.amber : Colors.grey,
-                      size: 32,
+    return GestureDetector(
+      onTap: () => _showDetail(context),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ColorFiltered(
+                  colorFilter: isEarned
+                      ? const ColorFilter.mode(
+                          Colors.transparent, BlendMode.multiply)
+                      : const ColorFilter.matrix(<double>[
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                        ]),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Opacity(
+                      opacity: isEarned ? 1.0 : 0.4,
+                      child: Image.asset(asset, fit: BoxFit.contain),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+                // Badge de contador (tipo notificação)
+                if (badgeCount != null && isEarned)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Text(
+                        '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          flex: 2,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isEarned ? Colors.white : Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                requirement,
-                style: TextStyle(
-                  fontSize: 9,
-                  color: isEarned ? Colors.green.shade300 : Colors.grey.shade600,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: isEarned ? Colors.white : Colors.grey,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showDetail(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ColorFiltered(
+              colorFilter: isEarned
+                  ? const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply)
+                  : const ColorFilter.matrix(<double>[
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ]),
+              child: Opacity(
+                opacity: isEarned ? 1.0 : 0.4,
+                child: Image.asset(asset, height: 100),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isEarned 
+                ? '✅ Conquistada!\n\nRequisito:\n$requirement'
+                : 'Requisito:\n$requirement',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ],
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Ok', style: TextStyle(color: Color(0xFF6366F1))),
+          ),
+        ],
+      ),
     );
   }
 }

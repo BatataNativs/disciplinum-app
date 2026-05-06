@@ -68,13 +68,13 @@ extension SmokingMedalEntityExtension on SmokingMedalEntity {
   String get nameBr {
     switch (this) {
       case SmokingMedalEntity.bronze:
-        return 'Bronze';
+        return 'Medalha de Bronze';
       case SmokingMedalEntity.prata:
-        return 'Prata';
+        return 'Medalha de Prata';
       case SmokingMedalEntity.ouro:
-        return 'Ouro';
+        return 'Medalha de Ouro';
       case SmokingMedalEntity.diamante:
-        return 'Diamante';
+        return 'Medalha de Diamante';
     }
   }
 
@@ -85,11 +85,11 @@ extension SmokingMedalEntityExtension on SmokingMedalEntity {
       case SmokingMedalEntity.bronze:
         return '${prefix}bronze.png';
       case SmokingMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case SmokingMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case SmokingMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 
@@ -150,5 +150,31 @@ extension SmokingMedalEntityExtension on SmokingMedalEntity {
       case SmokingMedalEntity.diamante:
         return '#B9F2FF'; // Azul claro
     }
+  }
+
+  /// Descrição da medalha (alias para benefitDescription)
+  String get description => benefitDescription;
+
+  /// Raridade da medalha
+  String get rarity {
+    switch (this) {
+      case SmokingMedalEntity.bronze:
+        return 'comum';
+      case SmokingMedalEntity.prata:
+        return 'rara';
+      case SmokingMedalEntity.ouro:
+        return 'epica';
+      case SmokingMedalEntity.diamante:
+        return 'lendaria';
+    }
+  }
+
+  /// Verifica se a medalha é lendária
+  bool get isLegendary => rarity == 'lendaria';
+
+  /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
+  bool canBeAwarded(List<String> earnedInsignias) {
+    final disciplinumCount = earnedInsignias.where((i) => i == 'disciplinum').length;
+    return disciplinumCount >= requiredDisciplinumInsignias;
   }
 }

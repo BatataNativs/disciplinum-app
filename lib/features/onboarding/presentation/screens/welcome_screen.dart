@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -21,12 +21,8 @@ class WelcomeScreen extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  isDark
-                      ? Colors.black
-                      : const Color.fromARGB(255, 255, 255, 255),
-                  isDark 
-                      ? Colors.black 
-                      : const Color.fromARGB(255, 3, 0, 19)
+                      Color.fromARGB(255, 255, 255, 255),
+                      const Color.fromARGB(255, 0, 0, 0),
                 ],
               ),
             ),
@@ -57,9 +53,7 @@ class WelcomeScreen extends StatelessWidget {
                     'Te ajudando a ser mais disciplinado.',
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(
-                      color: isDark
-                          ? Colors.grey[400]
-                          : const Color.fromARGB(255, 249, 249, 249),
+                      color: Color.fromARGB(255, 255, 255, 255),
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -117,14 +111,10 @@ class WelcomeScreen extends StatelessWidget {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark
-                            ? Colors.white
-                            : const Color.fromARGB(221, 0, 0, 0),
-                        backgroundColor: isDark ? Colors.black : Colors.white,
+                        foregroundColor: colorScheme.onSurface,
+                        backgroundColor: colorScheme.surface,
                         side: BorderSide(
-                            color: isDark
-                                ? Colors.grey[800]!
-                                : const Color.fromARGB(255, 0, 0, 0)),
+                            color: colorScheme.outline),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -151,9 +141,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: Text(
                       'Experimentar sem conta\n    (sem salvamentos)',
                       style: TextStyle(
-                        color: isDark
-                            ? Colors.grey[500]
-                            : const Color.fromARGB(255, 172, 172, 172),
+                        color: Color.fromARGB(255, 137, 136, 136),
                       ),
                     ),
                   ),

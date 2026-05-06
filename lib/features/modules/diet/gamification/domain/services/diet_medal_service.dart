@@ -1,18 +1,18 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
-import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_medalha.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/entities/diet_medal.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 
 /// Service de medalhas específico do módulo Dieta
 /// Implementa a interface base com lógica específica da Dieta
-class DietMedalhaService implements ModuleMedalhaInterface {
+class DietMedalService implements ModuleMedalhaInterface {
   final DietGamificationRepository _repository;
   final List<String> _earnedMedalhas = [];
   int _disciplinumCount = 0;
 
-  DietMedalhaService(this._repository);
+  DietMedalService(this._repository);
 
   Future<void> initialize() async {
     try {
@@ -59,13 +59,13 @@ class DietMedalhaService implements ModuleMedalhaInterface {
 
   @override
   List<String> getAllMedalhaIds() {
-    return DietMedalha.values.map((medalha) => medalha.name).toList();
+    return DietMedal.values.map((medalha) => medalha.name).toList();
   }
 
   @override
   String getMedalhaName(String medalhaId) {
     try {
-      return DietMedalha.values.firstWhere((m) => m.name == medalhaId).nameBr;
+      return DietMedal.values.firstWhere((m) => m.name == medalhaId).nameBr;
     } catch (e) {
       return medalhaId;
     }
@@ -74,7 +74,7 @@ class DietMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaAsset(String medalhaId) {
     try {
-      final medalha = DietMedalha.values.firstWhere((m) => m.name == medalhaId);
+      final medalha = DietMedal.values.firstWhere((m) => m.name == medalhaId);
       return medalha.asset;
     } catch (e) {
       return 'assets/medalhas/diet/$medalhaId.png';
@@ -84,7 +84,7 @@ class DietMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaRequirement(String medalhaId) {
     try {
-      final medalha = DietMedalha.values.firstWhere((m) => m.name == medalhaId);
+      final medalha = DietMedal.values.firstWhere((m) => m.name == medalhaId);
       return medalha.description;
     } catch (e) {
       return 'Requisito não encontrado';
@@ -126,9 +126,12 @@ class DietMedalhaService implements ModuleMedalhaInterface {
   Future<List<String>> checkForNewMedalhas(Map<String, dynamic> moduleData) async {
     final newMedalhas = <String>[];
     final disciplinumCount = moduleData['disciplinumCount'] ?? _disciplinumCount;
+    
+    // Criar lista de insignias fictícia baseada no count
+    final earnedInsignias = List<String>.filled(disciplinumCount, 'disciplinum');
 
-    for (final medalha in DietMedalha.values) {
-      if (!await hasEarnedMedalha(medalha.name) && medalha.canBeAwarded(disciplinumCount)) {
+    for (final medalha in DietMedal.values) {
+      if (!await hasEarnedMedalha(medalha.name) && medalha.canBeAwarded(earnedInsignias)) {
         newMedalhas.add(medalha.name);
         await awardMedalha(medalha.name);
       }

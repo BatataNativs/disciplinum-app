@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/iap/domain/entities/iap_entitlement.dart';
 import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitlement_repository.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -8,6 +9,8 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 /// Estado do serviço de compras in-app
 class IapState {
   final bool isDarkModeUnlocked;
+  final bool isPinkThemeUnlocked;
+  final bool isHalloweenThemeUnlocked;
   final bool isAdFreeUnlocked;
   final DateTime? adFreeLiteExpiration;
   final bool isCustomNotifUnlocked;
@@ -18,6 +21,8 @@ class IapState {
 
   const IapState({
     this.isDarkModeUnlocked = false,
+    this.isPinkThemeUnlocked = false,
+    this.isHalloweenThemeUnlocked = false,
     this.isAdFreeUnlocked = false,
     this.adFreeLiteExpiration,
     this.isCustomNotifUnlocked = false,
@@ -29,6 +34,8 @@ class IapState {
 
   IapState copyWith({
     bool? isDarkModeUnlocked,
+    bool? isPinkThemeUnlocked,
+    bool? isHalloweenThemeUnlocked,
     bool? isAdFreeUnlocked,
     DateTime? adFreeLiteExpiration,
     bool? isCustomNotifUnlocked,
@@ -39,6 +46,8 @@ class IapState {
   }) {
     return IapState(
       isDarkModeUnlocked: isDarkModeUnlocked ?? this.isDarkModeUnlocked,
+      isPinkThemeUnlocked: isPinkThemeUnlocked ?? this.isPinkThemeUnlocked,
+      isHalloweenThemeUnlocked: isHalloweenThemeUnlocked ?? this.isHalloweenThemeUnlocked,
       isAdFreeUnlocked: isAdFreeUnlocked ?? this.isAdFreeUnlocked,
       adFreeLiteExpiration: adFreeLiteExpiration ?? this.adFreeLiteExpiration,
       isCustomNotifUnlocked: isCustomNotifUnlocked ?? this.isCustomNotifUnlocked,
@@ -64,6 +73,8 @@ class IapService extends StateNotifier<IapState> {
 
   // IDs dos produtos
   static const String productIdDarkMode = 'dark_mode_unlock';
+  static const String productIdPinkTheme = 'pink_theme_unlock';
+  static const String productIdHalloweenTheme = 'halloween_theme_unlock';
   static const String productIdAdFree = 'ad_free_unlock';
   static const String productIdAdFreeLite = 'ad_free_lite';
   static const String productIdCustomNotif = 'custom_notifications_unlock';
@@ -71,6 +82,8 @@ class IapService extends StateNotifier<IapState> {
 
   // Getters para compatibilidade
   bool get isDarkModeUnlocked => state.isDarkModeUnlocked;
+  bool get isPinkThemeUnlocked => state.isPinkThemeUnlocked;
+  bool get isHalloweenThemeUnlocked => state.isHalloweenThemeUnlocked;
   bool get isAdFreeUnlocked => state.isAdFreeUnlocked;
   DateTime? get adFreeLiteExpiration => state.adFreeLiteExpiration;
   bool get isCustomNotifUnlocked => state.isCustomNotifUnlocked;
@@ -78,6 +91,34 @@ class IapService extends StateNotifier<IapState> {
   bool get isLoading => state.isLoading;
   String? get error => state.error;
   bool get isAvailable => state.isAvailable;
+
+  /// Mapeia AppTheme para ID de produto IAP
+  String productIdForTheme(AppTheme theme) {
+    return switch (theme) {
+      AppTheme.dark => productIdDarkMode,
+      AppTheme.pink => productIdPinkTheme,
+      AppTheme.halloween => productIdHalloweenTheme,
+      _ => '',
+    };
+  }
+
+  /// Verifica se um tema específico está desbloqueado (atrelado ao AppTheme)
+  bool isThemeUnlocked(AppTheme theme) {
+    if (theme.isFree) return true;
+    return switch (theme) {
+      AppTheme.dark => state.isDarkModeUnlocked,
+      AppTheme.pink => state.isPinkThemeUnlocked,
+      AppTheme.halloween => state.isHalloweenThemeUnlocked,
+      _ => true,
+    };
+  }
+
+  /// Inicia compra de um tema específico (atrelado ao AppTheme)
+  Future<bool> buyTheme(AppTheme theme) {
+    final productId = productIdForTheme(theme);
+    if (productId.isEmpty) return Future.value(false);
+    return purchaseProduct(productId);
+  }
 
   // Getters adicionais para compatibilidade
   bool get isAdFreePermanent => state.isAdFreeUnlocked;
@@ -90,7 +131,9 @@ class IapService extends StateNotifier<IapState> {
   // Métodos de compra para compatibilidade
   Future<bool> buyAdFree() => purchaseProduct(productIdAdFree);
   Future<bool> buyAdFreeLite() => purchaseProduct(productIdAdFreeLite);
-  Future<bool> buyDarkMode() => purchaseProduct(productIdDarkMode);
+  Future<bool> buyDarkMode() => buyTheme(AppTheme.dark);
+  Future<bool> buyPinkTheme() => buyTheme(AppTheme.pink);
+  Future<bool> buyHalloweenTheme() => buyTheme(AppTheme.halloween);
   Future<bool> buyCustomNotif() => purchaseProduct(productIdCustomNotif);
   Future<bool> buyMotivationPhrases() => purchaseProduct(productIdMotivationPhrases);
   Future<bool> buyByProductId(String productId) => purchaseProduct(productId);
@@ -128,6 +171,8 @@ class IapService extends StateNotifier<IapState> {
     try {
       // Carregar do repositório Isar puro
       final darkModeEntitlement = await _repository.getEntitlement(productIdDarkMode);
+      final pinkThemeEntitlement = await _repository.getEntitlement(productIdPinkTheme);
+      final halloweenThemeEntitlement = await _repository.getEntitlement(productIdHalloweenTheme);
       final adFreeEntitlement = await _repository.getEntitlement(productIdAdFree);
       final adFreeLiteEntitlement = await _repository.getEntitlement(productIdAdFreeLite);
       final customNotifEntitlement = await _repository.getEntitlement(productIdCustomNotif);
@@ -135,6 +180,8 @@ class IapService extends StateNotifier<IapState> {
 
       state = state.copyWith(
         isDarkModeUnlocked: darkModeEntitlement?.isValid ?? false,
+        isPinkThemeUnlocked: pinkThemeEntitlement?.isValid ?? false,
+        isHalloweenThemeUnlocked: halloweenThemeEntitlement?.isValid ?? false,
         isAdFreeUnlocked: adFreeEntitlement?.isValid ?? false,
         adFreeLiteExpiration: adFreeLiteEntitlement?.expirationDate,
         isCustomNotifUnlocked: customNotifEntitlement?.isValid ?? false,
@@ -155,6 +202,8 @@ class IapService extends StateNotifier<IapState> {
 
       state = state.copyWith(
         isDarkModeUnlocked: false,
+        isPinkThemeUnlocked: false,
+        isHalloweenThemeUnlocked: false,
         isAdFreeUnlocked: false,
         adFreeLiteExpiration: null,
         isCustomNotifUnlocked: false,
@@ -227,6 +276,12 @@ class IapService extends StateNotifier<IapState> {
       switch (purchase.productID) {
         case productIdDarkMode:
           state = state.copyWith(isDarkModeUnlocked: true);
+          break;
+        case productIdPinkTheme:
+          state = state.copyWith(isPinkThemeUnlocked: true);
+          break;
+        case productIdHalloweenTheme:
+          state = state.copyWith(isHalloweenThemeUnlocked: true);
           break;
         case productIdAdFree:
           state = state.copyWith(isAdFreeUnlocked: true);

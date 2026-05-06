@@ -14,7 +14,7 @@ class HealthTimelineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final duration = timeSmokeFree;
 
     // Usar SmokingHealthBenefitEntity como fonte de verdade
@@ -25,24 +25,12 @@ class HealthTimelineCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF1E1E2C),
-                  const Color(0xFF2A2A3C),
-                ]
-              : [
-                  const Color(0xFFF5F7FA),
-                  const Color(0xFFE8EEF5),
-                ],
+          colors: [
+            colorScheme.surfaceContainerHighest,
+            colorScheme.surface,
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -68,7 +56,7 @@ class HealthTimelineCard extends StatelessWidget {
                 Text(
                   "Melhorias na Saúde",
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -85,9 +73,7 @@ class HealthTimelineCard extends StatelessWidget {
               separatorBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Divider(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.05),
+                  color: colorScheme.outline.withValues(alpha: 0.1),
                   height: 1,
                 ),
               ),
@@ -131,16 +117,12 @@ class HealthTimelineCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isReached
                             ? themeColor.withValues(alpha: 0.2)
-                            : isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.05),
+                            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isReached
                               ? themeColor
-                              : isDark
-                                  ? Colors.white.withValues(alpha: 0.1)
-                                  : Colors.black.withValues(alpha: 0.1),
+                              : colorScheme.outline.withValues(alpha: 0.1),
                           width: 2,
                         ),
                       ),
@@ -161,7 +143,7 @@ class HealthTimelineCard extends StatelessWidget {
                             milestone.notificationTitle.replaceAll(' 🎊', ''),
                             style: TextStyle(
                               color: isReached
-                                  ? (isDark ? Colors.white : Colors.black87)
+                                  ? colorScheme.onSurface
                                   : Colors.grey,
                               fontSize: 15,
                               fontWeight: isReached
@@ -173,9 +155,7 @@ class HealthTimelineCard extends StatelessWidget {
                           Text(
                             milestone.timeRequired,
                             style: TextStyle(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.5)
-                                  : Colors.black.withValues(alpha: 0.5),
+                              color: colorScheme.onSurface.withValues(alpha: 0.5),
                               fontSize: 12,
                             ),
                           ),
@@ -192,9 +172,7 @@ class HealthTimelineCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isReached
                             ? themeColor.withValues(alpha: 0.15)
-                            : isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.05),
+                            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isReached
@@ -208,9 +186,7 @@ class HealthTimelineCard extends StatelessWidget {
                         style: TextStyle(
                           color: isReached
                               ? themeColor
-                              : isDark
-                                  ? Colors.white.withValues(alpha: 0.4)
-                                  : Colors.black.withValues(alpha: 0.4),
+                              : colorScheme.onSurface.withValues(alpha: 0.4),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),

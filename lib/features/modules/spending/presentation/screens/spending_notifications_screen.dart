@@ -14,8 +14,7 @@ class _SpendingNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -23,8 +22,8 @@ class _SpendingNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -36,7 +35,7 @@ class _SpendingNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -44,7 +43,7 @@ class _SpendingNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: const SingleChildScrollView(

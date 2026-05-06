@@ -91,9 +91,9 @@ class BingeEatingGamificationController extends ChangeNotifier {
       }
 
       // Atualizar estado com novo dia positivo
+      // NOTA: disciplinumCount é calculado dinamicamente a partir das insígnias conquistadas
       final updatedState = _moduleState!.copyWith(
         consecutivePositiveDays: _moduleState!.consecutivePositiveDays + 1,
-        disciplinumCount: _moduleState!.disciplinumCount + 1,
       );
 
       // Salvar estado

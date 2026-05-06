@@ -4,33 +4,44 @@ class NicheActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final bool isDark;
   final VoidCallback onTap;
   final bool isDestructive;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? textColor;
 
   const NicheActionButton({
     super.key,
     required this.icon,
     required this.label,
     required this.color,
-    required this.isDark,
     required this.onTap,
     this.isDestructive = false,
+    this.backgroundColor,
+    this.borderColor,
+    this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final effectiveBackgroundColor = backgroundColor ??
+        colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    final effectiveBorderColor = borderColor ??
+        colorScheme.outline.withValues(alpha: 0.25);
+    final effectiveTextColor = textColor ??
+        colorScheme.onSurface;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
+          color: effectiveBackgroundColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            color: effectiveBorderColor,
             width: 1,
           ),
         ),
@@ -42,7 +53,7 @@ class NicheActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isDark ? Colors.white : color,
+                color: effectiveTextColor,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

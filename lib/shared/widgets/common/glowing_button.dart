@@ -53,7 +53,6 @@ class _GlowingButtonState extends State<GlowingButton>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = widget.color ?? const Color(0xFF6366F1);
     final secondaryColor = widget.secondaryColor ??
         widget.color?.withValues(alpha: 0.8) ??
@@ -81,7 +80,7 @@ class _GlowingButtonState extends State<GlowingButton>
             boxShadow: [
               // Glow Effect
               BoxShadow(
-                color: glowColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                color: glowColor.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 1,
                 offset: const Offset(0, 4),

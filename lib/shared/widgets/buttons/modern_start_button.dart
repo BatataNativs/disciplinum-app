@@ -4,7 +4,6 @@ class ModernStartButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final bool isDark;
   final VoidCallback onTap;
 
   const ModernStartButton({
@@ -12,7 +11,6 @@ class ModernStartButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
-    required this.isDark,
     required this.onTap,
   });
 

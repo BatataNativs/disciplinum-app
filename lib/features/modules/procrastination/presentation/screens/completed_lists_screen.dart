@@ -10,7 +10,7 @@ class CompletedListsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final service = ref.watch(procrastinationServiceProvider);
     final completedLists = service.getFullyCompletedLists();
 
@@ -23,26 +23,17 @@ class CompletedListsScreen extends ConsumerWidget {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-            ],
-          ),
-        ),
+        color: colorScheme.surface,
         child: SafeArea(
           child: completedLists.isEmpty
-              ? _buildEmptyState(isDark)
-              : _buildListContent(completedLists, isDark),
+              ? _buildEmptyState(colorScheme)
+              : _buildListContent(context, completedLists, colorScheme),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(bool isDark) {
+  Widget _buildEmptyState(ColorScheme colorScheme) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -52,7 +43,7 @@ class CompletedListsScreen extends ConsumerWidget {
             Icon(
               Icons.checklist_rounded,
               size: 80,
-              color: isDark ? Colors.white24 : Colors.black12,
+              color: colorScheme.onSurface.withValues(alpha: 0.24),
             ),
             const SizedBox(height: 24),
             Text(
@@ -60,7 +51,7 @@ class CompletedListsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -69,7 +60,7 @@ class CompletedListsScreen extends ConsumerWidget {
               'Complete todas as tarefas de uma lista sem nenhum atraso para vê-la aqui!',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white38 : Colors.black38,
+                color: colorScheme.onSurface.withValues(alpha: 0.38),
               ),
               textAlign: TextAlign.center,
             ),
@@ -79,7 +70,7 @@ class CompletedListsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildListContent(List<TaskList> lists, bool isDark) {
+  Widget _buildListContent(BuildContext context, List<TaskList> lists, ColorScheme colorScheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -116,7 +107,7 @@ class CompletedListsScreen extends ConsumerWidget {
                   'As listas de tarefas/compromissos abaixo foram inteiramente concluídas, com êxito, sem nenhum atraso:',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.black54,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -128,31 +119,30 @@ class CompletedListsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Lista de listas concluídas
-          ...lists.map((list) => _buildCompletedListItem(list, isDark)),
+          ...lists.map((list) => _buildCompletedListItem(context, list)),
         ],
       ),
     );
   }
 
-  Widget _buildCompletedListItem(TaskList list, bool isDark) {
+  Widget _buildCompletedListItem(BuildContext context, TaskList list) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -178,7 +168,7 @@ class CompletedListsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 if (list.completedAt != null) ...[
@@ -187,7 +177,7 @@ class CompletedListsScreen extends ConsumerWidget {
                     'Concluída em ${DateFormat("dd/MM/yyyy").format(list.completedAt!)}',
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? Colors.white54 : Colors.black45,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

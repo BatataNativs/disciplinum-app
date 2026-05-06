@@ -5,7 +5,7 @@ class StoreDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -14,23 +14,9 @@ class StoreDialog extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color.fromARGB(255, 30, 30, 40),
-                    const Color.fromARGB(255, 15, 15, 20),
-                  ]
-                : [
-                    const Color.fromARGB(255, 255, 255, 255),
-                    const Color.fromARGB(255, 248, 250, 252),
-                  ],
-          ),
+          color: colorScheme.surface,
           border: Border.all(
-            color: isDark
-                ? const Color.fromARGB(164, 255, 255, 255)
-                : Colors.black,
+            color: colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
@@ -65,8 +51,7 @@ class StoreDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color:
-                            isDark ? Colors.white : const Color(0xFF1F2937),
+                        color: colorScheme.onSurface,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -83,7 +68,7 @@ class StoreDialog extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.white60 : Colors.black54,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                     height: 1.4,
                   ),
                 ),

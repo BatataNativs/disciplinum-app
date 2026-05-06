@@ -8,7 +8,7 @@ class FinishedBooksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -24,8 +24,8 @@ class FinishedBooksScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
+              colorScheme.surface,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
         ),
@@ -42,20 +42,20 @@ class FinishedBooksScreen extends ConsumerWidget {
                     children: [
                       Icon(Icons.emoji_events_outlined,
                           size: 60,
-                          color: isDark ? Colors.white24 : Colors.grey),
+                          color: colorScheme.onSurface.withValues(alpha: 0.3)),
                       const SizedBox(height: 16),
                       Text(
                         "Nenhum livro concluído ainda.",
                         style: TextStyle(
                             fontSize: 18,
-                            color: isDark ? Colors.white54 : Colors.grey),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         "Termine sua primeira leitura!",
                         style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.white38 : Colors.grey[400]),
+                            color: colorScheme.onSurface.withValues(alpha: 0.4)),
                       ),
                     ],
                   ),

@@ -85,11 +85,11 @@ extension ProcrastinationMedalEntityExtension on ProcrastinationMedalEntity {
       case ProcrastinationMedalEntity.bronze:
         return '${prefix}bronze.png';
       case ProcrastinationMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case ProcrastinationMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case ProcrastinationMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

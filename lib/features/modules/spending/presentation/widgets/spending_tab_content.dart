@@ -4,14 +4,14 @@ import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 /// Widget de conteúdo das abas da tela Spending
 class SpendingTabContent extends StatelessWidget {
   final int tabIndex;
-  final bool isDark;
+  final ColorScheme colorScheme;
   final List<String> selectedApps;
   final Function(String) onRemoveApp;
 
   const SpendingTabContent({
     super.key,
     required this.tabIndex,
-    required this.isDark,
+    required this.colorScheme,
     required this.selectedApps,
     required this.onRemoveApp,
   });
@@ -31,7 +31,7 @@ class SpendingTabContent extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -40,9 +40,7 @@ class SpendingTabContent extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
@@ -65,7 +63,6 @@ class SpendingTabContent extends StatelessWidget {
         return Column(
           children: [
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.account_balance_wallet_outlined,
               title:
                   'Em "Controle de gastos", gerencie apps monitorados e gastos fixos',
@@ -74,7 +71,6 @@ class SpendingTabContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.edit_note_rounded,
               title: 'Edite valor e vencimento a qualquer momento',
               content:
@@ -82,7 +78,6 @@ class SpendingTabContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure seus alertas',
               content:
@@ -90,7 +85,6 @@ class SpendingTabContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.circle,
               title: 'Sistema de urgência por cores',
               content:
@@ -98,7 +92,6 @@ class SpendingTabContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title: 'Em "Estatísticas", acompanhe seu progresso',
               content:

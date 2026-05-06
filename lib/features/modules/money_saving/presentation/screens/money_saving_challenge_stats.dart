@@ -7,10 +7,10 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.grey[50],
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Estatísticas dos Desafios'),
         backgroundColor: Colors.transparent,
@@ -26,7 +26,6 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
             subtitle: 'Soma de todos os seus desafios e conquistas',
             icon: Icons.account_balance_wallet_rounded,
             color: const Color(0xFF6366F1), // Indigo
-            isDark: isDark,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -41,7 +40,6 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
             subtitle: 'Análise de frequência e valores mais comuns',
             icon: Icons.bar_chart_rounded,
             color: const Color(0xFF10B981), // Emerald
-            isDark: isDark,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -60,15 +58,15 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
     required String subtitle,
     required IconData icon,
     required Color color,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -86,7 +84,7 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: Padding(
@@ -95,13 +93,13 @@ class MoneySavingChallengeStatsScreen extends StatelessWidget {
             subtitle,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white60 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ),
         trailing: Icon(
           Icons.chevron_right_rounded,
-          color: isDark ? Colors.white30 : Colors.black26,
+          color: colorScheme.onSurface.withValues(alpha: 0.3),
         ),
         onTap: onTap,
       ),

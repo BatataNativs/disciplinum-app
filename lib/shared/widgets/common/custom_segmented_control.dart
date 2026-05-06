@@ -4,26 +4,23 @@ import 'package:flutter/material.dart';
 class CustomSegmentedControl extends StatelessWidget {
   final TabController controller;
   final List<String> tabs;
-  final bool isDark;
 
   const CustomSegmentedControl({
     super.key,
     required this.controller,
     required this.tabs,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Container(
         height: 44,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.04),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(14),
         ),
         child: TabBar(
@@ -41,7 +38,7 @@ class CustomSegmentedControl extends StatelessWidget {
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           labelColor: Colors.white,
-          unselectedLabelColor: isDark ? Colors.white60 : Colors.black45,
+          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
           labelStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,

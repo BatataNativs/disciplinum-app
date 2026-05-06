@@ -38,6 +38,23 @@ class AppLockService {
       
       LoggerService.instance.gamification('App Lock exibido para: $appName - Mensagem: $alertMessage');
       
+      // Criar callbacks que fecham a tela automaticamente
+      void wrappedExitCallback() async {
+        // Fecha a tela de bloqueio primeiro
+        AppLockNavigationService.closeAppLockScreen();
+        // Executa a ação original
+        onExitApp();
+      }
+
+      void wrappedOpenCallback() async {
+        // Reseta gamificação antes de fechar
+        await _resetModuleGamification(nicheId);
+        // Fecha a tela de bloqueio
+        AppLockNavigationService.closeAppLockScreen();
+        // Executa a ação original
+        onOpenApp();
+      }
+
       // Implementar navegação para tela de bloqueio
       final lockEvent = AppLockEvent(
         packageName: packageName,
@@ -46,10 +63,10 @@ class AppLockService {
         nicheId: nicheId,
         alertMessage: alertMessage,
         timestamp: DateTime.now(),
-        onExitApp: onExitApp,
-        onOpenApp: onOpenApp,
+        onExitApp: wrappedExitCallback,
+        onOpenApp: wrappedOpenCallback,
       );
-      
+
       await AppLockNavigationService.showAppLockScreen(lockEvent);
       
     } catch (e) {

@@ -153,7 +153,7 @@ enum MoneySavingInsignia {
 
   /// Obtém o caminho do asset
   String get asset {
-    const prefix = 'assets/gamification/insignias/money_saving/';
+    const prefix = 'assets/gamification/insignias/moneySaving/';
     switch (this) {
       case MoneySavingInsignia.madeira:
         return '${prefix}madeira.png';

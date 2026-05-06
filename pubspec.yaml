@@ -77,6 +77,9 @@ dependencies:
   fl_chart: ^0.70.2
   confetti: ^0.7.0
   
+  # Background processing para notificações de conquistas
+  workmanager: ^0.9.0+3
+  
   # Logging profissional
   logger: ^2.0.2
 
@@ -123,7 +126,15 @@ flutter:
     - assets/gamification/insignias/smoking/
     - assets/gamification/insignias/spending/
     - assets/gamification/medals/
+    - assets/gamification/medals/avoidAdultContent/
+    - assets/gamification/medals/bingeEating/
+    - assets/gamification/medals/diet/
+    - assets/gamification/medals/focus/
+    - assets/gamification/medals/moneySaving/
+    - assets/gamification/medals/procrastination/
+    - assets/gamification/medals/reading/
     - assets/gamification/medals/smoking/
+    - assets/gamification/medals/spending/
     - assets/gamification/trofeus/
     - assets/gamification/others/
     - assets/secret_menu/

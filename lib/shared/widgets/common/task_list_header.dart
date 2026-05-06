@@ -3,7 +3,6 @@ import 'package:disciplinum/features/modules/procrastination/domain/entities/pro
 
 /// Cabeçalho da lista de tarefas com estatísticas
 class TaskListHeader extends StatelessWidget {
-  final bool isDark;
   final TaskList list;
   final int totalTasks;
   final int completedTasks;
@@ -13,7 +12,6 @@ class TaskListHeader extends StatelessWidget {
 
   const TaskListHeader({
     super.key,
-    required this.isDark,
     required this.list,
     required this.totalTasks,
     required this.completedTasks,
@@ -24,15 +22,14 @@ class TaskListHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.03),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(
-            color: isDark ? Colors.white12 : Colors.black12,
+            color: colorScheme.outline.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -50,7 +47,7 @@ class TaskListHeader extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -58,7 +55,7 @@ class TaskListHeader extends StatelessWidget {
                       '$completedTasks de $totalTasks concluídas',
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],

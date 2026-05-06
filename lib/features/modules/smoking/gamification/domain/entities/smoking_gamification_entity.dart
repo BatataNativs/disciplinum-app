@@ -54,17 +54,17 @@ class SmokingGamificationEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'earnedInsignias': earnedInsignias,
-      'earnedMedalhas': earnedMedalhas,
-      'consecutivePositiveDays': consecutivePositiveDays,
-      'disciplinumCount': disciplinumCount,
-      'lastPositiveCheckIn': lastPositiveCheckIn?.toIso8601String(),
-      'startDate': startDate?.toIso8601String(),
-      'dailyCost': dailyCost,
-      'packCost': packCost,
-      'isModuleActive': isModuleActive,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'earned_insignias': earnedInsigniasList,
+      'earned_medalhas': earnedMedalhasList,
+      'consecutive_positive_days': consecutivePositiveDays,
+      'disciplinum_count': disciplinumCount,
+      'last_positive_check_in': lastPositiveCheckIn?.toIso8601String(),
+      'start_date': startDate?.toIso8601String(),
+      'daily_cost': dailyCost,
+      'pack_cost': packCost,
+      'is_module_active': isModuleActive,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 

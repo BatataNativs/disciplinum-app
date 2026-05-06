@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/presentation/providers/procrastination_gamification_provider.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/presentation/widgets/procrastination_celebration_widget.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/services/procrastination_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -60,37 +61,28 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final service = ref.watch(procrastinationServiceProvider);
     // Usando provider local do Procrastination
     final isActive = ref.watch(procrastinationActiveProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Row
-              ModuleScreenHeader(
-                title: 'Evitar Procrastinação',
-              ),
+    return ProcrastinationCelebrationWidget(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          color: colorScheme.surface,
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header Row
+                ModuleScreenHeader(
+                  title: 'Evitar Procrastinação',
+                ),
 
-              // Segmented Control (2 opcoes)
-              CustomSegmentedControl(
+                // Segmented Control (2 opcoes)
+                CustomSegmentedControl(
                 controller: _tabController,
                 tabs: const ['Evitar procrastinação', 'Como funciona'],
-                isDark: isDark,
               ),
 
               // Conteudo
@@ -98,9 +90,8 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildTasksView(isDark, service, isActive),
+                    _buildTasksView(service, isActive),
                     HowItWorksSection(
-                      isDark: isDark,
                       onGetStarted: () => _tabController.animateTo(0),
                       infoCards: const [
                         InfoCardData(
@@ -123,14 +114,15 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                   ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTasksView(bool isDark, ProcrastinationService service, bool isActive) {
+  Widget _buildTasksView(ProcrastinationService service, bool isActive) {
     final lists = service.getAllLists();
     final currentList = lists.firstWhere(
       (l) => l.id == _selectedListId,
@@ -143,14 +135,12 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
     return Column(
       children: [
         TaskListTabs(
-          isDark: isDark,
           lists: lists,
           selectedListId: _selectedListId,
           onListSelected: (listId) => setState(() => _selectedListId = listId),
           onCreateList: () => _showCreateListDialog(service),
         ),
         TaskListHeader(
-          isDark: isDark,
           list: currentList,
           totalTasks: service.getTasksForList(currentList.id).length,
           completedTasks: service.getTasksForList(currentList.id).where((t) => t.isCompleted).length,
@@ -165,7 +155,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
         ),
         Expanded(
           child: TaskListWidget(
-            isDark: isDark,
             tasks: service.getTasksForList(currentList.id),
             onTaskToggle: (task) => service.toggleTaskInList(currentList.id, task.id),
             onTaskEdit: (task) => _showEditTaskDialog(service, currentList.id, task),
@@ -173,7 +162,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
             onAddTask: () => _showCreateTaskDialog(service, currentList),
           ),
         ),
-        _buildBottomButtons(isDark, service, isActive),
+        _buildBottomButtons(service, isActive),
       ],
     );
   }
@@ -213,13 +202,12 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
   }
 
   Widget _buildBottomButtons(
-      bool isDark, ProcrastinationService service, bool isActive) {
+      ProcrastinationService service, bool isActive) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -231,7 +219,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                   icon: Icons.add,
                   label: 'Nova Tarefa',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: () {
                     showDialog(
                       context: context,
@@ -251,7 +238,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                   icon: Icons.notifications_outlined,
                   label: 'Notificacoes',
                   color: Colors.amber,
-                  isDark: isDark,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -273,7 +259,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatisticas',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: _showStatisticsMenu,
                 ),
               ),
@@ -283,7 +268,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar modulo' : 'Ativar modulo',
                   color: isActive ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: () => _toggleModule(isActive),
                 ),
               ),
@@ -404,14 +388,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
   }
 
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -423,7 +407,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -431,7 +415,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               icon: Icons.auto_graph_rounded,
               label: 'Nivel de desprocrastinação',
               color: const Color(0xFF6366F1),
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -446,7 +429,6 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(

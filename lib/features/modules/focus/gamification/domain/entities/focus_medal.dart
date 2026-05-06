@@ -1,22 +1,22 @@
 /// Entidade de medalhas específicas do módulo Focus
 /// Baseada em milestones específicos de insígnias
-enum FocusMedalha {
+enum FocusMedalEntity {
   bronze,    // Ganha insígnia Latão
   prata,     // Ganha insígnia Ouro  
   ouro,      // Ganha insígnia Diamante
   diamante   // Ganha insígnia Disciplinum
 }
 
-extension FocusMedalhaExtension on FocusMedalha {
+extension FocusMedalEntityExtension on FocusMedalEntity {
   String get nameBr {
     switch (this) {
-      case FocusMedalha.bronze:
+      case FocusMedalEntity.bronze:
         return 'Medalha de Bronze';
-      case FocusMedalha.prata:
+      case FocusMedalEntity.prata:
         return 'Medalha de Prata';
-      case FocusMedalha.ouro:
+      case FocusMedalEntity.ouro:
         return 'Medalha de Ouro';
-      case FocusMedalha.diamante:
+      case FocusMedalEntity.diamante:
         return 'Medalha de Diamante';
     }
   }
@@ -24,26 +24,26 @@ extension FocusMedalhaExtension on FocusMedalha {
   String get asset {
     const prefix = 'assets/gamification/medals/focus/';
     switch (this) {
-      case FocusMedalha.bronze:
+      case FocusMedalEntity.bronze:
         return '${prefix}bronze.png';
-      case FocusMedalha.prata:
+      case FocusMedalEntity.prata:
         return '${prefix}silver.png';
-      case FocusMedalha.ouro:
+      case FocusMedalEntity.ouro:
         return '${prefix}gold.png';
-      case FocusMedalha.diamante:
+      case FocusMedalEntity.diamante:
         return '${prefix}diamond.png';
     }
   }
 
   String get requirementDescription {
     switch (this) {
-      case FocusMedalha.bronze:
+      case FocusMedalEntity.bronze:
         return 'Conquiste a insígnia Latão (3 períodos de foco respeitados)';
-      case FocusMedalha.prata:
+      case FocusMedalEntity.prata:
         return 'Conquiste a insígnia Ouro (6 períodos de foco respeitados)';
-      case FocusMedalha.ouro:
+      case FocusMedalEntity.ouro:
         return 'Conquiste a insígnia Diamante (9 períodos de foco respeitados)';
-      case FocusMedalha.diamante:
+      case FocusMedalEntity.diamante:
         return 'Conquiste a insígnia Disciplinum (10 períodos de foco respeitados)';
     }
   }
@@ -51,13 +51,13 @@ extension FocusMedalhaExtension on FocusMedalha {
   /// Verifica se esta medalha pode ser concedida com base nas insígnias conquistadas
   bool canBeAwarded(List<String> earnedInsignias) {
     switch (this) {
-      case FocusMedalha.bronze:
+      case FocusMedalEntity.bronze:
         return earnedInsignias.contains('latao');
-      case FocusMedalha.prata:
+      case FocusMedalEntity.prata:
         return earnedInsignias.contains('ouro');
-      case FocusMedalha.ouro:
+      case FocusMedalEntity.ouro:
         return earnedInsignias.contains('diamante');
-      case FocusMedalha.diamante:
+      case FocusMedalEntity.diamante:
         return earnedInsignias.contains('disciplinum');
     }
   }
@@ -69,13 +69,13 @@ extension FocusMedalhaExtension on FocusMedalha {
   /// Obtém a insígnia necessária para esta medalha
   String get requiredInsignia {
     switch (this) {
-      case FocusMedalha.bronze:
+      case FocusMedalEntity.bronze:
         return 'latao';
-      case FocusMedalha.prata:
+      case FocusMedalEntity.prata:
         return 'ouro';
-      case FocusMedalha.ouro:
+      case FocusMedalEntity.ouro:
         return 'diamante';
-      case FocusMedalha.diamante:
+      case FocusMedalEntity.diamante:
         return 'disciplinum';
     }
   }

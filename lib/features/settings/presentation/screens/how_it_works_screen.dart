@@ -21,12 +21,11 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final isLastPage = _currentPage == _totalPages - 1;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -37,7 +36,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.close,
-                        color: isDark ? Colors.white : Colors.black),
+                        color: colorScheme.onSurface),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Spacer(),
@@ -45,7 +44,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                     'Como funciona',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -67,9 +66,9 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 20),
-                          _buildHeader(index, theme),
+                          _buildHeader(index, Theme.of(context)),
                           const SizedBox(height: 24),
-                          _buildContent(index, theme),
+                          _buildContent(index, Theme.of(context)),
                           const SizedBox(height: 32),
                         ],
                       ),
@@ -93,8 +92,8 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                     height: 8,
                     decoration: BoxDecoration(
                       color: _currentPage == index
-                          ? const Color(0xFF6366F1)
-                          : Colors.grey.withValues(alpha: 0.3),
+                          ? colorScheme.primary
+                          : colorScheme.outline.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -121,8 +120,8 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -145,7 +144,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
   }
 
   Widget _buildHeader(int index, ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     switch (index) {
       case 0:
@@ -165,7 +164,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               'Funcionamento do app Disciplinum',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -180,7 +179,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
               'Sistema de Conquistas',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -192,14 +191,14 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Icon(
               Icons.warning_rounded,
               size: 80,
-              color: Colors.red,
+              color: colorScheme.error,
             ),
             const SizedBox(height: 2),
             Text(
               'Regras Importantes',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -211,9 +210,9 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
   }
 
   Widget _buildContent(int index, ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     final textStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: isDark ? Colors.white70 : Colors.black87,
+      color: colorScheme.onSurface.withValues(alpha: 0.7),
       height: 1.5,
     );
 
@@ -223,57 +222,124 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'O Disciplinum monitora apps selecionados POR VOCÊ ao configurar um módulo e te envia notificação de alerta para você sair deles em até 30 segundos se você os abrir.\n\n'
-              'Esse monitoramento é feito de forma segura e respeitando sua privacidade - apenas os apps que você selecionar são monitorados. Não há vigilância contínua da sua tela ou coleta desnecessária de dados não necessários para o funcionamento do app nesse aspecto. O gatilho é a abertura do app pré-configurado por você.\n\n'
-              'Você pode escolher quantos apps quiser para cada módulo, e usar quantos módulos quiser ao mesmo tempo.\n\n'
-              'Cada módulo tem suas próprias configurações, gatilhos de funcionamento e particularidades, permitindo que você gerencie diferentes aspectos da sua vida de forma independente.\n\n'
-              'O tal monitoramento de abertura de apps selecionados é apenas uma das funcionalidades do app. Também tem gestão de gastos fixos (contas, aluguel, etc.) que você registrar no app (valores e vencimentos) e receber lembretes para pagamento.\n\n'
-              'Ainda sobre finanças, tem também um módulo de "Desafio da Poupança", que é para criação e acompanhamento de metas, onde você pode registrar metas de valores a juntar e acompanhar seu progresso.\n\n'
-              'Tem módulo para você registrar livros que está lendo, quantas páginas leu por dia, quanto falta, ver estatísticas sobre seus hábitos de leitura e acompanhar seu progresso.\n\n'
-              'Há módulo pra te ajudar a parar de fumar também. Neste módulo, você insere o quanto gasta com cigarro, data pra começar a ficar sem fumar, e cria estatísticas do quanto você pode economizar e quanto melhorou - ou pode melhorar - sua saúde geral.',
+              'O Disciplinum ajuda você a manter hábitos saudáveis através de um sistema de bloqueio inteligente de apps. Quando você tenta abrir um app que configurou para ser monitorado, uma tela de bloqueio é exibida por alguns segundos, te dando tempo de refletir antes de continuar.\n\n'
+              'Este sistema é baseado na técnica de "interrupção do comportamento" - aquela pausa entre o impulso e a ação que pode fazer toda a diferença para quem quer mudar hábitos.\n\n'
+              'Cada módulo é independente, com sua própria gamificação (medalhas e insígnias), estatísticas e configurações. Você pode ativar quantos módulos quiser simultaneamente.\n\n'
+              'O app usa o serviço de Acessibilidade do Android (com sua permissão) para detectar quando apps monitorados são abertos. Isso é feito de forma segura e respeitando sua privacidade - não há coleta de dados pessoais, apenas a detecção dos apps que você mesmo escolheu monitorar.\n\n'
+              'Além do bloqueio de apps, o app oferece:'
+              '\n• Sistema de lembretes personalizáveis'
+              '\n• Cadastro de contas fixas com alertas de vencimento'
+              '\n• Timer Pomodoro para foco'
+              '\n• Estatísticas detalhadas de progresso'
+              '\n• Sincronização de dados na nuvem'
+              '\n• Temas personalizados (Azul, Rosa ou Escuro)\n',
             ),
             const SizedBox(height: 16),
-            Text(
-              'Módulos disponíveis no momento:',
-              style: textStyle?.copyWith(fontWeight: FontWeight.bold),
+            // Container branco para módulos
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Módulos disponíveis:',
+                    style: textStyle?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModuleItemDark(
+                      '🚭 Parar de Fumar',
+                      'Bloqueio de apps de venda de cigarro e estatísticas de economia/saúde'),
+                  _buildModuleItemDark(
+                      '💰 Controle de Gastos',
+                      'Bloqueio de apps de compras (Shopee, Mercado Livre, etc.)'),
+                  _buildModuleItemDark(
+                      '🎯 Foco e Produtividade',
+                      'Timer Pomodoro e bloqueio de apps durante períodos de foco'),
+                  _buildModuleItemDark(
+                      '🍎 Manter Dieta',
+                      'Lembretes de refeições com antecedência'),
+                  _buildModuleItemDark(
+                      '🔒 Evitar Conteúdo Adulto',
+                      'Bloqueio de navegadores e apps com conteúdo adulto'),
+                  _buildModuleItemDark(
+                      '⏰ Evitar Procrastinação',
+                      'Lembretes personalizáveis e sistema de notas'),
+                  _buildModuleItemDark(
+                      '📚 Leitura',
+                      'Estante virtual com progresso de páginas e estatísticas'),
+                  _buildModuleItemDark(
+                      '🍔 Compulsão Alimentar',
+                      'Bloqueio de apps de delivery (iFood, Uber Eats, etc.)'),
+                  _buildModuleItemDark(
+                      '� Desafio da Poupança',
+                      'Metas de economia com acompanhamento visual (quadradinhos)'),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildModuleItem(
-                '🚭 Parar de Fumar',
-                'Alertas e incentivo em horários críticos. Além de estatísticas de economia financeira gerada e saúde',
-                textStyle),
-            _buildModuleItem(
-                '💰 Controle de Gastos',
-                'Monitore apps de compras e seja orientado a sair se os abrir',
-                textStyle),
-            _buildModuleItem(
-                '🎯 Foco e Produtividade',
-                'Evite distrações, não abrindo apps selecionados durante período de foco definido',
-                textStyle),
-            _buildModuleItem(
-                '🍎 Manter Dieta',
-                'Lembretes para refeições (30 minutos antes, pra você ter tempo de aprontar ou esquentar sua refeição)',
-                textStyle),
-            _buildModuleItem(
-                '🔒 Evitar Conteúdo Adulto',
-                'Ajuda a evitar consumo de conteúdo adulto, **bloqueando acesso** a conteúdo adulto',
-                textStyle),
-            _buildModuleItem(
-                '⏰ Evitar Procrastinação',
-                'Organização e gestão de tempo. Te ajudando a se organizar com lembretes, notas e alarmes',
-                textStyle),
-            _buildModuleItem(
-                '📚 Leitura',
-                'Estimular o hábito da leitura e organização de livros. O módulo tem uma "estante" pra você ir alimentando com os livros que está lendo (nome, autor, quantidade de páginas..), e vai vendo o quanto já leu, o quanto falta, estatísticas sobre sues gostos e preferências, etc.',
-                textStyle),
-            _buildModuleItem(
-                '🍔 Compulsão Alimentar',
-                'Ajuda a evitar fastfoods e deliveries por impulso, monitorando apps de delivery e te orientando a sair se os abrir',
-                textStyle),
-            _buildModuleItem(
-                '🐖 Desafio da Poupança',
-                'Forma divertida de aprender a economizar dinheiro. Você cria meta de valor que quer juntar, e um prazo. Aí você vai inserindo no app informações sobre seus aportes em alguma conta ou "cofrinho" de algum app de banco e vê, num sistema de quadradinhos em linhas e colunas de fácil visualização, e vai acompanhando o quanto já juntou, o quanto falta, e projeções de tempo necessário para você atingir a meta ',
-                textStyle),
+            const SizedBox(height: 16),
+            // Container branco para recursos extras
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Outros recursos:',
+                    style: textStyle?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModuleItemDark(
+                      '📑 Contas Fixas',
+                      'Cadastro de contas mensais com lembretes de vencimento'),
+                  _buildModuleItemDark(
+                      '🎨 Temas Personalizados',
+                      'Escolha entre tema Azul, Rosa e Escuro'),
+                  _buildModuleItemDark(
+                      '📊 Estatísticas Detalhadas',
+                      'Acompanhe sua evolução com dados e gráficos'),
+                  _buildModuleItemDark(
+                      '☁️ Backup na Nuvem',
+                      'Seus dados sincronizados com segurança'),
+                  _buildModuleItemDark(
+                      '🔕 Pausa de Notificações',
+                      'Pause temporariamente sem perder progresso'),
+                ],
+              ),
+            ),
           ],
         );
       case 1:
@@ -290,20 +356,23 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
+                color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.secondary.withValues(alpha: 0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('🏅 Medalhas de Progresso',
-                      style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                      style: textStyle?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSecondaryContainer,
+                      )),
                   const SizedBox(height: 12),
-                  _buildMedalItem('🥉 Bronze', 'Bronze'),
-                  _buildMedalItem('🥈 Prata', 'Prata'),
-                  _buildMedalItem('🥇 Ouro', 'Ouro'),
-                  _buildMedalItem('💎 Diamante', 'Diamante'),
+                  _buildMedalItem('🥉 Bronze', 'Bronze', null, colorScheme, true),
+                  _buildMedalItem('🥈 Prata', 'Prata', null, colorScheme, true),
+                  _buildMedalItem('🥇 Ouro', 'Ouro', null, colorScheme, true),
+                  _buildMedalItem('💎 Diamante', 'Diamante', null, colorScheme, true),
                 ],
               ),
             ),
@@ -314,34 +383,37 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.primary.withValues(alpha: 0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('🛡️ Insígnias',
-                      style: textStyle?.copyWith(fontWeight: FontWeight.bold)),
+                      style: textStyle?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      )),
                   const SizedBox(height: 12),
                   _buildMedalItem('Madeira', 'Madeira',
-                      'assets/gamification/insignias/focus/madeira.png'),
+                      'assets/gamification/insignias/focus/madeira.png', colorScheme, false),
                   _buildMedalItem('Ferro', 'Ferro',
-                      'assets/gamification/insignias/focus/ferro.png'),
+                      'assets/gamification/insignias/focus/ferro.png', colorScheme, false),
                   _buildMedalItem('Alumínio', 'Alumínio',
-                      'assets/gamification/insignias/focus/aluminio.png'),
+                      'assets/gamification/insignias/focus/aluminio.png', colorScheme, false),
                   _buildMedalItem('Bronze', 'Bronze',
-                      'assets/gamification/insignias/focus/bronze.png'),
+                      'assets/gamification/insignias/focus/bronze.png', colorScheme, false),
                   _buildMedalItem('Latão', 'Latão',
-                      'assets/gamification/insignias/focus/latao.png'),
+                      'assets/gamification/insignias/focus/latao.png', colorScheme, false),
                   _buildMedalItem('Prata', 'Prata',
-                      'assets/gamification/insignias/focus/prata.png'),
+                      'assets/gamification/insignias/focus/prata.png', colorScheme, false),
                   _buildMedalItem('Ouro', 'Ouro',
-                      'assets/gamification/insignias/focus/ouro.png'),
+                      'assets/gamification/insignias/focus/ouro.png', colorScheme, false),
                   _buildMedalItem('Diamante', 'Diamante',
-                      'assets/gamification/insignias/focus/diamante.png'),
+                      'assets/gamification/insignias/focus/diamante.png', colorScheme, false),
                   _buildMedalItem('Disciplinum', 'Disciplinum',
-                      'assets/gamification/insignias/focus/disciplinum.png'),
+                      'assets/gamification/insignias/focus/disciplinum.png', colorScheme, false),
                 ],
               ),
             ),
@@ -353,19 +425,19 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: colorScheme.errorContainer.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.error.withValues(alpha: 0.4)),
               ),
               child: Column(
                 children: [
                   Icon(Icons.warning_amber_rounded,
-                      color: Colors.red, size: 32),
+                      color: colorScheme.error, size: 32),
                   const SizedBox(height: 2),
                   Text(
                     'Progresso Reiniciado',
                     style: textStyle?.copyWith(
-                        fontWeight: FontWeight.bold, color: Colors.red),
+                        fontWeight: FontWeight.bold, color: colorScheme.error),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -381,21 +453,21 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                color: colorScheme.tertiaryContainer.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
+                    color: colorScheme.tertiary.withValues(alpha: 0.4)),
               ),
               child: Column(
                 children: [
                   Icon(Icons.lightbulb_rounded,
-                      color: const Color(0xFF6366F1), size: 24),
+                      color: colorScheme.tertiary, size: 24),
                   const SizedBox(height: 2),
                   Text(
                     'Dica:',
                     style: textStyle?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6366F1)),
+                        color: colorScheme.tertiary),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -412,19 +484,19 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: colorScheme.secondaryContainer.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.secondary.withValues(alpha: 0.4)),
               ),
               child: Column(
                 children: [
                   Icon(Icons.check_circle_outline_rounded,
-                      color: Colors.green, size: 32),
+                      color: colorScheme.secondary, size: 32),
                   const SizedBox(height: 2),
                   Text(
                     'Vários módulos habilitados',
                     style: textStyle?.copyWith(
-                        fontWeight: FontWeight.bold, color: Colors.green),
+                        fontWeight: FontWeight.bold, color: colorScheme.onSecondaryContainer),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -443,26 +515,8 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
     }
   }
 
-  Widget _buildModuleItem(String title, String description, TextStyle? style) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('• ', style: style),
-          Expanded(
-            child: Text(
-              '$title: $description',
-              style: style,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMedalItem(String title, String description,
-      [String? assetPath]) {
+      [String? assetPath, ColorScheme? colorScheme, bool isEmoji = false]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -472,13 +526,59 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
           else
             Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: isEmoji 
+                    ? null 
+                    : (colorScheme?.onSurface ?? Colors.black),
+              ),
             ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               description,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme?.onSurface.withValues(alpha: 0.8) ?? Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModuleItemDark(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('• ', style: TextStyle(color: Colors.black.withValues(alpha: 0.6))),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: title,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ': $description',
+                    style: TextStyle(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

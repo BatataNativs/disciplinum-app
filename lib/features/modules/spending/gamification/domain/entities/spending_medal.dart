@@ -85,11 +85,11 @@ extension SpendingMedalEntityExtension on SpendingMedalEntity {
       case SpendingMedalEntity.bronze:
         return '${prefix}bronze.png';
       case SpendingMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case SpendingMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case SpendingMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

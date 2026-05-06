@@ -197,33 +197,33 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: EdgeInsets.only(
-        top: 24,
         left: 24,
         right: 24,
+        top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  widget.editId == null ? 'Criar novo desafio' : 'Editar desafio',
+                  widget.editId != null ? 'Editar Desafio' : 'Novo Desafio',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 IconButton(
@@ -233,22 +233,23 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildTitleField(isDark),
+            _buildTitleField(),
             const SizedBox(height: 20),
-            _buildCurrencyAndTargetFields(isDark),
+            _buildCurrencyAndTargetFields(),
             const SizedBox(height: 20),
-            _buildPeriodField(isDark),
+            _buildPeriodField(),
             const SizedBox(height: 20),
-            _buildMinMaxFields(isDark),
+            _buildMinMaxFields(),
             const SizedBox(height: 32),
-            _buildActionButtons(isDark),
+            _buildActionButtons(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTitleField(bool isDark) {
+  Widget _buildTitleField() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -263,7 +264,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
         const SizedBox(height: 4),
         TextField(
           controller: _titleController,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          style: TextStyle(color: colorScheme.onSurface),
           decoration: const InputDecoration(
             hintText: 'Dê um nome ao desafio!',
             border: UnderlineInputBorder(),
@@ -274,7 +275,8 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
     );
   }
 
-  Widget _buildCurrencyAndTargetFields(bool isDark) {
+  Widget _buildCurrencyAndTargetFields() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -292,7 +294,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
                 ),
               ),
               const SizedBox(height: 4),
-              _buildCurrencyDropdown(isDark),
+              _buildCurrencyDropdown(),
             ],
           ),
         ),
@@ -302,7 +304,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: isDark ? Colors.white24 : Colors.grey[400]!,
+                color: colorScheme.outline,
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -312,7 +314,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
               inputFormatters: [
                 CurrencyInputFormatter(currency: _selectedCurrency),
               ],
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: const InputDecoration(
                 hintText: '5.000,00',
                 border: InputBorder.none,
@@ -324,7 +326,8 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
     );
   }
 
-  Widget _buildCurrencyDropdown(bool isDark) {
+  Widget _buildCurrencyDropdown() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: DropdownButtonHideUnderline(
@@ -335,7 +338,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
           onChanged: (value) {
             if (value != null) {
@@ -360,7 +363,8 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
     );
   }
 
-  Widget _buildPeriodField(bool isDark) {
+  Widget _buildPeriodField() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         SizedBox(
@@ -369,7 +373,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               border: Border.all(
-                color: isDark ? Colors.white24 : Colors.grey[400]!,
+                color: colorScheme.outline,
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -377,7 +381,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
               controller: _periodValueController,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: const InputDecoration(
                 hintText: '6',
                 border: InputBorder.none,
@@ -386,16 +390,17 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(child: _buildPeriodTypeDropdown(isDark)),
+        Expanded(child: _buildPeriodTypeDropdown()),
       ],
     );
   }
 
-  Widget _buildPeriodTypeDropdown(bool isDark) {
+  Widget _buildPeriodTypeDropdown() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: isDark ? Colors.white24 : Colors.grey[400]!),
+        border: Border.all(color: colorScheme.outline),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(
@@ -404,7 +409,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
           onChanged: (value) {
             if (value != null) {
@@ -442,7 +447,8 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
     );
   }
 
-  Widget _buildMinMaxFields(bool isDark) {
+  Widget _buildMinMaxFields() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
@@ -462,7 +468,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: isDark ? Colors.white24 : Colors.grey[400]!,
+                    color: colorScheme.outline,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -472,7 +478,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
                   inputFormatters: [
                     CurrencyInputFormatter(currency: _selectedCurrency),
                   ],
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(color: colorScheme.onSurface),
                   decoration: const InputDecoration(
                     hintText: '10,00',
                     border: InputBorder.none,
@@ -500,7 +506,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: isDark ? Colors.white24 : Colors.grey[400]!,
+                    color: colorScheme.outline,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -510,7 +516,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
                   inputFormatters: [
                     CurrencyInputFormatter(currency: _selectedCurrency),
                   ],
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(color: colorScheme.onSurface),
                   decoration: const InputDecoration(
                     hintText: '100,00',
                     border: InputBorder.none,
@@ -524,7 +530,7 @@ class _MoneySavingChallengeModalState extends State<MoneySavingChallengeModal> {
     );
   }
 
-  Widget _buildActionButtons(bool isDark) {
+  Widget _buildActionButtons() {
     return Row(
       children: [
         Expanded(

@@ -41,8 +41,7 @@ class _ReadingNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -50,8 +49,8 @@ class _ReadingNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -63,7 +62,7 @@ class _ReadingNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -71,7 +70,7 @@ class _ReadingNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: _isLoading
@@ -90,7 +89,7 @@ class _ReadingNotificationsScreenState
                       title: 'Lembrete Diário',
                       subtitle: 'Configure seus horários de acompanhamento',
                       icon: Icons.menu_book_rounded,
-                      isDark: isDark,
+                      colorScheme: colorScheme,
                     ),
                     const SizedBox(height: 16),
                     _buildReminderCard(),
@@ -105,7 +104,7 @@ class _ReadingNotificationsScreenState
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
+    required ColorScheme colorScheme,
   }) {
     return Row(
       children: [
@@ -143,7 +142,7 @@ class _ReadingNotificationsScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -152,7 +151,7 @@ class _ReadingNotificationsScreenState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -164,7 +163,7 @@ class _ReadingNotificationsScreenState
   }
 
   Widget _buildReminderCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () {
@@ -272,8 +271,7 @@ class _ReadingNotificationsScreenState
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: colorScheme.onSurface,
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -282,8 +280,7 @@ class _ReadingNotificationsScreenState
                         'Defina um horário para ser lembrado de seguir com seu hábito de leitura diária',
                         style: TextStyle(
                           fontSize: 14,
-                          color:
-                              isDark ? Colors.white70 : const Color(0xFF64748B),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -308,12 +305,10 @@ class _ReadingNotificationsScreenState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white.withValues(alpha: 0.8),
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.purple.withValues(alpha: 0.1),
+                  color: colorScheme.tertiary.withValues(alpha: 0.1),
                 ),
               ),
               child: Row(
@@ -332,10 +327,8 @@ class _ReadingNotificationsScreenState
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _reminderCount > 0
-                          ? Colors.black
-                          : isDark
-                              ? Colors.white70
-                              : const Color(0xFF64748B),
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

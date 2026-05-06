@@ -37,6 +37,7 @@
     <!-- ========================================================= -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Permissão para exibir o Timer Overlay sobre outros apps (Fase 7) -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -77,17 +78,6 @@
                     android:host="login-callback" />
             </intent-filter>
 
-        </activity>
-
-        <!-- Activity de Bloqueio de Apps (AppLock) -->
-        <activity
-            android:name="com.disciplinum.app_lock.AppLockActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:launchMode="singleInstance">
         </activity>
 
         <!-- Receivers de notificação (Plugin flutter_local_notifications) -->

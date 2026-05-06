@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:confetti/confetti.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
@@ -22,10 +23,12 @@ class SmokingCelebrationWidget extends StatefulWidget {
 class _SmokingCelebrationWidgetState extends State<SmokingCelebrationWidget> {
   StreamSubscription? _insigniaSubscription;
   StreamSubscription? _medalhaSubscription;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _setupListeners();
   }
 
@@ -33,6 +36,7 @@ class _SmokingCelebrationWidgetState extends State<SmokingCelebrationWidget> {
   void dispose() {
     _insigniaSubscription?.cancel();
     _medalhaSubscription?.cancel();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -59,6 +63,9 @@ class _SmokingCelebrationWidgetState extends State<SmokingCelebrationWidget> {
   void _showInsigniaCelebration(String insigniaId, String insigniaName) {
     if (!mounted) return;
 
+    // Toca confetes
+    _confettiController.play();
+
     // Feedback tátil
     HapticFeedback.heavyImpact();
 
@@ -77,6 +84,9 @@ class _SmokingCelebrationWidgetState extends State<SmokingCelebrationWidget> {
 
   void _showMedalhaCelebration(String medalhaId, String medalhaName) {
     if (!mounted) return;
+
+    // Toca confetes com mais intensidade para medalhas
+    _confettiController.play();
 
     // Feedback tátil mais forte para medalhas
     HapticFeedback.heavyImpact();
@@ -99,7 +109,27 @@ class _SmokingCelebrationWidgetState extends State<SmokingCelebrationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        widget.child,
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          colors: const [
+            Colors.green,
+            Colors.blue,
+            Colors.pink,
+            Colors.orange,
+            Colors.purple,
+            Colors.yellow,
+            Colors.cyan,
+            Colors.red,
+          ],
+        ),
+      ],
+    );
   }
 }
 

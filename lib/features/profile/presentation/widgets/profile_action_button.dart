@@ -5,7 +5,6 @@ class ProfileActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
   final bool isDestructive;
-  final bool isDark;
 
   const ProfileActionButton({
     super.key,
@@ -13,11 +12,11 @@ class ProfileActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.isDestructive = false,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 48,
       decoration: BoxDecoration(
@@ -32,15 +31,10 @@ class ProfileActionButton extends StatelessWidget {
                 end: Alignment.bottomRight,
               )
             : LinearGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF6366F1).withValues(alpha: 0.8),
-                        const Color(0xFF8B5CF6).withValues(alpha: 0.8),
-                      ]
-                    : [
-                        const Color(0xFF4F46E5),
-                        const Color(0xFF7C3AED),
-                      ],
+                colors: [
+                  colorScheme.primary.withValues(alpha: 0.9),
+                  colorScheme.primary.withValues(alpha: 0.7),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

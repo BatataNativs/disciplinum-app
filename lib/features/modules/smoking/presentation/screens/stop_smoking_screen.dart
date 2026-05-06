@@ -26,6 +26,7 @@ import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_s
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart' as smoking_progress;
 import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_notifications_screen.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
@@ -466,6 +467,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
             nicheId: NicheId.smoking.id + 100);
 
+        // Remover horários de check-in do armazenamento local (modo guest)
+        final prefs = ref.read(preferencesServiceProvider);
+        await prefs.removeAllTimesForNiche(nicheId: NicheId.smoking.id);
+        await prefs.removeAllTimesForNiche(nicheId: NicheId.smoking.id + 100);
+        LoggerService.instance.d('🗑️ Horários de check-in removidos do armazenamento local');
+
         // Usando provider local do Smoking para resetar dados
         await ref.read(smokingServiceProvider).archiveAndReset();
 
@@ -480,6 +487,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             _gamificationRunning = false;
             isLoading = false;
             _selectedIndex = 0;
+            _checkinTime = null; // Limpar horário de check-in
           });
 
           if (_pageController.hasClients) {
@@ -550,8 +558,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (isLoading) {
       return Scaffold(
@@ -560,8 +567,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           centerTitle: true,
         ),
         body: Shimmer.fromColors(
-          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+          baseColor: colorScheme.surfaceContainerHighest,
+          highlightColor: colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -584,23 +591,20 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 226, 229, 251),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return SmokingCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
+          child: SafeArea(
           child: Column(
             children: [
               // Header Row
@@ -644,7 +648,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                               children: [
                                 StopSmokingTabContent(
                                   tabIndex: 0,
-                                  isDark: isDark,
                                   isModuleActive: _gamificationRunning,
                                   priceController: _priceController,
                                   packsController: _packsController,
@@ -687,7 +690,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                               children: [
                                 StopSmokingTabContent(
                                   tabIndex: 1,
-                                  isDark: isDark,
                                   priceController: _priceController,
                                   packsController: _packsController,
                                   selectedCurrency: _selectedCurrency,
@@ -733,7 +735,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 children: [
                   StopSmokingActionsWidget(
                     selectedIndex: _selectedIndex,
-                    isDark: isDark,
                     isSaving: isSaving,
                     pageController: _pageController,
                     onOpenCheckInManager: _openCheckInManager,
@@ -857,9 +858,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           ),
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
 
 
 
@@ -896,7 +897,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
 
   void _openCheckInManager() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
@@ -905,7 +906,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -930,7 +931,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -942,7 +943,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -951,7 +952,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               'Ele é fundamental para manter seu progresso.',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),
@@ -961,7 +962,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -972,7 +973,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               '(manhã, tarde e noite).',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),
@@ -984,7 +985,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                     icon: Icons.access_time_rounded,
                     label: 'Configurar Horário',
                     color: const Color(0xFF6366F1),
-                    isDark: isDark,
                     onTap: () async {
                       Navigator.pop(ctx);
                       final nicheId = _niche.id;
@@ -1028,14 +1028,14 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   }
 
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -1047,7 +1047,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -1064,7 +1064,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                   ),
                 );
               },
-              isDark: isDark,
             ),
             ListActionTile(
               icon: Icons.savings_outlined,
@@ -1088,7 +1087,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                   ),
                 );
               },
-              isDark: isDark,
             ),
             ListActionTile(
               icon: Icons.health_and_safety_outlined,
@@ -1111,7 +1109,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                   ),
                 );
               },
-              isDark: isDark,
             ),
             ListActionTile(
               icon: Icons.bar_chart_rounded,
@@ -1124,7 +1121,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                   MaterialPageRoute(builder: (_) => const smoking_progress.MyProgressSmoking()),
                 );
               },
-              isDark: isDark,
             ),
             const SizedBox(height: 12),
           ],

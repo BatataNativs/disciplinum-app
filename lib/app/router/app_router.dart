@@ -131,6 +131,13 @@ class AppRouter {
             return FastMaterialPageRoute(
                 builder: (_) => ReadingScreen(
                     heroTag: heroTag, initialTabIndex: initialTabIndex));
+          case NicheId.digitalDetox:
+            // TODO: Implementar DigitalDetoxScreen na FASE 1
+            return FastMaterialPageRoute(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: const Text('Jejum Digital')),
+                  body: const Center(child: Text('Em breve')),
+                ));
         }
 
       case AppRouter.settings:

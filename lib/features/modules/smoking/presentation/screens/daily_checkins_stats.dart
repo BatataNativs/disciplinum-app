@@ -87,19 +87,17 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF0A0A1A), const Color(0xFF111128)]
-              : [
-                  const Color.fromARGB(255, 226, 229, 251),
-                  const Color.fromARGB(255, 255, 255, 255)
-                ],
+          colors: [
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
+          ],
         ),
       ),
       child: Scaffold(
@@ -123,11 +121,11 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
                   child: Column(
                     children: [
                       const SizedBox(height: 8),
-                      _buildStatsRow(isDark),
+                      _buildStatsRow(),
                       const SizedBox(height: 24),
-                      _buildCalendar(isDark),
+                      _buildCalendar(),
                       const SizedBox(height: 24),
-                      _buildLegend(isDark),
+                      _buildLegend(),
                     ],
                   ),
                 ),
@@ -136,11 +134,10 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     );
   }
 
-  Widget _buildStatsRow(bool isDark) {
+  Widget _buildStatsRow() {
     return Row(
       children: [
         _buildStatCard(
-          isDark,
           icon: Icons.check_circle_rounded,
           color: const Color(0xFF22C55E),
           label: 'Total',
@@ -148,7 +145,6 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
         ),
         const SizedBox(width: 12),
         _buildStatCard(
-          isDark,
           icon: Icons.local_fire_department_rounded,
           color: const Color(0xFFF97316),
           label: 'Sequência atual',
@@ -156,7 +152,6 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
         ),
         const SizedBox(width: 12),
         _buildStatCard(
-          isDark,
           icon: Icons.military_tech_rounded,
           color: const Color(0xFFEAB308),
           label: 'Recorde',
@@ -166,29 +161,25 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     );
   }
 
-  Widget _buildStatCard(
-    bool isDark, {
+  Widget _buildStatCard({
     required IconData icon,
     required Color color,
     required String label,
     required String value,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.white.withValues(alpha: 0.85),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.06),
+            color: colorScheme.outline.withValues(alpha: 0.1),
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: isDark ? 0.15 : 0.1),
+              color: color.withValues(alpha: 0.15),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -210,7 +201,7 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 2),
@@ -219,7 +210,7 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
-                color: isDark ? Colors.white54 : Colors.black45,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.2,
               ),
             ),
@@ -229,7 +220,8 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     );
   }
 
-  Widget _buildCalendar(bool isDark) {
+  Widget _buildCalendar() {
+    final colorScheme = Theme.of(context).colorScheme;
     final monthName = _monthName(_currentMonth.month);
     final year = _currentMonth.year;
     final daysInMonth =
@@ -240,18 +232,14 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
@@ -263,23 +251,20 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _navButton(isDark, Icons.chevron_left_rounded, _prevMonth),
+              _navButton(Icons.chevron_left_rounded, _prevMonth),
               Text(
                 '$monthName $year',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.3,
                 ),
               ),
               _navButton(
-                  isDark,
                   Icons.chevron_right_rounded,
-                  _currentMonth.month < DateTime.now().month ||
-                          _currentMonth.year < DateTime.now().year
-                      ? _nextMonth
-                      : null),
+                  _nextMonth,
+                ),
             ],
           ),
           const SizedBox(height: 20),
@@ -294,7 +279,7 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white38 : Colors.black38,
+                        color: colorScheme.onSurface.withValues(alpha: 0.4),
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -324,7 +309,6 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
               final isFuture = date.isAfter(DateTime.now());
 
               return _buildDayCell(
-                isDark,
                 day: day,
                 isToday: isToday,
                 hasCheckin: hasCheckin,
@@ -337,35 +321,34 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     );
   }
 
-  Widget _navButton(bool isDark, IconData icon, VoidCallback? onTap) {
+  Widget _navButton(IconData icon, VoidCallback? onTap) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: onTap != null ? 0.08 : 0.03)
-              : Colors.black.withValues(alpha: onTap != null ? 0.06 : 0.02),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: onTap != null ? 0.5 : 0.2),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
           size: 20,
           color: onTap != null
-              ? (isDark ? Colors.white70 : Colors.black54)
-              : (isDark ? Colors.white24 : Colors.black12),
+              ? colorScheme.onSurface.withValues(alpha: 0.7)
+              : colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       ),
     );
   }
 
-  Widget _buildDayCell(
-    bool isDark, {
+  Widget _buildDayCell({
     required int day,
     required bool isToday,
     required bool hasCheckin,
     required bool isFuture,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     const checkinColor = Color(0xFF22C55E);
 
     return AnimatedContainer(
@@ -375,15 +358,13 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
         color: hasCheckin
             ? checkinColor.withValues(alpha: 0.18)
             : isToday
-                ? (isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.05))
+                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
                 : Colors.transparent,
         border: Border.all(
           color: hasCheckin
               ? checkinColor
               : isToday
-                  ? (isDark ? Colors.white38 : Colors.black26)
+                  ? colorScheme.outline.withValues(alpha: 0.3)
                   : Colors.transparent,
           width: hasCheckin ? 2 : 1.5,
         ),
@@ -400,8 +381,8 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
               color: hasCheckin
                   ? checkinColor
                   : isFuture
-                      ? (isDark ? Colors.white24 : Colors.black26)
-                      : (isDark ? Colors.white70 : Colors.black54),
+                      ? colorScheme.onSurface.withValues(alpha: 0.3)
+                      : colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           if (hasCheckin)
@@ -421,7 +402,8 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
     );
   }
 
-  Widget _buildLegend(bool isDark) {
+  Widget _buildLegend() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -439,7 +421,7 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
           'Dia sem fumar confirmado',
           style: TextStyle(
             fontSize: 13,
-            color: isDark ? Colors.white54 : Colors.black45,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],

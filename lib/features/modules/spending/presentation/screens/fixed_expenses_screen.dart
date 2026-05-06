@@ -17,7 +17,7 @@ class FixedExpensesScreen extends ConsumerStatefulWidget {
 class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -27,7 +27,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : Colors.black87),
+              color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -38,8 +38,8 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+              colorScheme.surface,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
         ),
@@ -83,7 +83,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
                                 itemCount: expenses.length,
                                 itemBuilder: (context, index) {
                                   final expense = expenses[index];
-                                  return _buildExpenseTile(expense, isDark);
+                                  return _buildExpenseTile(expense, colorScheme);
                                 },
                               ),
                       ),
@@ -107,7 +107,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
     );
   }
 
-  Widget _buildExpenseTile(FixedExpenseModel expense, bool isDark) {
+  Widget _buildExpenseTile(FixedExpenseModel expense, ColorScheme colorScheme) {
     String formatAmountForDisplay(double amount, String currency) {
       switch (currency) {
         case 'R\$':
@@ -142,7 +142,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: expense.getUrgencyLevel().color.withValues(alpha: 0.6),
@@ -155,12 +155,12 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
           expense.name,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           'Vence dia ${expense.dueDay.toString().padLeft(2, '0')} • ${expense.currency} ${formatAmountForDisplay(expense.amount, expense.currency)}',
-          style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
+          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -175,7 +175,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
             ),
             PopupMenuButton<String>(
               icon: Icon(Icons.more_vert,
-                  color: isDark ? Colors.white70 : Colors.black45),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7)),
               onSelected: (value) {
                 if (value == 'edit') {
                   _showAddExpenseDialog(context, expense: expense);
@@ -199,7 +199,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
 
   void _showAddExpenseDialog(BuildContext context,
       {FixedExpenseModel? expense}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final nameController = TextEditingController(text: expense?.name);
     final dayController =
         TextEditingController(text: expense?.dueDay.toString());
@@ -219,7 +219,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
               bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+              color: colorScheme.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SingleChildScrollView(
@@ -244,7 +244,7 @@ class _FixedExpensesScreenState extends ConsumerState<FixedExpensesScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 24),

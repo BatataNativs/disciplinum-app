@@ -86,6 +86,7 @@ class BingeEatingStreakService {
   }
 
   /// Atualiza estado do módulo com nova lógica de streak
+  /// NOTA: O disciplinumCount é calculado dinamicamente a partir das insígnias conquistadas
   static BingeEatingModuleState updateStreakState({
     required BingeEatingModuleState currentState,
     required bool hadPositiveDay,
@@ -93,43 +94,35 @@ class BingeEatingStreakService {
     DateTime? today, // Parâmetro opcional para testes
   }) {
     int newStreak = currentState.consecutivePositiveDays;
-    DateTime? newLastPositiveDay;
-    int newDisciplinumCount = currentState.disciplinumCount;
 
     if (hadRelapseToday) {
       // Processar recaída
       newStreak = processRelapse(
         lastRelapse: today ?? DateTime.now(),
         currentStreak: newStreak,
-        lastPositiveDay: newLastPositiveDay,
+        lastPositiveDay: null,
         today: today,
       );
-      newLastPositiveDay = null; // Reset em caso de recaída
-      
+
       LoggerService.instance.w('Binge Eating relapse processed - streak reset to 0');
     } else if (hadPositiveDay) {
       // Processar dia positivo
-      if (shouldIncrementStreak(
-        lastPositiveDay: newLastPositiveDay,
-        today: today ?? DateTime.now(),
-      )) {
-        newStreak++;
-        LoggerService.instance.i('Binge Eating streak incremented to $newStreak');
-      }
-      
-      newLastPositiveDay = today ?? DateTime.now();
-      newDisciplinumCount++;
-      
+      newStreak++;
+      LoggerService.instance.i('Binge Eating streak incremented to $newStreak');
+
       LoggerService.instance.i('Binge Eating positive day processed');
     } else {
       // Verificar se streak quebra por inatividade
-      if (isStreakBroken(lastPositiveDay: newLastPositiveDay, today: today)) {
-        newStreak = 0;
-        LoggerService.instance.w('Binge Eating streak broken due to inactivity');
-      }
+      // NOTA: Para verificar inatividade corretamente, precisaríamos do lastPositiveDay
+      // que não está armazenado no estado atual. A lógica de streak broken deve ser
+      // verificada externamente antes de chamar este método.
+      LoggerService.instance.d('Binge Eating - no activity today');
     }
 
     // Retornar estado atualizado
+    // disciplinumCount é calculado dinamicamente a partir das insígnias 'disciplinum' conquistadas
+    final newDisciplinumCount = currentState.earnedInsignias.where((i) => i == 'disciplinum').length;
+
     return currentState.copyWith(
       consecutivePositiveDays: newStreak,
       disciplinumCount: newDisciplinumCount,

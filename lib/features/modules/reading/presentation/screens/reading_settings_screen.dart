@@ -53,7 +53,7 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,8 +69,8 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
+              colorScheme.surface,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
         ),
@@ -93,7 +93,7 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -102,7 +102,7 @@ class _ReadingSettingsScreenState extends ConsumerState<ReadingSettingsScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),

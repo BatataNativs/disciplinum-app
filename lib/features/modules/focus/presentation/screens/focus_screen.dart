@@ -17,6 +17,7 @@ import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
+import 'package:disciplinum/features/modules/focus/gamification/presentation/widgets/focus_celebration_widget.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -459,8 +460,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final isModuleActive = ref.watch(focusActiveProvider);
 
@@ -471,19 +471,20 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return FocusCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
+          child: SafeArea(
           child: Column(
             children: [
               // Header Row
@@ -530,7 +531,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   
                   // Botões apenas na aba 0 (módulo)
                   if (_selectedIndex == 0)
-                    _buildBottomButtons(isDark, isModuleActive),
+                    _buildBottomButtons(isModuleActive),
                 ],
               ),
             ),
@@ -538,16 +539,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildBottomButtons(bool isDark, bool isModuleActive) {
+  Widget _buildBottomButtons(bool isModuleActive) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -559,7 +560,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   icon: Icons.settings_suggest_rounded,
                   label: 'Configurar',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: _pickFocusInterval,
                 ),
               ),
@@ -573,7 +573,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: _showStatisticsMenu,
                 ),
               ),
@@ -587,7 +586,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       ? 'Desativar módulo'
                       : 'Ativar módulo',
                   color: isModuleActive ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: isModuleActive
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
@@ -602,14 +600,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
 
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -621,7 +619,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -644,16 +642,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
 
   Widget _buildSegmentedControl() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final List<String> options = ['Foco e produtividade', 'Como Funciona'];
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -697,7 +693,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
@@ -711,7 +707,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Widget _buildTabContent(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     switch (index) {
       case 0:
         // 0: Foco e produtividade (módulo)
@@ -724,7 +720,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 "A notificação chegará automaticamente sempre que você abrir um dos aplicativos selecionados durante o intervalo de foco.",
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -735,21 +731,17 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white,
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white10
-                      : Colors.black.withValues(alpha: 0.05),
+                  color: colorScheme.outline.withValues(alpha: 0.1),
                 ),
               ),
               child: Row(
@@ -770,7 +762,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         const Text(
@@ -796,7 +788,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -805,9 +797,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white,
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
@@ -840,16 +830,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         label: Text(info.label ?? info.package,
                             style: TextStyle(
                                 fontSize: 13,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF6366F1))),
+                                color: colorScheme.onSurface)),
                         onDeleted: () => _removeSelectedApp(info.package),
-                        deleteIconColor: isDark
-                            ? Colors.white70
-                            : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                        backgroundColor:
-                            (isDark ? Colors.white : const Color(0xFF6366F1))
-                                .withValues(alpha: 0.1),
+                        deleteIconColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                        backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                         side: BorderSide.none,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
@@ -863,7 +847,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       case 1:
         // 1: Como Funciona
         return HowItWorksSection(
-          isDark: isDark,
           onGetStarted: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
           infoCards: const [
             InfoCardData(

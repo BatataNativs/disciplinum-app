@@ -3,7 +3,6 @@ import 'package:disciplinum/features/modules/procrastination/domain/entities/pro
 
 /// Widget para as abas horizontais de listas de tarefas
 class TaskListTabs extends StatelessWidget {
-  final bool isDark;
   final List<TaskList> lists;
   final String selectedListId;
   final Function(String) onListSelected;
@@ -11,7 +10,6 @@ class TaskListTabs extends StatelessWidget {
 
   const TaskListTabs({
     super.key,
-    required this.isDark,
     required this.lists,
     required this.selectedListId,
     required this.onListSelected,
@@ -20,15 +18,14 @@ class TaskListTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.black.withValues(alpha: 0.2)
-            : Colors.white.withValues(alpha: 0.7),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         border: Border(
           bottom: BorderSide(
-            color: isDark ? Colors.white12 : Colors.black12,
+            color: colorScheme.outline.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -75,7 +72,7 @@ class TaskListTabs extends StatelessWidget {
                   style: TextStyle(
                     color: isSelected
                         ? const Color(0xFF6366F1)
-                        : (isDark ? Colors.white70 : Colors.black87),
+                        : colorScheme.onSurface.withValues(alpha: 0.7),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     fontSize: 14,
                   ),

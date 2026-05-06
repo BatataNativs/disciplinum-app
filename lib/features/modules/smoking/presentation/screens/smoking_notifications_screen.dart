@@ -327,8 +327,7 @@ class _SmokingNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -336,8 +335,8 @@ class _SmokingNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -349,7 +348,7 @@ class _SmokingNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -357,7 +356,7 @@ class _SmokingNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: _isLoading
@@ -372,29 +371,27 @@ class _SmokingNotificationsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Toggle principal - Habilitar/Desabilitar
-                    _buildToggleCard(isDark),
+                    _buildToggleCard(),
                     const SizedBox(height: 24),
-                    
+
                     // Seção: Lembretes Motivacionais
                     _buildSectionHeader(
                       title: 'Lembretes Motivacionais',
                       subtitle: 'Até 8 horários por dia com frases inspiradoras',
                       icon: Icons.notifications_active_rounded,
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    _buildRemindersCard(isDark),
+                    _buildRemindersCard(),
                     const SizedBox(height: 24),
-                    
+
                     // Seção: Como Funciona
                     _buildSectionHeader(
                       title: 'Como Funciona',
                       subtitle: 'Frases adaptadas ao seu progresso',
                       icon: Icons.question_mark_outlined,
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    _buildHowItWorksCard(isDark),
+                    _buildHowItWorksCard(),
                   ],
                 ),
               ),
@@ -402,7 +399,8 @@ class _SmokingNotificationsScreenState
     );
   }
 
-  Widget _buildToggleCard(bool isDark) {
+  Widget _buildToggleCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -465,7 +463,7 @@ class _SmokingNotificationsScreenState
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    color: colorScheme.onSurface,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -476,7 +474,7 @@ class _SmokingNotificationsScreenState
                       : 'Nenhuma notificação será enviada',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -497,8 +495,8 @@ class _SmokingNotificationsScreenState
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -535,7 +533,7 @@ class _SmokingNotificationsScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -544,7 +542,7 @@ class _SmokingNotificationsScreenState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -555,7 +553,8 @@ class _SmokingNotificationsScreenState
     );
   }
 
-  Widget _buildRemindersCard(bool isDark) {
+  Widget _buildRemindersCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: _notificationsEnabled ? _openScheduleScreen : null,
       child: AnimatedContainer(
@@ -621,11 +620,9 @@ class _SmokingNotificationsScreenState
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? (_notificationsEnabled ? Colors.white70 : Colors.white54)
-                              : (_notificationsEnabled
-                                  ? const Color(0xFF1E293B)
-                                  : Colors.grey),
+                          color: _notificationsEnabled
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurface.withValues(alpha: 0.5),
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -636,13 +633,9 @@ class _SmokingNotificationsScreenState
                             : 'Ative as notificações acima para configurar',
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark
-                              ? (_notificationsEnabled
-                                  ? Colors.white70
-                                  : Colors.white54)
-                              : (_notificationsEnabled
-                                  ? const Color(0xFF64748B)
-                                  : Colors.grey.shade400),
+                          color: _notificationsEnabled
+                              ? colorScheme.onSurface.withValues(alpha: 0.7)
+                              : colorScheme.onSurface.withValues(alpha: 0.4),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -669,9 +662,7 @@ class _SmokingNotificationsScreenState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white.withValues(alpha: 0.8),
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: const Color(0xFF6366F1).withValues(alpha: 0.1),
@@ -695,7 +686,7 @@ class _SmokingNotificationsScreenState
                           fontWeight: FontWeight.w600,
                           color: _reminderCount > 0
                               ? const Color(0xFF6366F1)
-                              : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                              : colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -709,24 +700,18 @@ class _SmokingNotificationsScreenState
     );
   }
 
-  Widget _buildHowItWorksCard(bool isDark) {
+  Widget _buildHowItWorksCard() {
     final phrases = _getPhrasesByCategory();
-    
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white24 : Colors.grey.shade200,
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,21 +720,18 @@ class _SmokingNotificationsScreenState
             icon: Icons.access_time_filled_rounded,
             title: 'Frases por Horário',
             description: 'Manhã: Saúde | Almoço: Economia | Tarde: Dicas | Noite: Conquistas',
-            isDark: isDark,
           ),
           const SizedBox(height: 16),
           _buildFeatureItem(
             icon: Icons.auto_awesome_rounded,
             title: 'Frases Personalizadas',
-            description: 'Baseadas nos seus $_daysWithoutSmoking dias sem fumar',
-            isDark: isDark,
+            description: 'Baseadas nos seus \$_daysWithoutSmoking dias sem fumar',
           ),
           const SizedBox(height: 16),
           _buildFeatureItem(
             icon: Icons.celebration_rounded,
             title: 'Marcos Especiais',
             description: '1 dia, 3 dias, 1 semana, 1 mês... Cada conquista celebrada!',
-            isDark: isDark,
           ),
           const Divider(height: 32),
           Text(
@@ -757,7 +739,7 @@ class _SmokingNotificationsScreenState
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 12),
@@ -781,7 +763,7 @@ class _SmokingNotificationsScreenState
                     phrase,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -797,8 +779,8 @@ class _SmokingNotificationsScreenState
     required IconData icon,
     required String title,
     required String description,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -823,7 +805,7 @@ class _SmokingNotificationsScreenState
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 2),
@@ -831,7 +813,7 @@ class _SmokingNotificationsScreenState
                 description,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ],

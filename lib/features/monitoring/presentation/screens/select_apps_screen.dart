@@ -25,12 +25,12 @@ class SelectAppsScreenArgs {
 
 class AsyncAppIcon extends StatefulWidget {
   final String packageName;
-  final bool isDark;
+  final ColorScheme colorScheme;
 
   const AsyncAppIcon({
     super.key,
     required this.packageName,
-    required this.isDark,
+    required this.colorScheme,
   });
 
   @override
@@ -76,7 +76,7 @@ class _AsyncAppIconState extends State<AsyncAppIcon> {
           height: 40,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: widget.isDark ? Colors.white12 : Colors.black12,
+            color: widget.colorScheme.onSurface.withValues(alpha: 0.1),
           ),
           child: const Icon(Icons.android, size: 20, color: Colors.grey),
         );
@@ -256,7 +256,6 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -265,12 +264,10 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: isDark
-                ? [Colors.black, Colors.black]
-                : [
-                    colorScheme.primary.withValues(alpha: 0.06),
-                    colorScheme.surface,
-                  ],
+            colors: [
+              colorScheme.surface,
+              colorScheme.surfaceContainerHighest,
+            ],
           ),
         ),
         child: SafeArea(
@@ -319,9 +316,7 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
                                 prefixIcon: Icon(Icons.search_rounded,
                                     color: colorScheme.primary),
                                 filled: true,
-                                fillColor: isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : colorScheme.surfaceContainerHighest,
+                                fillColor: colorScheme.surfaceContainerHighest,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(14),
                                   borderSide: BorderSide.none,
@@ -384,14 +379,8 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
                                               color: selected
                                                   ? Colors.green
                                                       .withValues(
-                                                          alpha: isDark
-                                                              ? 0.15
-                                                              : 0.08)
-                                                  : (isDark
-                                                      ? Colors.white
-                                                          .withValues(
-                                                              alpha: 0.05)
-                                                      : colorScheme.surface),
+                                                          alpha: 0.1)
+                                                  : colorScheme.surface,
                                               borderRadius:
                                                   BorderRadius.circular(16),
                                               border: Border.all(
@@ -406,15 +395,14 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
                                                     selected ? 1.5 : 1.0,
                                               ),
                                               boxShadow: [
-                                                if (!isDark)
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.04),
-                                                    blurRadius: 8,
-                                                    offset:
-                                                        const Offset(0, 2),
-                                                  ),
+                                                BoxShadow(
+                                                  color: colorScheme.shadow
+                                                      .withValues(
+                                                          alpha: 0.04),
+                                                  blurRadius: 8,
+                                                  offset:
+                                                      const Offset(0, 2),
+                                                ),
                                               ],
                                             ),
                                             child: Row(
@@ -439,7 +427,7 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
                                                   child: AsyncAppIcon(
                                                     packageName:
                                                         app.packageName,
-                                                    isDark: isDark,
+                                                    colorScheme: colorScheme,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 16),

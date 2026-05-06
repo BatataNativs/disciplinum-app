@@ -101,7 +101,7 @@ extension BingeEatingInsigniaExtension on BingeEatingInsignia {
 
   /// Obtém o caminho do asset
   String get asset {
-    const prefix = 'assets/gamification/insignias/binge_eating/';
+    const prefix = 'assets/gamification/insignias/bingeEating/';
     switch (this) {
       case BingeEatingInsignia.madeira:
         return '${prefix}madeira.png';

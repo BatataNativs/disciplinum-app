@@ -15,7 +15,7 @@ class FixedBillsStatsScreen extends ConsumerStatefulWidget {
 class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final currentMonth = DateFormat('MMMM', 'pt_BR').format(DateTime.now());
     final currentMonthCapitalized = currentMonth[0].toUpperCase() + currentMonth.substring(1);
 
@@ -27,22 +27,13 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : Colors.black87),
+              color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
-          ),
-        ),
+        color: colorScheme.surface,
         child: SafeArea(
           child: Builder(
             builder: (context) {
@@ -60,15 +51,15 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Seção de contas do mês atual
-                        _buildCurrentMonthSection(expenses, currentMonthCapitalized, isDark),
+                        _buildCurrentMonthSection(expenses, currentMonthCapitalized),
                         const SizedBox(height: 32),
                         
                         // Gráfico de barras
-                        _buildMonthlyChart(monthlyStats, isDark),
+                        _buildMonthlyChart(monthlyStats),
                         const SizedBox(height: 24),
                         
                         // Mensagem motivacional
-                        _buildMotivationalMessage(isDark),
+                        _buildMotivationalMessage(),
                       ],
                     ),
                   );
@@ -81,16 +72,15 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
     );
   }
 
-  Widget _buildCurrentMonthSection(List<FixedExpenseModel> expenses, String month, bool isDark) {
+  Widget _buildCurrentMonthSection(List<FixedExpenseModel> expenses, String month) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
@@ -108,7 +98,7 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -116,20 +106,21 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
             Text(
               'Nenhuma conta paga neste mês ainda.',
               style: TextStyle(
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             )
           else
             ...expenses
                 .where((e) => _isPaidInCurrentMonth(e))
-                .map((expense) => _buildExpenseItem(expense, isDark)),
+                .map((expense) => _buildExpenseItem(expense)),
         ],
       ),
     );
   }
 
-  Widget _buildExpenseItem(FixedExpenseModel expense, bool isDark) {
+  Widget _buildExpenseItem(FixedExpenseModel expense) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isPaidThisMonth = _isPaidInCurrentMonth(expense);
     
     return Padding(
@@ -141,7 +132,7 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
               '${expense.name} - Venc. dia ${expense.dueDay.toString().padLeft(2, '0')}',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
                 fontWeight: isPaidThisMonth ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -172,16 +163,15 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
     );
   }
 
-  Widget _buildMonthlyChart(Map<String, MonthlyStats> monthlyStats, bool isDark) {
+  Widget _buildMonthlyChart(Map<String, MonthlyStats> monthlyStats) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
@@ -199,7 +189,7 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 20),
@@ -210,20 +200,21 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
                     child: Text(
                       'Sem dados históricos ainda.',
                       style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   )
-                : _buildStackedBarChart(monthlyStats, isDark),
+                : _buildStackedBarChart(monthlyStats),
           ),
           const SizedBox(height: 16),
-          _buildLegend(isDark),
+          _buildLegend(),
         ],
       ),
     );
   }
 
-  Widget _buildStackedBarChart(Map<String, MonthlyStats> monthlyStats, bool isDark) {
+  Widget _buildStackedBarChart(Map<String, MonthlyStats> monthlyStats) {
+    final colorScheme = Theme.of(context).colorScheme;
     final months = monthlyStats.keys.toList()..sort();
     final maxValue = months.map((m) => monthlyStats[m]!.total).fold(0, (a, b) => a > b ? a : b);
     
@@ -268,7 +259,7 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
                   month.substring(0, 3),
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white60 : Colors.black54,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -279,20 +270,21 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
     );
   }
 
-  Widget _buildLegend(bool isDark) {
+  Widget _buildLegend() {
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 16,
       runSpacing: 8,
       children: [
-        _buildLegendItem('Pagas com >5 dias', const Color(0xFF2E7D32), isDark),
-        _buildLegendItem('Pagas com 2-5 dias', const Color(0xFFF9A825), isDark),
-        _buildLegendItem('Pagas com 0-2 dias', const Color(0xFFC62828), isDark),
+        _buildLegendItem('Pagas com >5 dias', const Color(0xFF2E7D32)),
+        _buildLegendItem('Pagas com 2-5 dias', const Color(0xFFF9A825)),
+        _buildLegendItem('Pagas com 0-2 dias', const Color(0xFFC62828)),
       ],
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, bool isDark) {
+  Widget _buildLegendItem(String label, Color color) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -309,27 +301,23 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMotivationalMessage(bool isDark) {
+  Widget _buildMotivationalMessage() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF6366F1).withValues(alpha: 0.1),
-            const Color(0xFF6366F1).withValues(alpha: 0.05),
-          ],
-        ),
+        color: colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+          color: colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
@@ -337,7 +325,7 @@ class _FixedBillsStatsScreenState extends ConsumerState<FixedBillsStatsScreen> {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 14,
-          color: isDark ? Colors.white70 : Colors.black87,
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
           height: 1.4,
         ),
       ),

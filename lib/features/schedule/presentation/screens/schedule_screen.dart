@@ -213,7 +213,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     return 'Noite';
   }
 
-  Widget _buildEmptyState(bool isDark) {
+  Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -221,13 +222,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           Icon(
             Icons.schedule,
             size: 64,
-            color: isDark ? Colors.white54 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 24),
           Text(
             'Nenhum horário configurado',
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
+              color: colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -237,7 +238,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             'Toque no botão + para adicionar seu primeiro horário',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -246,7 +247,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     );
   }
 
-  Widget _buildTimeList(bool isDark) {
+  Widget _buildTimeList() {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListView.builder(
       itemCount: _times.length,
       itemBuilder: (context, index) {
@@ -254,22 +256,22 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: isDark ? Colors.grey[900] : Colors.grey[100],
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+              color: colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           child: ListTile(
             onTap: () => _pickTime(index),
             leading: Icon(
               Icons.access_time,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             title: Text(
               _formatTime(time),
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
+                color: colorScheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -277,14 +279,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             subtitle: Text(
               _getTimeDescription(time),
               style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 12,
               ),
             ),
             trailing: IconButton(
               icon: Icon(
                 Icons.delete_outline,
-                color: Colors.red,
+                color: colorScheme.error,
               ),
               onPressed: () => _removeTimeWithConfirm(index),
               tooltip: 'Remover horário',
@@ -295,7 +297,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     );
   }
 
-  Widget _buildFloatingActions(bool isDark) {
+  Widget _buildFloatingActions() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -303,16 +306,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         children: [
           FloatingActionButton(
             onPressed: () => Navigator.pop(context),
-            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+            backgroundColor: colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.arrow_back,
-              color: isDark ? Colors.white : Colors.black,
+              color: colorScheme.onSurface,
             ),
           ),
           if (_times.length < widget.args.maxSlots)
             FloatingActionButton(
               onPressed: _addTime,
-              backgroundColor: isDark ? const Color(0xFF6366F1) : const Color(0xFF6366F1),
+              backgroundColor: const Color(0xFF6366F1),
               child: const Icon(Icons.add, color: Colors.white),
             )
           else
@@ -324,12 +327,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (_loading) {
       return Scaffold(
-        backgroundColor: isDark ? Colors.black : Colors.white,
+        backgroundColor: colorScheme.surface,
         body: const Center(
           child: CircularProgressIndicator(),
         ),
@@ -337,20 +339,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           widget.args.title ?? 'Horários',
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
+            color: colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: isDark ? Colors.black : Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         iconTheme: IconThemeData(
-          color: isDark ? Colors.white : Colors.black,
+          color: colorScheme.onSurface,
         ),
       ),
       body: Padding(
@@ -361,7 +363,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             Text(
               'Configure seus horários',
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
+                color: colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -370,20 +372,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             Text(
               '${_times.length} de ${widget.args.maxSlots} horários configurados',
               style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 24),
             Expanded(
               child: _times.isEmpty
-                  ? _buildEmptyState(isDark)
-                  : _buildTimeList(isDark),
+                  ? _buildEmptyState()
+                  : _buildTimeList(),
             ),
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActions(isDark),
+      floatingActionButton: _buildFloatingActions(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

@@ -11,6 +11,7 @@ import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/app/startup_data.dart';
 import 'package:disciplinum/core/network/network_health_service.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
+import 'package:disciplinum/core/background/background_achievement_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 
 // Import para notificações
@@ -96,12 +97,36 @@ class AppBootstrap {
       
       // Registrar callbacks para check-ins dos módulos
       _registerCheckInCallbacks();
+
+      // Inicializar serviço de background para notificações de conquistas
+      await _initBackgroundAchievementService();
       
     } catch (e) {
       if (kDebugMode) {
         LoggerService.instance.e('Error initializing notifications', error: e);
       }
       // Notificações não são críticas para funcionamento básico
+    }
+  }
+
+  /// Inicializa o serviço de background para conquistas
+  static Future<void> _initBackgroundAchievementService() async {
+    try {
+      LoggerService.instance.i('🚀 Inicializando serviço de background...');
+      
+      // Inicializar o serviço
+      await BackgroundAchievementService.instance.initialize();
+      
+      // Agendar verificações periódicas
+      await BackgroundAchievementService.instance.scheduleAchievementChecks();
+      await BackgroundAchievementService.instance.scheduleStreakChecks();
+      
+      LoggerService.instance.i('✅ Serviço de background inicializado');
+    } catch (e) {
+      if (kDebugMode) {
+        LoggerService.instance.e('Error initializing background service', error: e);
+      }
+      // Background não é crítico, apenas logar erro
     }
   }
   

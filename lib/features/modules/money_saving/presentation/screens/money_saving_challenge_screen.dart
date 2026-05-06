@@ -18,6 +18,7 @@ import 'package:disciplinum/features/modules/money_saving/presentation/widgets/m
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_actions_widget.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/money_saving_tab_content.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_notifications_screen.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/presentation/widgets/money_saving_celebration_widget.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
@@ -180,7 +181,7 @@ class _MoneySavingChallengeScreenState
   }
 
   Future<void> _showChallengesList() async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -191,7 +192,7 @@ class _MoneySavingChallengeScreenState
           maxHeight: MediaQuery.of(context).size.height * 0.7,
         ),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -204,7 +205,7 @@ class _MoneySavingChallengeScreenState
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white12 : Colors.black12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -214,7 +215,7 @@ class _MoneySavingChallengeScreenState
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 24),
@@ -225,12 +226,12 @@ class _MoneySavingChallengeScreenState
                   children: [
                     Icon(Icons.savings_outlined,
                         size: 48,
-                        color: isDark ? Colors.white54 : Colors.black54),
+                        color: colorScheme.onSurface.withValues(alpha: 0.5)),
                     const SizedBox(height: 16),
                     Text(
                       'Nenhum desafio criado.',
                       style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.black54,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -242,9 +243,7 @@ class _MoneySavingChallengeScreenState
                   shrinkWrap: true,
                   itemCount: _challenges.length,
                   separatorBuilder: (_, __) => Divider(
-                    color: isDark
-                        ? Colors.white10
-                        : Colors.black.withValues(alpha: 0.05),
+                    color: colorScheme.outline.withValues(alpha: 0.1),
                     height: 1,
                   ),
                   itemBuilder: (context, index) {
@@ -257,9 +256,7 @@ class _MoneySavingChallengeScreenState
                         decoration: BoxDecoration(
                           color: isActive
                               ? const Color(0xFF6366F1).withValues(alpha: 0.1)
-                              : (isDark
-                                  ? Colors.white.withValues(alpha: 0.05)
-                                  : Colors.black.withValues(alpha: 0.02)),
+                              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                         child: Text('💰', style: TextStyle(fontSize: 20)),
@@ -267,14 +264,14 @@ class _MoneySavingChallengeScreenState
                       title: Text(
                         c.title,
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.onSurface,
                           fontWeight:
                               isActive ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                       trailing: PopupMenuButton<String>(
                         icon: Icon(Icons.more_vert,
-                            color: isDark ? Colors.white60 : Colors.black45),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6)),
                         onSelected: (val) {
                           if (val == 'edit') {
                             Navigator.pop(ctx);
@@ -431,19 +428,17 @@ class _MoneySavingChallengeScreenState
   }
 
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => MoneySavingStatisticsMenu(isDark: isDark),
+      builder: (ctx) => const MoneySavingStatisticsMenu(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     _service = ref.watch(moneySavingChallengeServiceProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (_isLoading) {
       return Scaffold(
@@ -454,10 +449,8 @@ class _MoneySavingChallengeScreenState
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                isDark
-                    ? Colors.black
-                    : const Color.fromARGB(255, 226, 229, 251),
-                isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
               ],
             ),
           ),
@@ -479,19 +472,20 @@ class _MoneySavingChallengeScreenState
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return MoneySavingCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
+          child: SafeArea(
           child: Column(
             children: [
               // Header
@@ -540,7 +534,6 @@ class _MoneySavingChallengeScreenState
                                   selectedIndex: 0,
                                   challenges: _challenges,
                                   activeChallenge: _challenge,
-                                  isDark: isDark,
                                   formatValue: _formatValue,
                                   setActiveChallenge: (id) async {
                                     await _service.setActiveChallenge(id);
@@ -560,7 +553,6 @@ class _MoneySavingChallengeScreenState
                                   selectedIndex: 1,
                                   challenges: _challenges,
                                   activeChallenge: _challenge,
-                                  isDark: isDark,
                                   formatValue: _formatValue,
                                   setActiveChallenge: (id) async {
                                     await _service.setActiveChallenge(id);
@@ -581,7 +573,6 @@ class _MoneySavingChallengeScreenState
                 child: _selectedIndex == 0
                     ? MoneySavingActionsWidget(
                         challenge: _challenge,
-                        isDark: isDark,
                         onShowChallengesList: _showChallengesList,
                         onShowNotifications: () {
                           Navigator.push(
@@ -603,7 +594,6 @@ class _MoneySavingChallengeScreenState
                           icon: Icons.rocket_launch_rounded,
                           label: 'Entendi!',
                           color: const Color(0xFF6366F1),
-                          isDark: isDark,
                           onTap: () {
                             if (_pageController.hasClients) {
                               _pageController.animateToPage(0,
@@ -620,8 +610,9 @@ class _MoneySavingChallengeScreenState
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _formatValue(double value, String currency) {
     bool isLatin = currency == 'R\$' || currency == '€' || currency == '\$';

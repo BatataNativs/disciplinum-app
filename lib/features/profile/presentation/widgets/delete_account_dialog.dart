@@ -13,7 +13,7 @@ class DeleteAccountDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return AppDialog(
       title: 'Deletar Conta',
@@ -58,16 +58,14 @@ class DeleteAccountDialog extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : const Color(0xFF6B7280),
+                color: colorScheme.outline,
               ),
             ),
           ),
           child: Text(
             'Cancelar',
             style: TextStyle(
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w600,
             ),
           ),

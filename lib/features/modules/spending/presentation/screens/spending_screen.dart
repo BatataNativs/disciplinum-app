@@ -16,6 +16,7 @@ import 'package:disciplinum/features/modules/spending/presentation/widgets/spend
 import 'package:disciplinum/features/modules/spending/presentation/widgets/spending_tab_content.dart';
 import 'package:disciplinum/features/modules/spending/presentation/widgets/spending_actions_widget.dart';
 import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
+import 'package:disciplinum/features/modules/spending/gamification/presentation/widgets/spending_celebration_widget.dart';
 
 class SpendingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -306,8 +307,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   Widget build(BuildContext context) {
     LoggerService.instance.i('SpendingScreen: Build chamado, loadingData=$_loadingData, isLoadingData=$_isLoadingData, selectedIndex=$_selectedIndex');
   
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (_loadingData) {
       LoggerService.instance.i('SpendingScreen: Mostrando loading');
@@ -317,23 +317,24 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return SpendingCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Row
-              SpendingHeaderWidget(
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header Row
+                SpendingHeaderWidget(
                 niche: _niche,
                 onBackPressed: () => Navigator.pop(context),
               ),
@@ -376,7 +377,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                               children: [
                                 SpendingTabContent(
                                   tabIndex: 0,
-                                  isDark: isDark,
+                                  colorScheme: colorScheme,
                                   selectedApps: _selectedApps,
                                   onRemoveApp: _removeSelectedApp,
                                 ),
@@ -391,7 +392,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                               children: [
                                 SpendingTabContent(
                                   tabIndex: 1,
-                                  isDark: isDark,
+                                  colorScheme: colorScheme,
                                   selectedApps: _selectedApps,
                                   onRemoveApp: _removeSelectedApp,
                                 ),
@@ -408,7 +409,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
               Center(
                 child: SpendingActionsWidget(
                   selectedIndex: _selectedIndex,
-                  isDark: isDark,
+                  colorScheme: colorScheme,
                   gamificationRunning: _gamificationRunning,
                   pageController: _pageController,
                   onOpenSelectApps: _openSelectApps,
@@ -420,7 +421,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                   context: context,
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

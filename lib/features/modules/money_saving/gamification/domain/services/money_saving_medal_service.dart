@@ -6,12 +6,12 @@ import 'package:disciplinum/features/modules/money_saving/gamification/domain/re
 
 /// Service de medalhas do módulo Money Saving Challenge
 /// Gerencia conquista e progressão de medalhas
-class MoneySavingMedalhaService implements ModuleMedalhaInterface {
+class MoneySavingMedalService implements ModuleMedalhaInterface {
   final MoneySavingGamificationRepository _repository;
   MoneySavingModuleState? _currentState;
   bool _isInitialized = false;
 
-  MoneySavingMedalhaService(this._repository);
+  MoneySavingMedalService(this._repository);
 
   /// Inicializa o service
   Future<void> initialize() async {
@@ -222,7 +222,7 @@ class MoneySavingMedalhaService implements ModuleMedalhaInterface {
         .where((m) => m.name == medalhaId)
         .firstOrNull;
     
-    return medalha?.asset ?? 'assets/gamification/medals/money_saving/default.png';
+    return medalha?.asset ?? 'assets/gamification/medals/moneySaving/default.png';
   }
 
   @override

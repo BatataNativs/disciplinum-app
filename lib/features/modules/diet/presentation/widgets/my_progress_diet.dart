@@ -116,12 +116,17 @@ class MyProgressDiet extends ConsumerWidget {
                 childAspectRatio: 0.75,
                 children: DietInsignia.values.map((insignia) {
                   final isEarned = earnedInsignias.contains(insignia.name);
+                  // Badge count para insígnia Disciplinum (mostra quantas vezes conquistou)
+                  final badgeCount = (insignia.name == 'disciplinum' && disciplinumCount > 1)
+                      ? disciplinumCount
+                      : null;
 
                   return _AwardItem(
                     asset: insignia.asset,
                     label: insignia.nameBr,
                     isEarned: isEarned,
                     requirement: insignia.requirementDescription,
+                    badgeCount: badgeCount,
                   );
                 }).toList(),
               ),
@@ -209,12 +214,14 @@ class _AwardItem extends StatelessWidget {
   final String label;
   final bool isEarned;
   final String requirement;
+  final int? badgeCount;
 
   const _AwardItem({
     required this.asset,
     required this.label,
     required this.isEarned,
     required this.requirement,
+    this.badgeCount,
   });
 
   @override
@@ -224,39 +231,71 @@ class _AwardItem extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: ColorFiltered(
-              colorFilter: isEarned
-                  ? const ColorFilter.mode(
-                      Colors.transparent, BlendMode.multiply)
-                  : const ColorFilter.matrix(<double>[
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0.2126,
-                      0.7152,
-                      0.0722,
-                      0,
-                      0,
-                      0,
-                      0,
-                      0,
-                      1,
-                      0,
-                    ]),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Opacity(
-                  opacity: isEarned ? 1.0 : 0.4,
-                  child: Image.asset(asset, fit: BoxFit.contain),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ColorFiltered(
+                  colorFilter: isEarned
+                      ? const ColorFilter.mode(
+                          Colors.transparent, BlendMode.multiply)
+                      : const ColorFilter.matrix(<double>[
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                        ]),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Opacity(
+                      opacity: isEarned ? 1.0 : 0.4,
+                      child: Image.asset(asset, fit: BoxFit.contain),
+                    ),
+                  ),
                 ),
-              ),
+                // Badge de contador (tipo notificação)
+                if (badgeCount != null && isEarned)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Text(
+                        '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),

@@ -13,12 +13,16 @@ class LegalFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isLightTheme = colorScheme.brightness == Brightness.light;
+
     final defaultStyle = textStyle ??
         TextStyle(
           fontSize: 12,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white60
-              : const Color.fromARGB(95, 255, 255, 255),
+          // Cor hardcoded só no tema claro, nos outros usa colorScheme
+          color: isLightTheme
+              ? Color.fromARGB(255, 137, 136, 136)
+              : colorScheme.onSurface.withValues(alpha: 0.6),
         );
 
     return Padding(
@@ -57,9 +61,7 @@ class LegalFooter extends StatelessWidget {
             '2026 Disciplinum - desenvolvendo disciplina, foco e bons hábitos',
             style: defaultStyle.copyWith(
               fontSize: 9,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white38
-                  : const Color.fromARGB(95, 255, 255, 255),
+              // Usa a cor do defaultStyle (já ajustada por tema)
             ),
             textAlign: TextAlign.center,
           ),

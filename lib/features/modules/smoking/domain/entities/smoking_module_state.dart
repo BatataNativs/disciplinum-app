@@ -316,4 +316,9 @@ class SmokingModuleState implements ModuleStateContract {
   SmokingModuleState resetHealthBenefits() {
     return copyWith(earnedHealthBenefits: []);
   }
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  SmokingModuleState reset() => SmokingModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

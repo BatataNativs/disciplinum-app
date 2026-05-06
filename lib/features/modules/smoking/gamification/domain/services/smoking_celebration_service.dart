@@ -2,6 +2,7 @@ import 'package:disciplinum/core/audio/system_audio_service.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/core/gamification/services/achievement_notification_service.dart';
 
 /// Eventos específicos do módulo Smoking
 class SmokingMedalhaConquistadaEvent extends AppEvent {
@@ -88,6 +89,8 @@ class SmokingCelebrationService {
   Future<void> celebrarMedalhaConquistada({
     required String medalhaId,
     required String medalhaName,
+    String? medalhaDescription,
+    String? assetPath,
   }) async {
     try {
       LoggerService.instance.gamification('🎉 Iniciando celebração medalha: $medalhaName');
@@ -101,11 +104,14 @@ class SmokingCelebrationService {
       // Feedback tátil baseado na raridade da medalha
       await _playMedalhaHapticFeedback(medalhaId);
 
-      // Notificação push de conquista
-      await NotificationService.showNotification(
-        id: 5002, // ID único para notificações de medalha
-        title: '🏆 Nova Medalha!',
-        body: 'Você conquistou a medalha: $medalhaName. Continue mantendo a disciplina!',
+      // Notificação global de conquista (com payload para deep link)
+      await AchievementNotificationService.instance.showMedalhaNotification(
+        moduleId: 'smoking',
+        medalhaId: medalhaId,
+        medalhaName: medalhaName,
+        medalhaDescription: medalhaDescription,
+        assetPath: assetPath,
+        rarity: medalhaId, // Usa ID da medalha como raridade
       );
 
       LoggerService.instance.gamification('🏆 Celebração medalha $medalhaName concluída');
@@ -118,6 +124,8 @@ class SmokingCelebrationService {
   Future<void> celebrarInsigniaConquistada({
     required String insigniaId,
     required String insigniaName,
+    String? insigniaDescription,
+    String? assetPath,
   }) async {
     try {
       LoggerService.instance.gamification('⭐ Iniciando celebração insígnia: $insigniaName');
@@ -131,11 +139,13 @@ class SmokingCelebrationService {
       // Feedback tátil para insígnia
       await SystemAudioService.instance.playHapticFeedback('medio');
 
-      // Notificação push de conquista
-      await NotificationService.showNotification(
-        id: 5001, // ID único para notificações de conquista
-        title: '🎉 Nova Conquista!',
-        body: 'Você conquistou a insígnia: $insigniaName. Continue mantendo a disciplina!',
+      // Notificação global de conquista (com payload para deep link)
+      await AchievementNotificationService.instance.showInsigniaNotification(
+        moduleId: 'smoking',
+        insigniaId: insigniaId,
+        insigniaName: insigniaName,
+        insigniaDescription: insigniaDescription,
+        assetPath: assetPath,
       );
 
       LoggerService.instance.gamification('✨ Celebração insígnia $insigniaName concluída');

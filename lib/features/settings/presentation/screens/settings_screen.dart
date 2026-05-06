@@ -6,6 +6,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; // Clipboard
 
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
@@ -149,8 +150,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _mostrarModalCafezinho(BuildContext context) {
     const String chavePix = 'f3b7c116-1d53-4a51-a6a2-5de1f36e688e';
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
@@ -169,9 +169,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? const Color(0xFFFFFFFF)
-                        : const Color(0xFF1F2937), // cor do título do modal
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -179,9 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'O Disciplinum é um app independente.\nSe ele te ajuda, considere pagar um "café"!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: isDark
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF4B5563)),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -190,19 +186,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? Colors.amberAccent
-                        : const Color.fromARGB(255, 43, 33, 188),
+                    color: colorScheme.primary,
                   ),
                 ),
                 Container(
                   margin: const EdgeInsets.only(top: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.indigo.withValues(alpha: 0.3)
-                        : Colors.blue.withValues(
-                            alpha: 0.1), // cor de fundo da caixa do pix
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -213,16 +204,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           style: TextStyle(
                             fontFamily: 'Monospace',
                             fontSize: 13,
-                            color: isDark ? Colors.white : Colors.blueGrey,
+                            color: colorScheme.onSurface,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       IconButton(
                         icon: Icon(Icons.copy,
-                            color: isDark
-                                ? const Color(0xFF6366F1)
-                                : const Color(0xFF4F46E5)),
+                            color: colorScheme.primary),
                         onPressed: () {
                           Clipboard.setData(
                             const ClipboardData(text: chavePix),
@@ -247,8 +236,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Usar provider local para estado de notificações
     final notificationsPaused = ref.watch(notificationsPausedProvider);
     final notificationsNotifier = ref.read(notificationsPausedProvider.notifier);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     Widget sectionHeader(String title) {
       return Padding(
@@ -258,7 +246,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white54 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
             letterSpacing: 1.1,
           ),
         ),
@@ -269,19 +257,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? Colors.black : Colors.grey.withValues(alpha: 0.2),
+            color: colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Column(children: children),
@@ -294,8 +281,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -308,33 +295,230 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           systemOverlayStyle:
-              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+              MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
         ),
         body: SafeArea(
           bottom: false,
-          child: ListView(
-            padding: const EdgeInsets.only(top: 8, bottom: 120),
+          child: Stack(
             children: [
-              const SettingsBannerAd(),
+              // --- FLORES DECORATIVAS NO PLANO DE FUNDO (tema rosa) ---
+              if (ref.watch(themeControllerProvider) == AppTheme.pink) ...[
+                // == FLORES GRANDES (60-80) ==
+                Positioned(
+                  top: 50,
+                  right: -15,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 72,
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 280,
+                  left: -25,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 68,
+                      color: colorScheme.secondary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 120,
+                  right: -15,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.spa,
+                      size: 76,
+                      color: colorScheme.primary.withValues(alpha: 0.13),
+                    ),
+                  ),
+                ),
+                // == FLORES MÉDIAS (30-45) ==
+                Positioned(
+                  top: 70,
+                  left: 60,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Icon(
+                      Icons.eco,
+                      size: 42,
+                      color: colorScheme.secondary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 240,
+                  right: 70,
+                  child: Transform.rotate(
+                    angle: 0.7,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 38,
+                      color: colorScheme.primary.withValues(alpha: 0.20),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 500,
+                  left: 40,
+                  child: Transform.rotate(
+                    angle: -0.6,
+                    child: Icon(
+                      Icons.spa,
+                      size: 36,
+                      color: colorScheme.secondary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 320,
+                  right: 55,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 40,
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                // == FLORES PEQUENAS (originais) ==
+                // Canto superior esquerdo
+                Positioned(
+                  top: 100,
+                  left: 30,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 26,
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 160,
+                  left: 70,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 20,
+                      color: colorScheme.secondary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                // Canto superior direito
+                Positioned(
+                  top: 120,
+                  right: 40,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.spa,
+                      size: 24,
+                      color: colorScheme.primary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                // Meio esquerdo
+                Positioned(
+                  top: 400,
+                  left: 20,
+                  child: Transform.rotate(
+                    angle: 0.8,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 22,
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                // Meio direito
+                Positioned(
+                  top: 500,
+                  right: 30,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 24,
+                      color: colorScheme.secondary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                // Inferior esquerdo
+                Positioned(
+                  bottom: 300,
+                  left: 50,
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Icon(
+                      Icons.eco,
+                      size: 18,
+                      color: colorScheme.secondary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                // Inferior direito
+                Positioned(
+                  bottom: 250,
+                  right: 40,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.spa,
+                      size: 22,
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                // Centro espalhado
+                Positioned(
+                  top: 700,
+                  left: 80,
+                  child: Transform.rotate(
+                    angle: 0.9,
+                    child: Icon(
+                      Icons.eco,
+                      size: 16,
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+              ],
+              ListView(
+                padding: const EdgeInsets.only(top: 8, bottom: 120),
+                children: [
+                  const SettingsBannerAd(),
               sectionHeader('Notificações'),
               settingContainer([
                 SwitchListTile(
                   activeThumbColor: Colors.white,
-                  activeTrackColor: Colors.green,
+                  activeTrackColor: colorScheme.primary,
                   inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
+                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
                   dense: true,
                   title: Text(
                     'Pausar notificações',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   subtitle: const Text('Silenciar alertas temporariamente'),
                   secondary: Icon(Icons.notifications_paused_outlined,
-                      color: isDark ? Colors.white70 : Colors.black54),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
                   value: notificationsPaused,
                   onChanged: (val) async {
                     await notificationsNotifier.setPaused(val);
@@ -348,26 +532,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 Divider(
                     height: 1,
-                    color: isDark ? Colors.black : Colors.grey[100],
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     indent: 56),
                 SwitchListTile(
                   activeThumbColor: Colors.white,
-                  activeTrackColor: Colors.green,
+                  activeTrackColor: colorScheme.primary,
                   inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
+                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
                   dense: true,
                   title: Text(
                     'Sons de alerta',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   subtitle: Text(_soundEnabled ? 'Som e vibração' : 'Mudo'),
                   secondary: Icon(
                       _soundEnabled ? Icons.volume_up : Icons.vibration,
-                      color: isDark ? Colors.white70 : Colors.black54),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
                   value: _soundEnabled,
                   onChanged: (val) {
                     setState(() => _soundEnabled = val);
@@ -376,18 +560,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 Divider(
                     height: 1,
-                    color: isDark ? Colors.black : Colors.grey[300],
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     indent: 56),
                 ListTile(
                   dense: true,
                   leading: Icon(Icons.settings_suggest_outlined,
-                      color: isDark ? Colors.white70 : Colors.black54),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
                   title: Text(
                     'Configurações do Android',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   subtitle: const Text('Gerenciar permissões do sistema'),
@@ -405,14 +589,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   onTap: _avaliarApp,
                 ),
                 Divider(
                     height: 1,
-                    color: isDark ? Colors.black : Colors.grey[100],
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     indent: 56),
                 ListTile(
                   dense: true,
@@ -422,14 +606,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   onTap: _enviarFeedback,
                 ),
                 Divider(
                     height: 1,
-                    color: isDark ? Colors.black : Colors.grey[100],
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     indent: 56),
                 ListTile(
                   dense: true,
@@ -440,7 +624,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   onTap: () => _mostrarModalCafezinho(context),
@@ -456,14 +640,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   onTap: _mostrarDialogoComoFunciona,
                 ),
                 Divider(
                     height: 1,
-                    color: isDark ? Colors.black : Colors.grey[100],
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     indent: 56),
                 ListTile(
                   dense: true,
@@ -474,7 +658,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   onTap: () => Navigator.push(
@@ -493,7 +677,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
                       fontSize: 12,
-                      color: isDark ? Colors.white38 : Colors.black38,
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -512,14 +696,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white12 : Colors.black12,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Icon(
                             Icons.menu_book_rounded,
                             size: 18,
-                            color: isDark ? Colors.white10 : Colors.black12,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ],
                       ),
@@ -529,22 +713,78 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Botão de Tema (Somente para Dev)
-                      IconButton(
-                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                        onPressed: () {
-                          ref.read(themeControllerProvider.notifier).toggleTheme();
-                          EnhancedSnackBarHelper.showInfo(context,
-                              "Dev: Remover botão de tema antes de publicar!");
-                        },
-                        color: Colors.red.withValues(alpha: 0.2),
+                      // Botão Tema Claro (Somente para Dev)
+                      Tooltip(
+                        message: 'DEV: Testar tema Claro (remover antes de publicar)',
+                        child: IconButton(
+                          icon: const Icon(Icons.wb_sunny, color: Colors.orange),
+                          onPressed: () async {
+                            final controller = ref.read(themeControllerProvider.notifier);
+                            await controller.setTheme(AppTheme.light);
+                            if (context.mounted) {
+                              EnhancedSnackBarHelper.showInfo(context,
+                                  "Dev: Tema Claro ativado (remover antes de publicar!)");
+                            }
+                          },
+                        ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 8),
+                      // Botão Tema Dark (Somente para Dev)
+                      Tooltip(
+                        message: 'DEV: Testar tema Dark (remover antes de publicar)',
+                        child: IconButton(
+                          icon: const Icon(Icons.dark_mode, color: Colors.black),
+                          onPressed: () async {
+                            final controller = ref.read(themeControllerProvider.notifier);
+                            await controller.setTheme(AppTheme.dark);
+                            if (context.mounted) {
+                              EnhancedSnackBarHelper.showInfo(context,
+                                  "Dev: Tema Dark ativado (remover antes de publicar!)");
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Botão Tema Rosa (Somente para Dev)
+                      Tooltip(
+                        message: 'DEV: Testar tema Rosa (remover antes de publicar)',
+                        child: IconButton(
+                          icon: const Icon(Icons.palette, color: Colors.pink),
+                          onPressed: () async {
+                            final controller = ref.read(themeControllerProvider.notifier);
+                            await controller.setTheme(AppTheme.pink);
+                            if (context.mounted) {
+                              EnhancedSnackBarHelper.showInfo(context,
+                                  "Dev: Tema Rosa ativado (remover antes de publicar!)");
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Botão Tema Halloween (Somente para Dev)
+                      Tooltip(
+                        message: 'DEV: Testar tema Halloween (remover antes de publicar)',
+                        child: IconButton(
+                          icon: const Icon(Icons.local_fire_department, color: Colors.deepOrange),
+                          onPressed: () async {
+                            final controller = ref.read(themeControllerProvider.notifier);
+                            await controller.setTheme(AppTheme.halloween);
+                            if (context.mounted) {
+                              EnhancedSnackBarHelper.showInfo(context,
+                                  "Dev: Tema Halloween ativado (remover antes de publicar!)");
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Botão Testar Tela Lock (Somente para Dev)
-                      IconButton(
-                        icon: const Icon(Icons.shield),
-                        onPressed: () => _testarTelaLock(context),
-                        color: Colors.orange.withValues(alpha: 0.2),
+                      Tooltip(
+                        message: 'DEV: Testar App Lock (remover antes de publicar)',
+                        child: IconButton(
+                          icon: const Icon(Icons.shield),
+                          onPressed: () => _testarTelaLock(context),
+                          color: Colors.orange.withValues(alpha: 0.6),
+                        ),
                       ),
                     ],
                   ),
@@ -552,9 +792,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+          ],
         ),
-        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 3),
       ),
+      bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 3),
+    ),
     );
   }
 }

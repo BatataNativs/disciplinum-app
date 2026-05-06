@@ -74,18 +74,18 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -2),
           ),
@@ -129,7 +129,7 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -137,7 +137,7 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
                           _isEditing ? 'Atualize as informações do livro' : 'Preencha os detalhes para começar',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.white60 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -147,7 +147,7 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(
                       Icons.close_rounded,
-                      color: isDark ? Colors.white60 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -160,30 +160,30 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
                 label: 'Título do Livro',
                 hint: 'Ex: O Senhor dos Anéis',
                 icon: Icons.title_rounded,
-                isDark: isDark,
+                colorScheme: colorScheme,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Campo de autor
               _buildTextField(
                 controller: _authorController,
                 label: 'Autor (opcional)',
                 hint: 'Ex: J.R.R. Tolkien',
                 icon: Icons.person_rounded,
-                isDark: isDark,
+                colorScheme: colorScheme,
                 isOptional: true,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Campo de páginas
               _buildTextField(
                 controller: _pagesController,
                 label: 'Número de Páginas',
                 hint: 'Ex: 500',
                 icon: Icons.auto_stories_rounded,
-                isDark: isDark,
+                colorScheme: colorScheme,
                 keyboardType: TextInputType.number,
               ),
               
@@ -195,7 +195,7 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 12),
@@ -299,44 +299,44 @@ class _AddBookDialogState extends ConsumerState<AddBookDialog> {
     required String label,
     required String hint,
     required IconData icon,
-    required bool isDark,
+    required ColorScheme colorScheme,
     bool isOptional = false,
     TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.white24 : Colors.black12,
+          color: colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        textCapitalization: label.contains('Autor') 
-            ? TextCapitalization.words 
+        textCapitalization: label.contains('Autor')
+            ? TextCapitalization.words
             : TextCapitalization.sentences,
         style: TextStyle(
           fontSize: 14,
-          color: isDark ? Colors.white : Colors.black87,
+          color: colorScheme.onSurface,
         ),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           prefixIcon: Icon(
             icon,
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
             size: 18,
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           labelStyle: TextStyle(
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
           ),
           hintStyle: TextStyle(
-            color: isDark ? Colors.white38 : Colors.black38,
+            color: colorScheme.onSurface.withValues(alpha: 0.4),
             fontSize: 12,
           ),
         ),

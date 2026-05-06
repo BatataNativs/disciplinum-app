@@ -89,6 +89,15 @@ class NicheRepository {
           icon: '📚',
           color: '#795548',
         );
+      case NicheId.digitalDetox:
+        return Niche(
+          id: nicheId.id,
+          nicheId: nicheId,
+          name: 'Jejum Digital',
+          description: 'Controle inteligente do uso de redes sociais e apps',
+          icon: '📱',
+          color: '#7C4DFF',
+        );
     }
   }
 

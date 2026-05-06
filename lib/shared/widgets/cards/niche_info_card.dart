@@ -4,7 +4,6 @@ class NicheInfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String content;
-  final bool isDark;
   final Color color;
 
   const NicheInfoCard({
@@ -12,21 +11,20 @@ class NicheInfoCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.content,
-    required this.isDark,
     this.color = const Color(0xFF6366F1),
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.9),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.5),
         ),
         boxShadow: [
           BoxShadow(
@@ -53,7 +51,7 @@ class NicheInfoCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
               letterSpacing: -0.2,
             ),
           ),
@@ -62,7 +60,7 @@ class NicheInfoCard extends StatelessWidget {
             content,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ),

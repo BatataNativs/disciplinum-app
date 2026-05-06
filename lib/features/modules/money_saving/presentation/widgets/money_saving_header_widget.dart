@@ -16,7 +16,7 @@ class MoneySavingHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -25,7 +25,7 @@ class MoneySavingHeaderWidget extends StatelessWidget {
           IconButton(
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
             onPressed: onBackPressed,
           ),
@@ -38,7 +38,7 @@ class MoneySavingHeaderWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -47,7 +47,7 @@ class MoneySavingHeaderWidget extends StatelessWidget {
                     challenge!.title,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.white70 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
               ],

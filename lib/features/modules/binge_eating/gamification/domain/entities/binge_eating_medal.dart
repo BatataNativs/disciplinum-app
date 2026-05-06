@@ -48,7 +48,7 @@ extension BingeEatingMedalExtension on BingeEatingMedal {
   }
 
   String get asset {
-    const prefix = 'assets/gamification/medals/binge_eating/';
+    const prefix = 'assets/gamification/medals/bingeEating/';
     switch (this) {
       case BingeEatingMedal.bronze:
         return '${prefix}bronze.png';

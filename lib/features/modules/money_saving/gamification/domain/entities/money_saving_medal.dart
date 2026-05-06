@@ -80,16 +80,16 @@ extension MoneySavingMedalEntityExtension on MoneySavingMedalEntity {
 
   /// Obtém o caminho do asset
   String get asset {
-    const prefix = 'assets/gamification/medals/money_saving/';
+    const prefix = 'assets/gamification/medals/moneySaving/';
     switch (this) {
       case MoneySavingMedalEntity.bronze:
         return '${prefix}bronze.png';
       case MoneySavingMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case MoneySavingMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case MoneySavingMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

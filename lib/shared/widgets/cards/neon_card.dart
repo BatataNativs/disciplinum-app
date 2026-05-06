@@ -28,119 +28,97 @@ class NeonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     // Cores premium
     final effectivePrimaryColor =
-        primaryColor ?? const Color(0xFF6366F1); // Indigo
+        primaryColor ?? const Color(0xFF6366F1);
     final effectiveSecondaryColor =
-        secondaryColor ?? const Color(0xFF8B5CF6); // Violet
-    final effectiveAccentColor = accentColor ?? const Color(0xFF3B82F6); // Blue
+        secondaryColor ?? const Color(0xFF8B5CF6);
+    final effectiveAccentColor =
+        accentColor ?? const Color(0xFFA855F7);
 
     return GestureDetector(
       onTap: onTap,
-      child: RepaintBoundary(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            boxShadow: [
-              // Brilho externo sutil (Glow)
-              BoxShadow(
-                color: effectivePrimaryColor.withValues(
-                    alpha: (isDark ? 0.15 : 0.2) * contentOpacity),
-                blurRadius: 2,
-                spreadRadius: 2,
-                offset: const Offset(0, 0),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(borderRadius),
-            child: Stack(
-              children: [
-                // Efeito de Vidro (Blur)
-                Positioned.fill(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        // cor dos cards
-                        color: (backgroundColor ??
-                                (isDark
-                                    ? Colors.black
-                                    : const Color.fromARGB(190, 232, 232, 235)))
-                            .withValues(
-                                alpha: (isDark ? 0.35 : 0.65) * contentOpacity),
-                        borderRadius: BorderRadius.circular(borderRadius),
-                      ),
-                    ),
-                  ),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(borderRadius),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.1),
+                  width: 1.5,
                 ),
-
-                // Gradiente de Fundo sutil
-                Positioned.fill(
-                  child: Container(
+              ),
+              child: Stack(
+                children: [
+                  // Base Layer - Gradient sutil de fundo
+                  Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
                           effectivePrimaryColor.withValues(
-                              alpha: (isDark ? 0.1 : 0.05) * contentOpacity),
+                              alpha: 0.075 * contentOpacity),
                           effectiveSecondaryColor.withValues(
-                              alpha: (isDark ? 0.05 : 0.02) * contentOpacity),
+                              alpha: 0.035 * contentOpacity),
                           effectiveAccentColor.withValues(
-                              alpha: (isDark ? 0.08 : 0.04) * contentOpacity),
+                              alpha: 0.06 * contentOpacity),
                         ],
                       ),
                     ),
                   ),
-                ),
 
-                // Borda "Glowing" Ultra-fina
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(borderRadius),
-                    border: Border.all(
-                      width: 1.0,
-                      color: (isDark ? Colors.white : effectivePrimaryColor)
-                          .withValues(
-                              alpha: (isDark ? 0.15 : 0.2) * contentOpacity),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: padding,
-                    child: Opacity(
-                      // Aplica opacidade no conteúdo filho se necessário
-                      // (Texto/Icones são leves, Opacity aqui é ok pq é interno e pequeno)
-                      opacity: contentOpacity,
-                      child: child,
-                    ),
-                  ),
-                ),
-
-                // Highlight superior (shimmer effect sutil)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 1,
+                  // Borda "Glowing" Ultra-fina
+                  Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.white.withValues(
-                              alpha: (isDark ? 0.3 : 0.5) * contentOpacity),
-                          Colors.transparent,
-                        ],
+                      borderRadius: BorderRadius.circular(borderRadius),
+                      border: Border.all(
+                        width: 1.0,
+                        color: effectivePrimaryColor.withValues(
+                            alpha: 0.175 * contentOpacity),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: padding,
+                      child: Opacity(
+                        opacity: contentOpacity,
+                        child: child,
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  // Highlight superior (shimmer effect sutil)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withValues(
+                                alpha: 0.4 * contentOpacity),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

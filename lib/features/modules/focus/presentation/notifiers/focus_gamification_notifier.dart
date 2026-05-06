@@ -41,8 +41,11 @@ class FocusGamificationState {
 class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
   final FocusGamificationRepository _repository;
 
-  FocusGamificationNotifier(this._repository) 
-      : super(const FocusGamificationState());
+  FocusGamificationNotifier(this._repository)
+      : super(const FocusGamificationState()) {
+    // Carrega dados automaticamente na inicialização
+    loadGamification();
+  }
 
   Future<void> loadGamification() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -66,7 +69,15 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentState = state.gamification ?? FocusModuleState.initial();
-      final newState = currentState.copyWith(isModuleActive: true);
+      // Concede insígnia Madeira se ainda não tiver
+      final earnedInsignias = List<String>.from(currentState.earnedInsignias);
+      if (!earnedInsignias.contains('madeira')) {
+        earnedInsignias.add('madeira');
+      }
+      final newState = currentState.copyWith(
+        isModuleActive: true,
+        earnedInsignias: earnedInsignias,
+      );
       await _repository.saveFocusState(newState);
       await _repository.syncWithSupabase(newState);
       await loadGamification();
@@ -92,7 +103,7 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.contains('madeira') ?? false;
       
       await _repository.clearFocusState();
       
@@ -100,7 +111,7 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
       final initialState = FocusModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveFocusState(stateWithMadeira);
         await _repository.syncWithSupabase(stateWithMadeira);

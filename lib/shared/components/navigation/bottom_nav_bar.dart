@@ -7,10 +7,22 @@ import 'package:disciplinum/core/di/providers.dart';
 
 class DisciplinumBottomNavBar extends ConsumerWidget {
   final int currentIndex;
+  final Color? glassColor;
+  final Color? borderColor;
+  final Color? activeIconColor;
+  final Color? inactiveIconColor;
+  final Color? activeIndicatorColor;
+  final Color? shadowColor;
 
   const DisciplinumBottomNavBar({
     super.key,
     required this.currentIndex,
+    this.glassColor,
+    this.borderColor,
+    this.activeIconColor,
+    this.inactiveIconColor,
+    this.activeIndicatorColor,
+    this.shadowColor,
   });
 
   void _onItemTap(BuildContext context, WidgetRef ref, int index) {
@@ -53,26 +65,21 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    // Cores ajustadas para Glassmorphism
-    final glassColor = isDark
-        ? const Color.fromARGB(255, 38, 38, 38).withValues(alpha: 0.85)
-        : const Color.fromARGB(255, 222, 222, 222).withValues(alpha: 0.85);
-
-    final borderColor = isDark
-        ? const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.7)
-        : const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.7);
-
-    final activeIconColor = isDark
-        ? const Color.fromARGB(255, 0, 0, 0)
-        : const Color.fromARGB(255, 0, 0, 0);
-    final inactiveIconColor =
-        isDark ? Colors.white54 : const Color.fromARGB(136, 16, 16, 16);
-
-    final activeIndicatorColor = isDark
-        ? Colors.white.withValues(alpha: 0.9)
-        : const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.9);
+    // Cores ajustadas para Glassmorphism (com fallback para parâmetros)
+    final effectiveGlassColor = glassColor ??
+        colorScheme.surfaceContainerHighest.withValues(alpha: 0.85);
+    final effectiveBorderColor = borderColor ??
+        colorScheme.outline.withValues(alpha: 0.5);
+    final effectiveActiveIconColor = activeIconColor ??
+        colorScheme.onSurface;
+    final effectiveInactiveIconColor = inactiveIconColor ??
+        colorScheme.onSurface.withValues(alpha: 0.5);
+    final effectiveActiveIndicatorColor = activeIndicatorColor ??
+        colorScheme.surfaceContainerHighest.withValues(alpha: 0.9);
+    final effectiveShadowColor = shadowColor ??
+        Colors.black.withValues(alpha: 0.7);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
@@ -83,15 +90,15 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
           child: Container(
             height: 70,
             decoration: BoxDecoration(
-              color: glassColor,
+              color: effectiveGlassColor,
               borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: borderColor,
+                color: effectiveBorderColor,
                 width: 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: effectiveShadowColor,
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -106,9 +113,9 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   index: 0,
                   icon: Icons.home_rounded,
                   isActive: currentIndex == 0,
-                  activeIndicatorColor: activeIndicatorColor,
-                  activeIconColor: activeIconColor,
-                  inactiveIconColor: inactiveIconColor,
+                  activeIndicatorColor: effectiveActiveIndicatorColor,
+                  activeIconColor: effectiveActiveIconColor,
+                  inactiveIconColor: effectiveInactiveIconColor,
                 ),
                 _buildIconItem(
                   context,
@@ -116,9 +123,9 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   index: 1,
                   icon: Icons.person_rounded,
                   isActive: currentIndex == 1,
-                  activeIndicatorColor: activeIndicatorColor,
-                  activeIconColor: activeIconColor,
-                  inactiveIconColor: inactiveIconColor,
+                  activeIndicatorColor: effectiveActiveIndicatorColor,
+                  activeIconColor: effectiveActiveIconColor,
+                  inactiveIconColor: effectiveInactiveIconColor,
                 ),
                 // --- NOVO ÍCONE: LOJINHA ---
                 _buildIconItem(
@@ -127,9 +134,9 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   index: 2,
                   assetPath: 'assets/icons/icone_carrinho_compra.png',
                   isActive: currentIndex == 2,
-                  activeIndicatorColor: activeIndicatorColor,
-                  activeIconColor: activeIconColor,
-                  inactiveIconColor: inactiveIconColor,
+                  activeIndicatorColor: effectiveActiveIndicatorColor,
+                  activeIconColor: effectiveActiveIconColor,
+                  inactiveIconColor: effectiveInactiveIconColor,
                 ),
                 // --- FIM NOVO ÍCONE ---
                 _buildIconItem(
@@ -138,9 +145,9 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   index: 3,
                   icon: Icons.settings_rounded,
                   isActive: currentIndex == 3,
-                  activeIndicatorColor: activeIndicatorColor,
-                  activeIconColor: activeIconColor,
-                  inactiveIconColor: inactiveIconColor,
+                  activeIndicatorColor: effectiveActiveIndicatorColor,
+                  activeIconColor: effectiveActiveIconColor,
+                  inactiveIconColor: effectiveInactiveIconColor,
                 ),
               ],
             ),

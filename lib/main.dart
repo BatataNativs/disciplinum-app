@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/bootstrap.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/app/auth_navigation_listener.dart';
-import 'package:disciplinum/core/theme/app_themes.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/storage/storage_manager.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
+import 'package:disciplinum/features/app_lock/infrastructure/services/navigation_service.dart';
+import 'package:disciplinum/core/gamification/presentation/widgets/global_achievement_listener.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,31 +77,53 @@ void main() async {
   }
 }
 
-class DisciplinumApp extends ConsumerWidget {
+class DisciplinumApp extends ConsumerStatefulWidget {
   const DisciplinumApp({super.key});
-  
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeController = ref.watch(themeControllerProvider);
+  ConsumerState<DisciplinumApp> createState() => _DisciplinumAppState();
+}
+
+class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Inicializar App Lock após o primeiro frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final container = ProviderScope.containerOf(context);
+      
+      // Configurar ProviderContainer para AppLockService
+      AppLockService.setContainer(container);
+
+      LoggerService.instance.d('🔒 App Lock inicializado');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeController = ref.watch(themeControllerProvider.notifier);
+    final currentTheme = ref.watch(themeControllerProvider);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
     final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
-    
+
     // Log para debug
-    LoggerService.instance.d('🏗️ DisciplinumApp build: seenOnboarding=$seenOnboarding, user=${authService.currentUser?.id}');
+    LoggerService.instance.d('🏗️ DisciplinumApp build: seenOnboarding=$seenOnboarding, user=${authService.currentUser?.id}, theme=${currentTheme.name}');
     
-    return AuthNavigationListener(
-      child: MaterialApp(
-        title: 'Disciplinum',
-        theme: AppThemes.lightTheme,
-        darkTheme: AppThemes.darkTheme,
-        themeMode: themeController.themeMode,
-        debugShowCheckedModeBanner: false,
-        // Se usuário está logado, vai para AuthWrapper (que leva para Home)
-        // Se não viu onboarding e não está logado, vai para onboarding
-        initialRoute: (seenOnboarding || authService.currentUser != null)
-            ? AppRouter.authWrapper 
-            : AppRouter.onboarding,
-        onGenerateRoute: AppRouter.generateRoute,
+    return GlobalAchievementListener(
+      child: AuthNavigationListener(
+        child: MaterialApp(
+          title: 'Disciplinum',
+          navigatorKey: AppLockNavigationService.navigatorKey, // Key para App Lock
+          theme: themeController.themeData, // Tema dinâmico baseado no tema selecionado
+          debugShowCheckedModeBanner: false,
+          // Se usuário está logado, vai para AuthWrapper (que leva para Home)
+          // Se não viu onboarding e não está logado, vai para onboarding
+          initialRoute: (seenOnboarding || authService.currentUser != null)
+              ? AppRouter.authWrapper
+              : AppRouter.onboarding,
+          onGenerateRoute: AppRouter.generateRoute,
+        ),
       ),
     );
   }

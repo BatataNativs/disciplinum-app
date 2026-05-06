@@ -3,16 +3,15 @@ import 'package:disciplinum/features/modules/money_saving/domain/entities/money_
 
 class SavingsOverviewCard extends StatelessWidget {
   final MoneySavingChallengeModel challenge;
-  final bool isDark;
 
   const SavingsOverviewCard({
     super.key,
     required this.challenge,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // Calcula progresso
     final progress = challenge.progressPercent;
     final totalSaved = challenge.totalSaved;
@@ -21,18 +20,17 @@ class SavingsOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -68,7 +66,7 @@ class SavingsOverviewCard extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: isDark ? Colors.white : const Color(0xFF6366F1),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -88,20 +86,17 @@ class SavingsOverviewCard extends StatelessWidget {
                 _buildValueRow(
                     'Guardado',
                     '${challenge.currency} ${totalSaved.toStringAsFixed(2)}',
-                    const Color(0xFF6366F1),
-                    isDark),
+                    const Color(0xFF6366F1)),
                 const SizedBox(height: 8),
                 _buildValueRow(
                     'Falta',
                     '${challenge.currency} ${remaining.toStringAsFixed(2)}',
-                    isDark ? Colors.white60 : Colors.grey[600]!,
-                    isDark),
+                    colorScheme.onSurface.withValues(alpha: 0.7)),
                 const SizedBox(height: 8),
                 _buildValueRow(
                     'Meta',
                     '${challenge.currency} ${challenge.targetAmount.toStringAsFixed(2)}',
-                    isDark ? Colors.white30 : Colors.grey[400]!,
-                    isDark,
+                    colorScheme.onSurface.withValues(alpha: 0.5),
                     isSmall: true),
               ],
             ),
@@ -111,7 +106,7 @@ class SavingsOverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildValueRow(String label, String value, Color color, bool isDark,
+  Widget _buildValueRow(String label, String value, Color color,
       {bool isSmall = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,7 +114,7 @@ class SavingsOverviewCard extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black54,
+            color: color.withValues(alpha: 0.7),
             fontSize: isSmall ? 10 : 12,
           ),
         ),

@@ -85,11 +85,11 @@ extension ReadingMedalEntityExtension on ReadingMedalEntity {
       case ReadingMedalEntity.bronze:
         return '${prefix}bronze.png';
       case ReadingMedalEntity.prata:
-        return '${prefix}prata.png';
+        return '${prefix}silver.png';
       case ReadingMedalEntity.ouro:
-        return '${prefix}ouro.png';
+        return '${prefix}gold.png';
       case ReadingMedalEntity.diamante:
-        return '${prefix}diamante.png';
+        return '${prefix}diamond.png';
     }
   }
 

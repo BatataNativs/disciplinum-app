@@ -4,7 +4,6 @@ class ChallengeCell extends StatelessWidget {
   final int index;
   final double value;
   final bool isMarked;
-  final bool isDark;
   final int gridSize;
   final ValueChanged<int> onTap;
 
@@ -13,7 +12,6 @@ class ChallengeCell extends StatelessWidget {
     required this.index,
     required this.value,
     required this.isMarked,
-    required this.isDark,
     required this.gridSize,
     required this.onTap,
   });

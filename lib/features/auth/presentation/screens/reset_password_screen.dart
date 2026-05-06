@@ -114,17 +114,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         }
       },
       child: Builder(builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final colorScheme = Theme.of(context).colorScheme;
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                isDark
-                    ? Colors.black
-                    : const Color.fromARGB(255, 226, 229, 251),
-                isDark ? Colors.black : const Color.fromARGB(255, 121, 148, 222)
+                colorScheme.surface,
+                colorScheme.primary.withValues(alpha: 0.2),
               ],
             ),
           ),

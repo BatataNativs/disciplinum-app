@@ -41,9 +41,7 @@ class AppDialog extends StatelessWidget {
             child: Text(
               cancelText,
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white70
-                    : Colors.black54,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 16,
               ),
             ),
@@ -125,17 +123,17 @@ class AppDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         width: width,
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[900] : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            color: colorScheme.outline,
             width: 1,
           ),
         ),
@@ -147,7 +145,7 @@ class AppDialog extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[800] : Colors.grey[50],
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -156,7 +154,7 @@ class AppDialog extends StatelessWidget {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
+                  color: colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -176,7 +174,7 @@ class AppDialog extends StatelessWidget {
                 child: Text(
                   content,
                   style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black87,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 16,
                     height: 1.4,
                   ),
@@ -190,7 +188,7 @@ class AppDialog extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[800] : Colors.grey[50],
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),

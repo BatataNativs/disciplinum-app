@@ -124,10 +124,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
-    final Color textColor = isDark ? Colors.white : Colors.black;
-    final Color subtitleColor = isDark ? Colors.white70 : Colors.black54;
+    final Color textColor = colorScheme.onSurface;
+    final Color subtitleColor = colorScheme.onSurface.withValues(alpha: 0.7);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -137,23 +137,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color.fromARGB(255, 30, 30, 40),
-                    const Color.fromARGB(255, 15, 15, 20),
-                  ]
-                : [
-                    Colors.white,
-                    const Color.fromARGB(255, 230, 235, 240),
-                  ],
-          ),
+          color: colorScheme.surface,
           border: Border.all(
-            color: isDark
-                ? const Color.fromARGB(164, 255, 255, 255)
-                : Colors.black12,
+            color: colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
@@ -206,9 +192,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   prefixIcon: Icon(Icons.person_outline,
                       size: 20, color: subtitleColor),
                   filled: true,
-                  fillColor: isDark
-                      ? Colors.white10
-                      : Colors.black.withValues(alpha: 0.05),
+                  fillColor: colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -231,7 +215,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 value: _showEmail,
                 icon: Icons.alternate_email_rounded,
                 onChanged: (val) => setState(() => _showEmail = val),
-                isDark: isDark,
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 8),
               _buildSwitchOption(
@@ -239,7 +223,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 value: _showAvatar,
                 icon: Icons.face_unlock_rounded,
                 onChanged: (val) => setState(() => _showAvatar = val),
-                isDark: isDark,
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 24),
 
@@ -263,9 +247,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white10
-                        : Colors.black.withValues(alpha: 0.05),
+                    color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -315,9 +297,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white10
-                          : Colors.black.withValues(alpha: 0.05),
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -391,12 +371,12 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     required bool value,
     required IconData icon,
     required ValueChanged<bool> onChanged,
-    required bool isDark,
+    required ColorScheme colorScheme,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: SwitchListTile(

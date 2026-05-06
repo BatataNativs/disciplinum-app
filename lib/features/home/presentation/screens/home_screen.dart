@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:confetti/confetti.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
@@ -17,6 +18,7 @@ import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart' as smoking;
 import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
+import 'package:disciplinum/core/gamification/presentation/widgets/global_celebration_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -348,48 +350,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     );
   }
 
+  /// Cores modernas por categoria de nicho
+  Color _getNicheColor(int nicheId) {
+    switch (nicheId) {
+      // Saúde & Bem-estar - Verde esmeralda
+      case 1: // smoking
+      case 2: // bingeEating
+      case 3: // diet
+        return const Color(0xFF10B981);
+      // Produtividade - Azul royal
+      case 8: // procrastination
+      case 5: // focus
+        return const Color(0xFF3B82F6);
+      // Finanças - Âmbar/Dourado
+      case 4: // spending
+      case 7: // moneySavingChallenge
+        return const Color(0xFFF59E0B);
+      // Conteúdo Adulto - Roxo vibrante
+      case 6: // adultContent
+        return const Color(0xFF8B5CF6);
+      // Leitura - Coral/Laranja suave
+      case 9: // reading
+        return const Color(0xFFF97316);
+      default:
+        return const Color(0xFF6366F1);
+    }
+  }
+
   Widget _buildNicheCard(
-      Niche niche, bool isDark, TextTheme textTheme, String heroTag) {
+      Niche niche, TextTheme textTheme, String heroTag) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final accentColor = _getNicheColor(niche.id);
+    final isDark = colorScheme.brightness == Brightness.dark;
+    
     return SizedBox(
       height: 195,
       child: GestureDetector(
         onTap: () => _handleNicheTap(niche, heroTag),
-        child: Material(
-          color: Colors.transparent,
-          elevation: 20,
-          shadowColor: Colors.black.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? [
-                        const Color.fromARGB(255, 30, 30, 40),
-                        const Color.fromARGB(255, 15, 15, 20),
-                      ]
-                    : [
-                        Colors.white,
-                        const Color.fromARGB(255, 230, 235, 255),
-                      ],
-              ),
-              border: Border.all(
-                color: isDark
-                    ? const Color.fromARGB(164, 255, 255, 255)
-                    : Colors.black,
-                width: 1,
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark
+                    ? colorScheme.surface.withValues(alpha: 0.9)
+                    : colorScheme.surface,
+                isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              ],
             ),
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              children: [
-                // Container com altura fixa para garantir que todos os ícones fiquem alinhados
-                // horizontalmente, independente do número de linhas do texto abaixo.
-                SizedBox(
-                  height: 110,
-                  child: Center(
+            border: Border.all(
+              color: isDark
+                  ? accentColor.withValues(alpha: 0.6)
+                  : accentColor.withValues(alpha: 0.25),
+              width: isDark ? 2 : 1.5,
+            ),
+            boxShadow: [
+              // Sombra colorida intensa no tema escuro
+              BoxShadow(
+                color: accentColor.withValues(alpha: isDark ? 0.35 : 0.15),
+                blurRadius: isDark ? 20 : 12,
+                spreadRadius: isDark ? 2 : 0,
+                offset: const Offset(0, 6),
+              ),
+              // Sombra de profundidade escura
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.6)
+                    : Colors.black.withValues(alpha: 0.08),
+                blurRadius: isDark ? 16 : 8,
+                spreadRadius: isDark ? 2 : -2,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+              SizedBox(
+                height: 100,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? accentColor.withValues(alpha: 0.2)
+                          : accentColor.withValues(alpha: 0.12),
+                      border: isDark
+                          ? Border.all(
+                              color: accentColor.withValues(alpha: 0.4),
+                              width: 1.5,
+                            )
+                          : null,
+                    ),
                     child: Transform.scale(
                       scale: niche.scale,
                       child: Hero(
@@ -397,50 +455,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         child: niche.isEmojiIcon
                             ? Text(
                                 niche.iconPath,
-                                style: const TextStyle(fontSize: 48),
+                                style: const TextStyle(fontSize: 42),
                               )
                             : Image.asset(
                                 niche.iconPath,
-                                height: 60, // Aumentado tamanho base
+                                height: 48,
                                 fit: BoxFit.contain,
                               ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Área de texto com altura flexível mas alinhada
-                Text(
-                  niche.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.5,
-                    color: isDark ? Colors.white : Colors.black87,
-                    height: 1.1,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              // Área de texto com altura flexível mas alinhada
+              Text(
+                niche.name,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: colorScheme.onSurface,
+                  height: 1.15,
                 ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      niche.homePhrase,
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.white60 : Colors.black54,
-                        fontSize: 9.5,
-                        height: 1.1,
-                      ),
+              ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Text(
+                    niche.homePhrase,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.55),
+                      fontSize: 10,
+                      height: 1.2,
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -451,25 +509,244 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final categories = NicheCategoryRepository.getCategories(); // Mudar para NicheCategory
     final textTheme = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentTheme = ref.watch(themeControllerProvider);
+    final isPinkTheme = currentTheme == AppTheme.pink;
 
-    return SmokingCelebrationWidget(
-      child: Scaffold(
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    return GlobalCelebrationWidget(
+      child: SmokingCelebrationWidget(
+        child: Scaffold(
         extendBody: true,
         body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-                isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-              ],
-            ),
-          ),
+          color: isDark ? Colors.black : colorScheme.surface,
           child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
+            // --- FLORES DECORATIVAS NO PLANO DE FUNDO (tema rosa) ---
+            if (isPinkTheme) ...[
+              // == FLORES GRANDES (60-80) ==
+              Positioned(
+                top: 80,
+                right: -10,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 72,
+                    color: colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 280,
+                left: -25,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 68,
+                    color: colorScheme.secondary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 120,
+                right: -15,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.spa,
+                    size: 76,
+                    color: colorScheme.primary.withValues(alpha: 0.13),
+                  ),
+                ),
+              ),
+              // == FLORES MÉDIAS (30-45) ==
+              Positioned(
+                top: 45,
+                left: 60,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.eco,
+                    size: 42,
+                    color: colorScheme.secondary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 200,
+                right: 80,
+                child: Transform.rotate(
+                  angle: 0.7,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 38,
+                    color: colorScheme.primary.withValues(alpha: 0.20),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 480,
+                left: 45,
+                child: Transform.rotate(
+                  angle: -0.6,
+                  child: Icon(
+                    Icons.spa,
+                    size: 35,
+                    color: colorScheme.secondary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 320,
+                right: 65,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 40,
+                    color: colorScheme.primary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              // == FLORES PEQUENAS (15-25) - Originais ==
+              Positioned(
+                top: 100,
+                left: 30,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 28,
+                    color: colorScheme.primary.withValues(alpha: 0.22),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 160,
+                left: 70,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 22,
+                    color: colorScheme.secondary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 120,
+                right: 40,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.spa,
+                    size: 26,
+                    color: colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 350,
+                left: 20,
+                child: Transform.rotate(
+                  angle: 0.8,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 24,
+                    color: colorScheme.primary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 400,
+                right: 30,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 26,
+                    color: colorScheme.secondary.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 250,
+                left: 50,
+                child: Transform.rotate(
+                  angle: -0.5,
+                  child: Icon(
+                    Icons.eco,
+                    size: 20,
+                    color: colorScheme.secondary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 200,
+                right: 40,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.spa,
+                    size: 24,
+                    color: colorScheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              // == FLORES PEQUENAS EXTRA ==
+              Positioned(
+                top: 550,
+                left: 100,
+                child: Transform.rotate(
+                  angle: 0.9,
+                  child: Icon(
+                    Icons.eco,
+                    size: 18,
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 650,
+                right: 60,
+                child: Transform.rotate(
+                  angle: -0.7,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 22,
+                    color: colorScheme.secondary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 750,
+                left: 25,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 16,
+                    color: colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 80,
+                left: 90,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 20,
+                    color: colorScheme.secondary.withValues(alpha: 0.13),
+                  ),
+                ),
+              ),
+            ],
             Positioned(
               top: -180,
               right: -180,
@@ -479,7 +756,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF6366F1)
-                      .withValues(alpha: isDark ? 0.05 : 0.02),
+                      .withValues(alpha: isDark ? 0.08 : 0.05),
                 ),
               ),
             ),
@@ -496,51 +773,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         ),
                       ),
                       const SizedBox(height: 8),
-                      if (isDark)
-                        Text(
-                          'Disciplinum',
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 24,
-                            letterSpacing: 1.3,
-                            color: Colors.white,
-                          ),
-                        )
-                      else
-                        Stack(
-                          children: [
-                            Text(
-                              'Disciplinum',
-                              style: textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 24,
-                                letterSpacing: 1.3,
-                                foreground: Paint()
-                                  ..style = PaintingStyle.stroke
-                                  ..strokeWidth = 1.2
-                                  ..color = Colors.black,
-                              ),
-                            ),
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [
-                                  Color.fromARGB(255, 0, 0, 0),
-                                  Color.fromARGB(255, 67, 67, 67)
-                                ],
-                              ).createShader(bounds),
-                              blendMode: BlendMode.srcIn,
-                              child: Text(
-                                'Disciplinum',
-                                style: textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 24,
-                                  letterSpacing: 1.3,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Disciplinum',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 24,
+                          letterSpacing: 1.3,
+                          color: colorScheme.onSurface,
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -558,13 +799,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                           builder: (context, ref, child) {
                             final activeModules = ref.watch(activeModulesProvider);
                             return _buildActiveModulesSection(
-                              activeModules, isDark, textTheme);
+                              activeModules, textTheme);
                           },
                         );
                       }
 
                       final category = categories[index - 1];
-                      return _buildCategorySection(category, isDark, textTheme);
+                      return _buildCategorySection(category, textTheme);
                     },
                   ),
                 ),
@@ -611,12 +852,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         ),
       ),
       bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
+        ),
       ),
     );
   }
 
   Widget _buildCategorySection(
-      NicheCategory category, bool isDark, TextTheme textTheme) {
+      NicheCategory category, TextTheme textTheme) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -625,7 +868,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -641,7 +884,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
               width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
               child: _buildNicheCard(
                 niche,
-                isDark,
                 textTheme,
                 heroTag,
               ),
@@ -652,8 +894,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     );
   }
 
+  // Glow suave para cards ativos - mais elegante e menos intenso
+  static const Color _activeGlowColor = Color(0xFF22C55E); // Verde mais suave
+  static const double _activeBlurRadius = 8.0;
+  static const double _activeSpreadRadius = 1.0;
+
   Widget _buildActiveModulesSection(
-      List<NicheId> activeNiches, bool isDark, TextTheme textTheme) {
+      List<NicheId> activeNiches, TextTheme textTheme) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -662,12 +910,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
         if (activeNiches.isEmpty)
-          _buildEmptyStateCard(isDark, textTheme)
+          _buildEmptyStateCard(textTheme)
         else
           // Usar Wrap para layout de duas colunas
           Wrap(
@@ -677,9 +925,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
               final niche = NicheRepository.getById(nicheId);
               return SizedBox(
                 width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
-                child: _buildNicheCard(
+                child: _buildActiveNicheCard(
                   niche,
-                  isDark,
                   textTheme,
                   'active_${niche.id}',
                 ),
@@ -690,70 +937,203 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     );
   }
 
-  Widget _buildEmptyStateCard(bool isDark, TextTheme textTheme) {
+  /// Card para módulos ativos com glow sutil e elegante
+  Widget _buildActiveNicheCard(
+      Niche niche, TextTheme textTheme, String heroTag) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    
+    return SizedBox(
+      height: 195,
+      child: GestureDetector(
+        onTap: () => _handleNicheTap(niche, heroTag),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark
+                    ? colorScheme.surface.withValues(alpha: 0.95)
+                    : colorScheme.surface,
+                isDark
+                    ? _activeGlowColor.withValues(alpha: 0.2)
+                    : _activeGlowColor.withValues(alpha: 0.06),
+              ],
+            ),
+            // Glow suave e elegante para indicar ativação
+            boxShadow: [
+              // Glow externo mais intenso no tema escuro
+              BoxShadow(
+                color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.25),
+                blurRadius: isDark ? 16 : _activeBlurRadius,
+                spreadRadius: isDark ? 3 : _activeSpreadRadius,
+              ),
+              // Sombra de profundidade escura
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.08),
+                blurRadius: isDark ? 14 : 6,
+                spreadRadius: isDark ? 2 : 0,
+                offset: const Offset(0, 5),
+              ),
+            ],
+            border: Border.all(
+              color: _activeGlowColor.withValues(alpha: isDark ? 0.8 : 0.5),
+              width: isDark ? 2.5 : 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              // Container com altura fixa para garantir que todos os ícones fiquem alinhados
+              SizedBox(
+                height: 100,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _activeGlowColor.withValues(alpha: isDark ? 0.25 : 0.12),
+                      border: Border.all(
+                        color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.35),
+                        width: isDark ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Transform.scale(
+                      scale: niche.scale,
+                      child: Hero(
+                        tag: heroTag,
+                        child: niche.isEmojiIcon
+                            ? Text(
+                                niche.iconPath,
+                                style: const TextStyle(fontSize: 42),
+                              )
+                            : Image.asset(
+                                niche.iconPath,
+                                height: 48,
+                                fit: BoxFit.contain,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Área de texto com altura flexível mas alinhada
+              Text(
+                niche.name,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: colorScheme.onSurface,
+                  height: 1.15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Text(
+                    niche.homePhrase,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 10,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateCard(TextTheme textTheme) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
           child: SizedBox(
             height: 195,
-            child: Material(
-              color: Colors.transparent,
-              elevation: 20,
-              shadowColor: Colors.black.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [
-                            const Color.fromARGB(255, 30, 30, 40),
-                            const Color.fromARGB(255, 15, 15, 20),
-                          ]
-                        : [
-                            Colors.white,
-                            const Color.fromARGB(255, 230, 235, 255),
-                          ],
-                  ),
-                  border: Border.all(
-                    color: isDark
-                        ? const Color.fromARGB(164, 255, 255, 255)
-                        : Colors.black,
-                    width: 1,
-                  ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
-                padding: const EdgeInsets.all(8),
-                child: SizedBox.expand(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '🚫',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 40),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Sem módulos ativos',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? const Color.fromARGB(85, 255, 255, 255)
-                              : Colors.black45,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
                   ),
-                ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colorScheme.primary.withValues(alpha: 0.08),
+                    ),
+                    child: Icon(
+                      Icons.add_circle_outline,
+                      size: 36,
+                      color: colorScheme.primary.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Ative um módulo',
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Sem módulos ativos',
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const Expanded(child: SizedBox()), // Espaço vazio para manter alinhamento
+        const Expanded(child: SizedBox()),
       ],
     );
+  }
+}
+
+// Extensão para facilitar o acesso ao contexto do GlobalCelebrationWidget
+extension GlobalCelebrationContext on BuildContext {
+  /// Dispara verificação manual de conquistas pendentes
+  void checkPendingAchievements() {
+    // O GlobalCelebrationWidget verifica automaticamente no initState
+    // Esta extensão pode ser usada para forçar re-verificação se necessário
   }
 }

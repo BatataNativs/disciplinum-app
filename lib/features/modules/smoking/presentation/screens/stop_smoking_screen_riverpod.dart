@@ -95,7 +95,6 @@ class StopSmokingScreenRiverpod extends ConsumerWidget {
             title: niche.name,
             icon: Icons.smoke_free,
             color: Colors.green,
-            isDark: Theme.of(context).brightness == Brightness.dark,
             content: '''Status: ${state.smokingData?.isConfigured == true ? "Configurado" : "Não configurado"}
 
 Início: ${_formatDate(state.smokingData!.startDate)}

@@ -1,6 +1,6 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medalha.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
@@ -12,13 +12,13 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   List<String> getAllMedalhaIds() {
-    return SmokingMedalhaEntity.values.map((m) => m.name).toList();
+    return SmokingMedalEntity.values.map((m) => m.name).toList();
   }
 
   dynamic getMedalhaData(String medalhaId) {
-    final entity = SmokingMedalhaEntity.values.firstWhere(
+    final entity = SmokingMedalEntity.values.firstWhere(
       (m) => m.name == medalhaId,
-      orElse: () => SmokingMedalhaEntity.bronze,
+      orElse: () => SmokingMedalEntity.bronze,
     );
     return {
       'id': entity.name,
@@ -72,7 +72,7 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
       final earnedInsignias = moduleData['earnedInsignias'] as List<String>? ?? [];
       final newMedalhas = <String>[];
       
-      for (final medalha in SmokingMedalhaEntity.values) {
+      for (final medalha in SmokingMedalEntity.values) {
         if (!_currentState!.hasMedalha(medalha.name) && 
             medalha.canBeAwarded(earnedInsignias)) {
           newMedalhas.add(medalha.name);
@@ -88,9 +88,9 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   String getMedalhaRequirement(String medalhaId) {
-    final entity = SmokingMedalhaEntity.values.firstWhere(
+    final entity = SmokingMedalEntity.values.firstWhere(
       (m) => m.name == medalhaId,
-      orElse: () => SmokingMedalhaEntity.bronze,
+      orElse: () => SmokingMedalEntity.bronze,
     );
     return entity.requirementDescription;
   }
@@ -159,44 +159,44 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
 
   @override
   String getMedalhaName(String medalhaId) {
-    final entity = SmokingMedalhaEntity.values.firstWhere(
+    final entity = SmokingMedalEntity.values.firstWhere(
       (m) => m.name == medalhaId,
-      orElse: () => SmokingMedalhaEntity.bronze,
+      orElse: () => SmokingMedalEntity.bronze,
     );
     return entity.nameBr;
   }
 
   @override
   String getMedalhaAsset(String medalhaId) {
-    final entity = SmokingMedalhaEntity.values.firstWhere(
+    final entity = SmokingMedalEntity.values.firstWhere(
       (m) => m.name == medalhaId,
-      orElse: () => SmokingMedalhaEntity.bronze,
+      orElse: () => SmokingMedalEntity.bronze,
     );
     return entity.asset;
   }
 
   /// Verifica se pode conceder medalha baseada nas insígnias
   bool canAwardMedalha(String medalhaId, List<String> earnedInsignias) {
-    final entity = SmokingMedalhaEntity.values.firstWhere(
+    final entity = SmokingMedalEntity.values.firstWhere(
       (m) => m.name == medalhaId,
-      orElse: () => SmokingMedalhaEntity.bronze,
+      orElse: () => SmokingMedalEntity.bronze,
     );
     return entity.canBeAwarded(earnedInsignias);
   }
 
   /// Obtém medalhas disponíveis para concessão
-  List<SmokingMedalhaEntity> getAvailableMedalhas(List<String> earnedInsignias) {
-    return SmokingMedalhaEntity.values
+  List<SmokingMedalEntity> getAvailableMedalhas(List<String> earnedInsignias) {
+    return SmokingMedalEntity.values
         .where((medalha) => medalha.canBeAwarded(earnedInsignias))
         .toList();
   }
 
   /// Obtém medalhas já conquistadas
-  Future<List<SmokingMedalhaEntity>> getEarnedMedalhaEntities() async {
+  Future<List<SmokingMedalEntity>> getEarnedMedalhaEntities() async {
     if (_currentState == null) return [];
     
     final earnedIds = await getEarnedMedalhas();
-    return SmokingMedalhaEntity.values
+    return SmokingMedalEntity.values
         .where((medalha) => earnedIds.contains(medalha.name))
         .toList();
   }
@@ -205,7 +205,7 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
   Map<String, dynamic> getNextMedalhaProgress() {
     if (_currentState == null) {
       return {
-        'nextMedalha': SmokingMedalhaEntity.bronze.name,
+        'nextMedalha': SmokingMedalEntity.bronze.name,
         'nextMedalhaName': 'Medalha de Bronze',
         'requiredInsignias': 1,
         'currentInsignias': 0,
@@ -218,8 +218,8 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     final disciplinumCount = earnedInsignias.where((i) => i == 'disciplinum').length;
     
     // Encontra a próxima medalha não conquistada
-    SmokingMedalhaEntity? nextMedalha;
-    for (final medalha in SmokingMedalhaEntity.values) {
+    SmokingMedalEntity? nextMedalha;
+    for (final medalha in SmokingMedalEntity.values) {
       if (!_currentState!.hasMedalha(medalha.name) && 
           medalha.canBeAwarded(earnedInsignias)) {
         nextMedalha = medalha;
@@ -272,7 +272,7 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     if (_currentState == null) {
       return {
         'totalEarned': 0,
-        'totalAvailable': SmokingMedalhaEntity.values.length,
+        'totalAvailable': SmokingMedalEntity.values.length,
         'byRarity': {},
         'byCategory': {},
         'completionPercentage': 0.0,
@@ -290,10 +290,10 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     
     return {
       'totalEarned': earned.length,
-      'totalAvailable': SmokingMedalhaEntity.values.length,
+      'totalAvailable': SmokingMedalEntity.values.length,
       'byRarity': byRarity,
       'byCategory': byCategory,
-      'completionPercentage': (earned.length / SmokingMedalhaEntity.values.length * 100),
+      'completionPercentage': (earned.length / SmokingMedalEntity.values.length * 100),
     };
   }
 

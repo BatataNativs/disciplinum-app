@@ -5,7 +5,6 @@ class ListActionTile extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  final bool isDark;
 
   const ListActionTile({
     super.key,
@@ -13,18 +12,19 @@ class ListActionTile extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onTap,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          color: colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Material(
@@ -51,14 +51,14 @@ class ListActionTile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: isDark ? Colors.white30 : Colors.black26,
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
               ],
             ),

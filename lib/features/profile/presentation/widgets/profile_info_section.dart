@@ -12,36 +12,27 @@ class ProfileInfoSection extends ConsumerWidget {
         ? (authService.userProfile?['name'] ?? 'Usuário')
         : 'Usuário Anônimo';
     
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark
-              ? [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.04),
-                ]
-              : [
-                  Colors.white.withValues(alpha: 0.95),
-                  Colors.white.withValues(alpha: 0.8),
-                ],
+          colors: [
+            colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+            colorScheme.surfaceContainerHighest,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.7),
+          color: colorScheme.outline.withValues(alpha: 0.2),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.08),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -56,9 +47,7 @@ class ProfileInfoSection extends ConsumerWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 26,
-                color: isDark
-                    ? const Color(0xFFFFFFFF)
-                    : const Color(0xFF1F2937),
+                color: colorScheme.onSurface,
                 letterSpacing: 0.5,
               ),
             ),
@@ -74,21 +63,14 @@ class ProfileInfoSection extends ConsumerWidget {
                     horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDark
-                        ? [
-                            const Color(0xFF6366F1).withValues(alpha: 0.25),
-                            const Color(0xFF8B5CF6).withValues(alpha: 0.25),
-                          ]
-                        : [
-                            const Color(0xFF4F46E5).withValues(alpha: 0.12),
-                            const Color(0xFF7C3AED).withValues(alpha: 0.12),
-                          ],
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.15),
+                      colorScheme.primary.withValues(alpha: 0.1),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF6366F1).withValues(alpha: 0.4)
-                        : const Color(0xFF4F46E5).withValues(alpha: 0.25),
+                    color: colorScheme.primary.withValues(alpha: 0.3),
                     width: 1.5,
                   ),
                 ),
@@ -98,9 +80,7 @@ class ProfileInfoSection extends ConsumerWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
-                    color: isDark
-                        ? const Color(0xFF818CF8)
-                        : const Color(0xFF4F46E5),
+                    color: colorScheme.primary,
                   ),
                 ),
               ),
@@ -116,21 +96,14 @@ class ProfileInfoSection extends ConsumerWidget {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDark
-                        ? [
-                            Colors.white.withValues(alpha: 0.06),
-                            Colors.white.withValues(alpha: 0.02),
-                          ]
-                        : [
-                            Colors.black.withValues(alpha: 0.025),
-                            Colors.black.withValues(alpha: 0.01),
-                          ],
+                    colors: [
+                      colorScheme.onSurface.withValues(alpha: 0.05),
+                      colorScheme.onSurface.withValues(alpha: 0.02),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.12)
-                        : Colors.black.withValues(alpha: 0.06),
+                    color: colorScheme.outline.withValues(alpha: 0.1),
                     width: 1.5,
                   ),
                 ),
@@ -143,9 +116,7 @@ class ProfileInfoSection extends ConsumerWidget {
                     fontSize: 15,
                     height: 1.6,
                     letterSpacing: 0.2,
-                    color: isDark
-                        ? const Color(0xFFE2E8F0)
-                        : const Color(0xFF475569),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ),

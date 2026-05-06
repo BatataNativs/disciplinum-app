@@ -9,6 +9,7 @@ import 'package:disciplinum/features/modules/reading/presentation/screens/my_she
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_settings_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart' as stats;
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart' as reading_progress;
+import 'package:disciplinum/features/modules/reading/gamification/presentation/widgets/reading_celebration_widget.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -108,89 +109,90 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final isActive = ref.watch(readingActiveProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-              isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255),
-            ],
+    return ReadingCelebrationWidget(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header com título e stats
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, 
-                        color: isDark ? Colors.white : Colors.black),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Leitura',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final readingService = ref.watch(readingServiceProvider);
-                              final totalBooks = readingService.books.length;
-                              final completedBooks = readingService.completedBooks.length;
-                              final currentStreak = readingService.currentStreak;
-                              
-                              return Row(
-                                children: [
-                                  _buildStatChip(
-                                    '$totalBooks livros',
-                                    isDark ? Colors.white24 : Colors.black12,
-                                    isDark ? Colors.white : Colors.black,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildStatChip(
-                                    '$completedBooks concluídos',
-                                    const Color(0xFF10B981).withValues(alpha: 0.2),
-                                    const Color(0xFF10B981),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildStatChip(
-                                    '$currentStreak dias 🔥',
-                                    const Color(0xFF6366F1).withValues(alpha: 0.2),
-                                    const Color(0xFF6366F1),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header com título e stats
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, 
+                          color: colorScheme.onSurface),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Leitura',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final readingService = ref.watch(readingServiceProvider);
+                                final totalBooks = readingService.books.length;
+                                final completedBooks = readingService.completedBooks.length;
+                                final currentStreak = readingService.currentStreak;
+                                
+                                return Row(
+                                  children: [
+                                    _buildStatChip(
+                                      '$totalBooks livros',
+                                      colorScheme.onSurface.withValues(alpha: 0.2),
+                                      colorScheme.onSurface,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildStatChip(
+                                      '$completedBooks concluídos',
+                                      const Color(0xFF10B981).withValues(alpha: 0.2),
+                                      const Color(0xFF10B981),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildStatChip(
+                                      '$currentStreak dias 🔥',
+                                      const Color(0xFF6366F1).withValues(alpha: 0.2),
+                                      const Color(0xFF6366F1),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               // Segmented Control (2 opções)
-              _buildSegmentedControl(isDark),
+              _buildSegmentedControl(),
 
               // Conteúdo
               Expanded(
@@ -228,8 +230,8 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                         const SizedBox(height: 8),
                         const Expanded(child: MyShelfScreen()),
                         const SizedBox(height: 12),
-                        _buildReminderSection(isDark),
-                        _buildBottomButtons(isDark, isActive),
+                        _buildReminderSection(),
+                        _buildBottomButtons(isActive),
                       ],
                     ),
                     // 1: Como funciona
@@ -237,23 +239,23 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSegmentedControl(bool isDark) {
+  Widget _buildSegmentedControl() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Container(
         height: 44,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.04),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(14),
         ),
         child: TabBar(
@@ -271,7 +273,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           labelColor: Colors.white,
-          unselectedLabelColor: isDark ? Colors.white60 : Colors.black45,
+          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
           labelStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
@@ -292,8 +294,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 
   Widget _buildHowItWorks(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Column(
       children: [
         Expanded(
@@ -303,7 +303,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NicheInfoCard(
-                  isDark: isDark,
                   icon: Icons.auto_stories_rounded,
                   title: 'Em " + Livro", adicione os livros',
                   content:
@@ -312,7 +311,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                 ),
                 const SizedBox(height: 16),
                 NicheInfoCard(
-                  isDark: isDark,
                   icon: Icons.notifications_outlined,
                   title: 'Em "Notificações", configure o lembrete diário',
                   content:
@@ -321,7 +319,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                 ),
                 const SizedBox(height: 16),
                 NicheInfoCard(
-                  isDark: isDark,
                   icon: Icons.bar_chart_rounded,
                   title: 'Em "Estatísticas", veja sua evolução',
                   content:
@@ -339,7 +336,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               icon: Icons.rocket_launch_rounded,
               label: 'Entendi!',
               color: const Color(0xFF6366F1),
-              isDark: isDark,
               onTap: () {
                 _tabController.animateTo(1);
               },
@@ -350,13 +346,12 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     );
   }
 
-  Widget _buildBottomButtons(bool isDark, bool isActive) {
+  Widget _buildBottomButtons(bool isActive) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -369,7 +364,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   icon: Icons.add,
                   label: 'Livro',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: () {
                     AddBookDialog.show(context);
                   },
@@ -381,7 +375,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
-                  isDark: isDark,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -403,7 +396,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: _showStatsMenu,
                 ),
               ),
@@ -413,7 +405,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: () => _toggleModule(isActive),
                 ),
               ),
@@ -422,15 +413,17 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         ],
       ),
     );
-  }  void _showStatsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  }
+
+  void _showStatsMenu() {
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -442,7 +435,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -450,7 +443,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               icon: Icons.bar_chart_rounded,
               label: 'Estatísticas de leitura',
               color: Colors.teal,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -463,7 +455,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -536,12 +527,13 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 
 
-  Widget _buildReminderSection(bool isDark) {
+  Widget _buildReminderSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -553,7 +545,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -569,7 +561,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     GestureDetector(
@@ -620,7 +612,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),

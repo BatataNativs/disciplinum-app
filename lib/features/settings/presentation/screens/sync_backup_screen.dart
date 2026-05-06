@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
@@ -102,25 +101,21 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF8FAFC),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
-          'Backup e Sincronização',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.transparent,
+        title: const Text('Sincronização'),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         elevation: 0,
         centerTitle: true,
         flexibleSpace: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: (isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF8FAFC)).withValues(alpha: 0.7),
+              color: colorScheme.surface.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -138,7 +133,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF6366F1).withValues(alpha: isDark ? 0.3 : 0.15),
+                    const Color(0xFF6366F1).withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                 ),
@@ -155,7 +150,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF10B981).withValues(alpha: isDark ? 0.2 : 0.1),
+                    const Color(0xFF10B981).withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -169,14 +164,13 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  _buildHeader(isDark),
+                  _buildHeader(colorScheme),
                   const SizedBox(height: 40),
                   _buildSyncCard(
                     title: 'Fazer Backup Agora',
                     description: 'Envia seus dados locais para a nuvem de forma segura e criptografada.',
                     icon: Icons.cloud_upload_outlined,
                     gradientColors: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    isDark: isDark,
                     onTap: () => _handleAction('backup', () => ref.read(cloudSyncServiceProvider).syncNow()),
                   ),
                   const SizedBox(height: 16),
@@ -185,11 +179,10 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                     description: 'Mescla dados locais com a nuvem. Ideal para múltiplos dispositivos.',
                     icon: Icons.sync_rounded,
                     gradientColors: const [Color(0xFF10B981), Color(0xFF14B8A6)],
-                    isDark: isDark,
                     onTap: () => _handleAction('sync', () => ref.read(cloudSyncServiceProvider).syncNow()),
                   ),
                   const Spacer(),
-                  _buildStatusFooter(isDark),
+                  _buildStatusFooter(),
                 ],
               ),
             ),
@@ -198,7 +191,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
           if (_isProcessing)
             Positioned.fill(
               child: Container(
-                color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
+                color: colorScheme.surface.withValues(alpha: 0.7),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                   child: Center(
@@ -209,7 +202,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                            color: colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -229,7 +222,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 4,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    isDark ? const Color(0xFF6366F1) : const Color(0xFF6366F1),
+                                    colorScheme.primary,
                                   ),
                                 ),
                               ),
@@ -240,7 +233,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -250,7 +243,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: isDark ? Colors.white60 : Colors.black54,
+                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -267,7 +260,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     );
   }
 
-  Widget _buildHeader(bool isDark) {
+  Widget _buildHeader(ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -287,7 +280,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.4 : 0.2),
+                color: colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -296,7 +289,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
           child: Icon(
             Icons.cloud_done_outlined,
             size: 40,
-            color: isDark ? Colors.white : const Color(0xFF6366F1),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 24),
@@ -306,7 +299,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -317,7 +310,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
           style: TextStyle(
             fontSize: 15,
             height: 1.5,
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -329,40 +322,23 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     required String description,
     required IconData icon,
     required List<Color> gradientColors,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
-      onTap: _isProcessing ? null : () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
+      onTap: onTap,
+      child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF1E1E2E),
-                    const Color(0xFF161622),
-                  ]
-                : [
-                    Colors.white,
-                    const Color(0xFFF8FAFC),
-                  ],
-          ),
-          borderRadius: BorderRadius.circular(24),
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: gradientColors[0].withValues(alpha: isDark ? 0.3 : 0.15),
-            width: 1.5,
+            color: colorScheme.outline.withValues(alpha: 0.3),
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withValues(alpha: isDark ? 0.2 : 0.08),
+              color: gradientColors[0].withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -375,22 +351,13 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
               height: 56,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    gradientColors[0].withValues(alpha: 0.2),
-                    gradientColors[1].withValues(alpha: 0.1),
-                  ],
+                  colors: gradientColors,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: gradientColors[0].withValues(alpha: 0.3),
-                  width: 1,
-                ),
               ),
               child: Icon(
                 icon,
-                color: gradientColors[0],
+                color: Colors.white,
                 size: 28,
               ),
             ),
@@ -401,10 +368,9 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black87,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -413,7 +379,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.4,
-                      color: isDark ? Colors.white60 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -430,7 +396,8 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     );
   }
 
-  Widget _buildStatusFooter(bool isDark) {
+  Widget _buildStatusFooter() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         children: [
@@ -440,7 +407,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -452,7 +419,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            isDark ? const Color(0xFF6366F1) : const Color(0xFF6366F1),
+                            colorScheme.primary,
                           ),
                         ),
                       ),
@@ -462,7 +429,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -475,12 +442,12 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: _lastSyncDate != null
-                    ? const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08)
-                    : (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                    : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
                   color: _lastSyncDate != null
-                      ? const Color(0xFF10B981).withValues(alpha: isDark ? 0.3 : 0.2)
+                      ? const Color(0xFF10B981).withValues(alpha: 0.25)
                       : Colors.transparent,
                   width: 1,
                 ),
@@ -492,7 +459,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                     _lastSyncDate != null ? Icons.check_circle_outline : Icons.info_outline,
                     color: _lastSyncDate != null
                         ? const Color(0xFF10B981)
-                        : (isDark ? Colors.white38 : Colors.black38),
+                        : colorScheme.onSurface.withValues(alpha: 0.38),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -505,7 +472,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                       fontWeight: FontWeight.w500,
                       color: _lastSyncDate != null
                           ? const Color(0xFF10B981)
-                          : (isDark ? Colors.white38 : Colors.black38),
+                          : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                 ],
@@ -520,14 +487,14 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
               Icon(
                 Icons.shield_outlined,
                 size: 14,
-                color: isDark ? Colors.white24 : Colors.black.withValues(alpha: 0.24),
+                color: colorScheme.onSurface.withValues(alpha: 0.24),
               ),
               const SizedBox(width: 6),
               Text(
                 'Dados sincronizados de forma segura',
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.white24 : Colors.black.withValues(alpha: 0.24),
+                  color: colorScheme.onSurface.withValues(alpha: 0.24),
                 ),
               ),
             ],

@@ -8,7 +8,7 @@ import 'package:disciplinum/features/modules/spending/presentation/widgets/my_pr
 /// Widget de ações da tela Spending
 class SpendingActionsWidget extends StatelessWidget {
   final int selectedIndex;
-  final bool isDark;
+  final ColorScheme colorScheme;
   final bool gamificationRunning;
   final PageController pageController;
   final VoidCallback onOpenSelectApps;
@@ -20,7 +20,7 @@ class SpendingActionsWidget extends StatelessWidget {
   const SpendingActionsWidget({
     super.key,
     required this.selectedIndex,
-    required this.isDark,
+    required this.colorScheme,
     required this.gamificationRunning,
     required this.pageController,
     required this.onOpenSelectApps,
@@ -57,7 +57,6 @@ class SpendingActionsWidget extends StatelessWidget {
             icon: Icons.apps_rounded,
             label: 'Selecionar Apps',
             color: const Color(0xFF6366F1),
-            isDark: isDark,
             onTap: onOpenSelectApps,
           ),
         );
@@ -70,7 +69,6 @@ class SpendingActionsWidget extends StatelessWidget {
               icon: Icons.rocket_launch_rounded,
               label: 'Entendi!',
               color: const Color(0xFF6366F1),
-              isDark: isDark,
               onTap: () {
                 if (pageController.hasClients) {
                   pageController.animateToPage(
@@ -92,9 +90,7 @@ class SpendingActionsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -106,7 +102,6 @@ class SpendingActionsWidget extends StatelessWidget {
                   icon: Icons.account_balance_wallet_rounded,
                   label: 'Controle de gastos',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: () => _showControlGastosMenu(),
                 ),
               ),
@@ -121,7 +116,6 @@ class SpendingActionsWidget extends StatelessWidget {
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
-                  isDark: isDark,
                   onTap: () => _showStatisticsMenu(),
                 ),
               ),
@@ -135,7 +129,6 @@ class SpendingActionsWidget extends StatelessWidget {
                       ? 'Desativar módulo'
                       : 'Ativar módulo',
                   color: gamificationRunning ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: onToggleModule,
                 ),
               ),
@@ -153,7 +146,7 @@ class SpendingActionsWidget extends StatelessWidget {
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -165,7 +158,7 @@ class SpendingActionsWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -173,7 +166,6 @@ class SpendingActionsWidget extends StatelessWidget {
               icon: Icons.touch_app_outlined,
               label: 'Selecionar apps',
               color: const Color(0xFF6366F1),
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 onOpenSelectApps();
@@ -183,7 +175,6 @@ class SpendingActionsWidget extends StatelessWidget {
               icon: Icons.receipt_long_rounded,
               label: 'Gastos fixos',
               color: Colors.teal,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -206,7 +197,7 @@ class SpendingActionsWidget extends StatelessWidget {
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -218,7 +209,7 @@ class SpendingActionsWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -226,7 +217,6 @@ class SpendingActionsWidget extends StatelessWidget {
               icon: Icons.receipt_long_outlined,
               label: 'Estatísticas de contas pagas',
               color: Colors.purple,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -241,7 +231,6 @@ class SpendingActionsWidget extends StatelessWidget {
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
-              isDark: isDark,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(

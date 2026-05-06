@@ -7,7 +7,6 @@ import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 
 class MoneySavingActionsWidget extends StatelessWidget {
   final MoneySavingChallengeModel? challenge;
-  final bool isDark;
   final VoidCallback onShowChallengesList;
   final VoidCallback onShowNotifications;
   final VoidCallback onShowStatistics;
@@ -16,7 +15,6 @@ class MoneySavingActionsWidget extends StatelessWidget {
   const MoneySavingActionsWidget({
     super.key,
     required this.challenge,
-    required this.isDark,
     required this.onShowChallengesList,
     required this.onShowNotifications,
     required this.onShowStatistics,
@@ -25,15 +23,14 @@ class MoneySavingActionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     bool hasChallenge = challenge != null;
     bool isActive = challenge?.isActive ?? false;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -45,7 +42,6 @@ class MoneySavingActionsWidget extends StatelessWidget {
                   icon: Icons.grid_view_rounded,
                   label: 'Meus Desafios',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: onShowChallengesList,
                 ),
               ),
@@ -55,7 +51,6 @@ class MoneySavingActionsWidget extends StatelessWidget {
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
-                  isDark: isDark,
                   onTap: onShowNotifications,
                 ),
               ),
@@ -69,7 +64,6 @@ class MoneySavingActionsWidget extends StatelessWidget {
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
-                  isDark: isDark,
                   onTap: onShowStatistics,
                 ),
               ),
@@ -79,7 +73,6 @@ class MoneySavingActionsWidget extends StatelessWidget {
                   icon: isActive ? Icons.power_settings_new : Icons.power_off,
                   label: isActive ? 'Desativar módulo' : 'Ativar módulo',
                   color: isActive ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: hasChallenge ? onToggleModule : () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Crie um desafio primeiro!')),
@@ -96,19 +89,17 @@ class MoneySavingActionsWidget extends StatelessWidget {
 }
 
 class MoneySavingStatisticsMenu extends StatelessWidget {
-  final bool isDark;
-
   const MoneySavingStatisticsMenu({
     super.key,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -120,7 +111,7 @@ class MoneySavingStatisticsMenu extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 20),
@@ -128,7 +119,6 @@ class MoneySavingStatisticsMenu extends StatelessWidget {
             icon: Icons.analytics_rounded,
             label: 'Estatísticas dos Desafios',
             color: const Color(0xFF10B981), // Emerald
-            isDark: isDark,
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -143,7 +133,6 @@ class MoneySavingStatisticsMenu extends StatelessWidget {
             icon: Icons.bar_chart_rounded,
             label: 'Conquistas',
             color: Colors.blue,
-            isDark: isDark,
             onTap: () {
               Navigator.pop(context);
               Navigator.push(

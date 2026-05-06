@@ -14,16 +14,14 @@ class BingeEatingSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final List<String> options = ['Compulsão alimentar', 'Como funciona'];
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -61,7 +59,7 @@ class BingeEatingSegmentedControl extends StatelessWidget {
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,

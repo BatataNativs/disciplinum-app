@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/features/settings/presentation/screens/how_it_works_screen.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   // Parâmetro opcional para saber se é modo de revisão (vindo das configurações)
   final bool isReviewMode;
 
@@ -15,10 +18,10 @@ class OnboardingScreen extends StatefulWidget {
   });
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   static const int _totalPages = 3;
@@ -294,11 +297,167 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final String finishButtonText =
         widget.isReviewMode ? 'Entendi' : 'Entrar no App';
 
+    final currentTheme = ref.watch(themeControllerProvider);
+    final isPinkTheme = currentTheme == AppTheme.pink;
+
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
+            // --- FLORES DECORATIVAS NO PLANO DE FUNDO (tema rosa) ---
+            if (isPinkTheme) ...[
+              // == FLORES GRANDES (60-80) ==
+              Positioned(
+                top: 30,
+                right: -20,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 82,
+                    color: Colors.pink.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 200,
+                left: -25,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 76,
+                    color: Colors.pinkAccent.withValues(alpha: 0.10),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 200,
+                right: -15,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.spa,
+                    size: 84,
+                    color: Colors.pink.withValues(alpha: 0.11),
+                  ),
+                ),
+              ),
+              // == FLORES MÉDIAS (30-45) ==
+              Positioned(
+                top: 80,
+                left: 50,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.eco,
+                    size: 46,
+                    color: Colors.pinkAccent.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 180,
+                right: 60,
+                child: Transform.rotate(
+                  angle: 0.7,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 42,
+                    color: Colors.pink.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 350,
+                left: 30,
+                child: Transform.rotate(
+                  angle: -0.6,
+                  child: Icon(
+                    Icons.spa,
+                    size: 40,
+                    color: Colors.pinkAccent.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 280,
+                right: 50,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 44,
+                    color: Colors.pink.withValues(alpha: 0.13),
+                  ),
+                ),
+              ),
+              // == FLORES PEQUENAS (15-28) ==
+              Positioned(
+                top: 140,
+                left: 20,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 28,
+                    color: Colors.pink.withValues(alpha: 0.22),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 250,
+                right: 30,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.spa,
+                    size: 24,
+                    color: Colors.pinkAccent.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 400,
+                left: 60,
+                child: Transform.rotate(
+                  angle: 0.8,
+                  child: Icon(
+                    Icons.filter_vintage,
+                    size: 22,
+                    color: Colors.pink.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 150,
+                left: 80,
+                child: Transform.rotate(
+                  angle: -0.5,
+                  child: Icon(
+                    Icons.eco,
+                    size: 20,
+                    color: Colors.pinkAccent.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 100,
+                right: 70,
+                child: Transform.rotate(
+                  angle: 0.6,
+                  child: Icon(
+                    Icons.local_florist,
+                    size: 26,
+                    color: Colors.pink.withValues(alpha: 0.17),
+                  ),
+                ),
+              ),
+            ],
+            // --- CONTEÚDO PRINCIPAL ---
+            Column(
+              children: [
             // Cards deslizantes
             Expanded(
               child: PageView.builder(
@@ -1281,7 +1440,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 }

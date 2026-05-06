@@ -50,8 +50,7 @@ class _MoneySavingChallengeNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -59,8 +58,8 @@ class _MoneySavingChallengeNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -72,7 +71,7 @@ class _MoneySavingChallengeNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -80,7 +79,7 @@ class _MoneySavingChallengeNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: _isLoading
@@ -99,23 +98,20 @@ class _MoneySavingChallengeNotificationsScreenState
                       title: 'Lembretes do Desafio',
                       subtitle: 'Configure lembretes para te motivar a poupar',
                       icon: Icons.savings_rounded,
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    _buildSchedulingSection(isDark),
+                    _buildSchedulingSection(),
                     const SizedBox(height: 8),
 
                     // Como funciona - Desafio
                     _buildMinimalInfoCard(
                       description:
                           'Configure lembretes para te motivar a poupar! As notificações são opcionais e servem apenas como incentivo.',
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 8),
                     _buildMinimalInfoCard(
                       description:
                           'Lembre-se: este é um tracker manual. As marcações no grid devem refletir seus depósitos reais na vida real, em instituições financeiras de sua escolha, conforme você os informa no app.',
-                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -128,8 +124,8 @@ class _MoneySavingChallengeNotificationsScreenState
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -166,7 +162,7 @@ class _MoneySavingChallengeNotificationsScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -175,7 +171,7 @@ class _MoneySavingChallengeNotificationsScreenState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -188,31 +184,24 @@ class _MoneySavingChallengeNotificationsScreenState
 
   Widget _buildMinimalInfoCard({
     required String description,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
+          color: colorScheme.outline.withValues(alpha: 0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Text(
         description,
         style: TextStyle(
           fontSize: 12,
-          color: const Color(0xFF64748B),
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
           height: 1.4,
           fontWeight: FontWeight.w400,
         ),
@@ -220,25 +209,19 @@ class _MoneySavingChallengeNotificationsScreenState
     );
   }
 
-  Widget _buildSchedulingSection(bool isDark) {
+  Widget _buildSchedulingSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     if (_challenge == null) return const SizedBox();
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
+          color: colorScheme.outline.withValues(alpha: 0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +264,7 @@ class _MoneySavingChallengeNotificationsScreenState
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
                   border:
-                      Border.all(color: isDark ? Colors.white24 : Colors.grey),
+                      Border.all(color: colorScheme.outline),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

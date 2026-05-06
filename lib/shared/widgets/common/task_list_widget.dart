@@ -5,7 +5,6 @@ typedef Task = ProcrastinationTask;
 
 /// Widget para exibir a lista de tarefas com drag and drop
 class TaskListWidget extends StatelessWidget {
-  final bool isDark;
   final List<Task> tasks;
   final Function(Task) onTaskToggle;
   final Function(Task) onTaskEdit;
@@ -14,7 +13,6 @@ class TaskListWidget extends StatelessWidget {
 
   const TaskListWidget({
     super.key,
-    required this.isDark,
     required this.tasks,
     required this.onTaskToggle,
     required this.onTaskEdit,
@@ -25,7 +23,7 @@ class TaskListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     return ReorderableListView.builder(
@@ -34,68 +32,65 @@ class TaskListWidget extends StatelessWidget {
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];
-        return _buildTaskTile(task, index);
+        return _buildTaskTile(context, task, index);
       },
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.checklist_rounded,
-              size: 64,
-              color: isDark ? Colors.white30 : Colors.black26,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 48,
+            color: colorScheme.onSurface.withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Nenhuma tarefa',
+            style: TextStyle(
+              fontSize: 16,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Nenhuma tarefa ainda',
-              style: TextStyle(
-                fontSize: 18,
-                color: isDark ? Colors.white60 : Colors.black54,
-                fontWeight: FontWeight.w500,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Adicione sua primeira tarefa para começar',
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Adicione sua primeira tarefa para começar',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: onAddTask,
+            icon: const Icon(Icons.add),
+            label: const Text('Adicionar Tarefa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onAddTask,
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar Tarefa'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTaskTile(Task task, int index) {
+  Widget _buildTaskTile(BuildContext context, Task task, int index) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       key: ValueKey(task.id),
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.05)
-          : Colors.black.withValues(alpha: 0.02),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isDark ? Colors.white12 : Colors.black12,
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -104,7 +99,7 @@ class TaskListWidget extends StatelessWidget {
           index: index,
           child: Icon(
             Icons.drag_handle,
-            color: isDark ? Colors.white38 : Colors.black38,
+            color: colorScheme.onSurface.withValues(alpha: 0.4),
           ),
         ),
         title: Text(
@@ -112,7 +107,7 @@ class TaskListWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
           ),
         ),
@@ -121,7 +116,7 @@ class TaskListWidget extends StatelessWidget {
                 task.description!,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -138,7 +133,7 @@ class TaskListWidget extends StatelessWidget {
             PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               onSelected: (value) {
                 switch (value) {

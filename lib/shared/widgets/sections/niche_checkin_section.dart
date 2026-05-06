@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 
 class NicheCheckinSection extends StatelessWidget {
   final TimeOfDay? checkinTime;
-  final bool isDark;
   final VoidCallback onDeleteTime;
 
   const NicheCheckinSection({
     super.key,
     required this.checkinTime,
-    required this.isDark,
     required this.onDeleteTime,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey[300]!,
+          color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -33,7 +33,7 @@ class NicheCheckinSection extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -49,7 +49,7 @@ class NicheCheckinSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     GestureDetector(
@@ -85,9 +85,9 @@ class NicheCheckinSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Para editar, apague este horário, e defina um novo horário no botão "Check-in diário"',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                 ),
               ],
             )
@@ -100,13 +100,13 @@ class NicheCheckinSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Acesse "Check-in diário" abaixo para configurar seu check-in diário',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                 ),
               ],
             ),

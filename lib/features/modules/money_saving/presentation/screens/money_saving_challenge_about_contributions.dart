@@ -7,7 +7,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final service = ref.watch(moneySavingChallengeServiceProvider);
     final challenges = service.challengesList;
 
@@ -32,7 +32,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
     String currency = challenges.isNotEmpty ? challenges.first.currency : 'R\$';
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Sobre os Aportes'),
         backgroundColor: Colors.transparent,
@@ -64,7 +64,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                     'Total de Aportes Realizados',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
@@ -72,7 +72,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -86,7 +86,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -94,7 +94,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
               'Estes são os valores que você consegue guardar com mais regularidade.',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white38 : Colors.black38,
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
             const SizedBox(height: 24),
@@ -106,7 +106,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                   child: Text(
                     'Nenhum aporte registrado ainda.',
                     style: TextStyle(
-                        color: isDark ? Colors.white30 : Colors.black38),
+                        color: colorScheme.onSurface.withValues(alpha: 0.3)),
                   ),
                 ),
               )
@@ -125,14 +125,10 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.03)
-                          : Colors.grey[50],
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white10
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: colorScheme.outline.withValues(alpha: 0.1),
                       ),
                     ),
                     child: ListTile(
@@ -143,14 +139,14 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       subtitle: Text(
                         '$count aportes realizados',
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.white60 : Colors.black54,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                       trailing: Column(
@@ -169,7 +165,7 @@ class MoneySavingChallengeAboutContributionsScreen extends ConsumerWidget {
                             'do total',
                             style: TextStyle(
                               fontSize: 10,
-                              color: isDark ? Colors.white30 : Colors.black26,
+                              color: colorScheme.onSurface.withValues(alpha: 0.3),
                             ),
                           ),
                         ],

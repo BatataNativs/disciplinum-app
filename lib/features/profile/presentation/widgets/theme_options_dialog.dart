@@ -1,16 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/dark_mode_purchase_dialog.dart';
+import 'package:disciplinum/features/profile/presentation/widgets/pink_theme_purchase_dialog.dart';
+import 'package:disciplinum/features/profile/presentation/widgets/halloween_theme_purchase_dialog.dart';
 
+/// Dialog de seleção de temas usando sistema de múltiplos temas
+/// 
+/// Usa Theme.of(context) para acessar cores do tema atual
+/// Não usa isDarkMode - usa AppTheme enum para controle
 class ThemeOptionsDialog extends ConsumerWidget {
   const ThemeOptionsDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeController = ref.read(themeControllerProvider.notifier);
-    final iap = ref.watch(iapServiceProvider);
-    final isDark = themeController.isDarkMode;
+    final currentTheme = ref.watch(themeControllerProvider);
+    final iap = ref.read(iapServiceProvider.notifier);
+    
+    // Usar Theme.of(context) para acessar cores do tema
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Helper que delega ao IAP para verificar se tema está desbloqueado
+    bool isThemeUnlocked(AppTheme theme) => iap.isThemeUnlocked(theme);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -19,23 +33,9 @@ class ThemeOptionsDialog extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color.fromARGB(255, 30, 30, 40),
-                    const Color.fromARGB(255, 15, 15, 20),
-                  ]
-                : [
-                    Colors.white,
-                    const Color.fromARGB(255, 230, 235, 240),
-                  ],
-          ),
+          color: colorScheme.surface, // Usa cor do tema
           border: Border.all(
-            color: isDark
-                ? const Color.fromARGB(164, 255, 255, 255)
-                : Colors.black12,
+            color: colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
@@ -55,15 +55,12 @@ class ThemeOptionsDialog extends ConsumerWidget {
               // Título
               Row(
                 children: [
-                  Icon(Icons.palette_rounded,
-                      color: isDark ? Colors.white : Colors.black87),
+                  Icon(Icons.palette_rounded, color: colorScheme.onSurface),
                   const SizedBox(width: 12),
                   Text(
                     'Temas',
-                    style: TextStyle(
-                      fontSize: 20,
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : Colors.black87,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -71,58 +68,87 @@ class ThemeOptionsDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Opção Claro
+              // Opção Claro (Gratuito)
               _buildThemeOption(
-                title: 'Tema Claro',
-                isSelected: !isDark,
-                onTap: () {
-                  if (isDark) {
-                    themeController.toggleTheme();
+                context: context,
+                title: AppTheme.light.displayName,
+                isSelected: currentTheme == AppTheme.light,
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  if (currentTheme != AppTheme.light) {
+                    await themeController.setTheme(AppTheme.light);
                   }
-                  Navigator.pop(context);
+                  navigator.pop();
                 },
-                isDark: isDark,
               ),
               const SizedBox(height: 12),
 
-              // Opção Escuro
+              // Opção Escuro (IAP)
               _buildThemeOption(
-                title: 'Tema Escuro',
-                isSelected: isDark,
-                onTap: () {
-                  if (!isDark) {
-                    if (iap.isDarkModeUnlocked) {
-                      themeController.toggleTheme();
+                context: context,
+                title: AppTheme.dark.displayName,
+                isSelected: currentTheme == AppTheme.dark,
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  if (currentTheme != AppTheme.dark) {
+                    if (isThemeUnlocked(AppTheme.dark)) {
+                      await themeController.setTheme(AppTheme.dark);
+                      navigator.pop();
                     } else {
-                      Navigator.pop(context);
+                      navigator.pop();
                       _showDarkModePurchaseDialog(context);
                     }
                   } else {
-                    Navigator.pop(context);
+                    navigator.pop();
                   }
                 },
-                isDark: isDark,
-                showLock: !iap.isDarkModeUnlocked,
+                showLock: !isThemeUnlocked(AppTheme.dark),
               ),
               const SizedBox(height: 12),
 
-              // Opção Rosa
+              // Opção Rosa (IAP)
               _buildThemeOption(
-                title: 'Tema Rosa',
-                isSelected: false,
-                isComingSoon: true,
-                onTap: () {},
-                isDark: isDark,
+                context: context,
+                title: AppTheme.pink.displayName,
+                isSelected: currentTheme == AppTheme.pink,
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  if (currentTheme != AppTheme.pink) {
+                    if (isThemeUnlocked(AppTheme.pink)) {
+                      await themeController.setTheme(AppTheme.pink);
+                      navigator.pop();
+                    } else {
+                      navigator.pop();
+                      _showPinkThemePurchaseDialog(context);
+                    }
+                  } else {
+                    navigator.pop();
+                  }
+                },
+                showLock: !isThemeUnlocked(AppTheme.pink),
               ),
               const SizedBox(height: 12),
 
-              // Opção Halloween
+              // Opção Halloween (IAP)
               _buildThemeOption(
-                title: 'Tema Halloween',
-                isSelected: false,
-                isComingSoon: true,
-                onTap: () {},
-                isDark: isDark,
+                context: context,
+                title: AppTheme.halloween.displayName,
+                isSelected: currentTheme == AppTheme.halloween,
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  if (currentTheme != AppTheme.halloween) {
+                    if (isThemeUnlocked(AppTheme.halloween)) {
+                      await themeController.setTheme(AppTheme.halloween);
+                      navigator.pop();
+                    } else {
+                      navigator.pop();
+                      _showHalloweenThemePurchaseDialog(context);
+                    }
+                  } else {
+                    navigator.pop();
+                  }
+                },
+                showLock: !isThemeUnlocked(AppTheme.halloween),
               ),
 
               const SizedBox(height: 24),
@@ -140,10 +166,8 @@ class ThemeOptionsDialog extends ConsumerWidget {
                   ),
                   child: Text(
                     'Fechar',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : Colors.black54,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -156,13 +180,17 @@ class ThemeOptionsDialog extends ConsumerWidget {
   }
 
   Widget _buildThemeOption({
+    required BuildContext context,
     required String title,
     required bool isSelected,
     required VoidCallback onTap,
-    required bool isDark,
     bool isComingSoon = false,
     bool showLock = false,
   }) {
+    // Usar tema do contexto
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -172,14 +200,12 @@ class ThemeOptionsDialog extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? Colors.white24 : Colors.black12)
-                : (isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.05)),
+                ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
-                  ? (isDark ? Colors.white54 : Colors.black38)
+                  ? colorScheme.primary.withValues(alpha: 0.5)
                   : Colors.transparent,
               width: 1,
             ),
@@ -194,8 +220,8 @@ class ThemeOptionsDialog extends ConsumerWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isSelected
-                        ? (isDark ? Colors.white : Colors.black87)
-                        : (isDark ? Colors.white38 : Colors.black38),
+                        ? colorScheme.primary
+                        : colorScheme.outline,
                     width: 2,
                   ),
                 ),
@@ -206,7 +232,7 @@ class ThemeOptionsDialog extends ConsumerWidget {
                           height: 10,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: colorScheme.primary,
                           ),
                         ),
                       )
@@ -218,13 +244,12 @@ class ThemeOptionsDialog extends ConsumerWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isComingSoon
-                            ? (isDark ? Colors.white38 : Colors.black38)
-                            : (isDark ? Colors.white : Colors.black87),
+                            ? colorScheme.onSurface.withValues(alpha: 0.5)
+                            : colorScheme.onSurface,
                         fontStyle:
                             isComingSoon ? FontStyle.italic : FontStyle.normal,
                       ),
@@ -234,9 +259,8 @@ class ThemeOptionsDialog extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           '(Disponível em breve)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white38 : Colors.black38,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                             fontStyle: FontStyle.italic,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -247,8 +271,11 @@ class ThemeOptionsDialog extends ConsumerWidget {
                 ),
               ),
               if (showLock && !isComingSoon)
-                Icon(Icons.lock_outline_rounded,
-                    size: 18, color: isDark ? Colors.white54 : Colors.black54),
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
             ],
           ),
         ),
@@ -260,6 +287,20 @@ class ThemeOptionsDialog extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => const DarkModePurchaseDialog(),
+    );
+  }
+
+  void _showPinkThemePurchaseDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => const PinkThemePurchaseDialog(),
+    );
+  }
+
+  void _showHalloweenThemePurchaseDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => const HalloweenThemePurchaseDialog(),
     );
   }
 }

@@ -19,39 +19,34 @@ class BingeEatingTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     switch (tabIndex) {
       case 0:
         // 0: Compulsão alimentar (módulo)
-        return _buildCompulsionContent(context, isDark);
+        return _buildCompulsionContent(context);
       case 1:
         // 1: Como funciona
-        return _buildHowItWorksContent(isDark);
+        return _buildHowItWorksContent(context);
       default:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _buildHowItWorksContent(bool isDark) {
+  Widget _buildHowItWorksContent(BuildContext context) {
     return Column(
-      children: [
+      children: const [
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.settings_outlined,
           title: "Em Selecionar apps, escolha os aplicativos de delivery",
           content: "Selecione os apps de delivery que você deseja monitorar. Após selecionar, ative o módulo para começar o monitoramento.",
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.notifications_outlined,
           title: "Em Notificações, configure lembretes",
           content: "Defina horários para receber lembretes motivacionais que te ajudem a evitar pedidos por impulso.",
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         NicheInfoCard(
-          isDark: isDark,
           icon: Icons.bar_chart_rounded,
           title: "Em Estatísticas, acompanhe seus ganhos",
           content: "Visualize quantos dias você está sem pedir delivery e acompanhe sua evolução.",
@@ -60,7 +55,8 @@ class BingeEatingTabContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCompulsionContent(BuildContext context, bool isDark) {
+  Widget _buildCompulsionContent(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -70,7 +66,7 @@ class BingeEatingTabContent extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
-            color: isDark ? Colors.white : Colors.black87,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -79,9 +75,7 @@ class BingeEatingTabContent extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.white,
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
@@ -115,15 +109,12 @@ class BingeEatingTabContent extends StatelessWidget {
                       info.label ?? info.package,
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white : const Color(0xFF6366F1),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     onDeleted: () => onRemoveApp(info.package),
-                    deleteIconColor: isDark
-                        ? Colors.white70
-                        : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                    backgroundColor: (isDark ? Colors.white : const Color(0xFF6366F1))
-                        .withValues(alpha: 0.1),
+                    deleteIconColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                    backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                     side: BorderSide.none,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),

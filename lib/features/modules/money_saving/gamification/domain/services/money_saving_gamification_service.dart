@@ -7,7 +7,7 @@ import 'package:disciplinum/features/modules/money_saving/gamification/domain/re
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_insignia.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_insignia_service.dart';
-import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_medalha_service.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_medal_service.dart';
 
 /// Service principal de gamificação do módulo Money Saving Challenge - VERSÃO RIVERPOD
 /// Implementação completa e profissional seguindo Clean Architecture
@@ -15,13 +15,13 @@ class MoneySavingGamificationService extends StateNotifier<MoneySavingModuleStat
     implements ModuleGamificationInterface {
   final MoneySavingGamificationRepository _repository;
   late final MoneySavingInsigniaService _insigniaService;
-  late final MoneySavingMedalhaService _medalhaService;
+  late final MoneySavingMedalService _medalhaService;
 
   bool _isInitialized = false;
 
   MoneySavingGamificationService(this._repository) : super(null) {
     _insigniaService = MoneySavingInsigniaService(_repository);
-    _medalhaService = MoneySavingMedalhaService(_repository);
+    _medalhaService = MoneySavingMedalService(_repository);
     initialize();
   }
 
@@ -31,7 +31,7 @@ class MoneySavingGamificationService extends StateNotifier<MoneySavingModuleStat
 
   /// Obtém o serviço de medalhas
   @override
-  MoneySavingMedalhaService get medalhaService => _medalhaService;
+  MoneySavingMedalService get medalhaService => _medalhaService;
 
   /// Obtém o nome do módulo
   @override

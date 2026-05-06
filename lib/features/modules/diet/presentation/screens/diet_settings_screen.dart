@@ -13,6 +13,7 @@ import 'package:disciplinum/features/modules/diet/presentation/screens/meal_stre
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/diet/presentation/widgets/my_progress_diet.dart' as diet_progress;
+import 'package:disciplinum/features/modules/diet/gamification/presentation/widgets/diet_celebration_widget.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -300,7 +301,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     if (_loadingData) {
       return Scaffold(
@@ -309,8 +310,8 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
           centerTitle: true,
         ),
         body: Shimmer.fromColors(
-          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+          baseColor: colorScheme.surfaceContainerHighest,
+          highlightColor: colorScheme.surfaceContainerHigh,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -333,61 +334,57 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
-            ],
+    return DietCelebrationWidget(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Row
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        _niche.name,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
-                        textAlign: TextAlign.center,
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header Row
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            color: colorScheme.onSurface),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
+                      Expanded(
+                        child: Text(
+                          _niche.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: _buildSegmentedControl(),
-                    ),
-                    Expanded(
-                      child: PageView(
+                Expanded(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: _buildSegmentedControl(),
+                      ),
+                      Expanded(
+                        child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
                           setState(() {
@@ -426,25 +423,24 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                       padding: const EdgeInsets.all(16),
                       child: _buildTabActions(0),
                     )
-                  : _buildBottomButtons(isDark),
+                  : _buildBottomButtons(),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSegmentedControl() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final List<String> options = ['Manter dieta', 'Como funciona'];
 
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -488,7 +484,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white60 : Colors.black45),
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                     letterSpacing: isSelected ? 0.3 : 0,
                   ),
                   textAlign: TextAlign.center,
@@ -502,7 +498,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   }
 
   Widget _buildTabContent(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     switch (index) {
       case 0:
         // 0: Manter dieta (módulo)
@@ -513,7 +509,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               'Após preencher seus horários de refeições, ative o módulo para iniciar sua jornada de alimentação com regularidade.',
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 16),
@@ -524,7 +520,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -533,21 +529,19 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.black.withValues(alpha: 0.02),
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     Icon(Icons.schedule,
                         size: 40,
-                        color: isDark ? Colors.white24 : Colors.black12),
+                        color: colorScheme.onSurface.withValues(alpha: 0.2)),
                     const SizedBox(height: 12),
                     Text(
                       'Nenhum horário definido',
                       style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.black38,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 14,
                       ),
                     ),
@@ -565,16 +559,12 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                       '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white : const Color(0xFF6366F1),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     onDeleted: () => _removeSchedule(time),
-                    deleteIconColor: isDark
-                        ? Colors.white70
-                        : const Color(0xFF6366F1).withValues(alpha: 0.7),
-                    backgroundColor:
-                        (isDark ? Colors.white : const Color(0xFF6366F1))
-                            .withValues(alpha: 0.1),
+                    deleteIconColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                    backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                     side: BorderSide.none,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -594,7 +584,6 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         return Column(
           children: [
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.schedule,
               title: 'Preencha seus horários de refeições',
               content:
@@ -602,7 +591,6 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.notifications_outlined,
               title: 'Em "Notificações", configure lembretes',
               content:
@@ -610,7 +598,6 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
             ),
             const SizedBox(height: 16),
             NicheInfoCard(
-              isDark: isDark,
               icon: Icons.bar_chart_rounded,
               title: 'Em "Estatísticas", veja seu progresso',
               content:
@@ -625,7 +612,6 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
 
   Widget _buildTabActions(int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
         // 0: Manter dieta (módulo) - botão de gerenciar horários
@@ -636,8 +622,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
             icon: Icons.schedule_rounded,
             label: 'Gerenciar horários',
             color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
+                        onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -654,8 +639,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
             icon: Icons.rocket_launch_rounded,
             label: 'Entendi!',
             color: const Color(0xFF6366F1),
-            isDark: isDark,
-            onTap: () {
+                        onTap: () {
               if (_pageController.hasClients) {
                 _pageController.animateToPage(0,
                     duration: const Duration(milliseconds: 300),
@@ -669,13 +653,12 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     }
   }
 
-  Widget _buildBottomButtons(bool isDark) {
+  Widget _buildBottomButtons() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -687,8 +670,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                   icon: Icons.restaurant_menu_rounded,
                   label: 'Horários',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
-                  onTap: () {
+                                    onTap: () {
                     _openScheduleManager();
                   },
                 ),
@@ -699,8 +681,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                   icon: Icons.notifications_outlined,
                   label: 'Notificações',
                   color: Colors.amber,
-                  isDark: isDark,
-                  onTap: () {
+                                    onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -720,8 +701,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
-                  onTap: _showStatisticsMenu,
+                                    onTap: _showStatisticsMenu,
                 ),
               ),
               const SizedBox(width: 12),
@@ -734,8 +714,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                       ? 'Desativar Módulo'
                       : 'Ativar Módulo',
                   color: _gamificationRunning ? Colors.red : Colors.green,
-                  isDark: isDark,
-                  onTap: _gamificationRunning
+                                    onTap: _gamificationRunning
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
                 ),
@@ -749,14 +728,14 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
 
 
   void _showStatisticsMenu() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -768,7 +747,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -776,8 +755,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               icon: Icons.restaurant_rounded,
               label: 'Registro de refeições',
               color: Colors.green,
-              isDark: isDark,
-              onTap: () {
+                            onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
@@ -791,8 +769,7 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
               icon: Icons.bar_chart_rounded,
               label: 'Conquistas',
               color: Colors.blue,
-              isDark: isDark,
-              onTap: () {
+                            onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,

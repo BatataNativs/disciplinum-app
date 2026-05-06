@@ -272,4 +272,9 @@ class MoneySavingModuleState implements ModuleStateContract {
       earnedMedalhas: [],
     );
   }
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  MoneySavingModuleState reset() => MoneySavingModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

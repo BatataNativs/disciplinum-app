@@ -196,19 +196,19 @@ extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
       case SmokingInsigniaEntity.ferro:
         return '1 dia sem fumar';
       case SmokingInsigniaEntity.aluminio:
-        return '3 dias sem fumar';
+        return '2 dias sem fumar';
       case SmokingInsigniaEntity.latao:
-        return '7 dias sem fumar';
+        return '3 dias sem fumar';
       case SmokingInsigniaEntity.bronze:
-        return '14 dias sem fumar';
+        return '5 dias sem fumar';
       case SmokingInsigniaEntity.prata:
-        return '30 dias sem fumar';
+        return '10 dias sem fumar';
       case SmokingInsigniaEntity.ouro:
-        return '60 dias sem fumar';
+        return '15 dias sem fumar';
       case SmokingInsigniaEntity.diamante:
-        return '90 dias sem fumar';
+        return '20 dias sem fumar';
       case SmokingInsigniaEntity.disciplinum:
-        return '120 dias sem fumar';
+        return '30 dias sem fumar';
     }
   }
 

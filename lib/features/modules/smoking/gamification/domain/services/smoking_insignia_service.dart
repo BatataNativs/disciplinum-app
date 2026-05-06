@@ -1,11 +1,13 @@
 import 'package:disciplinum/core/gamification/interfaces/module_insignia_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medalha.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_health_benefit.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_economic_benefit.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
 
 /// Service de insígnias específico do módulo Smoking
 /// Implementa a interface base com lógica específica do Smoking
@@ -154,6 +156,12 @@ class SmokingInsigniaService implements ModuleInsigniaInterface {
       // Verifica e concede novos marcos de saúde
       await _checkAndAwardHealthBenefits(consecutivePositiveDays);
       
+      // Verifica e concede novos marcos econômicos
+      await _checkAndAwardEconomicBenefits(consecutivePositiveDays);
+      
+      // Envia notificações especiais de saúde e economia
+      await _sendSpecialNotifications(consecutivePositiveDays);
+      
       await _saveState(_currentState!);
     } catch (e) {
       LoggerService.instance.e('Erro ao atualizar check-ins Smoking', error: e);
@@ -165,7 +173,7 @@ class SmokingInsigniaService implements ModuleInsigniaInterface {
     try {
       final currentMedalhas = _currentState?.earnedMedalhas ?? [];
       
-      for (final medalha in SmokingMedalhaEntity.values) {
+      for (final medalha in SmokingMedalEntity.values) {
         // Verifica se a medalha pode ser concedida e ainda não foi
         if (medalha.canBeAwarded(_currentState?.earnedInsignias ?? []) &&
             !currentMedalhas.contains(medalha.name)) {
@@ -216,6 +224,65 @@ class SmokingInsigniaService implements ModuleInsigniaInterface {
       }
     } catch (e) {
       LoggerService.instance.e('Erro ao verificar/conceder marcos de saúde', error: e);
+    }
+  }
+
+  /// Verifica e concede novos marcos econômicos baseados nos maços economizados
+  Future<void> _checkAndAwardEconomicBenefits(int consecutiveDays) async {
+    try {
+      final dailyCost = _currentState?.dailyCost ?? 0.0;
+      final packCost = _currentState?.packCost ?? 0.0;
+      
+      if (dailyCost <= 0 || packCost <= 0) return;
+      
+      // Calcula maços economizados
+      final totalSaved = dailyCost * consecutiveDays;
+      final packsSaved = (totalSaved / packCost).floor();
+      
+      // Lista de marcos econômicos configuráveis
+      final economicMilestones = [1, 2, 5, 10, 20, 30];
+      
+      // Verifica se atingiu algum marco econômico
+      for (final milestone in economicMilestones) {
+        if (packsSaved >= milestone) {
+          final benefit = SmokingEconomicBenefitEntity.values.firstWhere(
+            (b) => b.packsCount == milestone,
+            orElse: () => SmokingEconomicBenefitEntity.onePack,
+          );
+          
+          // Dispara celebração para o marco econômico
+          SmokingCelebrationService.instance.celebrarMarcoEconomia(
+            macos: milestone,
+            mensagem: benefit.notificationBody,
+          );
+          
+          LoggerService.instance.gamification('💰 Marco econômico atingido: $milestone maços economizados');
+        }
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao verificar marcos econômicos', error: e);
+    }
+  }
+
+  /// Envia notificações especiais de saúde e economia
+  Future<void> _sendSpecialNotifications(int consecutiveDays) async {
+    try {
+      final dailyCost = _currentState?.dailyCost ?? 0.0;
+      final packCost = _currentState?.packCost ?? 0.0;
+      
+      // Envia notificação especial de saúde se aplicável
+      await SmokingSpecialNotificationsService.instance.sendHealthNotification(consecutiveDays);
+      
+      // Calcula e envia notificação de economia se aplicável
+      if (dailyCost > 0 && packCost > 0) {
+        final totalSaved = dailyCost * consecutiveDays;
+        final packsSaved = (totalSaved / packCost).floor();
+        await SmokingSpecialNotificationsService.instance.sendEconomyNotification(packsSaved);
+      }
+      
+      LoggerService.instance.gamification('📱 Notificações especiais enviadas: $consecutiveDays dias');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao enviar notificações especiais', error: e);
     }
   }
 

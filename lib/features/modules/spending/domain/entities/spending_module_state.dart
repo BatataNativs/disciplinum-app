@@ -205,4 +205,9 @@ class SpendingModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory SpendingModuleState.fromMap(Map<String, dynamic> map) => SpendingModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  SpendingModuleState reset() => SpendingModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

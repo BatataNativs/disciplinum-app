@@ -189,4 +189,9 @@ class AdultContentModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory AdultContentModuleState.fromMap(Map<String, dynamic> map) => AdultContentModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  AdultContentModuleState reset() => AdultContentModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

@@ -42,8 +42,7 @@ class _BingeEatingNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -51,8 +50,8 @@ class _BingeEatingNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -64,7 +63,7 @@ class _BingeEatingNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -72,7 +71,7 @@ class _BingeEatingNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: _isLoading
@@ -91,7 +90,6 @@ class _BingeEatingNotificationsScreenState
                       title: 'Check-in Diário',
                       subtitle: 'Configure seus horários de acompanhamento',
                       icon: Icons.no_food_rounded,
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
                     _buildCheckinCard(),
@@ -101,7 +99,6 @@ class _BingeEatingNotificationsScreenState
                     _buildMinimalInfoCard(
                       description:
                           'Receba notificação diária no horário configurado. Responda "Resisti às tentações" para registrar seu progresso ou "Não resisti" para resetar as estatísticas.',
-                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -114,8 +111,8 @@ class _BingeEatingNotificationsScreenState
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -152,7 +149,7 @@ class _BingeEatingNotificationsScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -161,7 +158,7 @@ class _BingeEatingNotificationsScreenState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -174,25 +171,18 @@ class _BingeEatingNotificationsScreenState
 
   Widget _buildMinimalInfoCard({
     required String description,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
+          color: colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Text(
         description,
@@ -207,7 +197,7 @@ class _BingeEatingNotificationsScreenState
   }
 
   Widget _buildCheckinCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () {
@@ -315,8 +305,7 @@ class _BingeEatingNotificationsScreenState
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: colorScheme.onSurface,
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -325,8 +314,7 @@ class _BingeEatingNotificationsScreenState
                         'Configure horário para seu \ncheck-in diário',
                         style: TextStyle(
                           fontSize: 14,
-                          color:
-                              isDark ? Colors.white70 : const Color(0xFF64748B),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -351,9 +339,7 @@ class _BingeEatingNotificationsScreenState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white.withValues(alpha: 0.8),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Colors.green.withValues(alpha: 0.1),
@@ -375,10 +361,8 @@ class _BingeEatingNotificationsScreenState
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _checkinCount > 0
-                          ? Colors.black
-                          : isDark
-                              ? Colors.white70
-                              : const Color(0xFF64748B),
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

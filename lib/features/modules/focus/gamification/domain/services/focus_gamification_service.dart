@@ -6,8 +6,8 @@ import 'package:disciplinum/features/modules/focus/domain/services/focus_service
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_insignia_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medalha_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_medal_service.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medal.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_insignia.dart';
 
 /// Service principal de gamificação do módulo Focus
@@ -16,14 +16,14 @@ class FocusGamificationService implements ModuleGamificationInterface {
   final FocusGamificationRepository _repository;
   final FocusService _focusService;
   late final FocusInsigniaService _insigniaService;
-  late final FocusMedalhaService _medalhaService;
+  late final FocusMedalService _medalhaService;
   
   FocusModuleState? _currentState;
   bool _isInitialized = false;
 
   FocusGamificationService(this._repository, this._focusService) {
     _insigniaService = FocusInsigniaService(_focusService);
-    _medalhaService = FocusMedalhaService();
+    _medalhaService = FocusMedalService();
   }
 
   /// Inicializa o serviço de gamificação
@@ -255,9 +255,9 @@ class FocusGamificationService implements ModuleGamificationInterface {
         [];
   }
 
-  FocusMedalha? get currentMedal {
+  FocusMedalEntity? get currentMedal {
     // Retorna a primeira medalha não conquistada
-    for (final medalha in FocusMedalha.values) {
+    for (final medalha in FocusMedalEntity.values) {
       if (!_currentState!.hasMedalha(medalha.name)) {
         return medalha;
       }
@@ -265,11 +265,11 @@ class FocusGamificationService implements ModuleGamificationInterface {
     return null;
   }
 
-  List<FocusMedalha> get earnedMedals {
+  List<FocusMedalEntity> get earnedMedals {
     return _currentState?.earnedMedalhas.map((id) {
-          return FocusMedalha.values.firstWhere(
+          return FocusMedalEntity.values.firstWhere(
             (m) => m.name == id,
-            orElse: () => FocusMedalha.bronze,
+            orElse: () => FocusMedalEntity.bronze,
           );
         }).toList() ??
         [];

@@ -1,25 +1,25 @@
 import 'package:disciplinum/core/gamification/interfaces/module_medalha_interface.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/audio/system_audio_service.dart';
-import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medalha.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/entities/focus_medal.dart';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 
 /// Service de medalhas específico do módulo Focus
 /// Implementa a interface base com lógica específica do Focus
-class FocusMedalhaService implements ModuleMedalhaInterface {
+class FocusMedalService implements ModuleMedalhaInterface {
   int _disciplinumCount = 0;
   final List<String> _earnedMedalhas = [];
 
   @override
   List<String> getAllMedalhaIds() {
-    return FocusMedalha.values.map((m) => m.name).toList();
+    return FocusMedalEntity.values.map((m) => m.name).toList();
   }
 
   @override
   String getMedalhaName(String medalhaId) {
     try {
-      return FocusMedalha.values.firstWhere((m) => m.name == medalhaId).name;
+      return FocusMedalEntity.values.firstWhere((m) => m.name == medalhaId).name;
     } catch (e) {
       return medalhaId;
     }
@@ -28,7 +28,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaAsset(String medalhaId) {
     try {
-      final medalha = FocusMedalha.values.firstWhere((m) => m.name == medalhaId);
+      final medalha = FocusMedalEntity.values.firstWhere((m) => m.name == medalhaId);
       return medalha.asset;
     } catch (e) {
       return 'assets/medalhas/focus/$medalhaId.png';
@@ -38,7 +38,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
   @override
   String getMedalhaRequirement(String medalhaId) {
     try {
-      final medalha = FocusMedalha.values.firstWhere((m) => m.name == medalhaId);
+      final medalha = FocusMedalEntity.values.firstWhere((m) => m.name == medalhaId);
       return medalha.requirementDescription;
     } catch (e) {
       return 'Requisito não encontrado';
@@ -96,7 +96,7 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
     final newMedalhas = <String>[];
     final earnedInsignias = List<String>.from(moduleData['earnedInsignias'] ?? []);
 
-    for (final medalha in FocusMedalha.values) {
+    for (final medalha in FocusMedalEntity.values) {
       if (!await hasEarnedMedalha(medalha.name) && medalha.canBeAwarded(earnedInsignias)) {
         newMedalhas.add(medalha.name);
         await awardMedalha(medalha.name);
@@ -130,7 +130,8 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
       if (loadedState != null) {
         _earnedMedalhas.clear();
         _earnedMedalhas.addAll(loadedState.earnedMedalhas);
-        _disciplinumCount = loadedState.respectedPeriodsCount;
+        // Usa o getter disciplinumCount que calcula a partir das insígnias conquistadas
+        _disciplinumCount = loadedState.disciplinumCount;
       }
       
       LoggerService.instance.gamification('Estado Focus carregado');
@@ -154,15 +155,16 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
   Future<void> initialize() async {
     // Carregar estado salvo se necessário
     await loadState();
-    LoggerService.instance.gamification('FocusMedalhaService inicializado');
+    LoggerService.instance.gamification('FocusMedalEntityService inicializado');
   }
 
   void updateFromModuleState(FocusModuleState state) {
-    // Atualiza contador de disciplinum
+    // Atualiza contador de disciplinum (para compatibilidade)
     _disciplinumCount = state.disciplinumCount;
     
-    // Verifica se há medalhas para conceder
-    checkDisciplinumMedalhas(_disciplinumCount);
+    // Verifica se há medalhas para conceder baseado nas insígnias conquistadas
+    // Seguindo o guia: Bronze(Latão), Prata(Ouro), Ouro(Diamante), Diamante(Disciplinum)
+    checkMedalhasFromInsignias(state.earnedInsignias);
   }
 
   /// Implementa celebração da medalha
@@ -205,16 +207,32 @@ class FocusMedalhaService implements ModuleMedalhaInterface {
     }
   }
 
-  /// Verifica se há medalhas Disciplinum para conceder
-  void checkDisciplinumMedalhas(int disciplinumCount) async {
-    if (disciplinumCount >= 4 && !await hasEarnedMedalha('diamante')) {
-      await awardMedalha('diamante');
-    } else if (disciplinumCount >= 3 && !await hasEarnedMedalha('ouro')) {
-      await awardMedalha('ouro');
-    } else if (disciplinumCount >= 2 && !await hasEarnedMedalha('prata')) {
-      await awardMedalha('prata');
-    } else if (disciplinumCount >= 1 && !await hasEarnedMedalha('bronze')) {
+  /// Verifica se há medalhas para conceder baseado nas insígnias conquistadas
+  /// Seguindo o guia: medalhas são desbloqueadas por insígnias específicas
+  Future<void> checkMedalhasFromInsignias(List<String> earnedInsignias) async {
+    // Bronze: Ganhou insígnia Latão (3 períodos de foco)
+    if (earnedInsignias.contains('latao') && !await hasEarnedMedalha('bronze')) {
       await awardMedalha('bronze');
     }
+    // Prata: Ganhou insígnia Ouro (6 períodos de foco)
+    if (earnedInsignias.contains('ouro') && !await hasEarnedMedalha('prata')) {
+      await awardMedalha('prata');
+    }
+    // Ouro: Ganhou insígnia Diamante (9 períodos de foco)
+    if (earnedInsignias.contains('diamante') && !await hasEarnedMedalha('ouro')) {
+      await awardMedalha('ouro');
+    }
+    // Diamante: Ganhou insígnia Disciplinum (10 períodos de foco)
+    if (earnedInsignias.contains('disciplinum') && !await hasEarnedMedalha('diamante')) {
+      await awardMedalha('diamante');
+    }
+  }
+
+  /// Método legacy - mantido para compatibilidade mas usa earnedInsignias do state
+  void checkDisciplinumMedalhas(int disciplinumCount) async {
+    // Carrega estado atual para obter earnedInsignias
+    final loadedState = await FocusGamificationRepository.instance.getFocusState();
+    final earnedInsignias = loadedState?.earnedInsignias ?? [];
+    await checkMedalhasFromInsignias(earnedInsignias);
   }
 }

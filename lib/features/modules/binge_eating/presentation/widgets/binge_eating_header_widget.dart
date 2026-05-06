@@ -14,7 +14,7 @@ class BingeEatingHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -23,7 +23,7 @@ class BingeEatingHeaderWidget extends StatelessWidget {
           IconButton(
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : Colors.black87,
+              color: colorScheme.onSurface,
             ),
             onPressed: onBackPressed,
           ),
@@ -33,7 +33,7 @@ class BingeEatingHeaderWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),

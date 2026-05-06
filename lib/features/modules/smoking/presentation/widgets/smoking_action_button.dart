@@ -4,7 +4,6 @@ class SmokingActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final bool isDark;
   final VoidCallback onTap;
   final bool isDestructive;
 
@@ -13,24 +12,22 @@ class SmokingActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
-    required this.isDark,
     required this.onTap,
     this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.3 : 0.2),
+            color: color.withValues(alpha: 0.25),
             width: 1,
           ),
         ),
@@ -42,7 +39,7 @@ class SmokingActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isDark ? Colors.white : color,
+                color: colorScheme.onSurface,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

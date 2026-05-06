@@ -21,14 +21,14 @@ class ReadingGamificationEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'earnedInsignias': earnedInsignias,
-      'earnedMedalhas': earnedMedalhas,
-      'consecutiveDays': consecutiveDays,
-      'lastReadingDate': lastReadingDate?.toIso8601String(),
-      'startDate': startDate?.toIso8601String(),
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'isModuleActive': isModuleActive,
+      'earned_insignias': earnedInsigniasList,
+      'earned_medalhas': earnedMedalhasList,
+      'consecutive_days': consecutiveDays,
+      'last_reading_date': lastReadingDate?.toIso8601String(),
+      'start_date': startDate?.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'is_module_active': isModuleActive,
     };
   }
 

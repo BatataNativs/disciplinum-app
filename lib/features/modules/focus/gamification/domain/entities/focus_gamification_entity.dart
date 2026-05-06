@@ -51,18 +51,18 @@ class FocusGamificationEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'earnedInsignias': earnedInsignias,
-      'earnedMedalhas': earnedMedalhas,
-      'disciplinumCount': disciplinumCount,
-      'totalFocusMinutes': totalFocusMinutes,
-      'completedSessions': completedSessions,
-      'maxStreakDays': maxStreakDays,
-      'currentStreakDays': currentStreakDays,
-      'lastFocusSession': lastFocusSession?.toIso8601String(),
-      'startDate': startDate?.toIso8601String(),
-      'blockedApps': blockedApps,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'earned_insignias': earnedInsigniasList,
+      'earned_medalhas': earnedMedalhasList,
+      'disciplinum_count': disciplinumCount,
+      'total_focus_minutes': totalFocusMinutes,
+      'sessions_completed': completedSessions,
+      'longest_streak_days': maxStreakDays,
+      'current_streak_days': currentStreakDays,
+      'last_focus_session': lastFocusSession?.toIso8601String(),
+      'start_date': startDate?.toIso8601String(),
+      'unlocked_achievements': blockedAppsList,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 

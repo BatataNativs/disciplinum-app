@@ -68,13 +68,12 @@ class _NeonDropdownState<T> extends State<NeonDropdown<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     
     // Cores neon
     final primaryColor = widget.borderColor ?? const Color(0xFF6366F1);
     final focusedColor = widget.focusedBorderColor ?? const Color(0xFF8B5CF6);
-    final fillColor = widget.fillColor ?? 
-        (isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1));
+    final fillColor = widget.fillColor ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +82,7 @@ class _NeonDropdownState<T> extends State<NeonDropdown<T>> {
           Text(
             widget.labelText!,
             style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black87,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -110,13 +109,13 @@ class _NeonDropdownState<T> extends State<NeonDropdown<T>> {
               isExpanded: widget.isExpanded,
               icon: widget.icon,
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
+                color: colorScheme.onSurface,
                 fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
-                  color: isDark ? Colors.white38 : Colors.black38,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
                   fontSize: 16,
                 ),
                 prefixIcon: widget.prefixIcon,

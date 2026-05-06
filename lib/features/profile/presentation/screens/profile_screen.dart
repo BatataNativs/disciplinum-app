@@ -9,6 +9,7 @@ import 'package:disciplinum/features/profile/presentation/widgets/theme_button.d
 import 'package:disciplinum/features/profile/presentation/widgets/account_options_dialog.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -38,26 +39,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider.notifier);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentTheme = ref.watch(themeControllerProvider);
+    final isPinkTheme = currentTheme == AppTheme.pink;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF0F0F1A),
-                  const Color(0xFF1A1A2E),
-                  const Color(0xFF16213E),
-                ]
-              : [
-                  const Color.fromARGB(255, 255, 255, 255),
-                  const Color.fromARGB(255, 10, 60, 131),
-                  const Color.fromARGB(255, 255, 255, 255),
-                ],
-          stops: const [0.0, 0.5, 1.0],
+          colors: [
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
+          ],
         ),
       ),
       child: Scaffold(
@@ -75,56 +69,413 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          systemOverlayStyle: isDark
+          systemOverlayStyle: colorScheme.brightness == Brightness.dark
               ? SystemUiOverlayStyle.light
               : SystemUiOverlayStyle.dark,
         ),
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 8),
+          child: Stack(
+            children: [
+              // --- FLORES DECORATIVAS NO PLANO DE FUNDO (tema rosa) ---
+              if (isPinkTheme) ...[
+                // == FLORES GRANDES (60-80) ==
+                Positioned(
+                  top: 40,
+                  right: -15,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 78,
+                      color: colorScheme.primary.withValues(alpha: 0.13),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 250,
+                  left: -30,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 72,
+                      color: colorScheme.secondary.withValues(alpha: 0.11),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 100,
+                  right: -20,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.spa,
+                      size: 80,
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                // == FLORES MÉDIAS (35-50) ==
+                Positioned(
+                  top: 60,
+                  left: 80,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Icon(
+                      Icons.eco,
+                      size: 48,
+                      color: colorScheme.secondary.withValues(alpha: 0.17),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 220,
+                  right: 60,
+                  child: Transform.rotate(
+                    angle: 0.7,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 44,
+                      color: colorScheme.primary.withValues(alpha: 0.19),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 450,
+                  left: 30,
+                  child: Transform.rotate(
+                    angle: -0.6,
+                    child: Icon(
+                      Icons.spa,
+                      size: 42,
+                      color: colorScheme.secondary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 350,
+                  right: 45,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 46,
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                // == FLORES PEQUENAS (originais) ==
+                // Canto superior esquerdo
+                Positioned(
+                  top: 80,
+                  left: 20,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 32,
+                      color: colorScheme.primary.withValues(alpha: 0.25),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 140,
+                  left: 60,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 24,
+                      color: colorScheme.secondary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+                // Canto superior direito
+                Positioned(
+                  top: 100,
+                  right: 30,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.spa,
+                      size: 28,
+                      color: colorScheme.primary.withValues(alpha: 0.22),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 180,
+                  right: 70,
+                  child: Transform.rotate(
+                    angle: -0.6,
+                    child: Icon(
+                      Icons.eco,
+                      size: 22,
+                      color: colorScheme.secondary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                // Meio esquerdo
+                Positioned(
+                  top: 320,
+                  left: 15,
+                  child: Transform.rotate(
+                    angle: 0.8,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 26,
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+                // Meio direito
+                Positioned(
+                  top: 280,
+                  right: 25,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 30,
+                      color: colorScheme.secondary.withValues(alpha: 0.24),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 400,
+                  right: 50,
+                  child: Transform.rotate(
+                    angle: 0.7,
+                    child: Icon(
+                      Icons.spa,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                // Inferior esquerdo
+                Positioned(
+                  bottom: 200,
+                  left: 40,
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Icon(
+                      Icons.eco,
+                      size: 24,
+                      color: colorScheme.secondary.withValues(alpha: 0.19),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 280,
+                  left: 10,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 18,
+                      color: colorScheme.primary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                // Inferior direito
+                Positioned(
+                  bottom: 150,
+                  right: 20,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 28,
+                      color: colorScheme.primary.withValues(alpha: 0.21),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 240,
+                  right: 80,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Icon(
+                      Icons.spa,
+                      size: 22,
+                      color: colorScheme.secondary.withValues(alpha: 0.17),
+                    ),
+                  ),
+                ),
+                // Centro espalhado
+                Positioned(
+                  top: 520,
+                  left: 80,
+                  child: Transform.rotate(
+                    angle: 0.9,
+                    child: Icon(
+                      Icons.eco,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 600,
+                  right: 40,
+                  child: Transform.rotate(
+                    angle: -0.7,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 26,
+                      color: colorScheme.secondary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+                // Mais flores adicionais
+                Positioned(
+                  top: 220,
+                  left: 30,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.spa,
+                      size: 18,
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 480,
+                  left: 50,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 22,
+                      color: colorScheme.secondary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 720,
+                  left: 25,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.13),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 350,
+                  right: 60,
+                  child: Transform.rotate(
+                    angle: 0.2,
+                    child: Icon(
+                      Icons.eco,
+                      size: 24,
+                      color: colorScheme.secondary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 680,
+                  right: 25,
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.11),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 120,
+                  left: 70,
+                  child: Transform.rotate(
+                    angle: 0.7,
+                    child: Icon(
+                      Icons.spa,
+                      size: 22,
+                      color: colorScheme.secondary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 80,
+                  right: 60,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.eco,
+                      size: 18,
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 850,
+                  left: 45,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.filter_vintage,
+                      size: 16,
+                      color: colorScheme.secondary.withValues(alpha: 0.09),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 920,
+                  right: 35,
+                  child: Transform.rotate(
+                    angle: -0.8,
+                    child: Icon(
+                      Icons.local_florist,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+              ],
+              
+              // --- CONTEÚDO PRINCIPAL ---
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 8),
 
-                      // --- AVATAR COM GLASSMORPHISM ---
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: isDark
-                                ? [
-                                    Colors.white.withValues(alpha: 0.2),
-                                    Colors.white.withValues(alpha: 0.05),
-                                  ]
-                                : [
-                                    Colors.white,
-                                    Colors.white,
-                                  ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 35,
-                              spreadRadius: 6,
+                          // --- AVATAR COM GLASSMORPHISM ---
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  colorScheme.onSurface.withValues(alpha: 0.1),
+                                  colorScheme.onSurface.withValues(alpha: 0.05),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.shadow.withValues(alpha: 0.2),
+                                  blurRadius: 35,
+                                  spreadRadius: 6,
+                                ),
+                              ],
+                              border: Border.all(
+                                color: colorScheme.outline.withValues(alpha: 0.3),
+                                width: 2,
+                              ),
                             ),
-                          ],
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.3)
-                                : const Color.fromARGB(255, 38, 38, 38).withValues(alpha: 0.9),
-                            width: 2,
+                            padding: const EdgeInsets.all(10),
+                            child: const ProfileAvatarSection(),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(10),
-                        child: const ProfileAvatarSection(),
-                      ),
 
                       const SizedBox(height: 24),
 
@@ -194,9 +545,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Text(
                             'Faça login para salvar seu progresso!',
                             style: TextStyle(
-                              color: isDark
-                                  ? Colors.orangeAccent
-                                  : const Color.fromARGB(255, 189, 114, 1),
+                              color: colorScheme.tertiary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -216,38 +565,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(32),
                           gradient: LinearGradient(
-                            colors: isDark
-                                ? [
-                                    const Color(0xFF6366F1).withValues(alpha: 0.9),
-                                    const Color(0xFF8B5CF6).withValues(alpha: 0.9),
-                                    const Color(0xFFA855F7).withValues(alpha: 0.9),
-                                  ]
-                                : [
-                                    const Color(0xFFFFFFFF).withValues(alpha: 0.95),
-                                    const Color(0xFFFFFFFF).withValues(alpha: 0.85),
-                                    const Color(0xFFFFFFFF).withValues(alpha: 0.75),
-                                  ],
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.9),
+                              colorScheme.primary.withValues(alpha: 0.7),
+                            ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: isDark
-                                  ? const Color(0xFF6366F1).withValues(alpha: 0.5)
-                                  : Colors.black.withValues(alpha: 0.15),
+                              color: colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 24,
                               offset: const Offset(0, 10),
                             ),
                           ],
                           border: Border.all(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.25)
-                                : Colors.white.withValues(alpha: 0.7),
+                            color: colorScheme.onPrimary.withValues(alpha: 0.5),
                             width: 2,
                           ),
                         ),
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
-                            foregroundColor: isDark ? Colors.white : const Color(0xFF1F2937),
+                            foregroundColor: colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 36),
                             shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
@@ -276,9 +614,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               );
             },
           ),
-        ),
-        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 1),
+        ],
       ),
-    );
-  }
+    ),
+    bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 1),
+  ),
+);
+}
 }

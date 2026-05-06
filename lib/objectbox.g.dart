@@ -18,6 +18,7 @@ import 'core/database/entities/app_preference.dart';
 import 'core/database/entities/gamification_progress.dart';
 import 'core/database/entities/reading_book_entity.dart';
 import 'core/database/entities/user_module_state.dart';
+import 'core/gamification/entities/pending_achievement_entity.dart';
 import 'core/modules/sync/module_sync_service.dart';
 import 'core/storage/entities/daily_checkin_entity.dart';
 import 'core/storage/entities/detection_session_entity.dart';
@@ -30,6 +31,10 @@ import 'features/modules/binge_eating/gamification/domain/entities/binge_eating_
 import 'features/modules/diet/domain/entities/diet_config_entity.dart';
 import 'features/modules/diet/domain/entities/meal_entry_entity.dart';
 import 'features/modules/diet/gamification/domain/entities/diet_gamification_entity.dart';
+import 'features/modules/digital_detox/domain/entities/digital_detox_config_entity.dart';
+import 'features/modules/digital_detox/domain/entities/digital_detox_fasting_break_entity.dart';
+import 'features/modules/digital_detox/domain/entities/digital_detox_session_entity.dart';
+import 'features/modules/digital_detox/domain/entities/digital_detox_stats_entity.dart';
 import 'features/modules/focus/domain/entities/focus_config_entity.dart';
 import 'features/modules/focus/domain/entities/focus_interval_entity.dart';
 import 'features/modules/focus/gamification/domain/entities/focus_gamification_entity.dart';
@@ -44,6 +49,7 @@ import 'features/modules/smoking/domain/entities/smoking_config_entity.dart';
 import 'features/modules/smoking/domain/module_unlock_entity.dart';
 import 'features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
 import 'features/modules/spending/domain/entities/expense_entity.dart';
+import 'features/modules/spending/domain/entities/spending_config_entity.dart';
 import 'features/modules/spending/gamification/domain/entities/spending_gamification_entity.dart';
 import 'infrastructure/iap/domain/entities/iap_entitlement.dart';
 
@@ -2165,6 +2171,498 @@ final _entities = <obx_int.ModelEntity>[
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(35, 4889884323610195215),
+      name: 'SpendingConfigEntity',
+      lastPropertyId: const obx_int.IdUid(9, 1505522667265003821),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 7574673984950212340),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 3038476960850584631),
+            name: 'userId',
+            type: 9,
+            flags: 2080,
+            indexId: const obx_int.IdUid(38, 1269911446267455712)),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 4269266419445349450),
+            name: 'isModuleActive',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 5956909345567963885),
+            name: 'monthlyBudget',
+            type: 8,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 2711133152886543703),
+            name: 'currency',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 2421470039592929082),
+            name: 'enableNotifications',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 5479651208166453989),
+            name: 'reminderDay',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 138427564496366062),
+            name: 'createdAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 1505522667265003821),
+            name: 'updatedAt',
+            type: 10,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(36, 1884510499634008044),
+      name: 'PendingAchievementEntity',
+      lastPropertyId: const obx_int.IdUid(12, 3942967827364448883),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 6953284003189080917),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 5029241091419425498),
+            name: 'userId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 7331786950855405090),
+            name: 'type',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 5844798607065757963),
+            name: 'moduleId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 8734912292685350666),
+            name: 'achievementId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 5401083816571645638),
+            name: 'achievementName',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 4767901881187373659),
+            name: 'achievementDescription',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 8974733763416161046),
+            name: 'assetPath',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 8232600164758444237),
+            name: 'rarity',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 4281424502076976038),
+            name: 'earnedAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 4575156420853921927),
+            name: 'wasShown',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 3942967827364448883),
+            name: 'shownAt',
+            type: 10,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(37, 5729355014522283852),
+      name: 'DigitalDetoxConfigEntity',
+      lastPropertyId: const obx_int.IdUid(34, 4300197681111408493),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 5685810209827733781),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 7552357648284837618),
+            name: 'userId',
+            type: 9,
+            flags: 2080,
+            indexId: const obx_int.IdUid(39, 7676218877526858282)),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 1118606404628049902),
+            name: 'isModuleActive',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 9025197159364635682),
+            name: 'createdAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 6640059850495723238),
+            name: 'updatedAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 7156564790511282014),
+            name: 'monitoredApps',
+            type: 30,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 3506425053380200310),
+            name: 'enableTimeWindow',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 4419574062110088347),
+            name: 'allowedStartTime',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 560108431666959136),
+            name: 'allowedEndTime',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 9208768743694282136),
+            name: 'blockOnWeekends',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 3797043142381758243),
+            name: 'weekendAllowedStartTime',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 6899782627444771524),
+            name: 'weekendAllowedEndTime',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(13, 7179254491924922504),
+            name: 'enableDailyLimit',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(14, 106839563521473864),
+            name: 'dailyLimitMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(15, 1032101425481264241),
+            name: 'limitType',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(16, 7852150440205861319),
+            name: 'warnBeforeLimitMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(17, 8303892337838353305),
+            name: 'enablePreDetoxWarning',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(18, 6000325150201692503),
+            name: 'preDetoxWarningMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(19, 8935432991882448021),
+            name: 'preDetoxWarningMessage',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(20, 8229321862839406996),
+            name: 'enableRolloverMinutes',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(21, 3106019293451021332),
+            name: 'maxRolloverMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(22, 3501123776591093826),
+            name: 'rolloverExpirationDays',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(23, 321312848508831667),
+            name: 'enableWeeklyLimit',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(24, 6708323802229547464),
+            name: 'weeklyLimitMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(25, 8171299691585587597),
+            name: 'weeklyLimitStrategy',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(26, 1168542722017883244),
+            name: 'enableSessionMode',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(27, 8303463446135019939),
+            name: 'sessionDurationMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(28, 6367523438397077121),
+            name: 'sessionCooldownHours',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(29, 7308327198533578200),
+            name: 'maxSessionsPerDay',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(30, 6724755590448900669),
+            name: 'sessionDailyLimitMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(31, 3442508922978889252),
+            name: 'fastingBreakDaysRequired',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(32, 8755713629312651789),
+            name: 'fastingBreakValidityDays',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(33, 1672563766672193126),
+            name: 'currentDisciplinedStreak',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(34, 4300197681111408493),
+            name: 'lastDisciplinedDate',
+            type: 10,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(38, 2858881361687480995),
+      name: 'DigitalDetoxFastingBreakEntity',
+      lastPropertyId: const obx_int.IdUid(9, 2068765858237443210),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 8486562338655411281),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 4022974491695737081),
+            name: 'userId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 1150997286659264198),
+            name: 'earnedAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 1306953379143210772),
+            name: 'expiresAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 4130123789910516184),
+            name: 'usedAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 1346568395263901082),
+            name: 'isUsed',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 2312227740573623221),
+            name: 'daysDisciplinedCount',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 1027142746058001036),
+            name: 'weekNumber',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 2068765858237443210),
+            name: 'year',
+            type: 6,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(39, 4596388313953057885),
+      name: 'DigitalDetoxSessionEntity',
+      lastPropertyId: const obx_int.IdUid(11, 3856564437251159586),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 4987252280818144077),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 6948546384525017021),
+            name: 'userId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 4115727454741269564),
+            name: 'appPackageName',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 3965957519545041164),
+            name: 'appName',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 8057505875518682768),
+            name: 'sessionStart',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 8736658112688259134),
+            name: 'sessionEnd',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 4794609762816640304),
+            name: 'durationMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 49171768697849769),
+            name: 'date',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 8610389448837850996),
+            name: 'wasBlocked',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 436838237582977618),
+            name: 'sessionType',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 3856564437251159586),
+            name: 'wasSessionCompleted',
+            type: 1,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(40, 9153076975929927828),
+      name: 'DigitalDetoxStatsEntity',
+      lastPropertyId: const obx_int.IdUid(12, 2133585653979212338),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 9009880608688792199),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 6901311486020553192),
+            name: 'userId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 2721469674687379051),
+            name: 'date',
+            type: 10,
+            flags: 8,
+            indexId: const obx_int.IdUid(40, 3014621183292689724)),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 607814169914808723),
+            name: 'totalScreenTimeMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 6291160989328088824),
+            name: 'appBreakdownJson',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 6622181473128498817),
+            name: 'openCount',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 5861665863848669677),
+            name: 'longestSessionMinutes',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 3560755075045553807),
+            name: 'weekNumber',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 4102287780920758959),
+            name: 'monthNumber',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 3357617514222332565),
+            name: 'year',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 6989430580198975731),
+            name: 'wasDisciplinedDay',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 2133585653979212338),
+            name: 'usedFastingBreak',
+            type: 1,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
       backlinks: <obx_int.ModelBacklink>[])
 ];
 
@@ -2203,8 +2701,8 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(34, 5948507313186841817),
-      lastIndexId: const obx_int.IdUid(37, 4556094418401090300),
+      lastEntityId: const obx_int.IdUid(40, 9153076975929927828),
+      lastIndexId: const obx_int.IdUid(40, 3014621183292689724),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [5948507313186841817],
@@ -4776,6 +5274,485 @@ obx_int.ModelDefinition getObjectBoxModel() {
                 .vTableGetNullable(buffer, rootOffset, 22);
 
           return object;
+        }),
+    SpendingConfigEntity: obx_int.EntityDefinition<SpendingConfigEntity>(
+        model: _entities[33],
+        toOneRelations: (SpendingConfigEntity object) => [],
+        toManyRelations: (SpendingConfigEntity object) => {},
+        getId: (SpendingConfigEntity object) => object.id,
+        setId: (SpendingConfigEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (SpendingConfigEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final currencyOffset = fbb.writeString(object.currency);
+          fbb.startTable(10);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addBool(2, object.isModuleActive);
+          fbb.addFloat64(3, object.monthlyBudget);
+          fbb.addOffset(4, currencyOffset);
+          fbb.addBool(5, object.enableNotifications);
+          fbb.addInt64(6, object.reminderDay);
+          fbb.addInt64(7, object.createdAt.millisecondsSinceEpoch);
+          fbb.addInt64(8, object.updatedAt.millisecondsSinceEpoch);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final isModuleActiveParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false);
+          final monthlyBudgetParam =
+              const fb.Float64Reader().vTableGet(buffer, rootOffset, 10, 0);
+          final currencyParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 12, '');
+          final enableNotificationsParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 14, false);
+          final reminderDayParam =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0);
+          final object = SpendingConfigEntity(
+              userId: userIdParam,
+              isModuleActive: isModuleActiveParam,
+              monthlyBudget: monthlyBudgetParam,
+              currency: currencyParam,
+              enableNotifications: enableNotificationsParam,
+              reminderDay: reminderDayParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..createdAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0))
+            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 20, 0));
+
+          return object;
+        }),
+    PendingAchievementEntity: obx_int.EntityDefinition<
+            PendingAchievementEntity>(
+        model: _entities[34],
+        toOneRelations: (PendingAchievementEntity object) => [],
+        toManyRelations: (PendingAchievementEntity object) => {},
+        getId: (PendingAchievementEntity object) => object.id,
+        setId: (PendingAchievementEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (PendingAchievementEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final typeOffset = fbb.writeString(object.type);
+          final moduleIdOffset = fbb.writeString(object.moduleId);
+          final achievementIdOffset = fbb.writeString(object.achievementId);
+          final achievementNameOffset = fbb.writeString(object.achievementName);
+          final achievementDescriptionOffset =
+              object.achievementDescription == null
+                  ? null
+                  : fbb.writeString(object.achievementDescription!);
+          final assetPathOffset = object.assetPath == null
+              ? null
+              : fbb.writeString(object.assetPath!);
+          final rarityOffset =
+              object.rarity == null ? null : fbb.writeString(object.rarity!);
+          fbb.startTable(13);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addOffset(2, typeOffset);
+          fbb.addOffset(3, moduleIdOffset);
+          fbb.addOffset(4, achievementIdOffset);
+          fbb.addOffset(5, achievementNameOffset);
+          fbb.addOffset(6, achievementDescriptionOffset);
+          fbb.addOffset(7, assetPathOffset);
+          fbb.addOffset(8, rarityOffset);
+          fbb.addInt64(9, object.earnedAt?.millisecondsSinceEpoch);
+          fbb.addBool(10, object.wasShown);
+          fbb.addInt64(11, object.shownAt?.millisecondsSinceEpoch);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final earnedAtValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 22);
+          final shownAtValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 26);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final typeParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 8, '');
+          final moduleIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 10, '');
+          final achievementIdParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 12, '');
+          final achievementNameParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 14, '');
+          final achievementDescriptionParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGetNullable(buffer, rootOffset, 16);
+          final assetPathParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGetNullable(buffer, rootOffset, 18);
+          final rarityParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGetNullable(buffer, rootOffset, 20);
+          final earnedAtParam = earnedAtValue == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(earnedAtValue);
+          final wasShownParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 24, false);
+          final shownAtParam = shownAtValue == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(shownAtValue);
+          final object = PendingAchievementEntity(
+              userId: userIdParam,
+              type: typeParam,
+              moduleId: moduleIdParam,
+              achievementId: achievementIdParam,
+              achievementName: achievementNameParam,
+              achievementDescription: achievementDescriptionParam,
+              assetPath: assetPathParam,
+              rarity: rarityParam,
+              earnedAt: earnedAtParam,
+              wasShown: wasShownParam,
+              shownAt: shownAtParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+          return object;
+        }),
+    DigitalDetoxConfigEntity: obx_int.EntityDefinition<
+            DigitalDetoxConfigEntity>(
+        model: _entities[35],
+        toOneRelations: (DigitalDetoxConfigEntity object) => [],
+        toManyRelations: (DigitalDetoxConfigEntity object) => {},
+        getId: (DigitalDetoxConfigEntity object) => object.id,
+        setId: (DigitalDetoxConfigEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (DigitalDetoxConfigEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final monitoredAppsOffset = fbb.writeList(object.monitoredApps
+              .map(fbb.writeString)
+              .toList(growable: false));
+          final allowedStartTimeOffset =
+              fbb.writeString(object.allowedStartTime);
+          final allowedEndTimeOffset = fbb.writeString(object.allowedEndTime);
+          final weekendAllowedStartTimeOffset =
+              object.weekendAllowedStartTime == null
+                  ? null
+                  : fbb.writeString(object.weekendAllowedStartTime!);
+          final weekendAllowedEndTimeOffset =
+              object.weekendAllowedEndTime == null
+                  ? null
+                  : fbb.writeString(object.weekendAllowedEndTime!);
+          final limitTypeOffset = fbb.writeString(object.limitType);
+          final preDetoxWarningMessageOffset =
+              object.preDetoxWarningMessage == null
+                  ? null
+                  : fbb.writeString(object.preDetoxWarningMessage!);
+          final weeklyLimitStrategyOffset =
+              fbb.writeString(object.weeklyLimitStrategy);
+          fbb.startTable(35);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addBool(2, object.isModuleActive);
+          fbb.addInt64(3, object.createdAt.millisecondsSinceEpoch);
+          fbb.addInt64(4, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addOffset(5, monitoredAppsOffset);
+          fbb.addBool(6, object.enableTimeWindow);
+          fbb.addOffset(7, allowedStartTimeOffset);
+          fbb.addOffset(8, allowedEndTimeOffset);
+          fbb.addBool(9, object.blockOnWeekends);
+          fbb.addOffset(10, weekendAllowedStartTimeOffset);
+          fbb.addOffset(11, weekendAllowedEndTimeOffset);
+          fbb.addBool(12, object.enableDailyLimit);
+          fbb.addInt64(13, object.dailyLimitMinutes);
+          fbb.addOffset(14, limitTypeOffset);
+          fbb.addInt64(15, object.warnBeforeLimitMinutes);
+          fbb.addBool(16, object.enablePreDetoxWarning);
+          fbb.addInt64(17, object.preDetoxWarningMinutes);
+          fbb.addOffset(18, preDetoxWarningMessageOffset);
+          fbb.addBool(19, object.enableRolloverMinutes);
+          fbb.addInt64(20, object.maxRolloverMinutes);
+          fbb.addInt64(21, object.rolloverExpirationDays);
+          fbb.addBool(22, object.enableWeeklyLimit);
+          fbb.addInt64(23, object.weeklyLimitMinutes);
+          fbb.addOffset(24, weeklyLimitStrategyOffset);
+          fbb.addBool(25, object.enableSessionMode);
+          fbb.addInt64(26, object.sessionDurationMinutes);
+          fbb.addInt64(27, object.sessionCooldownHours);
+          fbb.addInt64(28, object.maxSessionsPerDay);
+          fbb.addInt64(29, object.sessionDailyLimitMinutes);
+          fbb.addInt64(30, object.fastingBreakDaysRequired);
+          fbb.addInt64(31, object.fastingBreakValidityDays);
+          fbb.addInt64(32, object.currentDisciplinedStreak);
+          fbb.addInt64(33, object.lastDisciplinedDate?.millisecondsSinceEpoch);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final lastDisciplinedDateValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 70);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final object = DigitalDetoxConfigEntity(userId: userIdParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..isModuleActive =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false)
+            ..createdAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0))
+            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0))
+            ..monitoredApps = const fb.ListReader<String>(
+                    fb.StringReader(asciiOptimization: true),
+                    lazy: false)
+                .vTableGet(buffer, rootOffset, 14, [])
+            ..enableTimeWindow =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 16, false)
+            ..allowedStartTime = const fb.StringReader(asciiOptimization: true)
+                .vTableGet(buffer, rootOffset, 18, '')
+            ..allowedEndTime = const fb.StringReader(asciiOptimization: true)
+                .vTableGet(buffer, rootOffset, 20, '')
+            ..blockOnWeekends =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 22, false)
+            ..weekendAllowedStartTime =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGetNullable(buffer, rootOffset, 24)
+            ..weekendAllowedEndTime =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGetNullable(buffer, rootOffset, 26)
+            ..enableDailyLimit =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 28, false)
+            ..dailyLimitMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 30, 0)
+            ..limitType = const fb.StringReader(asciiOptimization: true)
+                .vTableGet(buffer, rootOffset, 32, '')
+            ..warnBeforeLimitMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 34, 0)
+            ..enablePreDetoxWarning =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 36, false)
+            ..preDetoxWarningMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 38, 0)
+            ..preDetoxWarningMessage =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGetNullable(buffer, rootOffset, 40)
+            ..enableRolloverMinutes =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 42, false)
+            ..maxRolloverMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 44, 0)
+            ..rolloverExpirationDays =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 46, 0)
+            ..enableWeeklyLimit =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 48, false)
+            ..weeklyLimitMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 50, 0)
+            ..weeklyLimitStrategy =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGet(buffer, rootOffset, 52, '')
+            ..enableSessionMode =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 54, false)
+            ..sessionDurationMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 56, 0)
+            ..sessionCooldownHours =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 58, 0)
+            ..maxSessionsPerDay =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 60, 0)
+            ..sessionDailyLimitMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 62, 0)
+            ..fastingBreakDaysRequired =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 64, 0)
+            ..fastingBreakValidityDays =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 66, 0)
+            ..currentDisciplinedStreak =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 68, 0)
+            ..lastDisciplinedDate = lastDisciplinedDateValue == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(lastDisciplinedDateValue);
+
+          return object;
+        }),
+    DigitalDetoxFastingBreakEntity: obx_int.EntityDefinition<
+            DigitalDetoxFastingBreakEntity>(
+        model: _entities[36],
+        toOneRelations: (DigitalDetoxFastingBreakEntity object) => [],
+        toManyRelations: (DigitalDetoxFastingBreakEntity object) => {},
+        getId: (DigitalDetoxFastingBreakEntity object) => object.id,
+        setId: (DigitalDetoxFastingBreakEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (DigitalDetoxFastingBreakEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          fbb.startTable(10);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addInt64(2, object.earnedAt.millisecondsSinceEpoch);
+          fbb.addInt64(3, object.expiresAt?.millisecondsSinceEpoch);
+          fbb.addInt64(4, object.usedAt?.millisecondsSinceEpoch);
+          fbb.addBool(5, object.isUsed);
+          fbb.addInt64(6, object.daysDisciplinedCount);
+          fbb.addInt64(7, object.weekNumber);
+          fbb.addInt64(8, object.year);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final expiresAtValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 10);
+          final usedAtValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 12);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final earnedAtParam = DateTime.fromMillisecondsSinceEpoch(
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0));
+          final expiresAtParam = expiresAtValue == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(expiresAtValue);
+          final daysDisciplinedCountParam =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0);
+          final object = DigitalDetoxFastingBreakEntity(
+              userId: userIdParam,
+              earnedAt: earnedAtParam,
+              expiresAt: expiresAtParam,
+              daysDisciplinedCount: daysDisciplinedCountParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..usedAt = usedAtValue == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(usedAtValue)
+            ..isUsed =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 14, false)
+            ..weekNumber =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0)
+            ..year =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 20, 0);
+
+          return object;
+        }),
+    DigitalDetoxSessionEntity: obx_int.EntityDefinition<
+            DigitalDetoxSessionEntity>(
+        model: _entities[37],
+        toOneRelations: (DigitalDetoxSessionEntity object) => [],
+        toManyRelations: (DigitalDetoxSessionEntity object) => {},
+        getId: (DigitalDetoxSessionEntity object) => object.id,
+        setId: (DigitalDetoxSessionEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (DigitalDetoxSessionEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final appPackageNameOffset = fbb.writeString(object.appPackageName);
+          final appNameOffset = fbb.writeString(object.appName);
+          final sessionTypeOffset = fbb.writeString(object.sessionType);
+          fbb.startTable(12);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addOffset(2, appPackageNameOffset);
+          fbb.addOffset(3, appNameOffset);
+          fbb.addInt64(4, object.sessionStart.millisecondsSinceEpoch);
+          fbb.addInt64(5, object.sessionEnd?.millisecondsSinceEpoch);
+          fbb.addInt64(6, object.durationMinutes);
+          fbb.addInt64(7, object.date.millisecondsSinceEpoch);
+          fbb.addBool(8, object.wasBlocked);
+          fbb.addOffset(9, sessionTypeOffset);
+          fbb.addBool(10, object.wasSessionCompleted);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final sessionEndValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 14);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final appPackageNameParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 8, '');
+          final appNameParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 10, '');
+          final sessionStartParam = DateTime.fromMillisecondsSinceEpoch(
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0));
+          final dateParam = DateTime.fromMillisecondsSinceEpoch(
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0));
+          final object = DigitalDetoxSessionEntity(
+              userId: userIdParam,
+              appPackageName: appPackageNameParam,
+              appName: appNameParam,
+              sessionStart: sessionStartParam,
+              date: dateParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..sessionEnd = sessionEndValue == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(sessionEndValue)
+            ..durationMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0)
+            ..wasBlocked =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 20, false)
+            ..sessionType = const fb.StringReader(asciiOptimization: true)
+                .vTableGet(buffer, rootOffset, 22, '')
+            ..wasSessionCompleted =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 24, false);
+
+          return object;
+        }),
+    DigitalDetoxStatsEntity: obx_int.EntityDefinition<DigitalDetoxStatsEntity>(
+        model: _entities[38],
+        toOneRelations: (DigitalDetoxStatsEntity object) => [],
+        toManyRelations: (DigitalDetoxStatsEntity object) => {},
+        getId: (DigitalDetoxStatsEntity object) => object.id,
+        setId: (DigitalDetoxStatsEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (DigitalDetoxStatsEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final appBreakdownJsonOffset =
+              fbb.writeString(object.appBreakdownJson);
+          fbb.startTable(13);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addInt64(2, object.date.millisecondsSinceEpoch);
+          fbb.addInt64(3, object.totalScreenTimeMinutes);
+          fbb.addOffset(4, appBreakdownJsonOffset);
+          fbb.addInt64(5, object.openCount);
+          fbb.addInt64(6, object.longestSessionMinutes);
+          fbb.addInt64(7, object.weekNumber);
+          fbb.addInt64(8, object.monthNumber);
+          fbb.addInt64(9, object.year);
+          fbb.addBool(10, object.wasDisciplinedDay);
+          fbb.addBool(11, object.usedFastingBreak);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final dateParam = DateTime.fromMillisecondsSinceEpoch(
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0));
+          final object = DigitalDetoxStatsEntity(
+              userId: userIdParam, date: dateParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..totalScreenTimeMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0)
+            ..appBreakdownJson = const fb.StringReader(asciiOptimization: true)
+                .vTableGet(buffer, rootOffset, 12, '')
+            ..openCount =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0)
+            ..longestSessionMinutes =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0)
+            ..weekNumber =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0)
+            ..monthNumber =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 20, 0)
+            ..year = const fb.Int64Reader().vTableGet(buffer, rootOffset, 22, 0)
+            ..wasDisciplinedDay =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 24, false)
+            ..usedFastingBreak =
+                const fb.BoolReader().vTableGet(buffer, rootOffset, 26, false);
+
+          return object;
         })
   };
 
@@ -6430,4 +7407,415 @@ class SyncQueueItem_ {
   /// See [SyncQueueItem.errorMessage].
   static final errorMessage =
       obx.QueryStringProperty<SyncQueueItem>(_entities[32].properties[9]);
+}
+
+/// [SpendingConfigEntity] entity fields to define ObjectBox queries.
+class SpendingConfigEntity_ {
+  /// See [SpendingConfigEntity.id].
+  static final id = obx.QueryIntegerProperty<SpendingConfigEntity>(
+      _entities[33].properties[0]);
+
+  /// See [SpendingConfigEntity.userId].
+  static final userId = obx.QueryStringProperty<SpendingConfigEntity>(
+      _entities[33].properties[1]);
+
+  /// See [SpendingConfigEntity.isModuleActive].
+  static final isModuleActive = obx.QueryBooleanProperty<SpendingConfigEntity>(
+      _entities[33].properties[2]);
+
+  /// See [SpendingConfigEntity.monthlyBudget].
+  static final monthlyBudget = obx.QueryDoubleProperty<SpendingConfigEntity>(
+      _entities[33].properties[3]);
+
+  /// See [SpendingConfigEntity.currency].
+  static final currency = obx.QueryStringProperty<SpendingConfigEntity>(
+      _entities[33].properties[4]);
+
+  /// See [SpendingConfigEntity.enableNotifications].
+  static final enableNotifications =
+      obx.QueryBooleanProperty<SpendingConfigEntity>(
+          _entities[33].properties[5]);
+
+  /// See [SpendingConfigEntity.reminderDay].
+  static final reminderDay = obx.QueryIntegerProperty<SpendingConfigEntity>(
+      _entities[33].properties[6]);
+
+  /// See [SpendingConfigEntity.createdAt].
+  static final createdAt =
+      obx.QueryDateProperty<SpendingConfigEntity>(_entities[33].properties[7]);
+
+  /// See [SpendingConfigEntity.updatedAt].
+  static final updatedAt =
+      obx.QueryDateProperty<SpendingConfigEntity>(_entities[33].properties[8]);
+}
+
+/// [PendingAchievementEntity] entity fields to define ObjectBox queries.
+class PendingAchievementEntity_ {
+  /// See [PendingAchievementEntity.id].
+  static final id = obx.QueryIntegerProperty<PendingAchievementEntity>(
+      _entities[34].properties[0]);
+
+  /// See [PendingAchievementEntity.userId].
+  static final userId = obx.QueryStringProperty<PendingAchievementEntity>(
+      _entities[34].properties[1]);
+
+  /// See [PendingAchievementEntity.type].
+  static final type = obx.QueryStringProperty<PendingAchievementEntity>(
+      _entities[34].properties[2]);
+
+  /// See [PendingAchievementEntity.moduleId].
+  static final moduleId = obx.QueryStringProperty<PendingAchievementEntity>(
+      _entities[34].properties[3]);
+
+  /// See [PendingAchievementEntity.achievementId].
+  static final achievementId =
+      obx.QueryStringProperty<PendingAchievementEntity>(
+          _entities[34].properties[4]);
+
+  /// See [PendingAchievementEntity.achievementName].
+  static final achievementName =
+      obx.QueryStringProperty<PendingAchievementEntity>(
+          _entities[34].properties[5]);
+
+  /// See [PendingAchievementEntity.achievementDescription].
+  static final achievementDescription =
+      obx.QueryStringProperty<PendingAchievementEntity>(
+          _entities[34].properties[6]);
+
+  /// See [PendingAchievementEntity.assetPath].
+  static final assetPath = obx.QueryStringProperty<PendingAchievementEntity>(
+      _entities[34].properties[7]);
+
+  /// See [PendingAchievementEntity.rarity].
+  static final rarity = obx.QueryStringProperty<PendingAchievementEntity>(
+      _entities[34].properties[8]);
+
+  /// See [PendingAchievementEntity.earnedAt].
+  static final earnedAt = obx.QueryDateProperty<PendingAchievementEntity>(
+      _entities[34].properties[9]);
+
+  /// See [PendingAchievementEntity.wasShown].
+  static final wasShown = obx.QueryBooleanProperty<PendingAchievementEntity>(
+      _entities[34].properties[10]);
+
+  /// See [PendingAchievementEntity.shownAt].
+  static final shownAt = obx.QueryDateProperty<PendingAchievementEntity>(
+      _entities[34].properties[11]);
+}
+
+/// [DigitalDetoxConfigEntity] entity fields to define ObjectBox queries.
+class DigitalDetoxConfigEntity_ {
+  /// See [DigitalDetoxConfigEntity.id].
+  static final id = obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+      _entities[35].properties[0]);
+
+  /// See [DigitalDetoxConfigEntity.userId].
+  static final userId = obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+      _entities[35].properties[1]);
+
+  /// See [DigitalDetoxConfigEntity.isModuleActive].
+  static final isModuleActive =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[2]);
+
+  /// See [DigitalDetoxConfigEntity.createdAt].
+  static final createdAt = obx.QueryDateProperty<DigitalDetoxConfigEntity>(
+      _entities[35].properties[3]);
+
+  /// See [DigitalDetoxConfigEntity.updatedAt].
+  static final updatedAt = obx.QueryDateProperty<DigitalDetoxConfigEntity>(
+      _entities[35].properties[4]);
+
+  /// See [DigitalDetoxConfigEntity.monitoredApps].
+  static final monitoredApps =
+      obx.QueryStringVectorProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[5]);
+
+  /// See [DigitalDetoxConfigEntity.enableTimeWindow].
+  static final enableTimeWindow =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[6]);
+
+  /// See [DigitalDetoxConfigEntity.allowedStartTime].
+  static final allowedStartTime =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[7]);
+
+  /// See [DigitalDetoxConfigEntity.allowedEndTime].
+  static final allowedEndTime =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[8]);
+
+  /// See [DigitalDetoxConfigEntity.blockOnWeekends].
+  static final blockOnWeekends =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[9]);
+
+  /// See [DigitalDetoxConfigEntity.weekendAllowedStartTime].
+  static final weekendAllowedStartTime =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[10]);
+
+  /// See [DigitalDetoxConfigEntity.weekendAllowedEndTime].
+  static final weekendAllowedEndTime =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[11]);
+
+  /// See [DigitalDetoxConfigEntity.enableDailyLimit].
+  static final enableDailyLimit =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[12]);
+
+  /// See [DigitalDetoxConfigEntity.dailyLimitMinutes].
+  static final dailyLimitMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[13]);
+
+  /// See [DigitalDetoxConfigEntity.limitType].
+  static final limitType = obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+      _entities[35].properties[14]);
+
+  /// See [DigitalDetoxConfigEntity.warnBeforeLimitMinutes].
+  static final warnBeforeLimitMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[15]);
+
+  /// See [DigitalDetoxConfigEntity.enablePreDetoxWarning].
+  static final enablePreDetoxWarning =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[16]);
+
+  /// See [DigitalDetoxConfigEntity.preDetoxWarningMinutes].
+  static final preDetoxWarningMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[17]);
+
+  /// See [DigitalDetoxConfigEntity.preDetoxWarningMessage].
+  static final preDetoxWarningMessage =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[18]);
+
+  /// See [DigitalDetoxConfigEntity.enableRolloverMinutes].
+  static final enableRolloverMinutes =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[19]);
+
+  /// See [DigitalDetoxConfigEntity.maxRolloverMinutes].
+  static final maxRolloverMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[20]);
+
+  /// See [DigitalDetoxConfigEntity.rolloverExpirationDays].
+  static final rolloverExpirationDays =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[21]);
+
+  /// See [DigitalDetoxConfigEntity.enableWeeklyLimit].
+  static final enableWeeklyLimit =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[22]);
+
+  /// See [DigitalDetoxConfigEntity.weeklyLimitMinutes].
+  static final weeklyLimitMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[23]);
+
+  /// See [DigitalDetoxConfigEntity.weeklyLimitStrategy].
+  static final weeklyLimitStrategy =
+      obx.QueryStringProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[24]);
+
+  /// See [DigitalDetoxConfigEntity.enableSessionMode].
+  static final enableSessionMode =
+      obx.QueryBooleanProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[25]);
+
+  /// See [DigitalDetoxConfigEntity.sessionDurationMinutes].
+  static final sessionDurationMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[26]);
+
+  /// See [DigitalDetoxConfigEntity.sessionCooldownHours].
+  static final sessionCooldownHours =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[27]);
+
+  /// See [DigitalDetoxConfigEntity.maxSessionsPerDay].
+  static final maxSessionsPerDay =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[28]);
+
+  /// See [DigitalDetoxConfigEntity.sessionDailyLimitMinutes].
+  static final sessionDailyLimitMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[29]);
+
+  /// See [DigitalDetoxConfigEntity.fastingBreakDaysRequired].
+  static final fastingBreakDaysRequired =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[30]);
+
+  /// See [DigitalDetoxConfigEntity.fastingBreakValidityDays].
+  static final fastingBreakValidityDays =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[31]);
+
+  /// See [DigitalDetoxConfigEntity.currentDisciplinedStreak].
+  static final currentDisciplinedStreak =
+      obx.QueryIntegerProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[32]);
+
+  /// See [DigitalDetoxConfigEntity.lastDisciplinedDate].
+  static final lastDisciplinedDate =
+      obx.QueryDateProperty<DigitalDetoxConfigEntity>(
+          _entities[35].properties[33]);
+}
+
+/// [DigitalDetoxFastingBreakEntity] entity fields to define ObjectBox queries.
+class DigitalDetoxFastingBreakEntity_ {
+  /// See [DigitalDetoxFastingBreakEntity.id].
+  static final id = obx.QueryIntegerProperty<DigitalDetoxFastingBreakEntity>(
+      _entities[36].properties[0]);
+
+  /// See [DigitalDetoxFastingBreakEntity.userId].
+  static final userId = obx.QueryStringProperty<DigitalDetoxFastingBreakEntity>(
+      _entities[36].properties[1]);
+
+  /// See [DigitalDetoxFastingBreakEntity.earnedAt].
+  static final earnedAt = obx.QueryDateProperty<DigitalDetoxFastingBreakEntity>(
+      _entities[36].properties[2]);
+
+  /// See [DigitalDetoxFastingBreakEntity.expiresAt].
+  static final expiresAt =
+      obx.QueryDateProperty<DigitalDetoxFastingBreakEntity>(
+          _entities[36].properties[3]);
+
+  /// See [DigitalDetoxFastingBreakEntity.usedAt].
+  static final usedAt = obx.QueryDateProperty<DigitalDetoxFastingBreakEntity>(
+      _entities[36].properties[4]);
+
+  /// See [DigitalDetoxFastingBreakEntity.isUsed].
+  static final isUsed =
+      obx.QueryBooleanProperty<DigitalDetoxFastingBreakEntity>(
+          _entities[36].properties[5]);
+
+  /// See [DigitalDetoxFastingBreakEntity.daysDisciplinedCount].
+  static final daysDisciplinedCount =
+      obx.QueryIntegerProperty<DigitalDetoxFastingBreakEntity>(
+          _entities[36].properties[6]);
+
+  /// See [DigitalDetoxFastingBreakEntity.weekNumber].
+  static final weekNumber =
+      obx.QueryIntegerProperty<DigitalDetoxFastingBreakEntity>(
+          _entities[36].properties[7]);
+
+  /// See [DigitalDetoxFastingBreakEntity.year].
+  static final year = obx.QueryIntegerProperty<DigitalDetoxFastingBreakEntity>(
+      _entities[36].properties[8]);
+}
+
+/// [DigitalDetoxSessionEntity] entity fields to define ObjectBox queries.
+class DigitalDetoxSessionEntity_ {
+  /// See [DigitalDetoxSessionEntity.id].
+  static final id = obx.QueryIntegerProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[0]);
+
+  /// See [DigitalDetoxSessionEntity.userId].
+  static final userId = obx.QueryStringProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[1]);
+
+  /// See [DigitalDetoxSessionEntity.appPackageName].
+  static final appPackageName =
+      obx.QueryStringProperty<DigitalDetoxSessionEntity>(
+          _entities[37].properties[2]);
+
+  /// See [DigitalDetoxSessionEntity.appName].
+  static final appName = obx.QueryStringProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[3]);
+
+  /// See [DigitalDetoxSessionEntity.sessionStart].
+  static final sessionStart = obx.QueryDateProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[4]);
+
+  /// See [DigitalDetoxSessionEntity.sessionEnd].
+  static final sessionEnd = obx.QueryDateProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[5]);
+
+  /// See [DigitalDetoxSessionEntity.durationMinutes].
+  static final durationMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxSessionEntity>(
+          _entities[37].properties[6]);
+
+  /// See [DigitalDetoxSessionEntity.date].
+  static final date = obx.QueryDateProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[7]);
+
+  /// See [DigitalDetoxSessionEntity.wasBlocked].
+  static final wasBlocked = obx.QueryBooleanProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[8]);
+
+  /// See [DigitalDetoxSessionEntity.sessionType].
+  static final sessionType = obx.QueryStringProperty<DigitalDetoxSessionEntity>(
+      _entities[37].properties[9]);
+
+  /// See [DigitalDetoxSessionEntity.wasSessionCompleted].
+  static final wasSessionCompleted =
+      obx.QueryBooleanProperty<DigitalDetoxSessionEntity>(
+          _entities[37].properties[10]);
+}
+
+/// [DigitalDetoxStatsEntity] entity fields to define ObjectBox queries.
+class DigitalDetoxStatsEntity_ {
+  /// See [DigitalDetoxStatsEntity.id].
+  static final id = obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[0]);
+
+  /// See [DigitalDetoxStatsEntity.userId].
+  static final userId = obx.QueryStringProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[1]);
+
+  /// See [DigitalDetoxStatsEntity.date].
+  static final date = obx.QueryDateProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[2]);
+
+  /// See [DigitalDetoxStatsEntity.totalScreenTimeMinutes].
+  static final totalScreenTimeMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+          _entities[38].properties[3]);
+
+  /// See [DigitalDetoxStatsEntity.appBreakdownJson].
+  static final appBreakdownJson =
+      obx.QueryStringProperty<DigitalDetoxStatsEntity>(
+          _entities[38].properties[4]);
+
+  /// See [DigitalDetoxStatsEntity.openCount].
+  static final openCount = obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[5]);
+
+  /// See [DigitalDetoxStatsEntity.longestSessionMinutes].
+  static final longestSessionMinutes =
+      obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+          _entities[38].properties[6]);
+
+  /// See [DigitalDetoxStatsEntity.weekNumber].
+  static final weekNumber = obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[7]);
+
+  /// See [DigitalDetoxStatsEntity.monthNumber].
+  static final monthNumber = obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[8]);
+
+  /// See [DigitalDetoxStatsEntity.year].
+  static final year = obx.QueryIntegerProperty<DigitalDetoxStatsEntity>(
+      _entities[38].properties[9]);
+
+  /// See [DigitalDetoxStatsEntity.wasDisciplinedDay].
+  static final wasDisciplinedDay =
+      obx.QueryBooleanProperty<DigitalDetoxStatsEntity>(
+          _entities[38].properties[10]);
+
+  /// See [DigitalDetoxStatsEntity.usedFastingBreak].
+  static final usedFastingBreak =
+      obx.QueryBooleanProperty<DigitalDetoxStatsEntity>(
+          _entities[38].properties[11]);
 }

@@ -13,7 +13,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -21,8 +21,8 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -34,7 +34,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -42,7 +42,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: SingleChildScrollView(
@@ -55,11 +55,9 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
                 title: 'Aviso Importante',
                 subtitle: 'Este módulo notifica 30 minutos antes do horário definido',
                 icon: Icons.access_time_rounded,
-                isDark: isDark,
               ),
               const SizedBox(height: 16),
               NicheInfoCard(
-                isDark: isDark,
                 icon: Icons.warning_rounded,
                 title: 'Preparação',
                 color: Colors.orange,
@@ -77,8 +75,8 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -115,7 +113,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -124,7 +122,7 @@ class _DietNotificationsScreenState extends State<DietNotificationsScreen> {
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),

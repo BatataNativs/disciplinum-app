@@ -2132,10 +2132,505 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "35:4889884323610195215",
+      "lastPropertyId": "9:1505522667265003821",
+      "name": "SpendingConfigEntity",
+      "properties": [
+        {
+          "id": "1:7574673984950212340",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3038476960850584631",
+          "name": "userId",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "38:1269911446267455712"
+        },
+        {
+          "id": "3:4269266419445349450",
+          "name": "isModuleActive",
+          "type": 1
+        },
+        {
+          "id": "4:5956909345567963885",
+          "name": "monthlyBudget",
+          "type": 8
+        },
+        {
+          "id": "5:2711133152886543703",
+          "name": "currency",
+          "type": 9
+        },
+        {
+          "id": "6:2421470039592929082",
+          "name": "enableNotifications",
+          "type": 1
+        },
+        {
+          "id": "7:5479651208166453989",
+          "name": "reminderDay",
+          "type": 6
+        },
+        {
+          "id": "8:138427564496366062",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "9:1505522667265003821",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "36:1884510499634008044",
+      "lastPropertyId": "12:3942967827364448883",
+      "name": "PendingAchievementEntity",
+      "properties": [
+        {
+          "id": "1:6953284003189080917",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5029241091419425498",
+          "name": "userId",
+          "type": 9
+        },
+        {
+          "id": "3:7331786950855405090",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "4:5844798607065757963",
+          "name": "moduleId",
+          "type": 9
+        },
+        {
+          "id": "5:8734912292685350666",
+          "name": "achievementId",
+          "type": 9
+        },
+        {
+          "id": "6:5401083816571645638",
+          "name": "achievementName",
+          "type": 9
+        },
+        {
+          "id": "7:4767901881187373659",
+          "name": "achievementDescription",
+          "type": 9
+        },
+        {
+          "id": "8:8974733763416161046",
+          "name": "assetPath",
+          "type": 9
+        },
+        {
+          "id": "9:8232600164758444237",
+          "name": "rarity",
+          "type": 9
+        },
+        {
+          "id": "10:4281424502076976038",
+          "name": "earnedAt",
+          "type": 10
+        },
+        {
+          "id": "11:4575156420853921927",
+          "name": "wasShown",
+          "type": 1
+        },
+        {
+          "id": "12:3942967827364448883",
+          "name": "shownAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "37:5729355014522283852",
+      "lastPropertyId": "34:4300197681111408493",
+      "name": "DigitalDetoxConfigEntity",
+      "properties": [
+        {
+          "id": "1:5685810209827733781",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7552357648284837618",
+          "name": "userId",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "39:7676218877526858282"
+        },
+        {
+          "id": "3:1118606404628049902",
+          "name": "isModuleActive",
+          "type": 1
+        },
+        {
+          "id": "4:9025197159364635682",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "5:6640059850495723238",
+          "name": "updatedAt",
+          "type": 10
+        },
+        {
+          "id": "6:7156564790511282014",
+          "name": "monitoredApps",
+          "type": 30
+        },
+        {
+          "id": "7:3506425053380200310",
+          "name": "enableTimeWindow",
+          "type": 1
+        },
+        {
+          "id": "8:4419574062110088347",
+          "name": "allowedStartTime",
+          "type": 9
+        },
+        {
+          "id": "9:560108431666959136",
+          "name": "allowedEndTime",
+          "type": 9
+        },
+        {
+          "id": "10:9208768743694282136",
+          "name": "blockOnWeekends",
+          "type": 1
+        },
+        {
+          "id": "11:3797043142381758243",
+          "name": "weekendAllowedStartTime",
+          "type": 9
+        },
+        {
+          "id": "12:6899782627444771524",
+          "name": "weekendAllowedEndTime",
+          "type": 9
+        },
+        {
+          "id": "13:7179254491924922504",
+          "name": "enableDailyLimit",
+          "type": 1
+        },
+        {
+          "id": "14:106839563521473864",
+          "name": "dailyLimitMinutes",
+          "type": 6
+        },
+        {
+          "id": "15:1032101425481264241",
+          "name": "limitType",
+          "type": 9
+        },
+        {
+          "id": "16:7852150440205861319",
+          "name": "warnBeforeLimitMinutes",
+          "type": 6
+        },
+        {
+          "id": "17:8303892337838353305",
+          "name": "enablePreDetoxWarning",
+          "type": 1
+        },
+        {
+          "id": "18:6000325150201692503",
+          "name": "preDetoxWarningMinutes",
+          "type": 6
+        },
+        {
+          "id": "19:8935432991882448021",
+          "name": "preDetoxWarningMessage",
+          "type": 9
+        },
+        {
+          "id": "20:8229321862839406996",
+          "name": "enableRolloverMinutes",
+          "type": 1
+        },
+        {
+          "id": "21:3106019293451021332",
+          "name": "maxRolloverMinutes",
+          "type": 6
+        },
+        {
+          "id": "22:3501123776591093826",
+          "name": "rolloverExpirationDays",
+          "type": 6
+        },
+        {
+          "id": "23:321312848508831667",
+          "name": "enableWeeklyLimit",
+          "type": 1
+        },
+        {
+          "id": "24:6708323802229547464",
+          "name": "weeklyLimitMinutes",
+          "type": 6
+        },
+        {
+          "id": "25:8171299691585587597",
+          "name": "weeklyLimitStrategy",
+          "type": 9
+        },
+        {
+          "id": "26:1168542722017883244",
+          "name": "enableSessionMode",
+          "type": 1
+        },
+        {
+          "id": "27:8303463446135019939",
+          "name": "sessionDurationMinutes",
+          "type": 6
+        },
+        {
+          "id": "28:6367523438397077121",
+          "name": "sessionCooldownHours",
+          "type": 6
+        },
+        {
+          "id": "29:7308327198533578200",
+          "name": "maxSessionsPerDay",
+          "type": 6
+        },
+        {
+          "id": "30:6724755590448900669",
+          "name": "sessionDailyLimitMinutes",
+          "type": 6
+        },
+        {
+          "id": "31:3442508922978889252",
+          "name": "fastingBreakDaysRequired",
+          "type": 6
+        },
+        {
+          "id": "32:8755713629312651789",
+          "name": "fastingBreakValidityDays",
+          "type": 6
+        },
+        {
+          "id": "33:1672563766672193126",
+          "name": "currentDisciplinedStreak",
+          "type": 6
+        },
+        {
+          "id": "34:4300197681111408493",
+          "name": "lastDisciplinedDate",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "38:2858881361687480995",
+      "lastPropertyId": "9:2068765858237443210",
+      "name": "DigitalDetoxFastingBreakEntity",
+      "properties": [
+        {
+          "id": "1:8486562338655411281",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4022974491695737081",
+          "name": "userId",
+          "type": 9
+        },
+        {
+          "id": "3:1150997286659264198",
+          "name": "earnedAt",
+          "type": 10
+        },
+        {
+          "id": "4:1306953379143210772",
+          "name": "expiresAt",
+          "type": 10
+        },
+        {
+          "id": "5:4130123789910516184",
+          "name": "usedAt",
+          "type": 10
+        },
+        {
+          "id": "6:1346568395263901082",
+          "name": "isUsed",
+          "type": 1
+        },
+        {
+          "id": "7:2312227740573623221",
+          "name": "daysDisciplinedCount",
+          "type": 6
+        },
+        {
+          "id": "8:1027142746058001036",
+          "name": "weekNumber",
+          "type": 6
+        },
+        {
+          "id": "9:2068765858237443210",
+          "name": "year",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "39:4596388313953057885",
+      "lastPropertyId": "11:3856564437251159586",
+      "name": "DigitalDetoxSessionEntity",
+      "properties": [
+        {
+          "id": "1:4987252280818144077",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6948546384525017021",
+          "name": "userId",
+          "type": 9
+        },
+        {
+          "id": "3:4115727454741269564",
+          "name": "appPackageName",
+          "type": 9
+        },
+        {
+          "id": "4:3965957519545041164",
+          "name": "appName",
+          "type": 9
+        },
+        {
+          "id": "5:8057505875518682768",
+          "name": "sessionStart",
+          "type": 10
+        },
+        {
+          "id": "6:8736658112688259134",
+          "name": "sessionEnd",
+          "type": 10
+        },
+        {
+          "id": "7:4794609762816640304",
+          "name": "durationMinutes",
+          "type": 6
+        },
+        {
+          "id": "8:49171768697849769",
+          "name": "date",
+          "type": 10
+        },
+        {
+          "id": "9:8610389448837850996",
+          "name": "wasBlocked",
+          "type": 1
+        },
+        {
+          "id": "10:436838237582977618",
+          "name": "sessionType",
+          "type": 9
+        },
+        {
+          "id": "11:3856564437251159586",
+          "name": "wasSessionCompleted",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "40:9153076975929927828",
+      "lastPropertyId": "12:2133585653979212338",
+      "name": "DigitalDetoxStatsEntity",
+      "properties": [
+        {
+          "id": "1:9009880608688792199",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6901311486020553192",
+          "name": "userId",
+          "type": 9
+        },
+        {
+          "id": "3:2721469674687379051",
+          "name": "date",
+          "type": 10,
+          "flags": 8,
+          "indexId": "40:3014621183292689724"
+        },
+        {
+          "id": "4:607814169914808723",
+          "name": "totalScreenTimeMinutes",
+          "type": 6
+        },
+        {
+          "id": "5:6291160989328088824",
+          "name": "appBreakdownJson",
+          "type": 9
+        },
+        {
+          "id": "6:6622181473128498817",
+          "name": "openCount",
+          "type": 6
+        },
+        {
+          "id": "7:5861665863848669677",
+          "name": "longestSessionMinutes",
+          "type": 6
+        },
+        {
+          "id": "8:3560755075045553807",
+          "name": "weekNumber",
+          "type": 6
+        },
+        {
+          "id": "9:4102287780920758959",
+          "name": "monthNumber",
+          "type": 6
+        },
+        {
+          "id": "10:3357617514222332565",
+          "name": "year",
+          "type": 6
+        },
+        {
+          "id": "11:6989430580198975731",
+          "name": "wasDisciplinedDay",
+          "type": 1
+        },
+        {
+          "id": "12:2133585653979212338",
+          "name": "usedFastingBreak",
+          "type": 1
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "34:5948507313186841817",
-  "lastIndexId": "37:4556094418401090300",
+  "lastEntityId": "40:9153076975929927828",
+  "lastIndexId": "40:3014621183292689724",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

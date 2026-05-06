@@ -15,16 +15,14 @@ import 'package:disciplinum/features/modules/adult_content/presentation/widgets/
 import 'package:disciplinum/features/modules/money_saving/presentation/widgets/my_progress_money_saving_challenge.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/widgets/my_progress_procrastination.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
-// Widget genérico para módulos sem tela específica
-import 'package:disciplinum/shared/widgets/progress/my_progress_widgets.dart' show MyProgressFocus;
+// Tela de progresso específica do módulo Focus
+import 'package:disciplinum/features/modules/focus/presentation/widgets/my_progress_focus.dart';
 
 class MyProgressScreen extends ConsumerWidget {
   const MyProgressScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final authState = ref.watch(authServiceProvider);
     
     // Usar providers locais existentes para obter progresso
@@ -95,7 +93,6 @@ class MyProgressScreen extends ConsumerWidget {
                         niche: niche,
                         dias: dias,
                         isActive: isActive,
-                        isDark: isDark,
                         onTap: () => _navigateToProgressDetail(context, niche),
                       );
                     },
@@ -114,7 +111,6 @@ class MyProgressScreen extends ConsumerWidget {
     required Niche niche,
     required int dias,
     required bool isActive,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -212,6 +208,13 @@ class MyProgressScreen extends ConsumerWidget {
         break;
       case NicheId.reading:
         detailScreen = const MyProgressReading();
+        break;
+      case NicheId.digitalDetox:
+        // TODO: Implementar MyProgressDigitalDetox na FASE 8
+        detailScreen = Scaffold(
+          appBar: AppBar(title: const Text('Meu Progresso - Jejum Digital')),
+          body: const Center(child: Text('Em breve')),
+        );
         break;
     }
 

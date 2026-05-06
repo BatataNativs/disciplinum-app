@@ -365,18 +365,9 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
   }
 
   Widget _buildNormalView(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            isDark ? Colors.black : const Color.fromARGB(255, 226, 229, 251),
-            isDark ? Colors.black : const Color.fromARGB(255, 255, 255, 255)
-          ],
-        ),
-      ),
+      color: colorScheme.surface,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

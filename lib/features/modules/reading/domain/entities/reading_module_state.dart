@@ -186,4 +186,9 @@ class ReadingModuleState implements ModuleStateContract {
 
   /// Factory para criar a partir de Map (alias para fromJson)
   factory ReadingModuleState.fromMap(Map<String, dynamic> map) => ReadingModuleState.fromJson(map);
+
+  /// Reseta o estado para inicial, mas preserva a insígnia Madeira
+  ReadingModuleState reset() => ReadingModuleState.initial().copyWith(
+        earnedInsignias: earnedInsignias.contains('madeira') ? ['madeira'] : const [],
+      );
 }

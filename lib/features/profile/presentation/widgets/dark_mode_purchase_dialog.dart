@@ -9,24 +9,52 @@ class DarkModePurchaseDialog extends ConsumerStatefulWidget {
   const DarkModePurchaseDialog({super.key});
 
   @override
-  ConsumerState<DarkModePurchaseDialog> createState() =>
-      _DarkModePurchaseDialogState();
+  ConsumerState<DarkModePurchaseDialog> createState() => _DarkModePurchaseDialogState();
 }
 
-class _DarkModePurchaseDialogState
-    extends ConsumerState<DarkModePurchaseDialog> {
+class _DarkModePurchaseDialogState extends ConsumerState<DarkModePurchaseDialog> {
   Timer? _errorTimeout;
+  IapService? _iapService;
+
+  @override
+  void initState() {
+    super.initState();
+    // Configura o callback para mostrar snackbars de resultado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _iapService = ref.read(iapServiceProvider.notifier);
+      _iapService?.onPurchaseResult = (productId, success) {
+        if (!mounted) return;
+        
+        // Cancela o timeout de erro se receber resposta
+        _errorTimeout?.cancel();
+        _errorTimeout = null;
+        
+        if (success) {
+          EnhancedSnackBarHelper.showSuccess(context, 'Dark Mode desbloqueado com sucesso!');
+        } else {
+          EnhancedSnackBarHelper.showError(context, 'A compra foi cancelada ou ocorreu um erro.');
+        }
+        
+        // Fecha o dialog após o resultado
+        Navigator.of(context).pop();
+      };
+    });
+  }
 
   @override
   void dispose() {
     _errorTimeout?.cancel();
+    // Limpa o callback ao sair
+    if (_iapService != null && _iapService!.onPurchaseResult != null) {
+      _iapService!.onPurchaseResult = null;
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -35,19 +63,7 @@ class _DarkModePurchaseDialogState
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: isDark
-                ? [
-                    const Color(0xFF1F2937),
-                    const Color(0xFF111827),
-                  ]
-                : [
-                    const Color(0xFFFFFFFF),
-                    const Color(0xFFF9FAFB),
-                  ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: colorScheme.surface,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -98,14 +114,10 @@ class _DarkModePurchaseDialogState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.02),
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.05),
+                  color: colorScheme.outline.withValues(alpha: 0.1),
                 ),
               ),
               child: Column(
@@ -113,9 +125,7 @@ class _DarkModePurchaseDialogState
                   Icon(
                     Icons.dark_mode_outlined,
                     size: 48,
-                    color: isDark
-                        ? const Color.fromARGB(255, 29, 29, 29)
-                        : const Color.fromARGB(255, 0, 0, 0),
+                    color: colorScheme.onSurface,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -123,18 +133,16 @@ class _DarkModePurchaseDialogState
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Experiência visual elegante e confortável aos olhos com o tema escuro.',
+                    'Personalize seu app com o tema escuro',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF6B7280),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -181,9 +189,7 @@ class _DarkModePurchaseDialogState
                     child: Text(
                       'Depois',
                       style: TextStyle(
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF6B7280),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -195,7 +201,7 @@ class _DarkModePurchaseDialogState
                   flex: 2,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      // Não fecha o dialog ainda - espera o resultado
                       final iapService = ref.read(iapServiceProvider.notifier);
                       
                       // Mostra snackbar de início da compra
@@ -206,6 +212,9 @@ class _DarkModePurchaseDialogState
                         if (mounted) {
                           EnhancedSnackBarHelper.showError(context, 'Erro ao processar compra. Verifique sua conexão ou tente novamente.');
                           _errorTimeout = null;
+                          // Limpa o callback e fecha o dialog em caso de timeout
+                          iapService.onPurchaseResult = null;
+                          Navigator.of(context).pop();
                         }
                       });
                       

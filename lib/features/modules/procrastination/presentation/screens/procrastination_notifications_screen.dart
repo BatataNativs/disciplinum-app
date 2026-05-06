@@ -41,8 +41,7 @@ class _ProcrastinationNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -50,8 +49,8 @@ class _ProcrastinationNotificationsScreenState
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF),
+            colorScheme.surface,
+            colorScheme.surfaceContainerHighest,
           ],
         ),
       ),
@@ -63,7 +62,7 @@ class _ProcrastinationNotificationsScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -71,7 +70,7 @@ class _ProcrastinationNotificationsScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: IconThemeData(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: colorScheme.onSurface,
           ),
         ),
         body: _isLoading
@@ -90,7 +89,7 @@ class _ProcrastinationNotificationsScreenState
                       title: 'Lembrete Diário',
                       subtitle: 'Configure seus horários de acompanhamento',
                       icon: Icons.schedule_rounded,
-                      isDark: isDark,
+                      colorScheme: colorScheme,
                     ),
                     const SizedBox(height: 16),
                     _buildCheckinCard(),
@@ -105,7 +104,7 @@ class _ProcrastinationNotificationsScreenState
     required String title,
     required String subtitle,
     required IconData icon,
-    required bool isDark,
+    required ColorScheme colorScheme,
   }) {
     return Row(
       children: [
@@ -143,7 +142,7 @@ class _ProcrastinationNotificationsScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -152,7 +151,7 @@ class _ProcrastinationNotificationsScreenState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -164,7 +163,7 @@ class _ProcrastinationNotificationsScreenState
   }
 
   Widget _buildCheckinCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: _openSchedule,
@@ -232,8 +231,7 @@ class _ProcrastinationNotificationsScreenState
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: colorScheme.onSurface,
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -242,8 +240,7 @@ class _ProcrastinationNotificationsScreenState
                         'Defina um horário para o Disciplinum te lembrar de checar seus itens agendados',
                         style: TextStyle(
                           fontSize: 14,
-                          color:
-                              isDark ? Colors.white70 : const Color(0xFF64748B),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -268,12 +265,10 @@ class _ProcrastinationNotificationsScreenState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white.withValues(alpha: 0.8),
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                 ),
               ),
               child: Row(
@@ -292,10 +287,8 @@ class _ProcrastinationNotificationsScreenState
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _checkInCount > 0
-                          ? Colors.black
-                          : isDark
-                              ? Colors.white70
-                              : const Color(0xFF64748B),
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

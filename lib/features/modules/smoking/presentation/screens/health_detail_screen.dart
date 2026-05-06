@@ -11,7 +11,7 @@ class HealthDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     // Usando provider local do Smoking
     final smokingState = ref.watch(stopSmokingControllerProvider);
     final isModuleActive = smokingState.smokingData?.isModuleActive ?? false;
@@ -24,12 +24,8 @@ class HealthDetailScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isDark
-                  ? const Color.fromARGB(255, 0, 0, 0)
-                  : const Color.fromARGB(255, 230, 235, 255),
-              isDark
-                  ? const Color.fromARGB(255, 10, 15, 30)
-                  : const Color.fromARGB(255, 255, 255, 255)
+              colorScheme.surface,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
         ),
@@ -44,7 +40,7 @@ class HealthDetailScreen extends ConsumerWidget {
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white : Colors.black87),
+                          color: colorScheme.onSurface),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
@@ -53,7 +49,7 @@ class HealthDetailScreen extends ConsumerWidget {
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87),
+                            color: colorScheme.onSurface),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -76,9 +72,7 @@ class HealthDetailScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.black.withValues(alpha: 0.03),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -86,7 +80,7 @@ class HealthDetailScreen extends ConsumerWidget {
                           'Esses marcos representam melhorias reais na sua saúde.',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.white70 : Colors.black54,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),

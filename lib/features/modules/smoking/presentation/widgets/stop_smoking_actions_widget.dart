@@ -4,7 +4,6 @@ import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 /// Widget de ações da tela Stop Smoking
 class StopSmokingActionsWidget extends StatelessWidget {
   final int selectedIndex;
-  final bool isDark;
   final bool isSaving;
   final PageController pageController;
   final VoidCallback onOpenCheckInManager;
@@ -17,7 +16,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
   const StopSmokingActionsWidget({
     super.key,
     required this.selectedIndex,
-    required this.isDark,
     required this.isSaving,
     required this.pageController,
     required this.onOpenCheckInManager,
@@ -58,7 +56,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
             icon: Icons.rocket_launch_rounded,
             label: 'Entendi!',
             color: const Color(0xFF6366F1),
-            isDark: isDark,
             onTap: () {
               if (pageController.hasClients) {
                 pageController.animateToPage(
@@ -76,12 +73,11 @@ class StopSmokingActionsWidget extends StatelessWidget {
   }
 
   Widget _buildBottomButtons(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.black.withValues(alpha: 0.02),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -94,7 +90,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
                   icon: Icons.check_circle_outline,
                   label: 'Check-in diário',
                   color: const Color(0xFF6366F1),
-                  isDark: isDark,
                   onTap: onOpenCheckInManager,
                 ),
               ),
@@ -104,7 +99,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
                   icon: Icons.notifications_active_rounded,
                   label: 'Notificações',
                   color: Colors.orange,
-                  isDark: isDark,
                   onTap: onOpenNotifications,
                 ),
               ),
@@ -119,7 +113,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
                   icon: Icons.bar_chart_rounded,
                   label: 'Estatísticas',
                   color: Colors.teal,
-                  isDark: isDark,
                   onTap: onShowStatisticsMenu,
                 ),
               ),
@@ -133,7 +126,6 @@ class StopSmokingActionsWidget extends StatelessWidget {
                       ? 'Desativar Módulo'
                       : 'Ativar Módulo',
                   color: gamificationRunning ? Colors.red : Colors.green,
-                  isDark: isDark,
                   onTap: onToggleModule,
                 ),
               ),

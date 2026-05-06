@@ -69,9 +69,9 @@ class _ScrollIndicatorArrowState extends State<ScrollIndicatorArrow>
   Widget build(BuildContext context) {
     if (!_isVisible) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final indicatorColor = widget.color ??
-        (theme.brightness == Brightness.dark ? Colors.white30 : Colors.black26);
+        colorScheme.onSurface.withValues(alpha: 0.3);
 
     return FadeTransition(
       opacity: _opacityAnimation,

@@ -71,14 +71,38 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
     try {
       final current = state.gamification;
       final hasMadeira = current?.earnedInsigniasList.contains('Madeira') ?? false;
-      
+
       final initialState = ReadingGamificationEntity();
       initialState.id = 1;
       if (hasMadeira) {
         initialState.earnedInsigniasList = ['Madeira'];
       }
-      
+
       await _repository.saveReadingState(initialState);
+      await loadGamification();
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
+
+  /// Ativa o módulo e concede a insígnia Madeira
+  Future<void> activateModule() async {
+    try {
+      final current = state.gamification;
+
+      // Cria novo estado ou atualiza existente
+      final updatedState = current ?? ReadingGamificationEntity();
+      updatedState.id = 1;
+      updatedState.isModuleActive = true;
+
+      // Concede insígnia Madeira se ainda não tiver
+      final earnedInsignias = updatedState.earnedInsigniasList;
+      if (!earnedInsignias.contains('madeira')) {
+        earnedInsignias.add('madeira');
+        updatedState.earnedInsigniasList = earnedInsignias;
+      }
+
+      await _repository.saveReadingState(updatedState);
       await loadGamification();
     } catch (e) {
       state = state.copyWith(error: e.toString());

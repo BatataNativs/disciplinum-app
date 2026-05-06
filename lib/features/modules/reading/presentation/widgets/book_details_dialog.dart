@@ -10,8 +10,8 @@ class BookDetailsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Dialog(
       child: Container(
         constraints: const BoxConstraints(maxHeight: 600),
@@ -62,7 +62,7 @@ class BookDetailsDialog extends ConsumerWidget {
                             book.author!,
                             style: TextStyle(
                               fontSize: 14,
-                              color: isDark ? Colors.white70 : Colors.black54,
+                              color: colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -104,9 +104,7 @@ class BookDetailsDialog extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark 
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.02),
+                  color: colorScheme.onSurface.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -120,7 +118,7 @@ class BookDetailsDialog extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         Text(
@@ -144,7 +142,7 @@ class BookDetailsDialog extends ConsumerWidget {
                       '${book.currentPage} de ${book.totalPages} páginas lidas',
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? Colors.white70 : Colors.black54,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
