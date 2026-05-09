@@ -45,7 +45,7 @@ class MyProgressAdultContent extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Seu progresso no módulo: Evitar Conteúdo Adulto',
+              'Seu progresso no módulo: Jejum 18+',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
@@ -77,7 +77,7 @@ class MyProgressAdultContent extends ConsumerWidget {
                         ),
                       ),
                       const Text(
-                        'sem acessar conteúdo adulto',
+                        'no Jejum 18+',
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                     ],
@@ -97,7 +97,7 @@ class MyProgressAdultContent extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Conquistas por dias sem acessar conteúdo adulto',
+              'Conquistas por dias no Jejum 18+',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),

@@ -168,23 +168,23 @@ extension AdultContentInsigniaEntityExtension on AdultContentInsigniaEntity {
   String get requirementDescription {
     switch (this) {
       case AdultContentInsigniaEntity.madeira:
-        return 'Ative o módulo Evitar Conteúdo Adulto';
+        return 'Ative o módulo Jejum 18+';
       case AdultContentInsigniaEntity.ferro:
-        return '1 dia sem acessar conteúdo adulto';
+        return '1 dia no Jejum 18+';
       case AdultContentInsigniaEntity.aluminio:
-        return '2 dias sem acessar conteúdo adulto';
+        return '2 dias no Jejum 18+';
       case AdultContentInsigniaEntity.latao:
-        return '3 dias sem acessar conteúdo adulto';
+        return '3 dias no Jejum 18+';
       case AdultContentInsigniaEntity.bronze:
-        return '5 dias sem acessar conteúdo adulto';
+        return '5 dias no Jejum 18+';
       case AdultContentInsigniaEntity.prata:
-        return '10 dias sem acessar conteúdo adulto';
+        return '10 dias no Jejum 18+';
       case AdultContentInsigniaEntity.ouro:
-        return '15 dias sem acessar conteúdo adulto';
+        return '15 dias no Jejum 18+';
       case AdultContentInsigniaEntity.diamante:
-        return '20 dias sem acessar conteúdo adulto';
+        return '20 dias no Jejum 18+';
       case AdultContentInsigniaEntity.disciplinum:
-        return '30 dias sem acessar conteúdo adulto';
+        return '30 dias no Jejum 18+';
     }
   }
 

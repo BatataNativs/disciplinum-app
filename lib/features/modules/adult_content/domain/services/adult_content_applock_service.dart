@@ -91,7 +91,7 @@ class AdultContentAppLockService {
           appName: _getAppName(packageName),
           appIconBytes: null, // Será buscado automaticamente
           nicheId: NicheId.adultContent,
-          alertMessage: "Você escolheu acessar conteúdo adulto durante seu período de controle.",
+          alertMessage: "Você escolheu acessar apps restritos durante seu Jejum 18+.",
           timestamp: DateTime.now(),
           onExitApp: () => _handleExitApp(packageName),
           onOpenApp: () => _handleOpenApp(packageName),
@@ -116,7 +116,7 @@ class AdultContentAppLockService {
           appName: _getAppName(packageName),
           appIconBytes: null, // Será buscado automaticamente
           nicheId: NicheId.adultContent,
-          alertMessage: "Excelente! Você resistiu à tentação durante seu controle de conteúdo adulto.",
+          alertMessage: "Excelente! Você resistiu à tentação durante seu Jejum 18+.",
           timestamp: DateTime.now(),
           onExitApp: () => _handleExitApp(packageName),
           onOpenApp: () => _handleOpenApp(packageName),

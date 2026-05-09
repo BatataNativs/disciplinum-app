@@ -57,7 +57,7 @@ class NicheRepository {
         return Niche(
           id: nicheId.id,
           nicheId: nicheId,
-          name: 'Evitar Conteúdo Adulto',
+          name: 'Jejum 18+',
           description: 'Controle acesso a conteúdo adulto',
           icon: '🔞',
           color: '#E91E63',
@@ -96,7 +96,7 @@ class NicheRepository {
           name: 'Jejum Digital',
           description: 'Controle inteligente do uso de redes sociais e apps',
           icon: '📱',
-          color: '#7C4DFF',
+          color: '#FF9800',
         );
     }
   }

@@ -23,6 +23,7 @@ import 'package:disciplinum/features/modules/adult_content/presentation/screens/
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/money_saving_challenge_screen.dart';
 import 'package:disciplinum/features/modules/procrastination/presentation/screens/procrastination_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_screen.dart';
+import 'package:disciplinum/features/modules/digital_detox/presentation/screens/digital_detox_screen.dart';
 
 // --- IMPORT DA NOVA TELA ---
 import 'package:disciplinum/features/iap/presentation/screens/lojinha_screen.dart';
@@ -132,12 +133,8 @@ class AppRouter {
                 builder: (_) => ReadingScreen(
                     heroTag: heroTag, initialTabIndex: initialTabIndex));
           case NicheId.digitalDetox:
-            // TODO: Implementar DigitalDetoxScreen na FASE 1
             return FastMaterialPageRoute(
-                builder: (_) => Scaffold(
-                  appBar: AppBar(title: const Text('Jejum Digital')),
-                  body: const Center(child: Text('Em breve')),
-                ));
+                builder: (_) => DigitalDetoxScreen(heroTag: heroTag));
         }
 
       case AppRouter.settings:

@@ -1,9 +1,9 @@
-import 'package:disciplinum/core/database/objectbox_service.dart';
+﻿import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_session_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 
-/// Repository de sessões de uso do Jejum Digital
-/// Gerencia persistência de sessões usando ObjectBox
+/// Repository de sessÃµes de uso do Jejum Digital
+/// Gerencia persistÃªncia de sessÃµes usando ObjectBox
 class DigitalDetoxSessionRepository {
   static DigitalDetoxSessionRepository? _instance;
   static DigitalDetoxSessionRepository get instance => _instance ??= DigitalDetoxSessionRepository._internal();
@@ -12,7 +12,7 @@ class DigitalDetoxSessionRepository {
 
   Box<DigitalDetoxSessionEntity> get _box => ObjectBoxService.instance.store.box<DigitalDetoxSessionEntity>();
 
-  /// Inicia uma nova sessão
+  /// Inicia uma nova sessÃ£o
   Future<DigitalDetoxSessionEntity> startSession({
     required String userId,
     required String appPackage,
@@ -32,7 +32,7 @@ class DigitalDetoxSessionRepository {
     return session;
   }
 
-  /// Finaliza uma sessão
+  /// Finaliza uma sessÃ£o
   Future<void> endSession(int sessionId, {bool blocked = false, bool completed = false}) async {
     final session = _box.get(sessionId);
     if (session != null) {
@@ -41,7 +41,7 @@ class DigitalDetoxSessionRepository {
     }
   }
 
-  /// Busca sessão ativa (não finalizada)
+  /// Busca sessÃ£o ativa (nÃ£o finalizada)
   Future<DigitalDetoxSessionEntity?> getActiveSession(String userId) async {
     final query = _box.query(
       DigitalDetoxSessionEntity_.userId.equals(userId)
@@ -52,7 +52,7 @@ class DigitalDetoxSessionRepository {
     return result;
   }
 
-  /// Busca sessões de hoje
+  /// Busca sessÃµes de hoje
   Future<List<DigitalDetoxSessionEntity>> getTodaySessions(String userId) async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
@@ -85,19 +85,19 @@ class DigitalDetoxSessionRepository {
     return appUsage;
   }
 
-  /// Conta sessões de hoje
+  /// Conta sessÃµes de hoje
   Future<int> getTodaySessionCount(String userId) async {
     final sessions = await getTodaySessions(userId);
     return sessions.length;
   }
 
-  /// Conta sessões controladas de hoje
+  /// Conta sessÃµes controladas de hoje
   Future<int> getTodayControlledSessionCount(String userId) async {
     final sessions = await getTodaySessions(userId);
     return sessions.where((s) => s.sessionType == "controlled" && s.wasSessionCompleted).length;
   }
 
-  /// Busca última sessão
+  /// Busca Ãºltima sessÃ£o
   Future<DigitalDetoxSessionEntity?> getLastSession(String userId) async {
     final query = _box.query(
       DigitalDetoxSessionEntity_.userId.equals(userId),
@@ -108,7 +108,7 @@ class DigitalDetoxSessionRepository {
     return result;
   }
 
-  /// Verifica se está em cooldown (última sessão controlada terminou há menos de X horas)
+  /// Verifica se estÃ¡ em cooldown (Ãºltima sessÃ£o controlada terminou hÃ¡ menos de X horas)
   Future<bool> isInCooldown(String userId, int cooldownHours) async {
     final lastSession = await getLastSession(userId);
     if (lastSession == null) return false;

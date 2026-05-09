@@ -276,7 +276,7 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                       '🍎 Manter Dieta',
                       'Lembretes de refeições com antecedência'),
                   _buildModuleItemDark(
-                      '🔒 Evitar Conteúdo Adulto',
+                      '🔒 Jejum 18+',
                       'Bloqueio de navegadores e apps com conteúdo adulto'),
                   _buildModuleItemDark(
                       '⏰ Evitar Procrastinação',
@@ -288,7 +288,10 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                       '🍔 Compulsão Alimentar',
                       'Bloqueio de apps de delivery (iFood, Uber Eats, etc.)'),
                   _buildModuleItemDark(
-                      '� Desafio da Poupança',
+                      '📱 Jejum Digital',
+                      'Controle inteligente do uso de redes sociais e apps'),
+                  _buildModuleItemDark(
+                      '🏦 Desafio da Poupança',
                       'Metas de economia com acompanhamento visual (quadradinhos)'),
                 ],
               ),

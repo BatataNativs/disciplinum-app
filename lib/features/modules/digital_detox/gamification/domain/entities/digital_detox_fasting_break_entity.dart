@@ -1,7 +1,7 @@
-import 'package:objectbox/objectbox.dart';
+﻿import 'package:objectbox/objectbox.dart';
 
 /// Entidade de Quebra de Jejum
-/// Registra cada recompensa de "dia livre" concedida ao usuário disciplinado
+/// Registra cada recompensa de "dia livre" concedida ao usuÃ¡rio disciplinado
 @Entity()
 class DigitalDetoxFastingBreakEntity {
   @Id()
@@ -15,19 +15,19 @@ class DigitalDetoxFastingBreakEntity {
   /// Quando expira (null = nunca expira)
   DateTime? expiresAt;
 
-  /// Quando foi usada (null = ainda não usada)
+  /// Quando foi usada (null = ainda nÃ£o usada)
   DateTime? usedAt;
 
-  /// Se já foi usada
+  /// Se jÃ¡ foi usada
   bool isUsed = false;
 
   /// Quantos dias disciplinados para ganhar esta quebra
   int daysDisciplinedCount = 7;
 
-  /// Identificador da semana (para referência)
+  /// Identificador da semana (para referÃªncia)
   int weekNumber = 0;
 
-  /// Ano de referência
+  /// Ano de referÃªncia
   int year = 0;
 
   DigitalDetoxFastingBreakEntity({
@@ -44,20 +44,20 @@ class DigitalDetoxFastingBreakEntity {
     usedAt = DateTime.now();
   }
 
-  /// Verifica se a quebra está disponível (não usada e não expirada)
+  /// Verifica se a quebra estÃ¡ disponÃ­vel (nÃ£o usada e nÃ£o expirada)
   bool get isAvailable {
     if (isUsed) return false;
     if (expiresAt == null) return true;
     return DateTime.now().isBefore(expiresAt!);
   }
 
-  /// Verifica se está expirada
+  /// Verifica se estÃ¡ expirada
   bool get isExpired {
     if (expiresAt == null) return false;
     return DateTime.now().isAfter(expiresAt!);
   }
 
-  /// Dias restantes até expirar (null se não expira)
+  /// Dias restantes atÃ© expirar (null se nÃ£o expira)
   int? get daysUntilExpiry {
     if (expiresAt == null) return null;
     if (isUsed) return null;

@@ -330,7 +330,7 @@ class AppLockService {
       case NicheId.bingeEating:
         return 'Compulsão Alimentar';
       case NicheId.adultContent:
-        return 'Evitar Conteúdo Adulto';
+        return 'Jejum 18+';
       default:
         return 'Módulo Desconhecido';
     }

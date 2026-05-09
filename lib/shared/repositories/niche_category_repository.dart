@@ -33,7 +33,7 @@ class NicheCategoryRepository {
       ),
       const NicheCategory(
         id: 4,
-        name: 'Mente a autocontrole',
+        name: 'Mente e autocontrole',
         description: 'Aprendizado e crescimento pessoal',
         icon: '📚',
         color: '#FF9800',

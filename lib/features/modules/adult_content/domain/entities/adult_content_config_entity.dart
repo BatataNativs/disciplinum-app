@@ -17,7 +17,7 @@ class AdultContentConfigEntity {
   bool enableAppLock = false;
   List<String> monitoredApps = [];
   bool appLockRequirePassword = false;
-  String appLockMessage = "Pare! Você está tentando acessar conteúdo adulto durante seu período de controle.";
+  String appLockMessage = "Pare! Você está tentando acessar apps restritos durante seu Jejum 18+.";
   int appLockCooldownMinutes = 10;
   
   DateTime createdAt = DateTime.now();

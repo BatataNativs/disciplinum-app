@@ -27,7 +27,7 @@ class AdultContentConfig {
     this.enableAppLock = false,
     this.monitoredApps = const [],
     this.appLockRequirePassword = false,
-    this.appLockMessage = "Pare! Você está tentando acessar conteúdo adulto durante seu período de controle.",
+    this.appLockMessage = "Pare! Você está tentando acessar apps restritos durante seu Jejum 18+.",
     this.appLockCooldownMinutes = 10,
   });
 

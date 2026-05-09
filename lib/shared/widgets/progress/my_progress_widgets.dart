@@ -117,7 +117,7 @@ class MyProgressAdultContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ModuleProgressWidget(
       nicheId: NicheId.adultContent,
-      customTitle: 'Progresso - Conteúdo Adulto',
+      customTitle: 'Progresso - Jejum 18+',
     );
   }
 }

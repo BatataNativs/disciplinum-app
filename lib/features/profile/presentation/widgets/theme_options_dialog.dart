@@ -9,7 +9,7 @@ import 'package:disciplinum/features/profile/presentation/widgets/halloween_them
 /// Dialog de seleção de temas usando sistema de múltiplos temas
 /// 
 /// Usa Theme.of(context) para acessar cores do tema atual
-/// Não usa isDarkMode - usa AppTheme enum para controle
+/// Não usa verificação de modo escuro - usa AppTheme enum para controle
 class ThemeOptionsDialog extends ConsumerWidget {
   const ThemeOptionsDialog({super.key});
 

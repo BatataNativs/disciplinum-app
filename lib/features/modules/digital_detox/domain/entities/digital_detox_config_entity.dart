@@ -1,7 +1,7 @@
-import 'package:objectbox/objectbox.dart';
+﻿import 'package:objectbox/objectbox.dart';
 
-/// Entidade de configuração do módulo Jejum Digital
-/// Armazena todas as preferências e configurações do usuário
+/// Entidade de configuraÃ§Ã£o do mÃ³dulo Jejum Digital
+/// Armazena todas as preferÃªncias e configuraÃ§Ãµes do usuÃ¡rio
 @Entity()
 class DigitalDetoxConfigEntity {
   @Id()
@@ -10,7 +10,7 @@ class DigitalDetoxConfigEntity {
   @Unique()
   String userId;
 
-  // Status do módulo
+  // Status do mÃ³dulo
   bool isModuleActive = false;
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
@@ -18,7 +18,7 @@ class DigitalDetoxConfigEntity {
   // Apps monitorados
   List<String> monitoredApps = [];
 
-  // === BLOQUEIO POR HORÁRIO (FASE 2) ===
+  // === BLOQUEIO POR HORÃRIO (FASE 2) ===
   bool enableTimeWindow = false;
   String allowedStartTime = "08:00"; // HH:MM
   String allowedEndTime = "22:00"; // HH:MM
@@ -26,13 +26,13 @@ class DigitalDetoxConfigEntity {
   String? weekendAllowedStartTime; // HH:MM
   String? weekendAllowedEndTime; // HH:MM
 
-  // === LIMITE DE TEMPO DIÁRIO (FASE 3) ===
+  // === LIMITE DE TEMPO DIÃRIO (FASE 3) ===
   bool enableDailyLimit = false;
   int dailyLimitMinutes = 60; // minutos
   String limitType = "global"; // "perApp" | "global"
   int warnBeforeLimitMinutes = 5;
 
-  // === NOTIFICAÇÃO PRÉ-DETOX (FASE 4) ===
+  // === NOTIFICAÃ‡ÃƒO PRÃ‰-DETOX (FASE 4) ===
   bool enablePreDetoxWarning = true;
   int preDetoxWarningMinutes = 5;
   String? preDetoxWarningMessage;
@@ -47,18 +47,22 @@ class DigitalDetoxConfigEntity {
   int weeklyLimitMinutes = 540; // 9 horas
   String weeklyLimitStrategy = "flexible"; // "strict" | "flexible"
 
-  // === SESSÕES CONTROLADAS (FASE 6C) ===
+  // === SESSÃ•ES CONTROLADAS (FASE 6C) ===
   bool enableSessionMode = false;
   int sessionDurationMinutes = 10;
   int sessionCooldownHours = 2;
   int maxSessionsPerDay = 4;
   int sessionDailyLimitMinutes = 40;
 
+  // === GAMIFICAÃ‡ÃƒO / STREAKS (FASE 4) ===
+  int currentDisciplinedStreak = 0;
+  int longestDisciplinedStreak = 0;
+  int totalDisciplinedDays = 0;
+  DateTime? lastDisciplinedDate;
+
   // === QUEBRA DE JEJUM (FASE 7) ===
   int fastingBreakDaysRequired = 7;
   int fastingBreakValidityDays = 30;
-  int currentDisciplinedStreak = 0;
-  DateTime? lastDisciplinedDate;
 
   DigitalDetoxConfigEntity({
     required this.userId,
@@ -92,10 +96,12 @@ class DigitalDetoxConfigEntity {
     int? sessionCooldownHours,
     int? maxSessionsPerDay,
     int? sessionDailyLimitMinutes,
+    int? currentDisciplinedStreak,
+    int? longestDisciplinedStreak,
+    int? totalDisciplinedDays,
+    DateTime? lastDisciplinedDate,
     int? fastingBreakDaysRequired,
     int? fastingBreakValidityDays,
-    int? currentDisciplinedStreak,
-    DateTime? lastDisciplinedDate,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -127,10 +133,12 @@ class DigitalDetoxConfigEntity {
     entity.sessionCooldownHours = sessionCooldownHours ?? this.sessionCooldownHours;
     entity.maxSessionsPerDay = maxSessionsPerDay ?? this.maxSessionsPerDay;
     entity.sessionDailyLimitMinutes = sessionDailyLimitMinutes ?? this.sessionDailyLimitMinutes;
+    entity.currentDisciplinedStreak = currentDisciplinedStreak ?? this.currentDisciplinedStreak;
+    entity.longestDisciplinedStreak = longestDisciplinedStreak ?? this.longestDisciplinedStreak;
+    entity.totalDisciplinedDays = totalDisciplinedDays ?? this.totalDisciplinedDays;
+    entity.lastDisciplinedDate = lastDisciplinedDate ?? this.lastDisciplinedDate;
     entity.fastingBreakDaysRequired = fastingBreakDaysRequired ?? this.fastingBreakDaysRequired;
     entity.fastingBreakValidityDays = fastingBreakValidityDays ?? this.fastingBreakValidityDays;
-    entity.currentDisciplinedStreak = currentDisciplinedStreak ?? this.currentDisciplinedStreak;
-    entity.lastDisciplinedDate = lastDisciplinedDate ?? this.lastDisciplinedDate;
     entity.createdAt = createdAt ?? this.createdAt;
     entity.updatedAt = updatedAt ?? DateTime.now();
     return entity;

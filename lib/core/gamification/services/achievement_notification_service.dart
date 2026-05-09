@@ -186,7 +186,7 @@ class AchievementNotificationService {
     'focus': 'Foco',
     'diet': 'Dieta',
     'spending': 'Controle de Gastos',
-    'adultContent': 'Conteúdo Adulto',
+    'adultContent': 'Jejum 18+',
     'moneySavingChallenge': 'Desafio da Poupança',
     'procrastination': 'Produtividade',
     'reading': 'Leitura',

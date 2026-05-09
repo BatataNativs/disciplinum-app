@@ -27,7 +27,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const int _totalPages = 3;
 
   Widget _buildListItem(String text, TextStyle? style) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -40,22 +41,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isDark
+                colors: theme.brightness == Brightness.dark
                     ? [
-                        const Color(0xFF6366F1).withValues(alpha: 0.3),
-                        const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                        colorScheme.primary.withValues(alpha: 0.3),
+                        colorScheme.secondary.withValues(alpha: 0.15),
                       ]
                     : [
-                        const Color(0xFFDBEAFE).withValues(alpha: 0.9),
-                        const Color(0xFFF0F9FF).withValues(alpha: 0.6),
+                        colorScheme.primary.withValues(alpha: 0.9),
+                        colorScheme.primary.withValues(alpha: 0.6),
                       ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (isDark
-                          ? const Color(0xFF6366F1)
-                          : const Color(0xFF3B82F6))
-                      .withValues(alpha: isDark ? 0.3 : 0.2),
+                  color: colorScheme.primary
+                      .withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.2),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -64,7 +63,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Icon(
               Icons.check_circle_rounded,
               size: 16,
-              color: isDark ? const Color(0xFF818CF8) : const Color(0xFF2563EB),
+              color: theme.brightness == Brightness.dark 
+                  ? colorScheme.primary.withValues(alpha: 0.8)
+                  : colorScheme.primary,
             ),
           ),
           const SizedBox(width: 12),
@@ -83,7 +84,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildMedalLarge(String assetPath, String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -96,22 +98,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+              colors: theme.brightness == Brightness.dark
+                  ? [
+                      colorScheme.surface.withValues(alpha: 0.8),
+                      colorScheme.surface.withValues(alpha: 0.9),
+                    ]
+                  : [
+                      colorScheme.surface.withValues(alpha: 0.9),
+                      colorScheme.surface.withValues(alpha: 0.7),
+                    ],
             ),
             boxShadow: [
               BoxShadow(
-                color: (isDark ? Colors.black : Colors.blueGrey)
-                    .withValues(alpha: 0.15),
+                color: theme.brightness == Brightness.dark 
+                    ? Colors.black.withValues(alpha: 0.15)
+                    : Colors.blueGrey.withValues(alpha: 0.15),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               )
             ],
             border: Border.all(
-              color:
-                  (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981))
-                      .withValues(alpha: 0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -123,7 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
+            color: colorScheme.primary,
           ),
         ),
       ],
@@ -131,7 +138,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildMedal(String assetPath, String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -144,22 +152,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+              colors: theme.brightness == Brightness.dark
+                  ? [
+                      colorScheme.surface.withValues(alpha: 0.8),
+                      colorScheme.surface.withValues(alpha: 0.9),
+                    ]
+                  : [
+                      colorScheme.surface.withValues(alpha: 0.9),
+                      colorScheme.surface.withValues(alpha: 0.7),
+                    ],
             ),
             boxShadow: [
               BoxShadow(
-                color: (isDark ? Colors.black : Colors.blueGrey)
-                    .withValues(alpha: 0.15),
+                color: theme.brightness == Brightness.dark 
+                    ? Colors.black.withValues(alpha: 0.15)
+                    : Colors.blueGrey.withValues(alpha: 0.15),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               )
             ],
             border: Border.all(
-              color:
-                  (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981))
-                      .withValues(alpha: 0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -171,7 +184,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: (isDark ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
+            color: colorScheme.primary,
           ),
         ),
       ],
@@ -208,24 +221,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _confirmSkip() async {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final shouldSkip = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
         title: Text(
           'Pular explicação?',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
+            color: theme.brightness == Brightness.dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
           ),
         ),
         content: RichText(
           text: TextSpan(
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? const Color(0xFFB0B0B0) : const Color(0xFF424242),
+              color: theme.brightness == Brightness.dark ? const Color(0xFFB0B0B0) : const Color(0xFF424242),
             ),
             children: [
               const TextSpan(
@@ -237,7 +249,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark
+                  color: theme.brightness == Brightness.dark
                       ? const Color(0xFFB0B0B0)
                       : const Color(0xFF424242),
                 ),
@@ -289,7 +301,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isLastPage = _currentPage == _totalPages - 1;
 
     // Definição dos textos baseados no modo
@@ -301,7 +312,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final isPinkTheme = currentTheme == AppTheme.pink;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: theme.brightness == Brightness.dark ? Colors.black : Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -527,7 +538,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                 gradient: LinearGradient(
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
-                                                  colors: isDark
+                                                  colors: Theme.of(context).brightness == Brightness.dark
                                                       ? [
                                                           const Color(
                                                                   0xFF6366F1)
@@ -570,13 +581,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                   height: 1.2,
                                                   shadows: [
                                                     Shadow(
-                                                      color: (isDark
+                                                      color: (Theme.of(context).brightness == Brightness.dark
                                                               ? const Color(
                                                                   0xFF6366F1)
                                                               : const Color(
                                                                   0xFF3B82F6))
                                                           .withValues(
-                                                              alpha: isDark
+                                                              alpha: Theme.of(context).brightness == Brightness.dark
                                                                   ? 0.4
                                                                   : 0.25),
                                                       offset:
@@ -584,13 +595,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                       blurRadius: 8,
                                                     ),
                                                     Shadow(
-                                                      color: (isDark
+                                                      color: (Theme.of(context).brightness == Brightness.dark
                                                               ? const Color(
                                                                   0xFF6366F1)
                                                               : const Color(
                                                                   0xFF60A5FA))
                                                           .withValues(
-                                                              alpha: isDark
+                                                              alpha: Theme.of(context).brightness == Brightness.dark
                                                                   ? 0.2
                                                                   : 0.15),
                                                       offset:
@@ -611,7 +622,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                 gradient: LinearGradient(
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
-                                                  colors: isDark
+                                                  colors: Theme.of(context).brightness == Brightness.dark
                                                       ? [
                                                           const Color(
                                                                   0xFF1E293B)
@@ -633,12 +644,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                     BorderRadius.circular(16),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: (isDark
+                                                    color: (Theme.of(context).brightness == Brightness.dark
                                                             ? Colors.black
                                                             : const Color(
                                                                 0xFF64748B))
                                                         .withValues(
-                                                            alpha: isDark
+                                                            alpha: Theme.of(context).brightness == Brightness.dark
                                                                 ? 0.4
                                                                 : 0.12),
                                                     blurRadius: 20,
@@ -646,13 +657,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                     spreadRadius: 2,
                                                   ),
                                                   BoxShadow(
-                                                    color: (isDark
+                                                    color: (Theme.of(context).brightness == Brightness.dark
                                                             ? const Color(
                                                                 0xFF6366F1)
                                                             : const Color(
                                                                 0xFF3B82F6))
                                                         .withValues(
-                                                            alpha: isDark
+                                                            alpha: Theme.of(context).brightness == Brightness.dark
                                                                 ? 0.1
                                                                 : 0.06),
                                                     blurRadius: 30,
@@ -661,13 +672,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                   ),
                                                 ],
                                                 border: Border.all(
-                                                  color: (isDark
+                                                  color: (Theme.of(context).brightness == Brightness.dark
                                                           ? const Color(
                                                               0xFF334155)
                                                           : const Color(
                                                               0xFFE2E8F0))
                                                       .withValues(
-                                                          alpha: isDark
+                                                          alpha: Theme.of(context).brightness == Brightness.dark
                                                               ? 0.5
                                                               : 0.8),
                                                   width: 1.5,
@@ -685,7 +696,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                         vertical: 6),
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
-                                                        colors: isDark
+                                                        colors: Theme.of(context).brightness == Brightness.dark
                                                             ? [
                                                                 const Color(
                                                                         0xFFF59E0B)
@@ -715,13 +726,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                           BorderRadius.circular(
                                                               16),
                                                       border: Border.all(
-                                                        color: (isDark
+                                                        color: (Theme.of(context).brightness == Brightness.dark
                                                                 ? const Color(
                                                                     0xFFF59E0B)
                                                                 : const Color(
                                                                     0xFFD97706))
                                                             .withValues(
-                                                                alpha: isDark
+                                                                alpha: Theme.of(context).brightness == Brightness.dark
                                                                     ? 0.4
                                                                     : 0.3),
                                                         width: 1,
@@ -768,7 +779,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                         vertical: 6),
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
-                                                        colors: isDark
+                                                        colors: Theme.of(context).brightness == Brightness.dark
                                                             ? [
                                                                 const Color(
                                                                         0xFF6366F1)
@@ -798,13 +809,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                           BorderRadius.circular(
                                                               16),
                                                       border: Border.all(
-                                                        color: (isDark
+                                                        color: (Theme.of(context).brightness == Brightness.dark
                                                                 ? const Color(
                                                                     0xFF6366F1)
                                                                 : const Color(
                                                                     0xFF3B82F6))
                                                             .withValues(
-                                                                alpha: isDark
+                                                                alpha: Theme.of(context).brightness == Brightness.dark
                                                                     ? 0.4
                                                                     : 0.3),
                                                         width: 1,
@@ -864,7 +875,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                         vertical: 4),
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
-                                                        colors: isDark
+                                                        colors: Theme.of(context).brightness == Brightness.dark
                                                             ? [
                                                                 const Color
                                                                         .fromARGB(
@@ -910,7 +921,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                           BorderRadius.circular(
                                                               12),
                                                       border: Border.all(
-                                                        color: (isDark
+                                                        color: (Theme.of(context).brightness == Brightness.dark
                                                                 ? const Color
                                                                     .fromARGB(
                                                                     255,
@@ -924,7 +935,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                                     131,
                                                                     185))
                                                             .withValues(
-                                                                alpha: isDark
+                                                                alpha: Theme.of(context).brightness == Brightness.dark
                                                                     ? 0.4
                                                                     : 0.3),
                                                         width: 1,
@@ -977,7 +988,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: isDark
+                                  colors: Theme.of(context).brightness == Brightness.dark
                                       ? [
                                           const Color(0xFF6366F1)
                                               .withValues(alpha: 0.1),
@@ -1011,20 +1022,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   height: 1.2,
                                   shadows: [
                                     Shadow(
-                                      color: (isDark
+                                      color: (Theme.of(context).brightness == Brightness.dark
                                               ? const Color(0xFF6366F1)
                                               : const Color(0xFF3B82F6))
                                           .withValues(
-                                              alpha: isDark ? 0.4 : 0.25),
+                                              alpha: Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.25),
                                       offset: const Offset(0, 2),
                                       blurRadius: 8,
                                     ),
                                     Shadow(
-                                      color: (isDark
+                                      color: (Theme.of(context).brightness == Brightness.dark
                                               ? const Color(0xFF6366F1)
                                               : const Color(0xFF60A5FA))
                                           .withValues(
-                                              alpha: isDark ? 0.2 : 0.15),
+                                              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.15),
                                       offset: const Offset(0, 4),
                                       blurRadius: 16,
                                     ),
@@ -1064,7 +1075,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                     style: bodyStyle?.copyWith(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
-                                      color: isDark
+                                      color: Theme.of(context).brightness == Brightness.dark
                                           ? const Color(0xFFE2E8F0)
                                           : const Color(0xFF374151),
                                     ),
@@ -1075,9 +1086,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: isDark
+                                        colors: Theme.of(context).brightness == Brightness.dark
                                             ? [
-                                                const Color(0xFF6366F1)
+                                                const Color.fromARGB(255, 155, 37, 37)
                                                     .withValues(alpha: 0.15),
                                                 const Color(0xFF8B5CF6)
                                                     .withValues(alpha: 0.08),
@@ -1091,11 +1102,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: (isDark
+                                        color: (Theme.of(context).brightness == Brightness.dark
                                                 ? const Color(0xFF6366F1)
                                                 : const Color(0xFF3B82F6))
                                             .withValues(
-                                                alpha: isDark ? 0.3 : 0.2),
+                                                alpha: Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.2),
                                         width: 1,
                                       ),
                                     ),
@@ -1105,7 +1116,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                       style: bodyStyle?.copyWith(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
-                                        color: isDark
+                                        color: Theme.of(context).brightness == Brightness.dark
                                             ? const Color(0xFF818CF8)
                                             : const Color(0xFF1D4ED8),
                                       ),
@@ -1128,8 +1139,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                             bodyStyle),
                                         _buildListItem(
                                             'Parar de fumar', bodyStyle),
-                                        _buildListItem('Evitar conteúdo adulto',
-                                            bodyStyle),
+                                        _buildListItem('Jejum 18+', bodyStyle),
+                                        _buildListItem('Jejum Digital', bodyStyle),
                                         _buildListItem(
                                             'Evitar procrastinação', bodyStyle),
                                         const SizedBox(height: 16),
@@ -1138,7 +1149,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                               horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
-                                              colors: isDark
+                                              colors: Theme.of(context).brightness == Brightness.dark
                                                   ? [
                                                       const Color(0xFF10B981)
                                                           .withValues(
@@ -1159,12 +1170,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: (isDark
+                                              color: (Theme.of(context).brightness == Brightness.dark
                                                       ? const Color(0xFF10B981)
                                                       : const Color(0xFF10B981))
                                                   .withValues(
                                                       alpha:
-                                                          isDark ? 0.4 : 0.3),
+                                                          Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.3),
                                               width: 1,
                                             ),
                                           ),
@@ -1179,7 +1190,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                   style: bodyStyle?.copyWith(
                                                     fontWeight: FontWeight.w700,
                                                     fontSize: 14,
-                                                    color: isDark
+                                                    color: Theme.of(context).brightness == Brightness.dark
                                                         ? const Color(0xFF34D399)
                                                         : const Color(0xFF047857),
                                                   ),
@@ -1202,7 +1213,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         horizontal: 12, vertical: 2),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: isDark
+                                        colors: Theme.of(context).brightness == Brightness.dark
                                             ? [
                                                 const Color(0xFFF59E0B)
                                                     .withValues(alpha: 0.15),
@@ -1218,11 +1229,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: (isDark
+                                        color: (Theme.of(context).brightness == Brightness.dark
                                                 ? const Color(0xFFF59E0B)
                                                 : const Color(0xFFD97706))
                                             .withValues(
-                                                alpha: isDark ? 0.4 : 0.3),
+                                                alpha: Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.3),
                                         width: 1,
                                       ),
                                     ),
@@ -1333,10 +1344,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 10,
                   decoration: BoxDecoration(
                     color: _currentPage == index
-                        ? (isDark
+                        ? (Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFF6366F1)
                             : const Color.fromARGB(255, 23, 23, 23))
-                        : (isDark
+                        : (Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFF6366F1).withValues(alpha: 0.25)
                             : const Color.fromARGB(255, 36, 36, 36)
                                 .withValues(alpha: 0.25)),
@@ -1360,7 +1371,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: TextButton(
                         onPressed: _handleSkipAction,
                         style: TextButton.styleFrom(
-                          foregroundColor: (isDark
+                          foregroundColor: (Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFFFFFFFF)
                                   : const Color(0xFF1F2937))
                               .withValues(alpha: 0.8),
@@ -1387,7 +1398,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: (isDark
+                            color: (Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFF6366F1)
                                     : const Color.fromARGB(255, 16, 16, 17))
                                 .withValues(alpha: 0.4),
@@ -1408,7 +1419,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           }
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: isDark
+                          backgroundColor: Theme.of(context).brightness == Brightness.dark
                               ? const Color(0xFF6366F1)
                               : const Color.fromARGB(255, 32, 32, 32),
                           foregroundColor: Colors.white,

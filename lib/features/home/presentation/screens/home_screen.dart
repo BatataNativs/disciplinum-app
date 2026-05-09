@@ -128,7 +128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         await Future.delayed(const Duration(milliseconds: 500)); // Aguarda tempo suficiente para recarregar
         
         // Verifica se algum módulo foi ativado
-        final activeModules = ref.read(activeModulesProvider);
+        final activeModulesAsync = ref.read(activeModulesProvider);
+        final activeModules = activeModulesAsync.valueOrNull ?? [];
         final hasActiveModules = activeModules.isNotEmpty;
         
         LoggerService.instance.i('📊 APÓS SYNC: activeModules=$activeModules, count=${activeModules.length}');
@@ -379,9 +380,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
   Widget _buildNicheCard(
       Niche niche, TextTheme textTheme, String heroTag) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final accentColor = _getNicheColor(niche.id);
-    final isDark = colorScheme.brightness == Brightness.dark;
     
     return SizedBox(
       height: 195,
@@ -394,35 +395,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                isDark
+                theme.brightness == Brightness.dark
                     ? colorScheme.surface.withValues(alpha: 0.9)
                     : colorScheme.surface,
-                isDark
+                theme.brightness == Brightness.dark
                     ? Colors.black.withValues(alpha: 0.3)
                     : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               ],
             ),
             border: Border.all(
-              color: isDark
+              color: theme.brightness == Brightness.dark
                   ? accentColor.withValues(alpha: 0.6)
                   : accentColor.withValues(alpha: 0.25),
-              width: isDark ? 2 : 1.5,
+              width: theme.brightness == Brightness.dark ? 2 : 1.5,
             ),
             boxShadow: [
               // Sombra colorida intensa no tema escuro
               BoxShadow(
-                color: accentColor.withValues(alpha: isDark ? 0.35 : 0.15),
-                blurRadius: isDark ? 20 : 12,
-                spreadRadius: isDark ? 2 : 0,
+                color: accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.35 : 0.15),
+                blurRadius: theme.brightness == Brightness.dark ? 20 : 12,
+                spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
                 offset: const Offset(0, 6),
               ),
               // Sombra de profundidade escura
               BoxShadow(
-                color: isDark
+                color: theme.brightness == Brightness.dark
                     ? Colors.black.withValues(alpha: 0.6)
                     : Colors.black.withValues(alpha: 0.08),
-                blurRadius: isDark ? 16 : 8,
-                spreadRadius: isDark ? 2 : -2,
+                blurRadius: theme.brightness == Brightness.dark ? 16 : 8,
+                spreadRadius: theme.brightness == Brightness.dark ? 2 : -2,
                 offset: const Offset(0, 6),
               ),
             ],
@@ -438,10 +439,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDark
+                      color: theme.brightness == Brightness.dark
                           ? accentColor.withValues(alpha: 0.2)
                           : accentColor.withValues(alpha: 0.12),
-                      border: isDark
+                      border: theme.brightness == Brightness.dark
                           ? Border.all(
                               color: accentColor.withValues(alpha: 0.4),
                               width: 1.5,
@@ -513,14 +514,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
 
-    final isDark = colorScheme.brightness == Brightness.dark;
-
     return GlobalCelebrationWidget(
       child: SmokingCelebrationWidget(
         child: Scaffold(
         extendBody: true,
         body: Container(
-          color: isDark ? Colors.black : colorScheme.surface,
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.black : colorScheme.surface,
           child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -756,7 +755,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF6366F1)
-                      .withValues(alpha: isDark ? 0.08 : 0.05),
+                      .withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.08 : 0.05),
                 ),
               ),
             ),
@@ -797,7 +796,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(activeModulesProvider);
+                            final activeModulesAsync = ref.watch(activeModulesProvider);
+                            final activeModules = activeModulesAsync.valueOrNull ?? [];
                             return _buildActiveModulesSection(
                               activeModules, textTheme);
                           },
@@ -940,8 +940,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   /// Card para módulos ativos com glow sutil e elegante
   Widget _buildActiveNicheCard(
       Niche niche, TextTheme textTheme, String heroTag) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     
     return SizedBox(
       height: 195,
@@ -954,10 +954,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                isDark
+                theme.brightness == Brightness.dark
                     ? colorScheme.surface.withValues(alpha: 0.95)
                     : colorScheme.surface,
-                isDark
+                theme.brightness == Brightness.dark
                     ? _activeGlowColor.withValues(alpha: 0.2)
                     : _activeGlowColor.withValues(alpha: 0.06),
               ],
@@ -966,23 +966,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             boxShadow: [
               // Glow externo mais intenso no tema escuro
               BoxShadow(
-                color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.25),
-                blurRadius: isDark ? 16 : _activeBlurRadius,
-                spreadRadius: isDark ? 3 : _activeSpreadRadius,
+                color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.25),
+                blurRadius: theme.brightness == Brightness.dark ? 16 : _activeBlurRadius,
+                spreadRadius: theme.brightness == Brightness.dark ? 3 : _activeSpreadRadius,
               ),
               // Sombra de profundidade escura
               BoxShadow(
-                color: isDark
+                color: theme.brightness == Brightness.dark
                     ? Colors.black.withValues(alpha: 0.5)
                     : Colors.black.withValues(alpha: 0.08),
-                blurRadius: isDark ? 14 : 6,
-                spreadRadius: isDark ? 2 : 0,
+                blurRadius: theme.brightness == Brightness.dark ? 14 : 6,
+                spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
                 offset: const Offset(0, 5),
               ),
             ],
             border: Border.all(
-              color: _activeGlowColor.withValues(alpha: isDark ? 0.8 : 0.5),
-              width: isDark ? 2.5 : 1.5,
+              color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.8 : 0.5),
+              width: theme.brightness == Brightness.dark ? 2.5 : 1.5,
             ),
           ),
           padding: const EdgeInsets.all(12),
@@ -996,10 +996,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _activeGlowColor.withValues(alpha: isDark ? 0.25 : 0.12),
+                      color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.25 : 0.12),
                       border: Border.all(
-                        color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.35),
-                        width: isDark ? 1.5 : 1,
+                        color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.35),
+                        width: theme.brightness == Brightness.dark ? 1.5 : 1,
                       ),
                     ),
                     child: Transform.scale(

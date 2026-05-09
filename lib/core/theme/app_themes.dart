@@ -11,7 +11,7 @@ class AppColors {
 }
 
 class AppThemes {
-  /// Tema Dark Completo - Todas as cores extraídas dos isDark do app
+  /// Tema Dark Completo - Todas as cores extraídas do tema escuro do app
   static ThemeData get darkTheme {
     final base = ThemeData.dark();
     

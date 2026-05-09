@@ -1,10 +1,10 @@
-import 'package:disciplinum/core/database/objectbox_service.dart';
+﻿import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_stats_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 import 'dart:convert';
 
-/// Repository de estatísticas do Jejum Digital
-/// Gerencia persistência de estatísticas agregadas usando ObjectBox
+/// Repository de estatÃ­sticas do Jejum Digital
+/// Gerencia persistÃªncia de estatÃ­sticas agregadas usando ObjectBox
 class DigitalDetoxStatsRepository {
   static DigitalDetoxStatsRepository? _instance;
   static DigitalDetoxStatsRepository get instance => _instance ??= DigitalDetoxStatsRepository._internal();
@@ -13,7 +13,7 @@ class DigitalDetoxStatsRepository {
 
   Box<DigitalDetoxStatsEntity> get _box => ObjectBoxService.instance.store.box<DigitalDetoxStatsEntity>();
 
-  /// Busca ou cria estatísticas do dia
+  /// Busca ou cria estatÃ­sticas do dia
   Future<DigitalDetoxStatsEntity> getOrCreateTodayStats(String userId) async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
@@ -33,7 +33,7 @@ class DigitalDetoxStatsRepository {
     return stats;
   }
 
-  /// Atualiza estatísticas do dia
+  /// Atualiza estatÃ­sticas do dia
   Future<void> updateTodayStats(
     String userId, {
     int? totalScreenTimeMinutes,
@@ -67,7 +67,7 @@ class DigitalDetoxStatsRepository {
     _box.put(stats);
   }
 
-  /// Busca estatísticas de uma data específica
+  /// Busca estatÃ­sticas de uma data especÃ­fica
   Future<DigitalDetoxStatsEntity?> getStatsForDate(String userId, DateTime date) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
 
@@ -80,7 +80,7 @@ class DigitalDetoxStatsRepository {
     return result;
   }
 
-  /// Busca estatísticas da semana
+  /// Busca estatÃ­sticas da semana
   Future<List<DigitalDetoxStatsEntity>> getStatsForWeek(String userId, int weekNumber, int year) async {
     final query = _box.query(
       DigitalDetoxStatsEntity_.userId.equals(userId)
@@ -93,7 +93,7 @@ class DigitalDetoxStatsRepository {
     return results;
   }
 
-  /// Busca estatísticas do mês
+  /// Busca estatÃ­sticas do mÃªs
   Future<List<DigitalDetoxStatsEntity>> getStatsForMonth(String userId, int month, int year) async {
     final query = _box.query(
       DigitalDetoxStatsEntity_.userId.equals(userId)
@@ -106,7 +106,7 @@ class DigitalDetoxStatsRepository {
     return results;
   }
 
-  /// Busca todas as estatísticas
+  /// Busca todas as estatÃ­sticas
   Future<List<DigitalDetoxStatsEntity>> getAllStats(String userId) async {
     final query = _box.query(
       DigitalDetoxStatsEntity_.userId.equals(userId),
@@ -117,7 +117,7 @@ class DigitalDetoxStatsRepository {
     return results;
   }
 
-  /// Calcula média de uso diário
+  /// Calcula mÃ©dia de uso diÃ¡rio
   Future<double> getAverageDailyUsage(String userId) async {
     final stats = await getAllStats(userId);
     if (stats.isEmpty) return 0;
@@ -160,7 +160,7 @@ class DigitalDetoxStatsRepository {
 
     for (final stat in stats) {
       if (stat.wasDisciplinedDay) {
-        // Verificar se é dia consecutivo
+        // Verificar se Ã© dia consecutivo
         final expectedDate = today.subtract(Duration(days: streak));
         if (stat.date.year == expectedDate.year &&
             stat.date.month == expectedDate.month &&

@@ -18,6 +18,9 @@ import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitleme
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart' as auth;
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
+import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
+import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
+import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
 import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/core/theme/app_theme.dart';
@@ -26,9 +29,6 @@ import 'package:disciplinum/infrastructure/datasources/local_module_datasource.d
 import 'package:disciplinum/infrastructure/datasources/cloud_module_datasource.dart';
 import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
 import 'package:disciplinum/features/modules/reading/gamification/data/repositories/reading_gamification_repository.dart';
-
-
-
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service.dart';
 import 'package:disciplinum/features/modules/reading/domain/services/reading_service_local.dart';
 import 'package:disciplinum/features/modules/reading/presentation/controllers/reading_controller_local.dart';
@@ -376,8 +376,9 @@ final readingActiveProvider = Provider<bool>((ref) {
   return state.config?.isModuleActive ?? false;
 });
 
-/// Provider combinado para obter lista de módulos ativos (gamificação fragmentada)
-final activeModulesProvider = Provider<List<NicheId>>((ref) {
+/// Provider combinado para obter módulos ativos
+/// Sistema completo de módulos - verifica status de cada módulo individualmente
+final activeModulesProvider = FutureProvider<List<NicheId>>((ref) async {
   final activeModules = <NicheId>[];
   
   // Verificar cada módulo usando seus providers locais
@@ -390,6 +391,14 @@ final activeModulesProvider = Provider<List<NicheId>>((ref) {
   if (ref.watch(procrastinationActiveProvider)) activeModules.add(NicheId.procrastination);
   if (ref.watch(readingActiveProvider)) activeModules.add(NicheId.reading);
   if (ref.watch(spendingActiveProvider)) activeModules.add(NicheId.spending);
+  // Digital Detox - usar provider local
+  try {
+    // Verificar se módulo está ativo via provider local
+    final userId = ref.watch(currentUserIdProvider);
+    final digitalDetoxService = ref.read(digitalDetoxServiceLocalProvider);
+    final config = await digitalDetoxService.getConfig(userId);
+    if (config?.isModuleActive == true) activeModules.add(NicheId.digitalDetox);
+  } catch (_) {}
   
   return activeModules;
 });
@@ -432,8 +441,21 @@ final pendingMedalsProvider = Provider<Future<List<String>>>((ref) async {
     }
   } catch (_) {}
   
+  // Digital Detox - via service de gamificação local
+  try {
+    final userId = ref.watch(currentUserIdProvider);
+    // Usar o service de gamificação diretamente
+    final store = ObjectBoxService.instance.store;
+    final gamificationRepo = DigitalDetoxGamificationRepository(store.box<DigitalDetoxGamificationEntity>());
+    final gamification = gamificationRepo.getByUserId(userId);
+    if (gamification != null) {
+      pendingMedals.addAll(gamification.earnedMedalhasList);
+    }
+  } catch (_) {}
+  
   return pendingMedals;
 });
+
 
 /// Controla se a sincronização inicial já foi realizada
 /// 

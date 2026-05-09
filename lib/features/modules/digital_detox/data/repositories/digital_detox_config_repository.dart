@@ -1,9 +1,9 @@
-import 'package:disciplinum/core/database/objectbox_service.dart';
+﻿import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_config_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 
-/// Repository de configurações do Jejum Digital
-/// Gerencia persistência de configurações usando ObjectBox
+/// Repository de configuraÃ§Ãµes do Jejum Digital
+/// Gerencia persistÃªncia de configuraÃ§Ãµes usando ObjectBox
 class DigitalDetoxConfigRepository {
   static DigitalDetoxConfigRepository? _instance;
   static DigitalDetoxConfigRepository get instance => _instance ??= DigitalDetoxConfigRepository._internal();
@@ -12,7 +12,7 @@ class DigitalDetoxConfigRepository {
 
   Box<DigitalDetoxConfigEntity> get _box => ObjectBoxService.instance.store.box<DigitalDetoxConfigEntity>();
 
-  /// Busca configuração pelo userId
+  /// Busca configuraÃ§Ã£o pelo userId
   Future<DigitalDetoxConfigEntity?> getConfig(String userId) async {
     try {
       return _box.query(DigitalDetoxConfigEntity_.userId.equals(userId)).build().findFirst();
@@ -21,7 +21,7 @@ class DigitalDetoxConfigRepository {
     }
   }
 
-  /// Cria ou retorna configuração existente
+  /// Cria ou retorna configuraÃ§Ã£o existente
   Future<DigitalDetoxConfigEntity> getOrCreateConfig(String userId) async {
     var config = await getConfig(userId);
     if (config == null) {
@@ -31,20 +31,20 @@ class DigitalDetoxConfigRepository {
     return config;
   }
 
-  /// Salva configuração
+  /// Salva configuraÃ§Ã£o
   Future<void> saveConfig(DigitalDetoxConfigEntity config) async {
     config.touch();
     _box.put(config);
   }
 
-  /// Ativa/desativa módulo
+  /// Ativa/desativa mÃ³dulo
   Future<void> setModuleActive(String userId, bool isActive) async {
     final config = await getOrCreateConfig(userId);
     config.isModuleActive = isActive;
     await saveConfig(config);
   }
 
-  /// Verifica se módulo está ativo
+  /// Verifica se mÃ³dulo estÃ¡ ativo
   Future<bool> isModuleActive(String userId) async {
     final config = await getConfig(userId);
     return config?.isModuleActive ?? false;
@@ -74,7 +74,7 @@ class DigitalDetoxConfigRepository {
     await saveConfig(config);
   }
 
-  /// Limpa todas as configurações
+  /// Limpa todas as configuraÃ§Ãµes
   Future<void> clearAll() async {
     _box.removeAll();
   }

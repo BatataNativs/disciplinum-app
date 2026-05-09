@@ -36,12 +36,12 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   bool _isLoadingData = false;
 
   late PageController _pageController;
-  int _selectedIndex = 0; // 0=Evitar conteúdo adulto, 1=Como funciona
+  int _selectedIndex = 0; // 0=Jejum 18+, 1=Como funciona
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Evitar conteúdo adulto"
+    _pageController = PageController(initialPage: 0); // Garante que inicie na aba "Jejum 18+"
     _loadAllPersistentData();
   }
 
@@ -141,7 +141,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       if (mounted) {
         SnackBarHelper.showInfo(
           context,
-          'Você precisa conceder a permissão de sobreposição para ativar o módulo de Conteúdo Adulto.',
+          'Você precisa conceder a permissão de sobreposição para ativar o módulo de Jejum 18+.',
         );
       }
       return;
@@ -399,7 +399,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                           });
                         },
                         children: [
-                          // 0: Evitar conteúdo adulto (módulo)
+                          // 0: Jejum 18+ (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
@@ -438,7 +438,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
   Widget _buildSegmentedControl() {
     final colorScheme = Theme.of(context).colorScheme;
-    final List<String> options = ['Evitar conteúdo adulto', 'Como funciona'];
+    final List<String> options = ['Jejum 18+', 'Como funciona'];
 
     return Container(
       height: 44,
@@ -505,7 +505,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     final colorScheme = Theme.of(context).colorScheme;
     switch (index) {
       case 0:
-        // 0: Evitar conteúdo adulto (módulo)
+        // 0: Jejum 18+ (módulo)
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -593,7 +593,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
               icon: Icons.bar_chart_rounded,
               title: "Em Estatísticas, acompanhe sua evolução",
               content:
-                  "Visualize quantos dias você está sem acessar conteúdo adulto e acompanhe sua disciplina.",
+                  "Visualize quantos dias você está no Jejum 18+ e acompanhe sua disciplina.",
             ),
           ],
         );

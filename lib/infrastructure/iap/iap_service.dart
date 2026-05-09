@@ -80,7 +80,7 @@ class IapService extends StateNotifier<IapState> {
   static const String productIdCustomNotif = 'custom_notifications_unlock';
   static const String productIdMotivationPhrases = 'motivation_phrases_unlock';
 
-  // Getters para compatibilidade
+  // Getters para compatibilidade com sistema de temas
   bool get isDarkModeUnlocked => state.isDarkModeUnlocked;
   bool get isPinkThemeUnlocked => state.isPinkThemeUnlocked;
   bool get isHalloweenThemeUnlocked => state.isHalloweenThemeUnlocked;

@@ -520,7 +520,7 @@ class _LojinhaScreenState extends ConsumerState<LojinhaScreen> {
     IconData? icon,
     String? emoji,
     required Color color,
-    required bool isAcquired, // Removi o isDark daqui pois forçaremos o branco
+    required bool isAcquired, // Forçaremos texto branco independente do tema
     required VoidCallback onTap,
     VoidCallback? onPreviewTap,
     bool isDisabled = false,

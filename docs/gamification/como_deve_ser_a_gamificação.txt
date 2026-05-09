@@ -270,6 +270,109 @@ Unidade de medida:
   ganhou 3 insígnia Disciplinum > medalha de ouro
   ganhou 4 insígnia Disciplinum > medalha de diamante
 
+
+> Jejum Digital:
+
+Unidade de medida:
+
+Limite de uso respeitado (verificação diária)
+
+🏅 Insígnias (progressão por dias válidos consecutivos)
+
+🪵 Madeira – concedida ao configurar e ativar o módulo
+🥈 Ferro – 1 dia respeitando os limites
+🥈 Alumínio – 2 dias respeitando os limites
+🥇 Latão – 3 dias respeitando os limites
+🥉 Bronze – 5 dias respeitando os limites
+🥈 Prata – 10 dias respeitando os limites
+🥇 Ouro – 15 dias respeitando os limites
+💎 Diamante – 20 dias respeitando os limites
+🎱 Disciplinum – 30 dias respeitando os limites
+
+🏆 Medalhas (ciclos completos de 30 dias)
+
+1x Disciplinum → medalha de bronze
+2x Disciplinum → medalha de prata
+3x Disciplinum → medalha de ouro
+4x Disciplinum → medalha de diamante
+
+⚙️ Regras gerais de contagem
+
+O sistema opera com dois contadores independentes:
+
+🔥 1. Streak principal
+Conta dias válidos consecutivos
+Usado para insígnias e medalhas
+🎯 2. Ciclo de 7 dias (Quebra de Jejum)
+Conta dias válidos consecutivos
+Utilizado para concessão de Quebras de Jejum
+✅ Definições de tipos de dia
+
+Dia válido:
+
+Respeitou todos os limites
++1 no streak
++1 no ciclo de 7 dias
+
+Dia de quebra de jejum:
+
+Uso livre (acima dos limites)
+Considerado dia neutro
+Não soma e não interrompe:
+streak
+ciclo de 7 dias
+
+Dia de falha:
+
+Descumprimento das regras
+streak = 0
+ciclo de 7 dias = 0
+🎁 Quebras de Jejum
+
+Sistema de recompensa por consistência.
+
+📌 Aquisição
+A cada 7 dias válidos consecutivos → ganha 1 Quebra de Jejum
+🎮 Uso
+Concede 1 dia completo de uso livre
+Durante esse dia:
+progresso é pausado
+não conta como dia válido
+não quebra streak
+não afeta insígnias ou medalhas
+🧠 Regra central (corrigida e sem conflito)
+
+Dias de quebra de jejum são ignorados pelos contadores.
+A contagem continua normalmente a partir do próximo dia válido, sem reinício.
+
+📦 Armazenamento e limites
+Máximo de 1 Quebra de Jejum armazenada
+Se o usuário já possuir 1:
+não acumula outra até utilizar
+⛔ Restrição de uso
+Após utilizar uma Quebra de Jejum:
+é necessário completar novos 7 dias válidos
+para obter outra
+🔔 Notificações
+Ao completar 7 dias → notificação de recompensa
+Botão: “Ver no app” (leva à tela de Quebras de jejum)
+Aviso de término da quebra:
+notificação 5 minutos antes
+Encerramento automático ao final do dia
+📊 Exemplo de funcionamento
+Dia	Tipo	Streak	Ciclo 7 dias
+1	válido	1	      1
+2	válido	2	      2
+3	válido	3	      3
+4	válido	4	      4
+5	válido	5	      5
+6	válido	6	      6
+7	válido	7	      7 → ganha quebra 🎁
+8	quebra	7	      7 (inalterado)
+9	válido	8     	1
+
+
+
 ---------------------------------------------
 Obs 1: emojis meramente ilustrativos. As insígnias e as medalhas tem seus próprios assets!
 Obs 2: mantem as lógicas de, se o user descumprir regra, tiver recaída, ou desativar o módulo, reseta tudo. Mantendo só a insígnia de mandeira (perde as medalhas também. Remova a questão de "medalha máxima alcançada se ainda tiver isso perdido pelo código do projeto).

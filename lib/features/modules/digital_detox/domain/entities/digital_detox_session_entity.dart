@@ -1,7 +1,7 @@
-import 'package:objectbox/objectbox.dart';
+﻿import 'package:objectbox/objectbox.dart';
 
-/// Entidade de sessão de uso de app
-/// Registra cada período em que o usuário usou um app monitorado
+/// Entidade de sessÃ£o de uso de app
+/// Registra cada perÃ­odo em que o usuÃ¡rio usou um app monitorado
 @Entity()
 class DigitalDetoxSessionEntity {
   @Id()
@@ -14,19 +14,19 @@ class DigitalDetoxSessionEntity {
   DateTime sessionStart;
   DateTime? sessionEnd;
 
-  /// Duração em minutos (calculada ao finalizar)
+  /// DuraÃ§Ã£o em minutos (calculada ao finalizar)
   int durationMinutes = 0;
 
   /// Data apenas (para queries por dia) - sem hora
   DateTime date;
 
-  /// Se a sessão terminou por bloqueio do AppLock
+  /// Se a sessÃ£o terminou por bloqueio do AppLock
   bool wasBlocked = false;
 
-  /// Tipo de sessão: livre ou controlada (FASE 6C)
+  /// Tipo de sessÃ£o: livre ou controlada (FASE 6C)
   String sessionType = "free"; // "free" | "controlled"
 
-  /// Se sessão controlada foi completada (usou todo o tempo)
+  /// Se sessÃ£o controlada foi completada (usou todo o tempo)
   bool wasSessionCompleted = false;
 
   DigitalDetoxSessionEntity({
@@ -37,7 +37,7 @@ class DigitalDetoxSessionEntity {
     required this.date,
   });
 
-  /// Finaliza a sessão e calcula duração
+  /// Finaliza a sessÃ£o e calcula duraÃ§Ã£o
   void endSession({bool blocked = false, bool completed = false}) {
     sessionEnd = DateTime.now();
     wasBlocked = blocked;
@@ -74,6 +74,6 @@ class DigitalDetoxSessionEntity {
     return entity;
   }
 
-  /// Verifica se a sessão está ativa (não finalizada)
+  /// Verifica se a sessÃ£o estÃ¡ ativa (nÃ£o finalizada)
   bool get isActive => sessionEnd == null;
 }

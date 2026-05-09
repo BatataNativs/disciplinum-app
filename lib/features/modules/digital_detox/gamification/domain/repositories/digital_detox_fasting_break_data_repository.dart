@@ -1,9 +1,9 @@
-import 'package:disciplinum/core/database/objectbox_service.dart';
-import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_fasting_break_entity.dart';
+﻿import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_fasting_break_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 
 /// Repository de Quebras de Jejum
-/// Gerencia persistência de recompensas concedidas ao usuário
+/// Gerencia persistÃªncia de recompensas concedidas ao usuÃ¡rio
 class DigitalDetoxFastingBreakRepository {
   static DigitalDetoxFastingBreakRepository? _instance;
   static DigitalDetoxFastingBreakRepository get instance => _instance ??= DigitalDetoxFastingBreakRepository._internal();
@@ -32,7 +32,7 @@ class DigitalDetoxFastingBreakRepository {
     return fastingBreak;
   }
 
-  /// Busca todas as quebras do usuário
+  /// Busca todas as quebras do usuÃ¡rio
   Future<List<DigitalDetoxFastingBreakEntity>> getAllFastingBreaks(String userId) async {
     final query = _box.query(
       DigitalDetoxFastingBreakEntity_.userId.equals(userId),
@@ -43,7 +43,7 @@ class DigitalDetoxFastingBreakRepository {
     return results;
   }
 
-  /// Busca quebras disponíveis (não usadas e não expiradas)
+  /// Busca quebras disponÃ­veis (nÃ£o usadas e nÃ£o expiradas)
   Future<List<DigitalDetoxFastingBreakEntity>> getAvailableFastingBreaks(String userId) async {
     final now = DateTime.now();
 
@@ -61,7 +61,7 @@ class DigitalDetoxFastingBreakRepository {
     return results;
   }
 
-  /// Conta quebras disponíveis
+  /// Conta quebras disponÃ­veis
   Future<int> countAvailableFastingBreaks(String userId) async {
     final available = await getAvailableFastingBreaks(userId);
     return available.length;
@@ -78,7 +78,7 @@ class DigitalDetoxFastingBreakRepository {
     return true;
   }
 
-  /// Verifica se há uma quebra ativa hoje
+  /// Verifica se hÃ¡ uma quebra ativa hoje
   Future<bool> hasActiveFastingBreakToday(String userId) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -105,7 +105,7 @@ class DigitalDetoxFastingBreakRepository {
     return results;
   }
 
-  /// Busca quebras expiradas não usadas
+  /// Busca quebras expiradas nÃ£o usadas
   Future<List<DigitalDetoxFastingBreakEntity>> getExpiredFastingBreaks(String userId) async {
     final now = DateTime.now();
 
@@ -129,13 +129,13 @@ class DigitalDetoxFastingBreakRepository {
     return ids.length;
   }
 
-  /// Busca a quebra mais antiga disponível
+  /// Busca a quebra mais antiga disponÃ­vel
   Future<DigitalDetoxFastingBreakEntity?> getOldestAvailableFastingBreak(String userId) async {
     final available = await getAvailableFastingBreaks(userId);
     return available.isNotEmpty ? available.first : null;
   }
 
-  /// Calcula dias até a próxima expiração
+  /// Calcula dias atÃ© a prÃ³xima expiraÃ§Ã£o
   Future<int?> getDaysUntilNextExpiry(String userId) async {
     final available = await getAvailableFastingBreaks(userId);
     if (available.isEmpty) return null;

@@ -106,8 +106,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
   Widget _buildNicheCard(
       Niche niche, ColorScheme colorScheme, TextTheme textTheme, String heroTag,
       {bool isActive = false}) {
+    final theme = Theme.of(context);
     final accentColor = _getNicheColor(niche.id);
-    final isDark = colorScheme.brightness == Brightness.dark;
     
     return SizedBox(
       height: 195,
@@ -121,59 +121,59 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
               end: Alignment.bottomRight,
               colors: isActive
                   ? [
-                      isDark
+                      theme.brightness == Brightness.dark
                           ? colorScheme.surface.withValues(alpha: 0.95)
                           : colorScheme.surface,
-                      isDark
+                      theme.brightness == Brightness.dark
                           ? _activeGlowColor.withValues(alpha: 0.2)
                           : _activeGlowColor.withValues(alpha: 0.06),
                     ]
                   : [
-                      isDark
+                      theme.brightness == Brightness.dark
                           ? colorScheme.surface.withValues(alpha: 0.9)
                           : colorScheme.surface,
-                      isDark
+                      theme.brightness == Brightness.dark
                           ? Colors.black.withValues(alpha: 0.3)
                           : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     ],
             ),
             border: Border.all(
               color: isActive
-                  ? _activeGlowColor.withValues(alpha: isDark ? 0.8 : 0.5)
-                  : accentColor.withValues(alpha: isDark ? 0.6 : 0.25),
-              width: isActive ? (isDark ? 2.5 : 1.5) : (isDark ? 2 : 1.5),
+                  ? _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.8 : 0.5)
+                  : accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.6 : 0.25),
+              width: isActive ? (theme.brightness == Brightness.dark ? 2.5 : 1.5) : (theme.brightness == Brightness.dark ? 2 : 1.5),
             ),
             boxShadow: isActive
                 ? [
                     // Glow mais intenso no tema escuro
                     BoxShadow(
-                      color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.25),
-                      blurRadius: isDark ? 16 : _activeBlurRadius,
-                      spreadRadius: isDark ? 3 : _activeSpreadRadius,
+                      color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.25),
+                      blurRadius: theme.brightness == Brightness.dark ? 16 : _activeBlurRadius,
+                      spreadRadius: theme.brightness == Brightness.dark ? 3 : _activeSpreadRadius,
                     ),
                     BoxShadow(
-                      color: isDark
+                      color: theme.brightness == Brightness.dark
                           ? Colors.black.withValues(alpha: 0.5)
                           : Colors.black.withValues(alpha: 0.08),
-                      blurRadius: isDark ? 14 : 6,
-                      spreadRadius: isDark ? 2 : 0,
+                      blurRadius: theme.brightness == Brightness.dark ? 14 : 6,
+                      spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
                       offset: const Offset(0, 5),
                     ),
                   ]
                 : [
                     // Sombra intensa no tema escuro
                     BoxShadow(
-                      color: accentColor.withValues(alpha: isDark ? 0.35 : 0.15),
-                      blurRadius: isDark ? 20 : 12,
-                      spreadRadius: isDark ? 2 : 0,
+                      color: accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.35 : 0.15),
+                      blurRadius: theme.brightness == Brightness.dark ? 20 : 12,
+                      spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
                       offset: const Offset(0, 6),
                     ),
                     BoxShadow(
-                      color: isDark
+                      color: theme.brightness == Brightness.dark
                           ? Colors.black.withValues(alpha: 0.6)
                           : Colors.black.withValues(alpha: 0.08),
-                      blurRadius: isDark ? 16 : 8,
-                      spreadRadius: isDark ? 2 : -2,
+                      blurRadius: theme.brightness == Brightness.dark ? 16 : 8,
+                      spreadRadius: theme.brightness == Brightness.dark ? 2 : -2,
                       offset: const Offset(0, 6),
                     ),
                   ],
@@ -190,14 +190,14 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isActive
-                          ? _activeGlowColor.withValues(alpha: isDark ? 0.25 : 0.12)
-                          : accentColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                          ? _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.25 : 0.12)
+                          : accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.12),
                       border: isActive
                           ? Border.all(
-                              color: _activeGlowColor.withValues(alpha: isDark ? 0.5 : 0.35),
-                              width: isDark ? 1.5 : 1,
+                              color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.35),
+                              width: theme.brightness == Brightness.dark ? 1.5 : 1,
                             )
-                          : (isDark
+                          : (theme.brightness == Brightness.dark
                               ? Border.all(
                                   color: accentColor.withValues(alpha: 0.4),
                                   width: 1.5,
@@ -267,14 +267,13 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     final colorScheme = Theme.of(context).colorScheme;
     final categories = NicheCategoryRepository.getCategories();
     final allCategories = List<NicheCategory>.from(categories);
-    final isDark = colorScheme.brightness == Brightness.dark;
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
 
     return Scaffold(
       extendBody: true,
       body: Container(
-        color: isDark ? Colors.black : colorScheme.surface,
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.black : colorScheme.surface,
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -510,7 +509,7 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF6366F1)
-                      .withValues(alpha: isDark ? 0.08 : 0.04),
+                      .withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.08 : 0.04),
                 ),
               ),
             ),
@@ -575,7 +574,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModules = ref.watch(activeModulesProvider);
+                            final activeModulesAsync = ref.watch(activeModulesProvider);
+                            final activeModules = activeModulesAsync.valueOrNull ?? [];
                             return _buildActiveModulesSection(
                                 activeModules, colorScheme, textTheme);
                           },

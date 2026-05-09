@@ -117,7 +117,7 @@ class NicheCategory {
       case 3: // Produtividade
         return [NicheId.focus, NicheId.procrastination];
       case 4: // Mente e autocontrole
-        return [NicheId.adultContent, NicheId.reading];
+        return [NicheId.adultContent, NicheId.digitalDetox, NicheId.reading];
       default:
         return [];
     }

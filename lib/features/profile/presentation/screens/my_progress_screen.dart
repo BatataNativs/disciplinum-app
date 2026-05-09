@@ -17,6 +17,7 @@ import 'package:disciplinum/features/modules/procrastination/presentation/widget
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart';
 // Tela de progresso específica do módulo Focus
 import 'package:disciplinum/features/modules/focus/presentation/widgets/my_progress_focus.dart';
+import 'package:disciplinum/features/modules/digital_detox/presentation/screens/my_progress_digital_detox.dart';
 
 class MyProgressScreen extends ConsumerWidget {
   const MyProgressScreen({super.key});
@@ -26,7 +27,8 @@ class MyProgressScreen extends ConsumerWidget {
     final authState = ref.watch(authServiceProvider);
     
     // Usar providers locais existentes para obter progresso
-    final activeModules = ref.watch(activeModulesProvider);
+    final activeModulesAsync = ref.watch(activeModulesProvider);
+    final activeModules = activeModulesAsync.valueOrNull ?? [];
     final niches = NicheRepository.getAll();
 
     // Lógica para obter o primeiro nome
@@ -210,11 +212,7 @@ class MyProgressScreen extends ConsumerWidget {
         detailScreen = const MyProgressReading();
         break;
       case NicheId.digitalDetox:
-        // TODO: Implementar MyProgressDigitalDetox na FASE 8
-        detailScreen = Scaffold(
-          appBar: AppBar(title: const Text('Meu Progresso - Jejum Digital')),
-          body: const Center(child: Text('Em breve')),
-        );
+        detailScreen = const DigitalDetoxProgressScreen();
         break;
     }
 

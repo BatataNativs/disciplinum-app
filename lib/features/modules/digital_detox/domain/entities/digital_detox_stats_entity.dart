@@ -1,7 +1,7 @@
-import 'package:objectbox/objectbox.dart';
+﻿import 'package:objectbox/objectbox.dart';
 
-/// Entidade de estatísticas agregadas diárias
-/// Armazena resumo do uso de apps por dia para análises e gráficos
+/// Entidade de estatÃ­sticas agregadas diÃ¡rias
+/// Armazena resumo do uso de apps por dia para anÃ¡lises e grÃ¡ficos
 @Entity()
 class DigitalDetoxStatsEntity {
   @Id()
@@ -9,7 +9,7 @@ class DigitalDetoxStatsEntity {
 
   String userId;
 
-  /// Data (sem hora) - indexada para queries rápidas
+  /// Data (sem hora) - indexada para queries rÃ¡pidas
   @Index()
   DateTime date;
 
@@ -22,13 +22,13 @@ class DigitalDetoxStatsEntity {
   /// Quantas vezes abriu apps monitorados
   int openCount = 0;
 
-  /// Sessão mais longa do dia (em minutos)
+  /// SessÃ£o mais longa do dia (em minutos)
   int longestSessionMinutes = 0;
 
-  /// Número da semana (1-53) para queries semanais
+  /// NÃºmero da semana (1-53) para queries semanais
   int weekNumber = 0;
 
-  /// Número do mês (1-12) para queries mensais
+  /// NÃºmero do mÃªs (1-12) para queries mensais
   int monthNumber = 0;
 
   /// Ano
