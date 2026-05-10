@@ -13,6 +13,19 @@ class MealEntryRepository {
 
   Box<MealEntryEntity> get _box => ObjectBoxService.instance.store.box<MealEntryEntity>();
 
+  /// Função para determinar período do dia
+  String _getDayPeriodName(int hour) {
+    if (hour >= 0 && hour < 6) {
+      return 'Refeição da madrugada';
+    } else if (hour >= 6 && hour < 12) {
+      return 'Refeição da manhã';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Refeição da tarde';
+    } else {
+      return 'Refeição da noite';
+    }
+  }
+
   /// Salva uma refeição
   Future<void> saveMeal(MealEntryEntity meal) async {
     meal.touch();
@@ -140,7 +153,7 @@ class MealEntryRepository {
       orElse: () => MealEntryEntity(
         userId: userId,
         date: now,
-        mealName: 'Refeição das ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+        mealName: _getDayPeriodName(hour),
         plannedTime: DateTime(now.year, now.month, now.day, hour, minute),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:disciplinum/features/profile/presentation/widgets/edit_profile_d
 import 'package:disciplinum/features/profile/presentation/widgets/delete_account_dialog.dart';
 import 'package:disciplinum/features/settings/presentation/screens/sync_backup_screen.dart';
 import 'package:disciplinum/app/router/app_router.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class AccountOptionsDialog extends StatefulWidget {
   final AuthService authService;
@@ -535,14 +536,18 @@ class _AccountOptionsDialogState extends State<AccountOptionsDialog>
   }
 
   void _showEditProfileDialog(BuildContext context) {
+    final userProfile = widget.authService.userProfile;
+    LoggerService.instance.d('🔐 AccountOptionsDialog - userProfile completo: $userProfile');
+    LoggerService.instance.d('🔐 AccountOptionsDialog - show_email: ${userProfile?['show_email']}, show_avatar: ${userProfile?['show_avatar']}');
+    
     showDialog<bool>(
       context: context,
       builder: (ctx) => EditProfileDialog(
         authService: widget.authService,
-        initialName: widget.authService.userProfile?['name'] ?? '',
-        initialBio: widget.authService.userProfile?['bio'] ?? '',
-        initialShowEmail: widget.authService.userProfile?['show_email'] ?? true,
-        initialShowAvatar: widget.authService.userProfile?['show_avatar'] ?? true,
+        initialName: userProfile?['name'] ?? '',
+        initialBio: userProfile?['bio'] ?? '',
+        initialShowEmail: userProfile?['show_email'] ?? true,
+        initialShowAvatar: userProfile?['show_avatar'] ?? true,
       ),
     );
   }

@@ -11,10 +11,8 @@ import 'package:disciplinum/features/modules/reading/presentation/screens/readin
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart' as reading_progress;
 import 'package:disciplinum/features/modules/reading/gamification/presentation/widgets/reading_celebration_widget.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
-import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
-import 'package:disciplinum/shared/widgets/shared_widgets.dart';
+import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'dart:async';
 
 class ReadingScreen extends ConsumerStatefulWidget {
@@ -34,33 +32,21 @@ class ReadingScreen extends ConsumerStatefulWidget {
 class _ReadingScreenState extends ConsumerState<ReadingScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final Niche _niche = NicheRepository.getById(NicheId.reading);
-  late TabController _tabController;
-
-  // Cache dos horários como no módulo Focus
-  TimeOfDay? _reminderTime;
+  PageController _pageController = PageController(); // Inicialização imediata
+  int _selectedIndex = 0; // 0=Leitura, 1=Como funciona
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-        length: 2, vsync: this, initialIndex: widget.initialTabIndex);
+    _pageController = PageController(initialPage: widget.initialTabIndex);
+    _selectedIndex = widget.initialTabIndex;
     WidgetsBinding.instance.addObserver(this);
-    _loadReminderData();
-
-    // Adiciona listener para recarregar dados quando mudar de aba
-    _tabController.addListener(() {
-      if (_tabController.index == 0 && mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _loadReminderData();
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _tabController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -68,53 +54,15 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Força atualização quando a app volta para o primeiro plano
-      if (mounted) {
-        _loadReminderData();
-      }
-    }
-  }
-
-  @override
-  void didUpdateWidget(ReadingScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Força atualização quando o widget é reconstruído (volta de outras telas)
-    if (mounted) {
-      _loadReminderData();
-    }
-  }
-
-  Future<void> _loadReminderData() async {
-    try {
-      final reminderTimes = await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
-          nicheId: _niche.nicheId.id + 200);
-
-      TimeOfDay? newReminderTime;
-      if (reminderTimes.isNotEmpty) {
-        newReminderTime = TimeOfDay(
-            hour: reminderTimes[0].hour, minute: reminderTimes[0].minute);
-      }
-
-      // Só atualiza se realmente mudou
-      if (_reminderTime != newReminderTime) {
-        if (mounted) {
-          setState(() {
-            _reminderTime = newReminderTime;
-          });
-        }
-      }
-    } catch (e) {
-      // Silenciosamente ignora erros de carregamento
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isActive = ref.watch(readingActiveProvider);
 
     return ReadingCelebrationWidget(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -129,116 +77,55 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           child: SafeArea(
             child: Column(
               children: [
-                // Header com título e stats
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
+                // Header padrão como outros módulos
+                ModuleScreenHeader(
+                  title: _niche.name,
+                ),
+                
+                Expanded(
+                  child: Column(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, 
-                          color: colorScheme.onSurface),
-                        onPressed: () => Navigator.pop(context),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: _buildSegmentedControl(),
                       ),
-                      const SizedBox(width: 12),
+
+                      // --- PAGEVIEW ---
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: PageView(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedIndex = index;
+                            });
+                          },
                           children: [
-                            Text(
-                              'Leitura',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+                            // 0: Leitura (módulo)
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Column(
+                                children: [
+                                  _buildReadingTab(),
+                                  const SizedBox(height: 100),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Consumer(
-                              builder: (context, ref, child) {
-                                final readingService = ref.watch(readingServiceProvider);
-                                final totalBooks = readingService.books.length;
-                                final completedBooks = readingService.completedBooks.length;
-                                final currentStreak = readingService.currentStreak;
-                                
-                                return Row(
-                                  children: [
-                                    _buildStatChip(
-                                      '$totalBooks livros',
-                                      colorScheme.onSurface.withValues(alpha: 0.2),
-                                      colorScheme.onSurface,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _buildStatChip(
-                                      '$completedBooks concluídos',
-                                      const Color(0xFF10B981).withValues(alpha: 0.2),
-                                      const Color(0xFF10B981),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _buildStatChip(
-                                      '$currentStreak dias 🔥',
-                                      const Color(0xFF6366F1).withValues(alpha: 0.2),
-                                      const Color(0xFF6366F1),
-                                    ),
-                                  ],
-                                );
-                              },
+                            // 1: Como funciona
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.all(16),
+                              child: _buildHowItWorks(context),
                             ),
                           ],
                         ),
                       ),
+                      
+                      // Botões apenas na aba 0 (módulo)
+                      if (_selectedIndex == 0)
+                        _buildActionButtons(),
                     ],
                   ),
                 ),
-
-              // Segmented Control (2 opções)
-              _buildSegmentedControl(),
-
-              // Conteúdo
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // 0: Leitura (módulo) - Aba da Estante + Botões
-                    Column(
-                        children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              "Adicione livros e ative o módulo para começar:",
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              "Minha Estante:",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Expanded(child: MyShelfScreen()),
-                        const SizedBox(height: 12),
-                        _buildReminderSection(),
-                        _buildBottomButtons(isActive),
-                      ],
-                    ),
-                    // 1: Como funciona
-                    _buildHowItWorks(context),
-                  ],
-                ),
-              ),
               ],
             ),
           ),
@@ -247,98 +134,300 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     );
   }
 
+  // Segmented control moderno
   Widget _buildSegmentedControl() {
     final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: TabBar(
-          controller: _tabController,
-          indicator: BoxDecoration(
-            color: const Color(0xFF6366F1),
-            borderRadius: BorderRadius.circular(10),
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: _selectedIndex == 0 ? const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                  ) : null,
+                  color: _selectedIndex == 0 ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'Leitura',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 0.3,
+                      color: _selectedIndex == 0 ? Colors.white : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: _selectedIndex == 1 ? const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                  ) : null,
+                  color: _selectedIndex == 1 ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'Como funciona',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 0.3,
+                      color: _selectedIndex == 1 ? Colors.white : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tab de leitura - FUNCIONALIDADES REAIS
+  Widget _buildReadingTab() {
+    return Column(
+      children: [
+        // Header com stats
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelColor: Colors.white,
-          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            letterSpacing: 0.3,
+          child: Consumer(
+            builder: (context, ref, child) {
+              final readingService = ref.watch(readingServiceProvider);
+              final totalBooks = readingService.books.length;
+              final completedBooks = readingService.completedBooks.length;
+              final currentStreak = readingService.currentStreak;
+              
+              return Row(
+                children: [
+                  _buildStatCard('$totalBooks', 'Livros', const Color(0xFF8B5CF6), Icons.auto_stories_rounded),
+                  const SizedBox(width: 12),
+                  _buildStatCard('$completedBooks', 'Concluídos', const Color(0xFF10B981), Icons.check_circle_rounded),
+                  const SizedBox(width: 12),
+                  _buildStatCard('$currentStreak', 'Dias', const Color(0xFFF59E0B), Icons.local_fire_department_rounded),
+                ],
+              );
+            },
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Minha Estante
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          dividerColor: Colors.transparent,
-          tabs: const [
-            Tab(text: 'Leitura'),
-            Tab(text: 'Como funciona'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Minha Estante',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 150,
+                child: const MyShelfScreen(),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Card de estatística
+  Widget _buildStatCard(String value, String label, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
+  // Como funciona
   Widget _buildHowItWorks(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                NicheInfoCard(
-                  icon: Icons.auto_stories_rounded,
-                  title: 'Em " + Livro", adicione os livros',
-                  content:
-                      'Adicione os livros que você está lendo ou planeja ler, em seguida, ative o módulo (após adicionar o primeiro livro).\n'
-                      'É preenchido nome do livro, autor (opcional), número de páginas e tema.',
-                ),
-                const SizedBox(height: 16),
-                NicheInfoCard(
-                  icon: Icons.notifications_outlined,
-                  title: 'Em "Notificações", configure o lembrete diário',
-                  content:
-                      'Defina horário para ser lembrado de cultivar seu hábito de leitura e manter sua mente ativa todos os dias. \n'
-                      'E o app registra as páginas lidas para atualizar seu progresso, conforme você informa o quanto leu.',
-                ),
-                const SizedBox(height: 16),
-                NicheInfoCard(
-                  icon: Icons.bar_chart_rounded,
-                  title: 'Em "Estatísticas", veja sua evolução',
-                  content:
-                      'Acompanhe sua sequência de leitura e acompanhe seu progresso no módulo.',
-                ),
-                const SizedBox(height: 16),
-              ],
+        // Header
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.auto_stories_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Como Funciona',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Cultive o hábito da leitura diária',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
         ),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ModernStartButton(
-              icon: Icons.rocket_launch_rounded,
-              label: 'Entendi!',
-              color: const Color(0xFF6366F1),
-              onTap: () {
-                _tabController.animateTo(1);
-              },
+        
+        const SizedBox(height: 16),
+        
+        // Cards de instruções
+        _buildInstructionCard(
+          Icons.add_circle_rounded,
+          '1. Adicione Livros',
+          'Adicione os livros que você está lendo ou planeja ler. Preencha nome, autor, número de páginas e tema.',
+          const Color(0xFF10B981),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        _buildInstructionCard(
+          Icons.notifications_active_rounded,
+          '2. Configure Lembretes',
+          'Defina horários para ser lembrado de cultivar seu hábito de leitura e manter sua mente ativa todos os dias.',
+          const Color(0xFFF59E0B),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        _buildInstructionCard(
+          Icons.bar_chart_rounded,
+          '3. Acompanhe Progresso',
+          'Registre as páginas lidas e acompanhe sua evolução, sequências e conquistas no módulo.',
+          const Color(0xFF8B5CF6),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Botão de ação
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: const Text(
+              'Começar Agora',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -346,8 +435,67 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     );
   }
 
-  Widget _buildBottomButtons(bool isActive) {
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Botões de ação - FUNCIONALIDADES ESSENCIAIS
+  Widget _buildActionButtons() {
+    final isActive = ref.watch(readingActiveProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -356,26 +504,34 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Linha superior: + Livro | Notificações
+          // Linha principal: Adicionar Livro | Notificações
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.add,
-                  label: 'Livro',
-                  color: const Color(0xFF6366F1),
-                  onTap: () {
-                    AddBookDialog.show(context);
-                  },
+                child: ElevatedButton(
+                  onPressed: () => AddBookDialog.show(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Adicionar Livro'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notificações',
-                  color: Colors.amber,
-                  onTap: () {
+                child: ElevatedButton(
+                  onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -383,6 +539,22 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                       ),
                     );
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('Notificações'),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -392,20 +564,49 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
-                  color: const Color(0xFF6366F1),
-                  onTap: _showStatsMenu,
+                child: ElevatedButton(
+                  onPressed: _showStatsMenu,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Estatísticas'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: isActive ? Icons.power_settings_new : Icons.power_off,
-                  label: isActive ? 'Desativar módulo' : 'Ativar módulo',
-                  color: isActive ? Colors.red : Colors.green,
-                  onTap: () => _toggleModule(isActive),
+                child: ElevatedButton(
+                  onPressed: () => _toggleModule(isActive),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isActive ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isActive ? Icons.power_settings_new : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(isActive ? 'Desativar módulo' : 'Ativar módulo'),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -416,14 +617,14 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 
   void _showStatsMenu() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -435,7 +636,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -494,7 +695,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         HapticFeedback.heavyImpact();
         
         // Implementando lógica de desativação local
-        // Salvar estado desativado em configuração
         await ref.read(readingControllerIsarProvider.notifier).setModuleActive(false);
         
         // Sincronizar com a nuvem
@@ -511,7 +711,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       HapticFeedback.lightImpact();
       
       // Implementando lógica de ativação local
-      // Salvar estado ativado em configuração
       await ref.read(readingControllerIsarProvider.notifier).setModuleActive(true);
       
       // Sincronizar com a nuvem
@@ -524,153 +723,5 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         setState(() {}); // Rebuild para atualizar UI
       }
     }
-  }
-
-
-  Widget _buildReminderSection() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Lembrete Diário',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_reminderTime != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Horário configurado:',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _showDeleteTimeDialog(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.close_rounded,
-                              size: 14,
-                              color: Colors.red.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Defina novo horário em "Configurar"',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Horário não configurado',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Acesse "Notificações" para configurar seu lembrete diário',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showDeleteTimeDialog() async {
-    final formatted = "${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}";
-
-    final confirmed = await AppDialog.showConfirmation(
-      context: context,
-      title: 'Excluir horário?',
-      content: 'Deseja excluir o horário $formatted do seu lembrete diário?',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
-      isDangerous: true,
-    ) ?? false;
-
-    if (!confirmed) return;
-
-    // Remove o horário específico
-    await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
-      nicheId: _niche.nicheId.id + 200,
-      hour: _reminderTime!.hour,
-      minute: _reminderTime!.minute,
-    );
-
-    // Atualiza a variável de estado
-    if (mounted) {
-      setState(() {
-        _reminderTime = null;
-      });
-    }
-  }
-
-  Widget _buildStatChip(String label, Color backgroundColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
-      ),
-    );
   }
 }

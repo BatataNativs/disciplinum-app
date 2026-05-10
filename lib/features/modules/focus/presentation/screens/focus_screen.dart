@@ -14,7 +14,6 @@ import 'package:disciplinum/features/modules/focus/presentation/widgets/my_progr
 import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
 import 'package:disciplinum/features/modules/focus/gamification/presentation/widgets/focus_celebration_widget.dart';
@@ -544,51 +543,94 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 }
 
   Widget _buildBottomButtons(bool isModuleActive) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: ModernStartButton(
-                  icon: Icons.settings_suggest_rounded,
-                  label: 'Configurar',
-                  color: const Color(0xFF6366F1),
-                  onTap: _pickFocusInterval,
+          // Linha superior: Configurar (se aplicável)
+          if (_focusStart != null && _focusEnd != null)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _pickFocusInterval,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.settings_suggest_rounded, size: 20),
+                        SizedBox(width: 8),
+                        Text('Configurar'),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+              ],
+            ),
+          
+          if (_focusStart != null && _focusEnd != null) const SizedBox(height: 12),
+          
+          // Linha inferior: Estatísticas | Ativar/Desativar módulo
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
-                  color: const Color(0xFF6366F1),
-                  onTap: _showStatisticsMenu,
+                child: ElevatedButton(
+                  onPressed: _showStatisticsMenu,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Estatísticas'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: isModuleActive
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: isModuleActive
-                      ? 'Desativar módulo'
-                      : 'Ativar módulo',
-                  color: isModuleActive ? Colors.red : Colors.green,
-                  onTap: isModuleActive
+                child: ElevatedButton(
+                  onPressed: isModuleActive
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isModuleActive ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isModuleActive ? Icons.power_settings_new : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(isModuleActive ? 'Desativar módulo' : 'Ativar módulo'),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -600,14 +642,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
 
   void _showStatisticsMenu() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -619,7 +661,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),
@@ -627,7 +669,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               leading: Icon(Icons.bar_chart_rounded, color: Colors.blue),
               title: const Text('Conquistas'),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const focus_progress.MyProgressFocus()),

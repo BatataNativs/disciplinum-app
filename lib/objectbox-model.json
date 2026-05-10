@@ -2765,9 +2765,83 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "44:139419039960632339",
+      "lastPropertyId": "13:7493978474247931580",
+      "name": "UserChoicesEntity",
+      "properties": [
+        {
+          "id": "1:4299766729757954666",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:970059070104323352",
+          "name": "userId",
+          "type": 9
+        },
+        {
+          "id": "3:3836142092638477553",
+          "name": "showEmail",
+          "type": 1
+        },
+        {
+          "id": "4:3017843191522141288",
+          "name": "showAvatar",
+          "type": 1
+        },
+        {
+          "id": "5:8504120182838655239",
+          "name": "theme",
+          "type": 9
+        },
+        {
+          "id": "6:7632979305598572939",
+          "name": "notificationsEnabled",
+          "type": 1
+        },
+        {
+          "id": "7:4782631483971437228",
+          "name": "notificationTime",
+          "type": 9
+        },
+        {
+          "id": "8:9162733382848526561",
+          "name": "language",
+          "type": 9
+        },
+        {
+          "id": "9:3563316780945931880",
+          "name": "lastSyncAt",
+          "type": 10
+        },
+        {
+          "id": "10:208581542810271010",
+          "name": "version",
+          "type": 6
+        },
+        {
+          "id": "11:2591397720948156908",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "12:4235362260843251052",
+          "name": "updatedAt",
+          "type": 10
+        },
+        {
+          "id": "13:7493978474247931580",
+          "name": "moduleVisibilityJson",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "43:5695378983482397838",
+  "lastEntityId": "44:139419039960632339",
   "lastIndexId": "40:3014621183292689724",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",

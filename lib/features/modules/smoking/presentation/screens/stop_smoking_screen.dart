@@ -93,6 +93,18 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
+      // Se o módulo está desativado, não recarregar horários de check-in
+      if (!_gamificationRunning) {
+        if (_checkinTime != null) {
+          if (mounted) {
+            setState(() {
+              _checkinTime = null;
+            });
+          }
+        }
+        return;
+      }
+
       final prefs = ref.read(preferencesServiceProvider);
       final isGuest = await prefs.isGuestMode();
       final List<UserNicheTime> checkinTimes;
@@ -182,6 +194,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
         if (!_gamificationRunning) {
           _selectedDate = DateTime.now();
+          // Garantir que horário de check-in seja nulo quando módulo está desativado
+          if (_checkinTime != null) {
+            setState(() {
+              _checkinTime = null;
+            });
+          }
         } else {
           _selectedDate = settings!.quitDate ?? DateTime.now();
         }

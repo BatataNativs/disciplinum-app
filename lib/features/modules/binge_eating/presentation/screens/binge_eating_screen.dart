@@ -524,14 +524,14 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
 
 
   void _showStatisticsMenu() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -539,11 +539,11 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas',
+              'Estatísticas e Opções',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),

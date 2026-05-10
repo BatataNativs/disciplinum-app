@@ -14,8 +14,8 @@ import 'package:disciplinum/features/modules/procrastination/presentation/widget
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/common/custom_segmented_control.dart';
 import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';

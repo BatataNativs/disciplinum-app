@@ -282,21 +282,50 @@ class AuthService extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      final response = await supabase.auth.updateUser(
-        UserAttributes(data: data),
-      );
+      LoggerService.instance.d('🔐 Atualizando perfil com dados: $data');
 
-      if (response.user != null) {
-        await _handleUserSession(response.user!);
-        LoggerService.instance.i('Perfil atualizado com sucesso');
-        return true;
+      // Primeiro, atualiza os metadados do auth (para campos como name)
+      final authData = <String, dynamic>{};
+      if (data.containsKey('name')) {
+        authData['name'] = data['name'];
       }
       
-      state = state.copyWith(errorMessage: 'Falha ao atualizar perfil');
-      return false;
+      if (authData.isNotEmpty) {
+        await supabase.auth.updateUser(
+          UserAttributes(data: authData),
+        );
+      }
+
+      // Depois, atualiza a tabela users com todos os dados incluindo show_email e show_avatar
+      if (currentUser != null) {
+        final updateData = <String, dynamic>{};
+        
+        // Copia apenas os campos que existem na tabela users
+        if (data.containsKey('name')) updateData['name'] = data['name'];
+        if (data.containsKey('bio')) updateData['bio'] = data['bio'];
+        if (data.containsKey('show_email')) updateData['show_email'] = data['show_email'];
+        if (data.containsKey('show_avatar')) updateData['show_avatar'] = data['show_avatar'];
+        
+        if (updateData.isNotEmpty) {
+          LoggerService.instance.d('🔐 Atualizando tabela users com: $updateData');
+          
+          await supabase
+              .from('users')
+              .update(updateData)
+              .eq('id', currentUser!.id);
+        }
+      }
+
+      // Recarrega os dados do perfil para garantir consistência
+      if (currentUser != null) {
+        await _handleUserSession(currentUser!);
+      }
+      
+      LoggerService.instance.i('Perfil atualizado com sucesso');
+      return true;
     } on AuthException catch (e) {
       state = state.copyWith(errorMessage: e.message);
-      LoggerService.instance.e('Erro ao atualizar perfil', error: e);
+      LoggerService.instance.e('Erro ao atualizar perfil (AuthException)', error: e);
       return false;
     } catch (e) {
       state = state.copyWith(errorMessage: 'Erro inesperado ao atualizar perfil');
@@ -311,11 +340,14 @@ class AuthService extends StateNotifier<AuthState> {
   Future<void> _handleUserSession(User user) async {
     try {
       // Carrega perfil do usuário antes de atualizar o estado para evitar múltiplos rebuilds
+      // Especificando explicitamente as colunas para garantir que show_email e show_avatar sejam carregados
       final profile = await supabase
           .from('users')
-          .select()
+          .select('name, avatar_url, bio, show_email, show_avatar')
           .eq('id', user.id)
           .maybeSingle();
+
+      LoggerService.instance.d('🔐 Perfil carregado: show_email=${profile?['show_email']}, show_avatar=${profile?['show_avatar']}');
 
       state = state.copyWith(
         currentUser: user,

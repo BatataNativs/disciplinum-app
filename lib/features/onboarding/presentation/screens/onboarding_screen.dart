@@ -28,7 +28,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _buildListItem(String text, TextStyle? style) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -43,17 +42,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 end: Alignment.bottomRight,
                 colors: theme.brightness == Brightness.dark
                     ? [
-                        colorScheme.primary.withValues(alpha: 0.3),
-                        colorScheme.secondary.withValues(alpha: 0.15),
+                        Colors.green.withValues(alpha: 0.3),
+                        Colors.green.withValues(alpha: 0.15),
                       ]
                     : [
-                        colorScheme.primary.withValues(alpha: 0.9),
-                        colorScheme.primary.withValues(alpha: 0.6),
+                        Colors.green.withValues(alpha: 0.9),
+                        Colors.green.withValues(alpha: 0.6),
                       ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary
+                  color: Colors.green
                       .withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.2),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
@@ -63,9 +62,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Icon(
               Icons.check_circle_rounded,
               size: 16,
-              color: theme.brightness == Brightness.dark 
-                  ? colorScheme.primary.withValues(alpha: 0.8)
-                  : colorScheme.primary,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 12),

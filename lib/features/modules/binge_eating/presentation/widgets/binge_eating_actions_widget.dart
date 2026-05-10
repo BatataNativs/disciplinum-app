@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 /// Widget de ações da tela Binge Eating
 class BingeEatingActionsWidget extends StatelessWidget {
@@ -39,22 +38,32 @@ class BingeEatingActionsWidget extends StatelessWidget {
         // 0: Compulsão alimentar (módulo) - botão de selecionar apps
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.apps_rounded,
-            label: "Selecionar aplicativos",
-            color: const Color(0xFF6366F1),
-            onTap: onSelectApps,
+          child: ElevatedButton(
+            onPressed: onSelectApps,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.apps_rounded, size: 20),
+                SizedBox(width: 8),
+                Text("Selecionar aplicativos"),
+              ],
+            ),
           ),
         );
       case 1:
         // 1: Como funciona - botão para voltar ao módulo
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: "Entendi!",
-            color: const Color(0xFF6366F1),
-            onTap: () {
+          child: ElevatedButton(
+            onPressed: () {
               if (pageController.hasClients) {
                 pageController.animateToPage(
                   0,
@@ -63,6 +72,22 @@ class BingeEatingActionsWidget extends StatelessWidget {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.rocket_launch_rounded, size: 20),
+                SizedBox(width: 8),
+                Text("Entendi!"),
+              ],
+            ),
           ),
         );
       default:
@@ -83,20 +108,46 @@ class BingeEatingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.touch_app_outlined,
-                  label: "Selecionar apps",
-                  color: const Color(0xFF6366F1),
-                  onTap: onSelectApps,
+                child: ElevatedButton(
+                  onPressed: onSelectApps,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.touch_app_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text("Selecionar apps"),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_outlined,
-                  label: "Notificações",
-                  color: Colors.amber,
-                  onTap: onNotifications,
+                child: ElevatedButton(
+                  onPressed: onNotifications,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text("Notificações"),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -105,24 +156,53 @@ class BingeEatingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: "Estatísticas",
-                  color: const Color(0xFF6366F1),
-                  onTap: onStatistics,
+                child: ElevatedButton(
+                  onPressed: onStatistics,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text("Estatísticas"),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: gamificationRunning
-                      ? "Desativar Módulo"
-                      : "Ativar Módulo",
-                  color: gamificationRunning ? Colors.red : Colors.green,
-                  onTap: onToggleModule,
+                child: ElevatedButton(
+                  onPressed: onToggleModule,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gamificationRunning ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        gamificationRunning
+                            ? Icons.power_settings_new
+                            : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(gamificationRunning
+                          ? "Desativar Módulo"
+                          : "Ativar Módulo"),
+                    ],
+                  ),
                 ),
               ),
             ],

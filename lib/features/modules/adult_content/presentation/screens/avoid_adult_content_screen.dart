@@ -17,7 +17,6 @@ import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 class AvoidAdultContentScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -615,11 +614,24 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.touch_app_outlined,
-                  label: "Selecionar apps",
-                  color: const Color(0xFF6366F1),
-                  onTap: _openSelectApps,
+                child: ElevatedButton(
+                  onPressed: _openSelectApps,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.touch_app_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text("Selecionar apps"),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -628,26 +640,55 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: "Estatísticas",
-                  color: const Color(0xFF6366F1),
-                  onTap: _showStatisticsMenu,
+                child: ElevatedButton(
+                  onPressed: _showStatisticsMenu,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text("Estatísticas"),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: _gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: _gamificationRunning
-                      ? "Desativar Módulo"
-                      : "Ativar Módulo",
-                  color: _gamificationRunning ? Colors.red : Colors.green,
-                  onTap: _gamificationRunning
+                child: ElevatedButton(
+                  onPressed: _gamificationRunning
                       ? _desativarNichoMonitoramento
                       : _ativarNichoMonitoramento,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _gamificationRunning ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _gamificationRunning
+                            ? Icons.power_settings_new
+                            : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(_gamificationRunning
+                          ? "Desativar Módulo"
+                          : "Ativar Módulo"),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -659,14 +700,14 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
 
   void _showStatisticsMenu() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -674,11 +715,11 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Estatisticas e Opcoes",
+              'Estatísticas e Opções',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 20),

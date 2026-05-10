@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
-import 'package:disciplinum/app/router/app_router.dart';
-import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/shared/widgets/shared_widgets.dart';
+import 'package:disciplinum/core/di/user_choices_provider.dart';
 
-class EditProfileDialog extends StatefulWidget {
+class EditProfileDialog extends ConsumerStatefulWidget {
   final AuthService authService;
   final String initialName;
   final String initialBio;
@@ -22,375 +20,133 @@ class EditProfileDialog extends StatefulWidget {
   });
 
   @override
-  State<EditProfileDialog> createState() => _EditProfileDialogState();
+  ConsumerState<EditProfileDialog> createState() => _EditProfileDialogState();
 }
 
-class _EditProfileDialogState extends State<EditProfileDialog> {
-  late TextEditingController _nameController;
-  late TextEditingController _bioController;
-  late bool _showEmail;
-  late bool _showAvatar;
-  bool _isLoading = false;
+class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
+  late bool showEmail;
+  late bool showAvatar;
 
   @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.initialName);
-    _bioController = TextEditingController(text: widget.initialBio);
-    _showEmail = widget.initialShowEmail;
-    _showAvatar = widget.initialShowAvatar;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _bioController.dispose();
-    super.dispose();
-  }
-
-  Future<String?> _showBioDialog() async {
-    final TextEditingController tempBioController =
-        TextEditingController(text: _bioController.text);
-
-    return AppDialog.showCustom<String>(
-      context: context,
-      title: 'Sua frase',
-      content: TextField(
-        controller: tempBioController,
-        maxLines: 3,
-        maxLength: 100,
-        decoration: InputDecoration(
-          hintText: 'Escreva algo sobre você...',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.close_rounded, color: Colors.grey),
-            tooltip: 'Limpar texto',
-            onPressed: () {
-              tempBioController.clear();
-              HapticFeedback.lightImpact();
-            },
-          ),
+  Widget build(BuildContext context) {
+    final userChoicesAsync = ref.watch(userChoicesProvider);
+    showEmail = userChoicesAsync.value?.showEmail ?? widget.initialShowEmail;
+    showAvatar = userChoicesAsync.value?.showAvatar ?? widget.initialShowAvatar;
+    
+    return AlertDialog(
+      title: const Text('Editar Perfil'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Foto de Perfil',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: const Icon(Icons.person, size: 40),
+                      ),
+                      const SizedBox(width: 16),
+                      // Toggle para mostrar/ocultar avatar
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Exibir minha foto',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 4),
+                          Switch(
+                            value: showAvatar,
+                            onChanged: (value) => showAvatar = value,
+                            activeThumbColor: Colors.blue,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+        FilledButton(
+          onPressed: () => _save(context),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF6366F1),
+            foregroundColor: Colors.white,
           ),
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            Navigator.pop(context, tempBioController.text);
-          },
-          child: const Text('Confirmar'),
+          child: const Text('Salvar'),
         ),
       ],
     );
   }
 
-  Future<void> _save() async {
-    HapticFeedback.vibrate();
-    setState(() => _isLoading = true);
+  Future<void> _save(BuildContext context) async {
+    try {
+      final controller = ref.read(userChoicesControllerProvider);
+      final success = await controller.updateShowEmail(showEmail) &&
+                   await controller.updateShowAvatar(showAvatar);
 
-    setState(() => _isLoading = true);
-
-    final navigator = Navigator.of(context);
-
-    final success = await widget.authService.updateProfile({
-      'name': _nameController.text,
-      'show_email': _showEmail,
-      'show_avatar': _showAvatar,
-      'bio': _bioController.text,
-    });
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (success) {
-        EnhancedSnackBarHelper.showSuccess(context, 'Perfil atualizado com sucesso!');
-        navigator.pop(true);
-      } else {
-        EnhancedSnackBarHelper.showError(
-          context,
-          widget.authService.errorMessage ?? 'Erro ao atualizar perfil',
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil atualizado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao atualizar perfil'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro inesperado ao atualizar perfil'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final Color textColor = colorScheme.onSurface;
-    final Color subtitleColor = colorScheme.onSurface.withValues(alpha: 0.7);
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      alignment: const Alignment(0, -0.2),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          color: colorScheme.surface,
-          border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Cabeçalho
-              Row(
-                children: [
-                  Icon(Icons.edit_note_rounded,
-                      color: theme.colorScheme.primary, size: 28),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Editar Perfil',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: textColor,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Campo de Nome
-              const Text('NOME',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 2.0)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  hintText: 'Como quer ser chamado?',
-                  hintStyle:
-                      TextStyle(color: subtitleColor.withValues(alpha: 0.5)),
-                  prefixIcon: Icon(Icons.person_outline,
-                      size: 20, color: subtitleColor),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Configurações
-              const Text('VISIBILIDADE',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 2.0)),
-              const SizedBox(height: 8),
-              _buildSwitchOption(
-                title: 'Exibir e-mail',
-                value: _showEmail,
-                icon: Icons.alternate_email_rounded,
-                onChanged: (val) => setState(() => _showEmail = val),
-                colorScheme: colorScheme,
-              ),
-              const SizedBox(height: 8),
-              _buildSwitchOption(
-                title: 'Exibir minha foto',
-                value: _showAvatar,
-                icon: Icons.face_unlock_rounded,
-                onChanged: (val) => setState(() => _showAvatar = val),
-                colorScheme: colorScheme,
-              ),
-              const SizedBox(height: 24),
-
-              // Frase
-              const Text('FRASE DO PERFIL',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 2.0)),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () async {
-                  HapticFeedback.lightImpact();
-                  final updatedBio = await _showBioDialog();
-                  if (updatedBio != null) {
-                    setState(() => _bioController.text = updatedBio);
-                  }
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.format_quote_rounded,
-                          size: 20, color: subtitleColor),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _bioController.text.isEmpty
-                              ? 'Adicionar uma frase...'
-                              : _bioController.text,
-                          style: TextStyle(
-                            color: _bioController.text.isEmpty
-                                ? subtitleColor.withValues(alpha: 0.6)
-                                : textColor,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Icon(Icons.edit, size: 16, color: subtitleColor),
-                    ],
-                  ),
-                ),
-              ),
-
-              if (widget.authService.isEmailUser) ...[
-                const SizedBox(height: 24),
-                const Text('SEGURANÇA',
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                        letterSpacing: 2.0)),
-                const SizedBox(height: 8),
-                InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRouter.resetPassword);
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.lock_reset_rounded,
-                            size: 20, color: textColor),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            'Alterar Senha',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Icon(Icons.chevron_right_rounded,
-                            color: subtitleColor, size: 20),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 32),
-
-              // Botões
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancelar',
-                        style: TextStyle(
-                            color: subtitleColor, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: _isLoading ? null : _save,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : const Text('Salvar',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchOption({
-    required String title,
-    required bool value,
-    required IconData icon,
-    required ValueChanged<bool> onChanged,
-    required ColorScheme colorScheme,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: SwitchListTile(
-        title: Text(title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        value: value,
-        onChanged: (val) {
-          HapticFeedback.selectionClick();
-          onChanged(val);
-        },
-        secondary: Icon(icon, size: 20),
-        contentPadding: EdgeInsets.zero,
-        dense: true,
-      ),
-    );
-  }
 }

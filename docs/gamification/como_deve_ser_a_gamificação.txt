@@ -275,7 +275,7 @@ Unidade de medida:
 
 Unidade de medida:
 
-Limite de uso respeitado (verificação diária)
+Limite de uso configurado respeitado (verificação diária)
 
 🏅 Insígnias (progressão por dias válidos consecutivos)
 
@@ -289,12 +289,13 @@ Limite de uso respeitado (verificação diária)
 💎 Diamante – 20 dias respeitando os limites
 🎱 Disciplinum – 30 dias respeitando os limites
 
-🏆 Medalhas (ciclos completos de 30 dias)
+🏆 Medalhas (baseada em número de insígnias Disciplinum obtidas, sem interrupções do streak, claro.
+Até porque, se interromper o streak, a gamificação reseta, como em qualquer módulo)
 
-1x Disciplinum → medalha de bronze
-2x Disciplinum → medalha de prata
-3x Disciplinum → medalha de ouro
-4x Disciplinum → medalha de diamante
+Obteve 1 insígnia Disciplinum → medalha de bronze
+Obteve 2 insígnias Disciplinum → medalha de prata
+Obteve 3 insígnias Disciplinum → medalha de ouro
+obteve 4 insígnias Disciplinum → medalha de diamante
 
 ⚙️ Regras gerais de contagem
 

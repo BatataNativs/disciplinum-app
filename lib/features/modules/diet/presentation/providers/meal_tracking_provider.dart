@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/meal_entry_entity.dart';
 import 'package:disciplinum/features/modules/diet/domain/repositories/meal_entry_repository.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Estado do registro de refeições
 class MealTrackingState {
@@ -61,21 +62,34 @@ class MealTrackingNotifier extends StateNotifier<MealTrackingState> {
 
   MealTrackingNotifier(this._repository, this._userId) : super(const MealTrackingState());
 
-  /// Carrega dados de hoje e histórico
+  /// Função para determinar período do dia
+  String _getDayPeriodName(int hour) {
+    if (hour >= 0 && hour < 6) {
+      return 'Refeição da madrugada';
+    } else if (hour >= 6 && hour < 12) {
+      return 'Refeição da manhã';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Refeição da tarde';
+    } else {
+      return 'Refeição da noite';
+    }
+  }
+
+  /// Carrega dados do usuário
   Future<void> loadData() async {
-    state = state.copyWith(isLoading: true, error: null);
-    
     try {
-      final today = DateTime.now();
-      final meals = await _repository.getMealsByDate(_userId, today);
+      state = state.copyWith(isLoading: true);
+      
+      final now = DateTime.now();
+      final todayMeals = await _repository.getMealsByDate(_userId, now);
       final history = await _getHistory(days: 7);
       final streak = await _calculateStreak();
 
       state = state.copyWith(
-        todayMeals: meals,
+        isLoading: false,
+        todayMeals: todayMeals,
         history: history,
         streak: streak,
-        isLoading: false,
       );
     } catch (e) {
       state = state.copyWith(
@@ -85,28 +99,59 @@ class MealTrackingNotifier extends StateNotifier<MealTrackingState> {
     }
   }
 
+  /// Limpa todas as refeições do dia atual (usado ao desativar módulo)
+  Future<void> clearTodayMeals() async {
+    try {
+      final now = DateTime.now();
+      final todayMeals = await _repository.getMealsByDate(_userId, now);
+      
+      // Remove todas as refeições do dia atual
+      for (final meal in todayMeals) {
+        await _repository.deleteMeal(meal.id);
+      }
+      
+      // Recarrega os dados para refletir a limpeza
+      await loadData();
+    } catch (e) {
+      LoggerService.instance.e('Erro ao limpar refeições do dia: $e');
+      state = state.copyWith(error: 'Erro ao limpar refeições: $e');
+    }
+  }
+
   /// Registra uma refeição como feita ou não feita
   Future<void> recordMeal(TimeOfDay time, {required bool done}) async {
     try {
+      LoggerService.instance.i('recordMeal chamado - time: ${time.hour}:${time.minute}, done: $done');
+      LoggerService.instance.i('userId: $_userId');
+      
       final now = DateTime.now();
       final plannedTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
 
       // Busca refeição existente ou cria nova
       final meals = await _repository.getMealsByDate(_userId, now);
+      LoggerService.instance.i('Refeições encontradas para hoje: ${meals.length}');
+      
       final existing = meals.firstWhere(
         (m) => m.plannedTime.hour == time.hour && m.plannedTime.minute == time.minute,
-        orElse: () => MealEntryEntity(
-          userId: _userId,
-          date: now,
-          mealName: 'Refeição das ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-          plannedTime: plannedTime,
-        ),
+        orElse: () {
+          LoggerService.instance.i('Criando nova refeição para horário ${time.hour}:${time.minute}');
+          return MealEntryEntity(
+            userId: _userId,
+            date: now,
+            mealName: _getDayPeriodName(time.hour),
+            plannedTime: plannedTime,
+          );
+        },
       );
+
+      LoggerService.instance.i('Refeição encontrada/criada: ${existing.mealName} - wasCompleted: ${existing.wasCompleted}');
 
       // Verifica se foi no horário (tolerância de 30 min)
       final actualTime = DateTime.now();
       final difference = actualTime.difference(plannedTime).inMinutes.abs();
       final wasOnTime = difference <= 30;
+
+      LoggerService.instance.i('Diferença de horário: $difference min, wasOnTime: $wasOnTime');
 
       final updated = existing.copyWith(
         wasCompleted: done,
@@ -114,11 +159,15 @@ class MealTrackingNotifier extends StateNotifier<MealTrackingState> {
         actualTime: done ? actualTime : null,
       );
 
+      LoggerService.instance.i('Salvando refeição atualizada...');
       await _repository.saveMeal(updated);
 
       // Recarrega dados
+      LoggerService.instance.i('Recarregando dados...');
       await loadData();
+      LoggerService.instance.i('recordMeal concluído com sucesso');
     } catch (e) {
+      LoggerService.instance.e('Erro em recordMeal: $e');
       state = state.copyWith(error: 'Erro ao registrar refeição: $e');
     }
   }
@@ -129,26 +178,48 @@ class MealTrackingNotifier extends StateNotifier<MealTrackingState> {
       final now = DateTime.now();
       final existingMeals = await _repository.getMealsByDate(_userId, now);
       
-      // Só cria se não existirem refeições para hoje
-      if (existingMeals.isNotEmpty) return;
+      // Sempre garante que as refeições existam para os horários atuais
+      // Se não existirem refeições, cria todas
+      // Se existirem, verifica se precisa criar alguma que falta
+      if (existingMeals.isEmpty) {
+        // Cria todas as refeições
+        for (int i = 0; i < mealTimes.length && i < mealNames.length; i++) {
+          final time = mealTimes[i];
+          final plannedTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
 
-      for (int i = 0; i < mealTimes.length && i < mealNames.length; i++) {
-        final time = mealTimes[i];
-        final plannedTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+          final meal = MealEntryEntity(
+            userId: _userId,
+            date: now,
+            mealName: mealNames[i],
+            plannedTime: plannedTime,
+          );
 
-        final meal = MealEntryEntity(
-          userId: _userId,
-          date: now,
-          mealName: mealNames[i],
-          plannedTime: plannedTime,
-        );
-
-        await _repository.saveMeal(meal);
+          await _repository.saveMeal(meal);
+        }
+      } else {
+        // Verifica se alguma refeição está faltando e cria se necessário
+        for (int i = 0; i < mealTimes.length && i < mealNames.length; i++) {
+          final time = mealTimes[i];
+          final plannedTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+          
+          final exists = existingMeals.any((meal) => 
+            meal.plannedTime.hour == time.hour && meal.plannedTime.minute == time.minute);
+          
+          if (!exists) {
+            final meal = MealEntryEntity(
+              userId: _userId,
+              date: now,
+              mealName: mealNames[i],
+              plannedTime: plannedTime,
+            );
+            await _repository.saveMeal(meal);
+          }
+        }
       }
 
       await loadData();
     } catch (e) {
-      state = state.copyWith(error: 'Erro ao criar refeições: $e');
+      state = state.copyWith(error: 'Erro ao criar refeições padrão: $e');
     }
   }
 

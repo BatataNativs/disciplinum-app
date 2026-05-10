@@ -52,9 +52,6 @@ import 'package:disciplinum/features/modules/procrastination/gamification/presen
 import 'package:disciplinum/features/modules/smoking/gamification/presentation/providers/smoking_gamification_provider.dart';
 import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/diet_service.dart';
-import 'package:disciplinum/features/modules/diet/domain/services/diet_service_local.dart';
-import 'package:disciplinum/features/modules/diet/presentation/controllers/diet_controller_local.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_insignia_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_medalha_service.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_special_notifications_service.dart';
@@ -211,22 +208,6 @@ final adultContentServiceProvider = Provider<AdultContentService>((ref) {
   return AdultContentService(repository);
 });
 
-/// Provider para DietServiceLocal
-final dietServiceIsarProvider = Provider<DietServiceLocal>((ref) {
-  return DietServiceLocal.instance;
-});
-
-/// Provider para DietControllerLocal
-final dietControllerIsarProvider = StateNotifierProvider<DietControllerLocal, DietState>((ref) {
-  final service = ref.watch(dietServiceIsarProvider);
-  return DietControllerLocal(service);
-});
-
-/// Provider para DietService (legado)
-final dietServiceProvider = Provider<DietService>((ref) {
-  final repository = ref.watch(objectboxPreferencesRepositoryProvider);
-  return DietService(repository);
-});
 
 /// Provider para ProcrastinationServiceLocal
 final procrastinationServiceIsarProvider = Provider<ProcrastinationServiceLocal>((ref) {

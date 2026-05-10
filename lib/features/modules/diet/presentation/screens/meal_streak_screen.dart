@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/meal_entry_entity.dart';
 import 'package:disciplinum/features/modules/diet/presentation/providers/meal_tracking_provider.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 class MealStreakScreen extends ConsumerStatefulWidget {
   final List<TimeOfDay> scheduledTimes;
@@ -22,8 +22,20 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
 
   Future<void> _initializeData() async {
     final notifier = ref.read(mealTrackingProvider.notifier);
-    final names = ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Jantar', 'Ceia'];
-    final mealNames = names.sublist(0, widget.scheduledTimes.length.clamp(1, names.length));
+    
+    // Gerar nomes baseados no período do dia
+    final mealNames = widget.scheduledTimes.map((time) {
+      if (time.hour >= 0 && time.hour < 6) {
+        return 'Refeição da madrugada';
+      } else if (time.hour >= 6 && time.hour < 12) {
+        return 'Refeição da manhã';
+      } else if (time.hour >= 12 && time.hour < 18) {
+        return 'Refeição da tarde';
+      } else {
+        return 'Refeição da noite';
+      }
+    }).toList();
+    
     await notifier.createDefaultMealsForDay(widget.scheduledTimes, mealNames);
   }
 
@@ -125,6 +137,34 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
   }
 
   Widget _buildTodaySection(ColorScheme colorScheme, List<MealEntryEntity> meals) {
+    // Agrupar refeições por período do dia
+    final Map<String, List<MealEntryEntity>> mealsByPeriod = {
+      'Manhã': [],
+      'Tarde': [],
+      'Noite': [],
+      'Madrugada': [],
+    };
+
+    for (final meal in meals) {
+      final hour = meal.plannedTime.hour;
+      String period;
+      if (hour >= 0 && hour < 6) {
+        period = 'Madrugada';
+      } else if (hour >= 6 && hour < 12) {
+        period = 'Manhã';
+      } else if (hour >= 12 && hour < 18) {
+        period = 'Tarde';
+      } else {
+        period = 'Noite';
+      }
+      mealsByPeriod[period]!.add(meal);
+    }
+
+    // Ordenar horários dentro de cada período
+    for (final period in mealsByPeriod.keys) {
+      mealsByPeriod[period]!.sort((a, b) => a.plannedTime.hour.compareTo(b.plannedTime.hour));
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -140,146 +180,235 @@ class _MealStreakScreenState extends ConsumerState<MealStreakScreen> {
         if (meals.isEmpty)
           _buildEmptyState(colorScheme, 'Nenhum horário configurado')
         else
-          ...(meals.map((meal) => _buildMealTile(meal, colorScheme))),
+          ...mealsByPeriod.entries.where((entry) => entry.value.isNotEmpty).map((entry) {
+            final period = entry.key;
+            final periodMeals = entry.value;
+            
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título do período
+                Text(
+                  '$period:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Horários do período
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: periodMeals.map((meal) => _buildCompactMealTile(meal, colorScheme)).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }),
       ],
     );
   }
 
-  Widget _buildMealTile(MealEntryEntity meal, ColorScheme colorScheme) {
+  Widget _buildCompactMealTile(MealEntryEntity meal, ColorScheme colorScheme) {
     final bool isPending = !meal.wasCompleted;
     final bool isDone = meal.wasCompleted && meal.wasOnTime;
     final bool isMissed = meal.wasCompleted && !meal.wasOnTime;
     
-    Color dotColor;
-    IconData statusIcon;
-    String statusText;
-
-    if (isDone) {
-      dotColor = const Color(0xFF22C55E);
-      statusIcon = Icons.check_circle;
-      statusText = 'Feita no horário';
-    } else if (isMissed) {
-      dotColor = const Color(0xFFF59E0B);
-      statusIcon = Icons.access_time;
-      statusText = 'Feita fora do horário';
-    } else if (!meal.wasCompleted) {
-      dotColor = colorScheme.onSurface.withValues(alpha: 0.4);
-      statusIcon = Icons.radio_button_unchecked;
-      statusText = 'Pendente';
-    } else {
-      dotColor = const Color(0xFFEF4444);
-      statusIcon = Icons.cancel;
-      statusText = 'Não feita';
-    }
-
     final timeStr = '${meal.plannedTime.hour.toString().padLeft(2, '0')}:${meal.plannedTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.1),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: dotColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(statusIcon, color: dotColor, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  meal.mealName,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  'Horário: $timeStr',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  statusText,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: dotColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+          // Horário
+          Text(
+            timeStr,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
             ),
           ),
-          if (isPending)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildQuickAction(
-                  icon: Icons.check,
+          const SizedBox(width: 8),
+          
+          // Status - sempre visível
+          if (isDone)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: const Color(0xFF22C55E),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Feito',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: const Color(0xFF22C55E),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (isMissed)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    color: const Color(0xFFF59E0B),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Fora',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: const Color(0xFFF59E0B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6B7280).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.radio_button_unchecked,
+                    color: const Color(0xFF6B7280),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Pendente',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: const Color(0xFF6B7280),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          // Botões de ação (apenas se pendente)
+          if (isPending) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () async {
+                try {
+                  final notifier = ref.read(mealTrackingProvider.notifier);
+                  await notifier.recordMeal(
+                    TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
+                    done: true,
+                  );
+                  // Forçar atualização da UI
+                  if (mounted) {
+                    ref.invalidate(mealTrackingProvider);
+                    setState(() {});
+                  }
+                } catch (e) {
+                  LoggerService.instance.e('Erro ao registrar refeição como feita: $e');
+                }
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
                   color: const Color(0xFF22C55E),
-                  onTap: () async {
-                    HapticFeedback.mediumImpact();
-                    await ref.read(mealTrackingProvider.notifier).recordMeal(
-                      TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
-                      done: true,
-                    );
-                  },
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                const SizedBox(width: 8),
-                _buildQuickAction(
-                  icon: Icons.close,
-                  color: const Color(0xFFEF4444),
-                  onTap: () async {
-                    HapticFeedback.mediumImpact();
-                    await ref.read(mealTrackingProvider.notifier).recordMeal(
-                      TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
-                      done: false,
-                    );
-                  },
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 14,
                 ),
-              ],
+              ),
             ),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () async {
+                try {
+                  final notifier = ref.read(mealTrackingProvider.notifier);
+                  await notifier.recordMeal(
+                    TimeOfDay(hour: meal.plannedTime.hour, minute: meal.plannedTime.minute),
+                    done: false,
+                  );
+                  // Forçar atualização da UI
+                  if (mounted) {
+                    ref.invalidate(mealTrackingProvider);
+                    setState(() {});
+                  }
+                } catch (e) {
+                  LoggerService.instance.e('Erro ao registrar refeição como não feita: $e');
+                }
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildQuickAction({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: color, size: 20),
-      ),
-    );
-  }
-
+  
+  
   Widget _buildHistorySection(ColorScheme colorScheme, List<DaySummary> history) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

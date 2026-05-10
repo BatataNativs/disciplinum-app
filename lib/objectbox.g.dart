@@ -24,6 +24,7 @@ import 'core/storage/entities/daily_checkin_entity.dart';
 import 'core/storage/entities/detection_session_entity.dart';
 import 'core/storage/entities/focus_status_entity.dart';
 import 'core/storage/entities/monitoring_state_entity.dart';
+import 'core/storage/entities/user_choices_entity.dart';
 import 'features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
 import 'features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
 import 'features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
@@ -2803,6 +2804,80 @@ final _entities = <obx_int.ModelEntity>[
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(44, 139419039960632339),
+      name: 'UserChoicesEntity',
+      lastPropertyId: const obx_int.IdUid(13, 7493978474247931580),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 4299766729757954666),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 970059070104323352),
+            name: 'userId',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 3836142092638477553),
+            name: 'showEmail',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 3017843191522141288),
+            name: 'showAvatar',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 8504120182838655239),
+            name: 'theme',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 7632979305598572939),
+            name: 'notificationsEnabled',
+            type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 4782631483971437228),
+            name: 'notificationTime',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 9162733382848526561),
+            name: 'language',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 3563316780945931880),
+            name: 'lastSyncAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(10, 208581542810271010),
+            name: 'version',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 2591397720948156908),
+            name: 'createdAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 4235362260843251052),
+            name: 'updatedAt',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(13, 7493978474247931580),
+            name: 'moduleVisibilityJson',
+            type: 9,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
       backlinks: <obx_int.ModelBacklink>[])
 ];
 
@@ -2841,7 +2916,7 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(43, 5695378983482397838),
+      lastEntityId: const obx_int.IdUid(44, 139419039960632339),
       lastIndexId: const obx_int.IdUid(40, 3014621183292689724),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
@@ -6077,6 +6152,86 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
           return object;
+        }),
+    UserChoicesEntity: obx_int.EntityDefinition<UserChoicesEntity>(
+        model: _entities[41],
+        toOneRelations: (UserChoicesEntity object) => [],
+        toManyRelations: (UserChoicesEntity object) => {},
+        getId: (UserChoicesEntity object) => object.id,
+        setId: (UserChoicesEntity object, int id) {
+          object.id = id;
+        },
+        objectToFB: (UserChoicesEntity object, fb.Builder fbb) {
+          final userIdOffset = fbb.writeString(object.userId);
+          final themeOffset = fbb.writeString(object.theme);
+          final notificationTimeOffset =
+              fbb.writeString(object.notificationTime);
+          final languageOffset = fbb.writeString(object.language);
+          final moduleVisibilityJsonOffset =
+              fbb.writeString(object.moduleVisibilityJson);
+          fbb.startTable(14);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, userIdOffset);
+          fbb.addBool(2, object.showEmail);
+          fbb.addBool(3, object.showAvatar);
+          fbb.addOffset(4, themeOffset);
+          fbb.addBool(5, object.notificationsEnabled);
+          fbb.addOffset(6, notificationTimeOffset);
+          fbb.addOffset(7, languageOffset);
+          fbb.addInt64(8, object.lastSyncAt?.millisecondsSinceEpoch);
+          fbb.addInt64(9, object.version);
+          fbb.addInt64(10, object.createdAt.millisecondsSinceEpoch);
+          fbb.addInt64(11, object.updatedAt.millisecondsSinceEpoch);
+          fbb.addOffset(12, moduleVisibilityJsonOffset);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final lastSyncAtValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 20);
+          final userIdParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final showEmailParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 8, false);
+          final showAvatarParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 10, false);
+          final themeParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 12, '');
+          final notificationsEnabledParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 14, false);
+          final notificationTimeParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 16, '');
+          final languageParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 18, '');
+          final moduleVisibilityJsonParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 28, '');
+          final lastSyncAtParam = lastSyncAtValue == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(lastSyncAtValue);
+          final versionParam =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 22, 0);
+          final object = UserChoicesEntity(
+              userId: userIdParam,
+              showEmail: showEmailParam,
+              showAvatar: showAvatarParam,
+              theme: themeParam,
+              notificationsEnabled: notificationsEnabledParam,
+              notificationTime: notificationTimeParam,
+              language: languageParam,
+              moduleVisibilityJson: moduleVisibilityJsonParam,
+              lastSyncAt: lastSyncAtParam,
+              version: versionParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..createdAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 24, 0))
+            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 26, 0));
+
+          return object;
         })
   };
 
@@ -8260,4 +8415,59 @@ class DigitalDetoxGamificationEntity_ {
   static final updatedAt =
       obx.QueryDateProperty<DigitalDetoxGamificationEntity>(
           _entities[40].properties[14]);
+}
+
+/// [UserChoicesEntity] entity fields to define ObjectBox queries.
+class UserChoicesEntity_ {
+  /// See [UserChoicesEntity.id].
+  static final id =
+      obx.QueryIntegerProperty<UserChoicesEntity>(_entities[41].properties[0]);
+
+  /// See [UserChoicesEntity.userId].
+  static final userId =
+      obx.QueryStringProperty<UserChoicesEntity>(_entities[41].properties[1]);
+
+  /// See [UserChoicesEntity.showEmail].
+  static final showEmail =
+      obx.QueryBooleanProperty<UserChoicesEntity>(_entities[41].properties[2]);
+
+  /// See [UserChoicesEntity.showAvatar].
+  static final showAvatar =
+      obx.QueryBooleanProperty<UserChoicesEntity>(_entities[41].properties[3]);
+
+  /// See [UserChoicesEntity.theme].
+  static final theme =
+      obx.QueryStringProperty<UserChoicesEntity>(_entities[41].properties[4]);
+
+  /// See [UserChoicesEntity.notificationsEnabled].
+  static final notificationsEnabled =
+      obx.QueryBooleanProperty<UserChoicesEntity>(_entities[41].properties[5]);
+
+  /// See [UserChoicesEntity.notificationTime].
+  static final notificationTime =
+      obx.QueryStringProperty<UserChoicesEntity>(_entities[41].properties[6]);
+
+  /// See [UserChoicesEntity.language].
+  static final language =
+      obx.QueryStringProperty<UserChoicesEntity>(_entities[41].properties[7]);
+
+  /// See [UserChoicesEntity.lastSyncAt].
+  static final lastSyncAt =
+      obx.QueryDateProperty<UserChoicesEntity>(_entities[41].properties[8]);
+
+  /// See [UserChoicesEntity.version].
+  static final version =
+      obx.QueryIntegerProperty<UserChoicesEntity>(_entities[41].properties[9]);
+
+  /// See [UserChoicesEntity.createdAt].
+  static final createdAt =
+      obx.QueryDateProperty<UserChoicesEntity>(_entities[41].properties[10]);
+
+  /// See [UserChoicesEntity.updatedAt].
+  static final updatedAt =
+      obx.QueryDateProperty<UserChoicesEntity>(_entities[41].properties[11]);
+
+  /// See [UserChoicesEntity.moduleVisibilityJson].
+  static final moduleVisibilityJson =
+      obx.QueryStringProperty<UserChoicesEntity>(_entities[41].properties[12]);
 }

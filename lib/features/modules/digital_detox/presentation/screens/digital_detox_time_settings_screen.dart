@@ -16,6 +16,8 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
   bool _enableTimeWindow = false;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 22, minute: 0);
+  bool _enableDailyLimit = false;
+  int _dailyLimitMinutes = 60;
   bool _blockOnWeekends = false;
   TimeOfDay? _weekendStartTime;
   TimeOfDay? _weekendEndTime;
@@ -171,11 +173,77 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Toggle principal
+            // Limite de tempo diário
             Card(
               child: SwitchListTile(
                 title: const Text(
-                  'Ativar Bloqueio por Horário',
+                  'Limite de tempo diário',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text('Definir tempo máximo de uso por dia'),
+                value: _enableDailyLimit,
+                onChanged: (value) {
+                  setState(() {
+                    _enableDailyLimit = value;
+                    _hasChanges = true;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            if (_enableDailyLimit) ...[
+              Text(
+                'Tempo máximo diário',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Slider(
+                        value: _dailyLimitMinutes.toDouble(),
+                        min: 15,
+                        max: 480,
+                        divisions: 31,
+                        label: '${(_dailyLimitMinutes ~/ 60)}h ${(_dailyLimitMinutes % 60)}min',
+                        onChanged: (value) {
+                          setState(() {
+                            _dailyLimitMinutes = value.round();
+                            _hasChanges = true;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${(_dailyLimitMinutes ~/ 60)}h ${(_dailyLimitMinutes % 60)}min',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            
+            // Toggle principal - Bloqueio por horário
+            Card(
+              child: SwitchListTile(
+                title: const Text(
+                  'Bloqueio por horário',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: const Text('Permitir uso de apps apenas em horários específicos'),

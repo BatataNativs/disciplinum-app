@@ -148,6 +148,8 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     // Diet module is mostly notification based (schedule), but logic check permission too
     // For consistency we check notification perms.
 
+
+
     final granted = await NotificationService.requestPermission();
 
     if (!mounted) return;
@@ -323,11 +325,11 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       if (gamificationState.gamification != null) {
         LoggerService.instance.i('Diet: Horário removido, verificando estado');
       }
-      
-      EnhancedSnackBarHelper.showInfo(
-          context,
-          'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-        );
+    }
+    EnhancedSnackBarHelper.showInfo(
+        context,
+        'Horário removido: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+      );
     }
   }
 
@@ -398,13 +400,13 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                       ),
                       Expanded(
                         child: PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _selectedIndex = index;
-                            });
-                          },
-                          children: [
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        children: [
                           // TAB 0: Manter dieta (módulo)
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -438,9 +440,9 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
           ),
         ),
       ),
-    )
+    ),
   );
-  }
+}
 
   Widget _buildSegmentedControl() {
     final colorScheme = Theme.of(context).colorScheme;
@@ -558,319 +560,238 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 24),
-            // Seção de horários
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Horários de Refeição',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _openScheduleManager,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: const Color(0xFF8B5CF6),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (_times.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            color: const Color(0xFF6B7280),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Nenhum horário configurado',
-                              style: TextStyle(
-                                color: const Color(0xFF6B7280),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    ..._organizeTimesByPeriod().entries.map((entry) {
-                      if (entry.value.isEmpty) return const SizedBox.shrink();
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF6B7280),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: entry.value.map((time) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF8B5CF6),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    GestureDetector(
-                                      onTap: () => _removeSchedule(time),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: const Color(0xFF8B5CF6),
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      );
-                    }),
-                ],
+            
+            const SizedBox(height: 20),
+            
+            // Seus horários
+            Text(
+              'Seus horários de refeições:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+                color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 24),
-            // Seção de estatísticas
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Estatísticas',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+            const SizedBox(height: 12),
+            if (_times.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.schedule,
+                        size: 40,
+                        color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Nenhum horário definido',
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ListActionTile(
-                    icon: Icons.bar_chart,
-                    label: 'Registro de Refeições',
-                    color: const Color(0xFF8B5CF6),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MealStreakScreen(scheduledTimes: _times),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: [
+                  // Organizar horários por período
+                  ..._organizeTimesByPeriod().entries.where((entry) => entry.value.isNotEmpty).map((entry) {
+                    final period = entry.key;
+                    final times = entry.value;
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Título do período
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            period,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
+                        // Horários do período
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: times.map((time) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutCubic,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: colorScheme.primary.withValues(alpha: 0.15),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.schedule_rounded,
+                                    color: colorScheme.primary,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  GestureDetector(
+                                    onTap: () => _removeSchedule(time),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                      size: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }),
                 ],
               ),
+            const SizedBox(height: 16),
+            const Text(
+              'ATENÇÃO: Este módulo vai te notificar 30 min antes do horário definido. Pra dar tempo de preparar ou esquentar sua refeição',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         );
       case 1:
         // 1: Como funciona
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Icon(
+                    Icons.restaurant_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
                     'Como Funciona',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildHowItWorksItem(
-                    '1. Configure seus horários',
-                    'Defina os horários das suas refeições diárias.',
-                    Icons.schedule,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildHowItWorksItem(
-                    '2. Receba notificações',
-                    'Seja lembrado 30 minutos antes de cada refeição.',
-                    Icons.notifications,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildHowItWorksItem(
-                    '3. Confirme suas refeições',
-                    'Marque se fez a refeição no horário correto.',
-                    Icons.check_circle,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildHowItWorksItem(
-                    '4. Acompanhe seu progresso',
-                    'Veja suas estatísticas e conquistas.',
-                    Icons.trending_up,
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Mantenha uma alimentação saudável com regularidade',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+            
+            const SizedBox(height: 16),
+            
+            // Cards de instruções
+            _buildInstructionCard(
+              Icons.schedule_rounded,
+              '1. Configure Horários',
+              'Defina os horários das suas refeições principais para criar uma rotina alimentar consistente.',
+              const Color(0xFF10B981),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            _buildInstructionCard(
+              Icons.notifications_active_rounded,
+              '2. Receba Lembretes',
+              'Seja notificado 30 minutos antes de cada refeição para ter tempo de preparar ou aquecer sua comida.',
+              const Color(0xFFF59E0B),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            _buildInstructionCard(
+              Icons.bar_chart_rounded,
+              '3. Acompanhe Progresso',
+              'Registre suas refeições e visualize suas estatísticas, sequências e conquistas do módulo.',
+              const Color(0xFF8B5CF6),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Botão de ação
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Gamificação',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: const Text(
+                  'Começar Agora',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 16),
-                  _buildGamificationItem(
-                    '🪵 Madeira',
-                    'Início da Jornada',
-                    'Ative o módulo',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥈 Ferro',
-                    'Primeiro Dia',
-                    '1 dia cumprindo horários',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥈 Alumínio',
-                    'Dois Dias',
-                    '2 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥇 Latão',
-                    'Quatro Dias',
-                    '4 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥉 Bronze',
-                    'Oito Dias',
-                    '8 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥈 Prata',
-                    'Doze Dias',
-                    '12 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🥇 Ouro',
-                    'Dezoito Dias',
-                    '18 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '💎 Diamante',
-                    'Vinte e Seis Dias',
-                    '26 dias seguidos',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildGamificationItem(
-                    '🎱 Disciplinum',
-                    'Trinta Dias',
-                    '30 dias seguidos',
-                  ),
-                ],
+                ),
               ),
             ),
           ],
@@ -880,6 +801,64 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     }
   }
 
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Card de estatística
   Widget _buildStatCard(String value, String label, Color color, IconData icon) {
     return Expanded(
       child: Container(
@@ -890,26 +869,23 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 20),
             const SizedBox(height: 8),
             Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: color,
+                color: Color(0xFF1F2937),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: color.withValues(alpha: 0.7),
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -918,175 +894,149 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
     );
   }
 
-  Widget _buildHowItWorksItem(String title, String description, IconData icon) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            color: const Color(0xFF8B5CF6),
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGamificationItem(String emoji, String title, String description) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // Botões de ação - FUNCIONALIDADES ESSENCIAIS
   Widget _buildActionButtons() {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Botão principal de ativar/desativar
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _gamificationRunning ? _desativarNichoMonitoramento() : _ativarNichoMonitoramento(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _gamificationRunning ? Colors.red : Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                _gamificationRunning ? 'Desativar Módulo' : 'Ativar Módulo',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Botões secundários
+          // Linha principal: Gerenciar horários | Notificações
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const DietNotificationsScreen(),
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                child: ElevatedButton(
+                  onPressed: _openScheduleManager,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  child: const Text('Notificações'),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.schedule_rounded, size: 20),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Horários',
+                          style: TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => diet_progress.MyProgressDiet(),
+                        builder: (context) => const DietNotificationsScreen(),
                       ),
-                    );
+                    ).then((_) => _loadAllPersistentData());
                   },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
-                  child: const Text('Conquistas'),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.notifications_outlined, size: 20),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Notificações',
+                          style: TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Linha inferior: Estatísticas | Ativar/Desativar módulo
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _showStatisticsMenu,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Estatísticas',
+                          style: TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _gamificationRunning ? _desativarNichoMonitoramento() : _ativarNichoMonitoramento(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _gamificationRunning ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _gamificationRunning ? Icons.power_settings_new : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _gamificationRunning ? 'Desativar módulo' : 'Ativar módulo',
+                          style: TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1095,4 +1045,62 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
       ),
     );
   }
+
+
+  void _showStatisticsMenu() {
+    final colorScheme = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estatísticas',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListActionTile(
+              icon: Icons.restaurant_rounded,
+              label: 'Registro de refeições',
+              color: Colors.green,
+                            onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MealStreakScreen(scheduledTimes: _times),
+                  ),
+                );
+              },
+            ),
+            ListActionTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Conquistas',
+              color: Colors.blue,
+                            onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const diet_progress.MyProgressDiet()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

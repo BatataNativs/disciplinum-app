@@ -8,6 +8,7 @@ import 'package:disciplinum/features/app_lock/infrastructure/channels/app_lock_c
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
 
 /// Serviço principal de App Lock
 /// Gerencia o sistema de bloqueio consciente para todos os módulos
@@ -200,13 +201,13 @@ class AppLockService {
   /// Reseta gamificação do módulo Diet
   Future<void> _resetDietGamification() async {
     try {
-      // Implementar reset real para módulo Diet usando Riverpod
+      // Implementar reset real para módulo Diet usando novo sistema de gamificação
       if (_container != null) {
-        final dietService = _container!.read(dietServiceProvider);
-        await dietService.resetDailyProgress();
+        final gamificationNotifier = _container!.read(dietGamificationNotifierProvider.notifier);
+        await gamificationNotifier.resetProgress();
         LoggerService.instance.gamification('Diet gamification resetada com sucesso');
       } else {
-        LoggerService.instance.w('Container Riverpod não disponível para DietService');
+        LoggerService.instance.w('Container Riverpod não disponível para DietGamificationNotifier');
       }
       
     } catch (e) {

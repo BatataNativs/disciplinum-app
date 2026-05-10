@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 /// Widget de ações da tela Stop Smoking
 class StopSmokingActionsWidget extends StatelessWidget {
@@ -52,11 +51,8 @@ class StopSmokingActionsWidget extends StatelessWidget {
         // 1: Como funciona - botão para voltar ao módulo
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: ModernStartButton(
-            icon: Icons.rocket_launch_rounded,
-            label: 'Entendi!',
-            color: const Color(0xFF6366F1),
-            onTap: () {
+          child: ElevatedButton(
+            onPressed: () {
               if (pageController.hasClients) {
                 pageController.animateToPage(
                   0,
@@ -65,6 +61,22 @@ class StopSmokingActionsWidget extends StatelessWidget {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.rocket_launch_rounded, size: 20),
+                SizedBox(width: 8),
+                Text('Entendi!'),
+              ],
+            ),
           ),
         );
       default:
@@ -86,20 +98,46 @@ class StopSmokingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.check_circle_outline,
-                  label: 'Check-in diário',
-                  color: const Color(0xFF6366F1),
-                  onTap: onOpenCheckInManager,
+                child: ElevatedButton(
+                  onPressed: onOpenCheckInManager,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 20),
+                      SizedBox(width: 8),
+                      Text('Check-in diário'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.notifications_active_rounded,
-                  label: 'Notificações',
-                  color: Colors.orange,
-                  onTap: onOpenNotifications,
+                child: ElevatedButton(
+                  onPressed: onOpenNotifications,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_active_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Notificações'),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -109,24 +147,53 @@ class StopSmokingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
-                  color: Colors.teal,
-                  onTap: onShowStatisticsMenu,
+                child: ElevatedButton(
+                  onPressed: onShowStatisticsMenu,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Estatísticas'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: gamificationRunning
-                      ? 'Desativar Módulo'
-                      : 'Ativar Módulo',
-                  color: gamificationRunning ? Colors.red : Colors.green,
-                  onTap: onToggleModule,
+                child: ElevatedButton(
+                  onPressed: onToggleModule,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gamificationRunning ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        gamificationRunning
+                            ? Icons.power_settings_new
+                            : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(gamificationRunning
+                          ? 'Desativar Módulo'
+                          : 'Ativar Módulo'),
+                    ],
+                  ),
                 ),
               ),
             ],

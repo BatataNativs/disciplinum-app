@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_expenses_screen.dart';
 import 'package:disciplinum/features/modules/spending/presentation/screens/fixed_bills_stats_screen.dart';
 import 'package:disciplinum/features/modules/spending/presentation/widgets/my_progress_spending.dart' as spending_progress;
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 
 /// Widget de ações da tela Spending
 class SpendingActionsWidget extends StatelessWidget {
@@ -98,11 +98,24 @@ class SpendingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: 'Controle de gastos',
-                  color: const Color(0xFF6366F1),
-                  onTap: () => _showControlGastosMenu(),
+                child: ElevatedButton(
+                  onPressed: () => _showControlGastosMenu(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.account_balance_wallet_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Controle de gastos'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -112,24 +125,53 @@ class SpendingActionsWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ModernStartButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Estatísticas',
-                  color: Colors.teal,
-                  onTap: () => _showStatisticsMenu(),
+                child: ElevatedButton(
+                  onPressed: () => _showStatisticsMenu(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bar_chart_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Estatísticas'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ModernStartButton(
-                  icon: gamificationRunning
-                      ? Icons.power_settings_new
-                      : Icons.power_off,
-                  label: gamificationRunning
-                      ? 'Desativar módulo'
-                      : 'Ativar módulo',
-                  color: gamificationRunning ? Colors.red : Colors.green,
-                  onTap: onToggleModule,
+                child: ElevatedButton(
+                  onPressed: onToggleModule,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gamificationRunning ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        gamificationRunning
+                            ? Icons.power_settings_new
+                            : Icons.power_off,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(gamificationRunning
+                          ? 'Desativar módulo'
+                          : 'Ativar módulo'),
+                    ],
+                  ),
                 ),
               ),
             ],
