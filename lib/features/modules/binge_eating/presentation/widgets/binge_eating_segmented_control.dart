@@ -15,59 +15,81 @@ class BingeEatingSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final List<String> options = ['Compulsão alimentar', 'Como funciona'];
 
     return Container(
-      height: 44,
-      padding: const EdgeInsets.all(4),
+      height: 48,
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
-        children: List.generate(options.length, (index) {
-          final isSelected = selectedIndex == index;
-          return Expanded(
+        children: [
+          Expanded(
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                if (!isSelected) {
-                  onIndexChanged(index);
-                }
+                onIndexChanged(0);
               },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.center,
+              child: Container(
+                height: 48,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                      : [],
+                  gradient: selectedIndex == 0 ? const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                  ) : null,
+                  color: selectedIndex == 0 ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  options[index],
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : colorScheme.onSurface.withValues(alpha: 0.6),
-                    letterSpacing: isSelected ? 0.3 : 0,
+                child: Center(
+                  child: Text(
+                    'Compulsão alimentar',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 0.3,
+                      color: selectedIndex == 0 ? Colors.white : const Color(0xFF6B7280),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-          );
-        }),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onIndexChanged(1);
+              },
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: selectedIndex == 1 ? const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                  ) : null,
+                  color: selectedIndex == 1 ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'Como funciona',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 0.3,
+                      color: selectedIndex == 1 ? Colors.white : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

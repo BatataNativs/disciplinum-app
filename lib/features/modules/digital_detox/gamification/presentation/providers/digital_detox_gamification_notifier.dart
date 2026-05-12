@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
@@ -154,6 +155,64 @@ class DigitalDetoxGamificationNotifier extends StateNotifier<DigitalDetoxGamific
     } catch (e) {
       LoggerService.instance.e('Erro ao resetar streak: $e');
       state = state.copyWith(errorMessage: 'Falha ao resetar streak');
+    }
+  }
+
+  Future<void> resetSevenDayCycle() async {
+    try {
+      final currentGamification = state.gamification;
+      if (currentGamification == null) return;
+      
+      // Reseta apenas o ciclo de 7 dias, mantendo o streak principal
+      final updatedGamification = currentGamification.resetSevenDayCycle();
+      await _repository.save(updatedGamification);
+      
+      // Recarregar estado
+      await loadGamification(userId);
+      
+      LoggerService.instance.i('Streak resetado para Digital Detox');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar streak: $e');
+      state = state.copyWith(errorMessage: 'Falha ao resetar streak');
+    }
+  }
+
+  /// Reseta o progresso do módulo preservando a insígnia Madeira
+  Future<void> resetProgress() async {
+    try {
+      final currentGamification = state.gamification;
+      if (currentGamification == null) return;
+      
+      // Preserva a insígnia Madeira (incentivo para tentar novamente)
+      final hasMadeira = currentGamification.earnedInsigniasList.contains('Madeira');
+      
+      // Cria estado inicial preservando Madeira se existia
+      final initialState = DigitalDetoxGamificationEntity(
+        userId: userId,
+        currentStreak: 0,
+        longestStreak: 0,
+        totalDisciplinedDays: 0,
+        lastDisciplinedDate: null,
+        sevenDayCycle: 0,
+        cycleStartDate: null,
+        earnedInsignias: hasMadeira ? jsonEncode(['Madeira']) : '[]',
+        earnedMedalhas: '[]',
+        cycle30StartDate: null,
+        daysInCurrent30DayCycle: 0,
+        isModuleActive: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      await _repository.save(initialState);
+      
+      // Recarregar estado
+      await loadGamification(userId);
+      
+      LoggerService.instance.i('Progresso resetado (Madeira preservada: $hasMadeira)');
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar progresso: $e');
+      state = state.copyWith(errorMessage: 'Falha ao resetar progresso');
     }
   }
 

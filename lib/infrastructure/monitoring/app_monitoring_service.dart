@@ -22,6 +22,7 @@ import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_service_local.dart';
+import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_applock_service.dart';
 
 
 class AppMonitoringService {
@@ -487,6 +488,24 @@ class AppMonitoringService {
     if (!isAppLockActive) {
       LoggerService.instance.system('App Lock não está ativo para o módulo $currentNicheId - ignorando entrada de app');
       return;
+    }
+
+    // 🎯 LÓGICA ESPECÍFICA PARA DIGITAL DETOX
+    if (currentNicheId == NicheId.digitalDetox) {
+      // Obter userId do serviço local do Digital Detox
+      final digitalDetoxService = DigitalDetoxServiceLocal.instance;
+      final config = await digitalDetoxService.getConfig('current_user');
+      final userId = config?.userId ?? 'current_user';
+      
+      // Verificar se deve bloquear usando DigitalDetoxAppLockService
+      final shouldBlock = await DigitalDetoxAppLockService.instance.shouldBlockApp(userId, packageName);
+      
+      if (!shouldBlock) {
+        LoggerService.instance.i('App $packageName permitido pelo Digital Detox (dentro do horário permitido)');
+        return; // Não bloqueia se está dentro do horário permitido
+      }
+      
+      LoggerService.instance.i('App $packageName bloqueado pelo Digital Detox (fora do horário permitido)');
     }
 
     // Preparar mensagem para o App Lock

@@ -184,6 +184,19 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       return;
     }
 
+    // Se a permissão foi concedida, garantir navegação para tela 0
+    if (mounted) {
+      setState(() {
+        _selectedIndex = 0; // Garante que volte para tela 0
+      });
+      
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
+
     // Continuar com as outras permissões
     if (!mounted) return;
     await PermissionService.ensurePermissions(context);
@@ -231,7 +244,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     HapticFeedback.heavyImpact();
     setState(() {
       _gamificationRunning = true;
+      _selectedIndex = 0; // Garante que volte para tela 0
     });
+    
+    // Navega para a tela 0 (Foco e produtividade)
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    }
+    
     ref.read(cloudSyncServiceProvider).saveModuleStatus(
       nicheId: _niche.nicheId,
       isModuleActive: true,
@@ -244,9 +266,22 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    context.showNotificationPermissionDialog(
+    final result = await context.showNotificationPermissionDialog(
       onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
+    
+    // Após retornar das configurações, navegar para tela 0
+    if (result == true && mounted) {
+      setState(() {
+        _selectedIndex = 0; // Garante que volte para tela 0
+      });
+      
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
   }
 
   Future<void> _desativarNichoMonitoramento() async {

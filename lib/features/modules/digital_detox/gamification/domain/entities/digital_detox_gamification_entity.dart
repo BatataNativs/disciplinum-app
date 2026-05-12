@@ -79,13 +79,13 @@ class DigitalDetoxGamificationEntity {
     List<String> newMedalhas = earnedMedalhasList;
     if (newDaysIn30DayCycle >= 30) {
       if (newMedalhas.isEmpty) {
-        newMedalhas.add('🥉 Bronze - ${DateTime.now().day}/${DateTime.now().month}');
+        newMedalhas.add(' Bronze - ${DateTime.now().day}/${DateTime.now().month}');
       } else if (newMedalhas.length == 1) {
-        newMedalhas.add('🥈 Prata - ${DateTime.now().day}/${DateTime.now().month}');
+        newMedalhas.add(' Prata - ${DateTime.now().day}/${DateTime.now().month}');
       } else if (newMedalhas.length == 2) {
-        newMedalhas.add('🥇 Ouro - ${DateTime.now().day}/${DateTime.now().month}');
+        newMedalhas.add(' Ouro - ${DateTime.now().day}/${DateTime.now().month}');
       } else if (newMedalhas.length < 4) {
-        newMedalhas.add('💎 Diamante - ${DateTime.now().day}/${DateTime.now().month}');
+        newMedalhas.add(' Diamante - ${DateTime.now().day}/${DateTime.now().month}');
       }
     }
 
@@ -114,7 +114,7 @@ class DigitalDetoxGamificationEntity {
       cycleStartDate: DateTime.now(),
       daysInCurrent30DayCycle: 0,
       cycle30StartDate: DateTime.now(),
-      earnedInsignias: earnedInsignias.contains('🪵 Madeira') ? jsonEncode(['🪵 Madeira']) : '[]',
+      earnedInsignias: earnedInsignias.contains(' Madeira') ? jsonEncode([' Madeira']) : '[]',
       earnedMedalhas: '[]',
       isModuleActive: isModuleActive,
       createdAt: createdAt,

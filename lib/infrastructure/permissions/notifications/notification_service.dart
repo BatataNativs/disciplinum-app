@@ -38,9 +38,13 @@ Future<void> initNotifications() async {
 
   try {
     final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneInfo.toString()));
+    // Usar a propriedade identifier do TimezoneInfo para obter o nome da timezone
+    final timeZoneName = timeZoneInfo.identifier;
+    LoggerService.instance.i('Timezone detectada: $timeZoneName');
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
   } catch (e) {
     LoggerService.instance.e('Erro ao configurar timezone', error: e);
+    // Fallback para timezone padrão
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
   }
 

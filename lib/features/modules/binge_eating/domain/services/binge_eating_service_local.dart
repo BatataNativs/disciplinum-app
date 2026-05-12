@@ -152,6 +152,12 @@ class BingeEatingServiceLocal {
           hour: entity.reminderHour,
           minute: entity.reminderMinute,
         ),
+        // Campos do AppLock
+        enableAppLock: entity.enableAppLock,
+        monitoredApps: entity.monitoredApps,
+        appLockRequirePassword: entity.appLockRequirePassword,
+        appLockMessage: entity.appLockMessage,
+        appLockCooldownMinutes: entity.appLockCooldownMinutes,
       );
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar configuração do BingeEating', error: e);
@@ -177,6 +183,13 @@ class BingeEatingServiceLocal {
       entity.enableNotifications = config.enableNotifications;
       entity.reminderHour = config.reminderTime.hour;
       entity.reminderMinute = config.reminderTime.minute;
+      
+      // Campos do AppLock
+      entity.enableAppLock = config.enableAppLock;
+      entity.monitoredApps = config.monitoredApps;
+      entity.appLockRequirePassword = config.appLockRequirePassword;
+      entity.appLockMessage = config.appLockMessage;
+      entity.appLockCooldownMinutes = config.appLockCooldownMinutes;
       
       await _repository.saveConfig(entity);
       

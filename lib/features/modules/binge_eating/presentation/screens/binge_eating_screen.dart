@@ -79,14 +79,25 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       final nicheId = _niche.nicheId;
       final userApps =
           await ref.read(cloudSyncServiceProvider).loadUserNicheApps(nicheId: nicheId);
-      final status = await ref.read(cloudSyncServiceProvider).loadModuleStatus(nicheId);
-      final apps = userApps.map((a) => a.appPackage).toList();
+            final apps = userApps.map((a) => a.appPackage).toList();
+
+      // Verificar configuração local do BingeEating
+      final bingeEatingService = ref.read(bingeEatingServiceIsarProvider);
+      final localConfig = await bingeEatingService.getConfig();
+      final isLocallyActive = localConfig.isModuleActive;
+
+      // Combinar apps da nuvem com apps monitorados localmente
+      final monitoredApps = localConfig.monitoredApps;
+      final allApps = <String>{};
+      allApps.addAll(apps);
+      allApps.addAll(monitoredApps);
 
       if (mounted) {
         setState(() {
           _selectedApps.clear();
-          _selectedApps.addAll(apps);
-          _gamificationRunning = status?.isModuleActive ?? false;
+          _selectedApps.addAll(allApps.toList());
+          // Priorizar configuração local sobre a da nuvem
+          _gamificationRunning = isLocallyActive;
           _loadingData = false;
         });
 
@@ -161,6 +172,19 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
       return;
     }
 
+    // Se a permissão foi concedida, garantir navegação para tela 0
+    if (mounted) {
+      setState(() {
+        _selectedIndex = 0; // Garante que volte para tela 0
+      });
+      
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
+
     if (!mounted) return;
     await PermissionService.ensurePermissions(context, forceUsage: true);
     bool accessibilityGranted =
@@ -195,7 +219,16 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
     HapticFeedback.heavyImpact();
     setState(() {
       _gamificationRunning = true;
+      _selectedIndex = 0; // Garante que volte para tela 0
     });
+    
+    // Navega para a tela 0 (Compulsão alimentar)
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    }
+    
     ref.read(cloudSyncServiceProvider).saveModuleStatus(nicheId: _niche.nicheId, isModuleActive: true);
     // Inicia o ciclo de gamificação local
     final bingeEatingService = ref.read(bingeEatingServiceIsarProvider);
@@ -209,9 +242,22 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    context.showNotificationPermissionDialog(
+    final result = await context.showNotificationPermissionDialog(
       onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
+    
+    // Após retornar das configurações, navegar para tela 0
+    if (result == true && mounted) {
+      setState(() {
+        _selectedIndex = 0; // Garante que volte para tela 0
+      });
+      
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
   }
 
   Future<void> _desativarNichoMonitoramento() async {
@@ -430,9 +476,8 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                // Container roxo com degradê
+                                // Header
                                 Container(
-                                  width: double.infinity,
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
@@ -478,31 +523,68 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                                     ],
                                   ),
                                 ),
+                                
                                 const SizedBox(height: 20),
+                                
                                 // Cards de instruções
                                 _buildInstructionCard(
                                   Icons.psychology_rounded,
                                   '1. Identifique Gatilhos',
                                   'Reconheça os gatilhos emocionais ou situacionais que desencadeiam episódios de compulsão alimentar.',
-                                  Colors.purple,
+                                  const Color(0xFF10B981),
                                 ),
+                                
+                                const SizedBox(height: 12),
+                                
                                 _buildInstructionCard(
                                   Icons.block_rounded,
                                   '2. Bloqueie Apps',
                                   'Use o bloqueio inteligente para impedir acesso a aplicativos de delivery e comida durante períodos críticos.',
-                                  Colors.purple,
+                                  const Color(0xFFF59E0B),
                                 ),
+                                
+                                const SizedBox(height: 12),
+                                
                                 _buildInstructionCard(
                                   Icons.notifications_active_rounded,
                                   '3. Configure Alertas',
                                   'Receba notificações personalizadas para lembrá-lo de suas estratégias e mantê-lo motivado.',
-                                  Colors.purple,
+                                  const Color(0xFF8B5CF6),
                                 ),
+                                
+                                const SizedBox(height: 12),
+                                
                                 _buildInstructionCard(
-                                  Icons.emoji_emotions_rounded,
-                                  '4. Acompanhe Progresso',
-                                  'Monitore seus padrões, visualize estatísticas e celebre cada vitória contra a compulsão alimentar.',
-                                  Colors.purple,
+                                  Icons.emoji_events,
+                                  '4. Ganhe Recompensas',
+                                  'A cada dia disciplinado, você ganha medalhas e acompanha seu progresso contra a compulsão alimentar.',
+                                  const Color(0xFFEF4444),
+                                ),
+                                
+                                const SizedBox(height: 20),
+                                
+                                // Botão de ação
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF8B5CF6),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    ),
+                                    child: const Text(
+                                      'Começar Agora',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -643,30 +725,25 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      content,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              height: 1.3,
+            ),
           ),
         ],
       ),

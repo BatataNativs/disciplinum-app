@@ -239,12 +239,25 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
   
   
   
-  void _showPermissionRequiredDialog() {
-    context.showAccessibilityPermissionDialog(
+  Future<void> _showPermissionRequiredDialog() async {
+    final result = await context.showAccessibilityPermissionDialog(
       title: 'Permissão Necessária',
       message: 'O Jejum Digital precisa de acesso à Acessibilidade para monitorar os apps.\n\nIsso permite que o app detecte quando você abre apps de redes sociais e mostre a tela de bloqueio.',
       onOpenSettings: () => PermissionService.openAccessibilitySettings(),
     );
+
+    // Após retornar das configurações, navegar para tela 0
+    if (result == true && mounted) {
+      setState(() {
+        _selectedIndex = 0; // Garante que volte para tela 0
+      });
+      
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic);
+      }
+    }
   }
 
   @override

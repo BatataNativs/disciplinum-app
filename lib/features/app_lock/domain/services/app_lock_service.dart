@@ -9,6 +9,7 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
+import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
 
 /// Serviço principal de App Lock
 /// Gerencia o sistema de bloqueio consciente para todos os módulos
@@ -35,7 +36,8 @@ class AppLockService {
     required VoidCallback onOpenApp,
   }) async {
     try {
-      final alertMessage = 'Atenção! Este app está sendo monitorado.';
+      // Mensagem personalizada por módulo
+      final alertMessage = _getModuleAlertMessage(nicheId);
       
       LoggerService.instance.gamification('App Lock exibido para: $appName - Mensagem: $alertMessage');
       
@@ -133,6 +135,9 @@ class AppLockService {
           break;
         case NicheId.adultContent:
           await _resetAdultContentGamification();
+          break;
+        case NicheId.digitalDetox:
+          await _resetDigitalDetoxGamification();
           break;
         default:
           LoggerService.instance.w('Módulo não reconhecido para reset: $nicheId');
@@ -250,6 +255,24 @@ class AppLockService {
     }
   }
 
+  /// Reseta gamificação do módulo Digital Detox
+  Future<void> _resetDigitalDetoxGamification() async {
+    try {
+      // Implementar reset real para módulo Digital Detox usando Riverpod
+      if (_container != null) {
+        final digitalDetoxService = _container!.read(digitalDetoxServiceLocalProvider);
+        // Usar deactivateModule para resetar o progresso (limpa monitoredApps e isModuleActive)
+        await digitalDetoxService.deactivateModule('current_user');
+        LoggerService.instance.gamification('Digital Detox gamification resetada com sucesso');
+      } else {
+        LoggerService.instance.w('Container Riverpod não disponível para DigitalDetoxService');
+      }
+      
+    } catch (e) {
+      LoggerService.instance.e('Erro ao resetar Digital Detox gamification', error: e);
+    }
+  }
+
   /// Mostra notificação de reset
   Future<void> _showResetNotification(AppLockEvent lockEvent) async {
     try {
@@ -328,8 +351,32 @@ class AppLockService {
         return 'Compulsão Alimentar';
       case NicheId.adultContent:
         return 'Jejum 18+';
+      case NicheId.digitalDetox:
+        return 'Jejum Digital';
       default:
         return 'Módulo Desconhecido';
+    }
+  }
+
+  /// Obtém mensagem de alerta personalizada por módulo
+  static String _getModuleAlertMessage(NicheId nicheId) {
+    switch (nicheId) {
+      case NicheId.focus:
+        return '⚠️ ATENÇÃO: Este app está bloqueado pelo seu modo Foco. Mantenha sua concentração!';
+      case NicheId.spending:
+        return '💰 ATENÇÃO: Este app pode afetar seu controle de gastos. Deseja continuar?';
+      case NicheId.smoking:
+        return '🚭 ATENÇÃO: Este app compromete sua meta de parar de fumar. Resista!';
+      case NicheId.diet:
+        return '🥗 ATENÇÃO: Este app pode comprometer sua dieta. Escolha sabiamente!';
+      case NicheId.bingeEating:
+        return '🍔 ATENÇÃO: Este app pode desencadear compulsão alimentar. Pense antes!';
+      case NicheId.adultContent:
+        return '🔞 ATENÇÃO: Este conteúdo está bloqueado pelo seu Jejum 18+. Mantenha seu foco!';
+      case NicheId.digitalDetox:
+        return '📱 ATENÇÃO: Este app está sendo monitorado pelo seu Jejum Digital. Use com consciência!';
+      default:
+        return '⚠️ ATENÇÃO: Este app está sendo monitorado.';
     }
   }
 

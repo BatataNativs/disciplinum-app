@@ -97,6 +97,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
 
   Widget _buildBottomButtons(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -105,6 +106,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Linha principal: Selecionar Apps | Notificações
           Row(
             children: [
               Expanded(
@@ -116,14 +118,17 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.touch_app_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text("Selecionar apps"),
+                      const Icon(Icons.touch_app_outlined, size: 20),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Selecionar Apps',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -138,14 +143,17 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.notifications_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text("Notificações"),
+                      const Icon(Icons.notifications_outlined, size: 20),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Notificações',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -153,6 +161,7 @@ class BingeEatingActionsWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // Linha inferior: Estatísticas | Ativar/Desativar módulo
           Row(
             children: [
               Expanded(
@@ -164,14 +173,17 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.bar_chart_rounded, size: 20),
-                      SizedBox(width: 8),
-                      Text("Estatísticas"),
+                      const Icon(Icons.bar_chart_rounded, size: 20),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Estatísticas',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -186,21 +198,20 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        gamificationRunning
-                            ? Icons.power_settings_new
-                            : Icons.power_off,
+                        gamificationRunning ? Icons.power_settings_new : Icons.power_off,
                         size: 20,
                       ),
-                      SizedBox(width: 8),
-                      Text(gamificationRunning
-                          ? "Desativar Módulo"
-                          : "Ativar Módulo"),
+                      const SizedBox(width: 2),
+                      Text(
+                        gamificationRunning ? 'Desativar módulo' : 'Ativar módulo',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
