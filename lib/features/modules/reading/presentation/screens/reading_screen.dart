@@ -9,6 +9,8 @@ import 'package:disciplinum/features/modules/reading/presentation/screens/my_she
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_settings_screen.dart';
 import 'package:disciplinum/features/modules/reading/presentation/screens/reading_stats_screen.dart' as stats;
 import 'package:disciplinum/features/modules/reading/presentation/widgets/my_progress_reading.dart' as reading_progress;
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/features/modules/reading/gamification/presentation/widgets/reading_celebration_widget.dart';
 import 'package:disciplinum/features/modules/reading/presentation/widgets/add_book_dialog.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -232,15 +234,16 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
               final readingService = ref.watch(readingServiceProvider);
               final totalBooks = readingService.books.length;
               final completedBooks = readingService.completedBooks.length;
-              final currentStreak = readingService.currentStreak;
               
               return Row(
                 children: [
-                  _buildStatCard('$totalBooks', 'Livros', const Color(0xFF8B5CF6), Icons.auto_stories_rounded),
+                  Expanded(
+                    child: _buildStatCard('$totalBooks', 'Livros', const Color(0xFF8B5CF6), Icons.auto_stories_rounded),
+                  ),
                   const SizedBox(width: 12),
-                  _buildStatCard('$completedBooks', 'Concluídos', const Color(0xFF10B981), Icons.check_circle_rounded),
-                  const SizedBox(width: 12),
-                  _buildStatCard('$currentStreak', 'Dias', const Color(0xFFF59E0B), Icons.local_fire_department_rounded),
+                  Expanded(
+                    child: _buildStatCard('$completedBooks', 'Concluídos', const Color(0xFF10B981), Icons.check_circle_rounded),
+                  ),
                 ],
               );
             },
@@ -289,8 +292,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
 
   // Card de estatística
   Widget _buildStatCard(String value, String label, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
+    return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
@@ -319,17 +321,16 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
             ),
           ],
         ),
-      ),
     );
   }
 
   // Como funciona
   Widget _buildHowItWorks(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -376,7 +377,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           ),
         ),
         
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         
         // Cards de instruções
         _buildInstructionCard(
@@ -710,6 +711,15 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     } else {
       HapticFeedback.lightImpact();
       
+      // Verificar permissão de notificação antes de ativar
+      bool notificationGranted = await NotificationService.requestPermission();
+      if (!notificationGranted) {
+        if (mounted) {
+          _showNotificationSettingsDialog();
+        }
+        return;
+      }
+      
       // Implementando lógica de ativação local
       await ref.read(readingControllerIsarProvider.notifier).setModuleActive(true);
       
@@ -723,5 +733,11 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         setState(() {}); // Rebuild para atualizar UI
       }
     }
+  }
+
+  Future<void> _showNotificationSettingsDialog() async {
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
+    );
   }
 }

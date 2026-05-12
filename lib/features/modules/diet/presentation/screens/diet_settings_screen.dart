@@ -8,6 +8,7 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/diet_notifications_screen.dart';
 import 'package:disciplinum/features/modules/diet/presentation/screens/meal_streak_screen.dart';
 import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
@@ -176,31 +177,8 @@ class _DietSettingsScreenState extends ConsumerState<DietSettingsScreen> {
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
-        content: const Text(
-          'Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.',
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Abrir configurações'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 

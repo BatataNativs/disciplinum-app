@@ -37,8 +37,8 @@ Future<void> initNotifications() async {
   tz.initializeTimeZones();
 
   try {
-    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+    final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneInfo.toString()));
   } catch (e) {
     LoggerService.instance.e('Erro ao configurar timezone', error: e);
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
@@ -47,11 +47,10 @@ Future<void> initNotifications() async {
   const fln.AndroidInitializationSettings initializationSettingsAndroid =
       fln.AndroidInitializationSettings('@mipmap/launcher_icon');
 
-  const fln.InitializationSettings initializationSettings =
-      fln.InitializationSettings(android: initializationSettingsAndroid);
-
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
+    settings: fln.InitializationSettings(
+      android: initializationSettingsAndroid,
+    ),
     onDidReceiveNotificationResponse: (fln.NotificationResponse response) {
       if (response.actionId == actionIdNao) {
         NotificationService.onRelapseDetected?.call(response.payload);
@@ -78,7 +77,7 @@ Future<void> initNotifications() async {
         // ID da notificação de insígnia é 5000 + index, mas não temos acesso ao index aqui
         // Então vamos cancelar todas as notificações de insígnias (5000-5010)
         for (int i = 0; i < 15; i++) {
-          flutterLocalNotificationsPlugin.cancel(5000 + i);
+          flutterLocalNotificationsPlugin.cancel(id:5000 + i);
         }
       }
       
@@ -86,7 +85,7 @@ Future<void> initNotifications() async {
         // Apenas fechar notificação (já foi tratada pelo addPendingInsignia)
         // Cancelar todas as notificações de insígnias
         for (int i = 0; i < 15; i++) {
-          flutterLocalNotificationsPlugin.cancel(5000 + i);
+          flutterLocalNotificationsPlugin.cancel(id:5000 + i);
         }
       }
 
@@ -117,7 +116,7 @@ Future<void> initNotifications() async {
 
       // Lógica para fechar a notificação de leitura (ID 9000)
       if (response.actionId == 'reading_skip') {
-        flutterLocalNotificationsPlugin.cancel(9000);
+        flutterLocalNotificationsPlugin.cancel(id:9000);
       }
 
       // Lógica para ações rápidas de TAREFAS de Procrastinação
@@ -212,10 +211,10 @@ Future<void> sendModuleNotification(String body,
       fln.NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await flutterLocalNotificationsPlugin.show(
-    id,
-    title,
-    body,
-    platformChannelSpecifics,
+    id: id,
+    title: title,
+    body: body,
+    notificationDetails: platformChannelSpecifics,
     payload: payload,
   );
 }
@@ -288,11 +287,11 @@ class NotificationService {
 
     try {
       await flutterLocalNotificationsPlugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduledDate,
-        fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: fln.NotificationDetails(android: androidPlatformChannelSpecifics),
         androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: fln.DateTimeComponents.time,
         payload: payload,
@@ -338,11 +337,11 @@ class NotificationService {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: fln.NotificationDetails(android: androidPlatformChannelSpecifics),
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: fln.DateTimeComponents.dayOfWeekAndTime,
       payload: payload,
@@ -377,11 +376,11 @@ class NotificationService {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tzScheduledDate,
-      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tzScheduledDate,
+      notificationDetails: fln.NotificationDetails(android: androidPlatformChannelSpecifics),
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
       payload: payload,
     );
@@ -431,11 +430,11 @@ class NotificationService {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      fln.NotificationDetails(android: androidPlatformChannelSpecifics),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: fln.NotificationDetails(android: androidPlatformChannelSpecifics),
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: fln.DateTimeComponents.dayOfMonthAndTime,
       payload: payload,
@@ -445,7 +444,7 @@ class NotificationService {
 
   static Future<void> cancelNotification(int id) async {
     if (kIsWeb) return;
-    await flutterLocalNotificationsPlugin.cancel(id);
+    await flutterLocalNotificationsPlugin.cancel(id:id);
   }
 
   static Future<void> openNotificationSettings() async {
@@ -512,11 +511,11 @@ class NotificationService {
     final platformDetails = fln.NotificationDetails(android: androidDetails);
 
     await flutterLocalNotificationsPlugin.show(
-      id,
-      title,
-      body,
-      platformDetails,
-      payload: 'binge_checkin',
-    );
+    id: id,
+    title: title,
+    body: body,
+    notificationDetails: platformDetails,
+    payload: 'binge_checkin',
+  );
   }
 }

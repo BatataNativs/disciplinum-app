@@ -7,6 +7,7 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
@@ -157,31 +158,8 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
-        content: const Text(
-          'Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.',
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Abrir configurações'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 
@@ -390,13 +368,102 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                SpendingTabContent(
-                                  tabIndex: 1,
-                                  colorScheme: colorScheme,
-                                  selectedApps: _selectedApps,
-                                  onRemoveApp: _removeSelectedApp,
+                                // Container roxo com degradê
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(
+                                        Icons.shopping_cart_rounded,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Como Funciona',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Controle seus gastos com inteligência',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 100),
+                                const SizedBox(height: 20),
+                                // Cards de instruções
+                                _buildInstructionCard(
+                                  Icons.credit_card_rounded,
+                                  '1. Selecione Apps de Compras',
+                                  'Escolha aplicativos de e-commerce, delivery e serviços que você quer controlar seus gastos.',
+                                  Colors.orange,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.trending_up_rounded,
+                                  '2. Acompanhe em Tempo Real',
+                                  'Visualize seus gastos diários, semanais e mensais com gráficos detalhados e relatórios.',
+                                  Colors.orange,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.notifications_active_rounded,
+                                  '3. Alertas Personalizados',
+                                  'Receba notificações quando atingir limites de gastos ou para lembrar de metas financeiras.',
+                                  Colors.orange,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.insights_rounded,
+                                  '4. Análise de Padrões',
+                                  'Entenda seus hábitos de consumo, identifique onde pode economizar e melhore seu controle financeiro.',
+                                  Colors.orange,
+                                ),
+                                const SizedBox(height: 20),
+                                // Botão Começar Agora
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF8B5CF6),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Começar Agora',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -425,6 +492,67 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -8,6 +8,7 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/features/modules/adult_content/presentation/widgets/my_progress_adult_content.dart' as adult_content_progress;
 import 'package:disciplinum/features/modules/adult_content/gamification/presentation/widgets/adult_content_celebration_widget.dart';
@@ -15,7 +16,6 @@ import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/cards/niche_info_card.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 
 class AvoidAdultContentScreen extends ConsumerStatefulWidget {
@@ -184,31 +184,8 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Permissão necessária"),
-        content: const Text(
-          "Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.",
-        ),
-        actions: [
-          TextButton(
-            child: const Text("Abrir configurações"),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text("Cancelar"),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 
@@ -526,7 +503,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
                   color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     "Nenhum app selecionado.",
                     style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -572,29 +549,108 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
         );
       case 1:
         // 1: Como funciona
-        return Column(
-          children: [
-            NicheInfoCard(
-              icon: Icons.settings_outlined,
-              title: "Em Selecionar apps, escolha os aplicativos a monitorar",
-              content:
-                  "Selecione os apps de conteúdo adulto que você deseja monitorar. Após selecionar, ative o módulo para começar.",
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              icon: Icons.notifications_outlined,
-              title: "Em Notificações, configure lembretes",
-              content:
-                  "Defina horários para receber lembretes motivacionais que te ajudem a manter a disciplina.",
-            ),
-            const SizedBox(height: 16),
-            NicheInfoCard(
-              icon: Icons.bar_chart_rounded,
-              title: "Em Estatísticas, acompanhe sua evolução",
-              content:
-                  "Visualize quantos dias você está no Jejum 18+ e acompanhe sua disciplina.",
-            ),
-          ],
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              // Container roxo com degradê
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.block_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Como Funciona',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Proteja-se contra conteúdo adulto com inteligência',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Cards de instruções
+              _buildInstructionCard(
+                Icons.security_rounded,
+                '1. Bloqueio Inteligente',
+                'Use tecnologia avançada para detectar e bloquear automaticamente conteúdo adulto em apps e navegadores.',
+                Colors.red,
+              ),
+              _buildInstructionCard(
+                Icons.schedule_rounded,
+                '2. Agendamento Personalizado',
+                'Defina horários específicos para bloqueio temporário, permitindo acesso em períodos seguros.',
+                Colors.red,
+              ),
+              _buildInstructionCard(
+                Icons.privacy_tip_rounded,
+                '3. Modo Furtivo',
+                'Ative o modo discreto que esconde o bloqueio, mantendo seu uso completamente privado e seguro.',
+                Colors.red,
+              ),
+              _buildInstructionCard(
+                Icons.insights_rounded,
+                '4. Relatórios Detalhados',
+                'Acompanhe tentativas de acesso, padrões de uso e eficácia do bloqueio através de estatísticas completas.',
+                Colors.red,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Começar Agora',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+            ],
+          ),
         );
       default:
         return const SizedBox.shrink();
@@ -738,6 +794,67 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

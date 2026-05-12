@@ -1,6 +1,7 @@
 ﻿import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_config_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
+import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Repository de configuraÃ§Ãµes do Jejum Digital
 /// Gerencia persistÃªncia de configuraÃ§Ãµes usando ObjectBox
@@ -31,20 +32,27 @@ class DigitalDetoxConfigRepository {
     return config;
   }
 
-  /// Salva configuraÃ§Ã£o
+  /// Salva configuração
   Future<void> saveConfig(DigitalDetoxConfigEntity config) async {
     config.touch();
     _box.put(config);
   }
 
-  /// Ativa/desativa mÃ³dulo
+  /// Ativa/desativa módulo
   Future<void> setModuleActive(String userId, bool isActive) async {
     final config = await getOrCreateConfig(userId);
     config.isModuleActive = isActive;
+    
+    // Se estiver desativando, limpa a lista de apps monitorados
+    if (!isActive) {
+      config.monitoredApps.clear();
+      LoggerService.instance.i('Apps monitorados limpos ao desativar módulo Digital Detox');
+    }
+    
     await saveConfig(config);
   }
 
-  /// Verifica se mÃ³dulo estÃ¡ ativo
+  /// Verifica se módulo está ativo
   Future<bool> isModuleActive(String userId) async {
     final config = await getConfig(userId);
     return config?.isModuleActive ?? false;

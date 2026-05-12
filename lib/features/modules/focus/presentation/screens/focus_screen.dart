@@ -8,6 +8,7 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/features/modules/focus/presentation/widgets/my_progress_focus.dart' as focus_progress;
@@ -15,7 +16,6 @@ import 'package:disciplinum/core/utils/app_info_helper.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
-import 'package:disciplinum/shared/widgets/common/how_it_works_section.dart';
 import 'package:disciplinum/features/modules/focus/gamification/presentation/widgets/focus_celebration_widget.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
@@ -244,31 +244,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
-        content: const Text(
-          'Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.',
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Abrir configurações'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 
@@ -888,28 +865,173 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         );
       case 1:
         // 1: Como Funciona
-        return HowItWorksSection(
-          onGetStarted: () => _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
-          infoCards: const [
-            InfoCardData(
-              icon: Icons.settings_outlined,
-              title: 'Em "Configurar", defina seus intervalos de foco',
-              content: 'Defina intervalos de horários de foco e selecione apps que possam te distrair. Depois, ative o módulo.',
-            ),
-            InfoCardData(
-              icon: Icons.notifications_outlined,
-              title: 'Notificações',
-              content: 'Receba notificações para te lembrar de manter o foco durante o seu horário produtivo.',
-            ),
-            InfoCardData(
-              icon: Icons.bar_chart_rounded,
-              title: 'Em "Estatísticas", monitore seu foco',
-              content: 'Veja como anda seu foco, acompanhando seus períodos de foco concluídos com sucesso e o progresso geral no módulo.',
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              // Container roxo com degradê
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Como Funciona',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Aumente sua produtividade com foco inteligente',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Cards de instruções
+              _buildInstructionCard(
+                Icons.timer_rounded,
+                '1. Defina Períodos de Foco',
+                'Estabeleça blocos de tempo dedicado (25, 45, 60 minutos) para trabalho profundo sem distrações.',
+                Colors.blue,
+              ),
+              _buildInstructionCard(
+                Icons.apps_rounded,
+                '2. Bloqueie Apps Distraentes',
+                'Selecione aplicativos que atrapalham sua produtividade e bloqueie-os durante seus períodos de foco.',
+                Colors.blue,
+              ),
+              _buildInstructionCard(
+                Icons.notifications_active_rounded,
+                '3. Receba Alertas Inteligentes',
+                'Seja notificado quando seus períodos de foco terminarem ou quando tentar acessar apps bloqueados.',
+                Colors.blue,
+              ),
+              _buildInstructionCard(
+                Icons.trending_up_rounded,
+                '4. Acompanhe sua Produtividade',
+                'Visualize estatísticas detalhadas sobre seu tempo de foco, conclusão de tarefas e evolução pessoal.',
+                Colors.blue,
+              ),
+            const SizedBox(height: 20),
+            // Botão Começar Agora
+            ElevatedButton(
+              onPressed: () {
+                _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Começar Agora',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
+          ),
         );
       default:
         return const SizedBox.shrink();
     }
   }
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 }

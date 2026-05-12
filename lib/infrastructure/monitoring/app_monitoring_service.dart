@@ -19,6 +19,10 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/session_persistence_service.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
+import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
+import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
+import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_service_local.dart';
+
 
 class AppMonitoringService {
   late final ObjectBoxPreferencesRepository _prefsRepo;
@@ -285,15 +289,15 @@ class AppMonitoringService {
     const details = NotificationDetails(android: androidDetails);
 
     await flutterLocalNotificationsPlugin.show(
-      _foregroundServiceId,
-      'Monitoramento Ativo',
-      'O Disciplinum está te ajudando a manter bons hábitos e disciplina.',
-      details,
+      id: _foregroundServiceId,
+      title: 'Monitoramento Ativo',
+      body: 'O Disciplinum está te ajudando a manter bons hábitos e disciplina.',
+      notificationDetails: details,
     );
   }
 
   Future<void> _stopForegroundService() async {
-    await flutterLocalNotificationsPlugin.cancel(_foregroundServiceId);
+    await flutterLocalNotificationsPlugin.cancel(id: _foregroundServiceId);
   }
 
   Future<void> _saveHeartbeat() async {
@@ -478,6 +482,13 @@ class AppMonitoringService {
 
     _lastSeenMonitoredApp[packageName] = now;
 
+    // 🚀 VERIFICAR SE APP LOCK ESTÁ ATIVADO PARA O MÓDULO ATUAL
+    final isAppLockActive = await _isAppLockActiveForModule();
+    if (!isAppLockActive) {
+      LoggerService.instance.system('App Lock não está ativo para o módulo $currentNicheId - ignorando entrada de app');
+      return;
+    }
+
     // Preparar mensagem para o App Lock
     final baseMessage = GamificationMessages.getModuleMessage(
       currentNicheId!,
@@ -618,6 +629,58 @@ class AppMonitoringService {
         packageName.contains('.launcher') ||
         packageName.contains('.home') ||
         packageName.endsWith('.launcher');
+  }
+
+  /// Verifica se App Lock está ativo para o módulo atual
+  Future<bool> _isAppLockActiveForModule() async {
+    try {
+      final nicheId = currentNicheId;
+      if (nicheId == null) return false;
+
+      switch (nicheId) {
+        case NicheId.bingeEating:
+          final bingeEatingService = BingeEatingServiceLocal.instance;
+          final config = await bingeEatingService.getConfig();
+          return config.enableAppLock && config.isModuleActive;
+        
+        case NicheId.adultContent:
+          final adultContentService = AdultContentServiceLocal.instance;
+          final config = await adultContentService.getConfig();
+          return config.enableAppLock && config.isModuleActive;
+        
+        case NicheId.diet:
+          // Diet não tem suporte a App Lock implementado
+          return false;
+        
+        case NicheId.reading:
+          // Reading não tem suporte a App Lock implementado
+          return false;
+        
+        case NicheId.moneySavingChallenge:
+          // Money Saving não tem suporte a App Lock implementado
+          return false;
+        
+        case NicheId.procrastination:
+          // Procrastination não tem suporte a App Lock implementado
+          return false;
+        
+        case NicheId.smoking:
+          // Smoking não tem suporte a App Lock implementado
+          return false;
+        
+        case NicheId.digitalDetox:
+          // Digital Detox tem suporte completo a App Lock
+          final digitalDetoxService = DigitalDetoxServiceLocal.instance;
+          final config = await digitalDetoxService.getOrCreateConfig('current_user'); // Usar ID padrão
+          return config.isModuleActive && config.monitoredApps.isNotEmpty;
+        
+        default:
+          return false;
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao verificar App Lock para módulo', error: e);
+      return false;
+    }
   }
 
   /// Identifica pacotes de sistema que são "interativos" e NÃO representam saída do monitoramento

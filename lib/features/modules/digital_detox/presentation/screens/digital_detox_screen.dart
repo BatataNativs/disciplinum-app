@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
@@ -12,7 +14,6 @@ import 'package:disciplinum/features/modules/digital_detox/presentation/screens/
 import 'package:disciplinum/features/modules/digital_detox/presentation/screens/digital_detox_fasting_breaks_screen.dart';
 import 'package:disciplinum/features/modules/digital_detox/presentation/screens/my_progress_digital_detox.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
@@ -34,6 +35,11 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
   final List<String> _selectedApps = [];
   bool _isModuleActive = false;
   bool _isLoadingData = false;
+  bool _isLoadingAppIcons = false;
+  // ignore: prefer_final_fields
+  Map<String, Uint8List?> _appIcons = {};
+  // ignore: prefer_final_fields
+  Map<String, bool> _appIconLoadStatus = {};
 
   late PageController _pageController;
   int _selectedIndex = 0;
@@ -43,12 +49,64 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
     super.initState();
     _pageController = PageController(initialPage: 0);
     _loadAllPersistentData();
+    _loadAppIcons(); // Carregar ícones reais em background
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAppIcons() async {
+    if (_isLoadingAppIcons) return;
+    
+    setState(() => _isLoadingAppIcons = true);
+    
+    try {
+      final commonApps = [
+        'com.instagram.android',
+        'com.facebook.katana',
+        'com.zhiliaoapp.musically',
+        'com.snapchat.android',
+        'com.twitter.android',
+        'com.whatsapp',
+        'com.google.android.youtube',
+        'com.discord',
+        'com.pinterest',
+        'com.linkedin.android',
+        'com.reddit.frontpage',
+        'org.telegram.messenger', // Package name correto
+        'com.twitch.android',
+      ];
+      
+      for (final packageName in commonApps) {
+        try {
+          LoggerService.instance.i('🔍 Tentando carregar ícone para: $packageName');
+          final icon = await InstalledAppService().getAppIcon(packageName);
+          LoggerService.instance.i('✅ Ícone carregado para $packageName: ${icon != null ? 'SUCESSO' : 'NULL'}');
+          if (mounted) {
+            setState(() {
+              _appIcons[packageName] = icon;
+              _appIconLoadStatus[packageName] = true;
+            });
+          }
+        } catch (e) {
+          LoggerService.instance.e('❌ Erro ao carregar ícone para $packageName: $e');
+          if (mounted) {
+            setState(() {
+              _appIconLoadStatus[packageName] = true; // Marca como carregado mesmo com erro
+            });
+          }
+        }
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao carregar ícones dos apps', error: e);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingAppIcons = false);
+      }
+    }
   }
 
   Future<void> _loadAllPersistentData() async {
@@ -69,17 +127,18 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           _selectedApps.addAll(apps);
           _isModuleActive = config.isModuleActive;
         });
+      }
 
-        if (_isModuleActive) {
-          bool accessibilityGranted = await PermissionService.hasAccessibilityPermission();
-          if (!mounted) return;
+      
+      if (_isModuleActive) {
+        bool accessibilityGranted = await PermissionService.hasAccessibilityPermission();
+        if (!mounted) return;
 
-          if (accessibilityGranted) {
-            ref.read(digitalDetoxServiceLocalProvider);
-            LoggerService.instance.i('Jejum Digital: AppLock ativado para ${_selectedApps.length} apps');
-          } else {
-            setState(() => _isModuleActive = false);
-          }
+        if (accessibilityGranted) {
+          ref.read(digitalDetoxServiceLocalProvider);
+          LoggerService.instance.i('Jejum Digital: AppLock ativado para ${_selectedApps.length} apps');
+        } else {
+          setState(() => _isModuleActive = false);
         }
       }
     } catch (e) {
@@ -89,6 +148,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
     }
   }
 
+  
   Future<void> _toggleModule() async {
     HapticFeedback.mediumImpact();
 
@@ -176,47 +236,14 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
     }
   }
 
-  Future<void> _selectApps() async {
-    await Navigator.of(context).push<List<String>>(
-      MaterialPageRoute(
-        builder: (context) => SelectAppsScreen(
-          args: SelectAppsScreenArgs(
-            initiallySelected: _selectedApps,
-            onSaved: (selectedApps) {
-              setState(() {
-                _selectedApps.clear();
-                _selectedApps.addAll(selectedApps);
-              });
-            },
-            nicheId: NicheId.digitalDetox,
-          ),
-        ),
-      ),
-    );
-  }
-
+  
   
   
   void _showPermissionRequiredDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão Necessária'),
-        content: const Text('O Jejum Digital precisa de acesso à Acessibilidade para monitorar os apps.\n\nIsso permite que o app detecte quando você abre apps de redes sociais e mostre a tela de bloqueio.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              PermissionService.openAccessibilitySettings();
-            },
-            child: const Text('Abrir Configurações'),
-          ),
-        ],
-      ),
+    context.showAccessibilityPermissionDialog(
+      title: 'Permissão Necessária',
+      message: 'O Jejum Digital precisa de acesso à Acessibilidade para monitorar os apps.\n\nIsso permite que o app detecte quando você abre apps de redes sociais e mostre a tela de bloqueio.',
+      onOpenSettings: () => PermissionService.openAccessibilitySettings(),
     );
   }
 
@@ -390,18 +417,18 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header com stats
+            // Header com stats (reduzido)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -413,138 +440,192 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
                   
                   return Row(
                     children: [
-                      _buildStatCard('$totalApps', 'Apps', const Color(0xFF8B5CF6), Icons.phone_android_rounded),
-                      const SizedBox(width: 12),
-                      _buildStatCard(isActive ? 'Ativo' : 'Inativo', 'Status', isActive ? const Color(0xFF10B981) : const Color(0xFFEF4444), isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded),
-                      const SizedBox(width: 12),
-                      _buildStatCard('${_getCurrentStreak()}', 'Dias', const Color(0xFFF59E0B), Icons.calendar_today_rounded),
+                      _buildStatCard('$totalApps', 'Apps', const Color(0xFF8B5CF6), Icons.phone_android_rounded, isCompact: true),
+                      const SizedBox(width: 8),
+                      _buildStatCard(isActive ? 'Ativo' : 'Inativo', 'Status', isActive ? const Color(0xFF10B981) : const Color(0xFFEF4444), isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded, isCompact: true),
+                      const SizedBox(width: 8),
+                      _buildStatCard('${_getCurrentStreak()}', 'Dias', const Color(0xFFF59E0B), Icons.calendar_today_rounded, isCompact: true),
                     ],
                   );
                 },
               ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             
-            // Apps para Jejum
-            Text(
-              'Apps para Jejum',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-                color: colorScheme.onSurface,
+            // Imagem ilustrativa
+            Container(
+              width: double.infinity,
+              height: 180,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/modules/jejum_digital/digital_detox_screen_asset.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported,
+                              size: 48,
+                              color: colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Imagem não disponível',
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            
+            const SizedBox(height: 20),
+            
+            // Apps para Jejum - Grid de Ícones
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                'Apps para Jejum',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Grid de ícones dos apps selecionados
             if (_selectedApps.isEmpty)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                height: 120,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: colorScheme.outline.withValues(alpha: 0.2),
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Icon(Icons.phone_android,
-                        size: 40,
-                        color: colorScheme.onSurface.withValues(alpha: 0.2)),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Nenhum app selecionado',
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontSize: 14,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.touch_app_outlined,
+                          size: 32,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Toque nos ícones abaixo para adicionar apps',
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )
             else
-              Column(
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _selectedApps.map((app) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 6,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.15),
-                            width: 1,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: colorScheme.outline.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _selectedApps.map((app) {
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.phone_android_rounded,
-                              color: colorScheme.primary,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _getAppName(app),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            if (!_isModuleActive)
-                              GestureDetector(
-                                onTap: () => setState(() => _selectedApps.remove(app)),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _appIcons[app] != null
+                            ? Image.memory(
+                                _appIcons[app]!,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                color: colorScheme.primaryContainer,
                                 child: Icon(
-                                  Icons.close_rounded,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.5),
-                                  size: 14,
+                                  _getAppIcon(app),
+                                  size: 28,
+                                  color: colorScheme.primary,
                                 ),
                               ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
+            
             const SizedBox(height: 20),
             
-            // Botão para selecionar apps (reduzido)
-            if (!_isModuleActive)
-              Center(
-                child: SizedBox(
-                  width: 200,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _selectApps,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'Selecionar Apps',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            // Botão para selecionar mais apps
+            if (_isModuleActive)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Aqui você pode adicionar navegação para tela de seleção de apps
+                    // Por enquanto, vamos mostrar os apps comuns
+                  },
+                  icon: Icon(Icons.add_circle_outline, size: 20),
+                  label: Text('Selecionar Apps'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -570,7 +651,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
@@ -742,31 +823,31 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
   }
 
   // Card de estatística
-  Widget _buildStatCard(String value, String label, Color color, IconData icon) {
+  Widget _buildStatCard(String value, String label, Color color, IconData icon, {bool isCompact = false}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: isCompact ? const EdgeInsets.all(12) : const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: isCompact ? 16 : 20),
+            SizedBox(height: isCompact ? 4 : 8),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: isCompact ? 14 : 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
+                color: const Color(0xFF1F2937),
               ),
             ),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6B7280),
+              style: TextStyle(
+                fontSize: isCompact ? 10 : 12,
+                color: const Color(0xFF6B7280),
               ),
             ),
           ],
@@ -961,68 +1042,143 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
 
   Widget _buildCommonAppsSection() {
     final colorScheme = Theme.of(context).colorScheme;
+    
+    // Lista de apps comuns para verificar
     final commonApps = [
-      'com.instagram.android',
-      'com.facebook.katana', 
-      'com.zhiliaoapp.musically',
-      'com.snapchat.android',
-      'com.twitter.android',
-      'com.whatsapp',
-      'com.google.android.youtube',
-      'com.discord',
+      {'name': 'Instagram', 'package': 'com.instagram.android'},
+      {'name': 'Facebook', 'package': 'com.facebook.katana'},
+      {'name': 'TikTok', 'package': 'com.zhiliaoapp.musically'},
+      {'name': 'Snapchat', 'package': 'com.snapchat.android'},
+      {'name': 'Twitter/X', 'package': 'com.twitter.android'},
+      {'name': 'WhatsApp', 'package': 'com.whatsapp'},
+      {'name': 'YouTube', 'package': 'com.google.android.youtube'},
+      {'name': 'Discord', 'package': 'com.discord'},
+      {'name': 'Pinterest', 'package': 'com.pinterest'},
+      {'name': 'LinkedIn', 'package': 'com.linkedin.android'},
+      {'name': 'Reddit', 'package': 'com.reddit.frontpage'},
+      {'name': 'Telegram', 'package': 'org.telegram.messenger'}, // Package name correto
+      {'name': 'Twitch', 'package': 'com.twitch.android'},
     ];
+    
+    // Filtrar apenas apps que estão instalados (têm ícone real)
+    final installedApps = commonApps.where((app) {
+      final packageName = app['package'] as String;
+      final hasIcon = _appIcons[packageName] != null;
+      LoggerService.instance.i('🔍 App ${app['name']} ($packageName): ${hasIcon ? "INSTALADO" : "NÃO INSTALADO"}');
+      return hasIcon; // Apenas se tiver ícone real
+    }).toList();
+    
+    LoggerService.instance.i('📊 Total de apps comuns: ${commonApps.length}, Apps instalados: ${installedApps.length}');
+    
+    // Se não tiver nenhum app instalado, não mostrar a seção
+    if (installedApps.isEmpty) {
+      return const SizedBox.shrink();
+    }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Apps comuns',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Apps instalados',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: commonApps.map((app) {
-            final isSelected = _selectedApps.contains(app);
-            return GestureDetector(
-              onTap: () {
-                if (!_isModuleActive) {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedApps.remove(app);
-                    } else {
-                      _selectedApps.add(app);
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+          children: installedApps.map((app) {
+              final packageName = app['package'] as String;
+              final appName = app['name'] as String;
+              final isSelected = _selectedApps.contains(packageName);
+              return GestureDetector(
+                onTap: () async {
+                  if (!_isModuleActive) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedApps.remove(packageName);
+                      } else {
+                        _selectedApps.add(packageName);
+                      }
+                    });
+                    
+                    // Persistir imediatamente a mudança nos apps monitorados
+                    try {
+                      final userId = ref.read(digitalDetoxCurrentUserIdProvider);
+                      final service = ref.read(digitalDetoxServiceLocalProvider);
+                      
+                      if (isSelected) {
+                        // Remover app da persistência
+                        await service.removeMonitoredApp(userId, packageName);
+                        LoggerService.instance.i('App removido da persistência: $packageName');
+                      } else {
+                        // Adicionar app à persistência
+                        await service.addMonitoredApp(userId, packageName);
+                        LoggerService.instance.i('App adicionado à persistência: $packageName');
+                      }
+                    } catch (e) {
+                      LoggerService.instance.e('Erro ao persistir mudança no app $packageName', error: e);
                     }
-                  });
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? colorScheme.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? colorScheme.primary : colorScheme.outline,
-                    width: 1,
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? colorScheme.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? colorScheme.primary : colorScheme.outline,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Ícone real do app (já filtramos apenas apps instalados)
+                      _appIconLoadStatus[packageName] == true
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.memory(
+                              _appIcons[packageName]!,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color?>(
+                                isSelected ? Colors.white : colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                      const SizedBox(width: 8),
+                      Text(
+                        appName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Text(
-                  _getAppName(app),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
         const SizedBox(height: 12),
         if (!_isModuleActive && _selectedApps.isNotEmpty)
@@ -1057,12 +1213,15 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Seu perfil de uso',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Seu perfil de uso',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -1145,6 +1304,9 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
   }
 
   int _getCurrentStreak() {
+    // Se o módulo não está ativo, não inicializar gamificação
+    if (!_isModuleActive) return 0;
+    
     try {
       // Acessar o serviço de gamificação diretamente
       final store = ObjectBoxService.instance.store;
@@ -1156,9 +1318,6 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
       final userId = ref.read(digitalDetoxCurrentUserIdProvider);
       final gamification = gamificationService.initializeGamification(userId);
       
-      // Se o módulo não está ativo, não contar streak
-      if (!_isModuleActive) return 0;
-      
       return gamification.currentStreak;
     } catch (e) {
       LoggerService.instance.e('Erro ao obter streak atual', error: e);
@@ -1166,22 +1325,38 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
     }
   }
 
-  String _getAppName(String packageName) {
-    final appNames = {
-      'com.instagram.android': 'Instagram',
-      'com.facebook.katana': 'Facebook',
-      'com.zhiliaoapp.musically': 'TikTok',
-      'com.snapchat.android': 'Snapchat',
-      'com.twitter.android': 'Twitter',
-      'com.pinterest': 'Pinterest',
-      'com.linkedin.android': 'LinkedIn',
-      'com.reddit.frontpage': 'Reddit',
-      'com.whatsapp': 'WhatsApp',
-      'com.discord': 'Discord',
-      'com.telegram.messenger': 'Telegram',
-      'com.google.android.youtube': 'YouTube',
-      'com.twitch.android': 'Twitch',
-    };
-    return appNames[packageName] ?? packageName.split('.').last;
+  IconData _getAppIcon(String packageName) {
+    // Retornar ícone baseado no package name
+    switch (packageName) {
+      case 'com.instagram.android':
+        return Icons.camera_alt;
+      case 'com.facebook.katana':
+        return Icons.facebook;
+      case 'com.zhiliaoapp.musically':
+        return Icons.music_video;
+      case 'com.snapchat.android':
+        return Icons.snapchat;
+      case 'com.twitter.android':
+        return Icons.alternate_email;
+      case 'com.whatsapp':
+        return Icons.message;
+      case 'com.google.android.youtube':
+        return Icons.play_circle;
+      case 'com.discord':
+        return Icons.discord;
+      case 'com.pinterest':
+        return Icons.push_pin;
+      case 'com.linkedin.android':
+        return Icons.work;
+      case 'com.reddit.frontpage':
+        return Icons.forum;
+      case 'com.telegram.messenger':
+        return Icons.send;
+      case 'com.twitch.android':
+        return Icons.live_tv;
+      default:
+        return Icons.phone_android;
+    }
   }
-}
+
+  }

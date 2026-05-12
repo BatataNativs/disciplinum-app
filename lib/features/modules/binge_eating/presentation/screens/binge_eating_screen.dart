@@ -9,6 +9,7 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/binge_eating/presentation/widgets/my_progress_binge_eating.dart' as binge_eating_progress;
@@ -208,31 +209,8 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Permissão necessária"),
-        content: const Text(
-          "Para receber notificações do Disciplinum, habilite as notificações do app nas configurações do Android.",
-        ),
-        actions: [
-          TextButton(
-            child: const Text("Abrir configurações"),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text("Cancelar"),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 
@@ -447,17 +425,85 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
                               ],
                             ),
                           ),
+                          // 1: Como funciona
                           SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                BingeEatingTabContent(
-                                  tabIndex: 1,
-                                  selectedApps: _selectedApps,
-                                  onGetAppInfo: gatherAppDisplayInfo,
-                                  onRemoveApp: _removeSelectedApp,
+                                // Container roxo com degradê
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(
+                                        Icons.restaurant_rounded,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Como Funciona',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Controle a compulsão alimentar com inteligência',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 100),
+                                const SizedBox(height: 20),
+                                // Cards de instruções
+                                _buildInstructionCard(
+                                  Icons.psychology_rounded,
+                                  '1. Identifique Gatilhos',
+                                  'Reconheça os gatilhos emocionais ou situacionais que desencadeiam episódios de compulsão alimentar.',
+                                  Colors.purple,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.block_rounded,
+                                  '2. Bloqueie Apps',
+                                  'Use o bloqueio inteligente para impedir acesso a aplicativos de delivery e comida durante períodos críticos.',
+                                  Colors.purple,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.notifications_active_rounded,
+                                  '3. Configure Alertas',
+                                  'Receba notificações personalizadas para lembrá-lo de suas estratégias e mantê-lo motivado.',
+                                  Colors.purple,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.emoji_emotions_rounded,
+                                  '4. Acompanhe Progresso',
+                                  'Monitore seus padrões, visualize estatísticas e celebre cada vitória contra a compulsão alimentar.',
+                                  Colors.purple,
+                                ),
                               ],
                             ),
                           ),
@@ -562,6 +608,67 @@ class _BingeEatingScreenState extends ConsumerState<BingeEatingScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

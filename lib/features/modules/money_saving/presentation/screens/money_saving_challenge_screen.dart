@@ -6,6 +6,7 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/services/money_saving_challenge_service.dart';
 import 'package:disciplinum/features/modules/money_saving/presentation/screens/full_screen_grid_page.dart';
@@ -89,6 +90,15 @@ class _MoneySavingChallengeScreenState
     await _service.saveChallenge(updated);
 
     if (mounted) {
+      // Verificar permissão de notificação antes de ativar
+      bool notificationGranted = await NotificationService.requestPermission();
+      if (!notificationGranted) {
+        if (mounted) {
+          _showNotificationSettingsDialog();
+        }
+        return;
+      }
+      
       // Ativa módulo usando provider local
       final notifier = ref.read(moneySavingGamificationNotifierProvider(ref.read(moneySavingCurrentUserIdProvider)).notifier);
       await notifier.activateModule();
@@ -530,17 +540,80 @@ class _MoneySavingChallengeScreenState
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
-                                MoneySavingTabContent(
-                                  selectedIndex: 0,
-                                  challenges: _challenges,
-                                  activeChallenge: _challenge,
-                                  formatValue: _formatValue,
-                                  setActiveChallenge: (id) async {
-                                    await _service.setActiveChallenge(id);
-                                    await _loadChallenge();
-                                  },
+                                // Container roxo com degradê
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(
+                                        Icons.savings_rounded,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Como Funciona',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Economize dinheiro com desafios inteligentes',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 100),
+                                const SizedBox(height: 20),
+                                // Cards de instruções
+                                _buildInstructionCard(
+                                  Icons.emoji_events_rounded,
+                                  '1. Escolha um Desafio',
+                                  'Selecione entre diversos desafios de economia: 30 dias sem compras, R\$100 por mês, etc.',
+                                  Colors.green,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.trending_up_rounded,
+                                  '2. Acompanhe sua Economia',
+                                  'Veja quanto você já economizou, visualize metas e acompanhe seu progresso diário.',
+                                  Colors.green,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.celebration_rounded,
+                                  '3. Ganhe Conquistas',
+                                  'Desbloqueie medalhas e conquistas especiais ao atingir marcos de economia consistentes.',
+                                  Colors.green,
+                                ),
+                                _buildInstructionCard(
+                                  Icons.notifications_active_rounded,
+                                  '4. Lembretes Inteligentes',
+                                  'Receba alertas personalizadas para não esquecer de registrar suas economias diárias.',
+                                  Colors.green,
+                                ),
                               ],
                             ),
                           ),
@@ -635,5 +708,72 @@ class _MoneySavingChallengeScreenState
       }
     }
     return result + decimalSep + decimal;
+  }
+
+  Future<void> _showNotificationSettingsDialog() async {
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
+    );
+  }
+
+  // Card de instrução
+  Widget _buildInstructionCard(IconData icon, String title, String content, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

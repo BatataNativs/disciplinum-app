@@ -17,7 +17,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Notificações e Intents
-  flutter_local_notifications: ^19.5.0 # Versão estável compatível
+  flutter_local_notifications: ^21.0.0 # Versão estável compatível
   android_intent_plus: ^6.0.0
   
   # Monitoramento de Uso e Apps
@@ -36,29 +36,29 @@ dependencies:
   
   # Gerenciamento de Estado
   provider: ^6.1.2
-  flutter_riverpod: ^2.4.9
-  riverpod_annotation: ^2.3.3
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   
   # Utilitários
   equatable: ^2.0.5
   
   # Backend e Auth (Supabase + Google)
-  supabase_flutter: ^2.8.3
+  supabase_flutter: ^2.12.4
   google_sign_in: ^7.2.0
   
   # Firebase (Core + Crashlytics)
-  firebase_core: ^4.3.0
-  firebase_crashlytics: ^5.0.6
-  firebase_analytics: ^12.1.0
+  firebase_core: ^4.7.0
+  firebase_crashlytics: ^5.2.0
+  firebase_analytics: ^12.3.0
   
   # Utilitários de Device e UI
-  device_info_plus: ^12.3.0
-  image_picker: ^1.1.2
-  package_info_plus: ^9.0.0
+  device_info_plus: ^13.1.0
+  image_picker: ^1.2.2
+  package_info_plus: ^10.1.0
   shimmer: ^3.0.0
   
   # Anúncios (Versão atualizada!)
-  google_mobile_ads: ^7.0.0
+  google_mobile_ads: ^8.0.0
   
   # compras in-app
   in_app_purchase: ^3.0.0
@@ -70,12 +70,12 @@ dependencies:
   intl: ^0.20.2
   flutter_localizations:
     sdk: flutter
-  timezone: ^0.10.1
-  flutter_timezone: ^3.0.1
+  timezone: ^0.11.0
+  flutter_timezone: ^5.0.2
   table_calendar: ^3.2.0
   uuid: ^4.5.2
-  fl_chart: ^0.70.2
-  confetti: ^0.7.0
+  fl_chart: ^1.2.0
+  confetti: ^0.8.0
   
   # Background processing para notificações de conquistas
   workmanager: ^0.9.0+3
@@ -93,8 +93,8 @@ dev_dependencies:
   flutter_native_splash: ^2.4.3
   
   # Riverpod Code Generation
-  riverpod_generator: ^2.3.8
-  build_runner: ^2.4.7
+  riverpod_generator: ^2.4.0
+  build_runner: ^2.4.13
   
   # ObjectBox Code Generation
   objectbox_generator: ^4.1.0
@@ -138,6 +138,7 @@ flutter:
     - assets/gamification/trofeus/
     - assets/gamification/others/
     - assets/secret_menu/
+    - assets/modules/jejum_digital/
 
 # --- Configuração do Ícone do App ---
 flutter_launcher_icons:

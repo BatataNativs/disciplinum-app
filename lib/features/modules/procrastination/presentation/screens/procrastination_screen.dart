@@ -13,6 +13,7 @@ import 'package:disciplinum/features/modules/procrastination/presentation/screen
 import 'package:disciplinum/features/modules/procrastination/presentation/widgets/my_progress_procrastination.dart' as procrastination_progress;
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
@@ -181,8 +182,14 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
       context: context,
       builder: (context) => TaskCreationDialog(
         task: task,
-        onSave: (updatedTask) => service.updateTaskInList(listId, updatedTask),
+        onSave: (task) => service.updateTaskInList(listId, task),
       ),
+    );
+  }
+
+  Future<void> _showNotificationSettingsDialog() async {
+    context.showNotificationPermissionDialog(
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 
@@ -365,7 +372,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
       if (!notificationGranted) {
         if (mounted) {
-          SnackBarHelper.showWarning(context, 'Permissão de notificação necessária para funcionar.');
+          _showNotificationSettingsDialog();
         }
         return;
       }

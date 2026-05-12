@@ -5,6 +5,7 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import 'health_detail_screen.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
@@ -550,27 +551,10 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   }
 
   Future<void> _showNotificationSettingsDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão necessária'),
-        content: const Text(
-          'Para receber os lembretes de check-in, habilite as notificações do app nas configurações.',
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Abrir configurações'),
-            onPressed: () {
-              Navigator.of(context).pop();
-              NotificationService.openNotificationSettings();
-            },
-          ),
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
+    context.showNotificationPermissionDialog(
+      title: 'Permissão necessária',
+      message: 'Para receber os lembretes de check-in, habilite as notificações do app nas configurações.',
+      onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
   }
 

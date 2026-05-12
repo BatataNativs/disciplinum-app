@@ -220,15 +220,12 @@ class AppLockService {
     try {
       // Implementar reset real para módulo Binge Eating usando Riverpod
       if (_container != null) {
-        final bingeEatingService = _container!.read(bingeEatingServiceProvider);
-        // Para BingeEating, deletamos todos os episódios usando os métodos reais
-        final episodes = bingeEatingService.episodes;
-        for (final episode in episodes) {
-          await bingeEatingService.deleteEpisode(episode.id);
-        }
+        final bingeEatingService = _container!.read(bingeEatingServiceIsarProvider);
+        // Para BingeEating, limpa todos os dados usando o método clearAllData
+        await bingeEatingService.clearAllData();
         LoggerService.instance.gamification('Binge Eating gamification resetada com sucesso');
       } else {
-        LoggerService.instance.w('Container Riverpod não disponível para BingeEatingService');
+        LoggerService.instance.w('Container Riverpod não disponível para BingeEatingServiceLocal');
       }
       
     } catch (e) {
@@ -282,18 +279,18 @@ class AppLockService {
 
       // Inicializar notificações
       await flutterLocalNotificationsPlugin.initialize(
-        const InitializationSettings(
+        settings: InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          iOS: DarwinInitializationSettings(),
         ),
       );
 
       // Criar notificação
       await flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecondsSinceEpoch.remainder(1000),
-        title,
-        body,
-        const NotificationDetails(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(1000),
+        title: title,
+        body: body,
+        payload: null,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'app_lock_channel',
             'App Lock Notifications',
@@ -304,7 +301,6 @@ class AppLockService {
             enableVibration: true,
             color: Colors.orange, // Laranja Disciplinum
           ),
-          iOS: DarwinNotificationDetails(),
         ),
       );
       
