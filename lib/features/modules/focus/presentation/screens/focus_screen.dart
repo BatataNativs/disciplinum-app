@@ -100,7 +100,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
         if (_gamificationRunning) {
           // Usando provider local do Focus
-          final focusController = ref.read(focusControllerIsarProvider.notifier);
+          final focusController = ref.read(focusControllerLocalProvider.notifier);
 
           bool accessibilityGranted =
               await PermissionService.hasAccessibilityPermission();
@@ -199,7 +199,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
     // Continuar com as outras permissões
     if (!mounted) return;
-    await PermissionService.ensurePermissions(context);
+    await PermissionService.ensurePermissions(
+      context,
+      forceUsage: true,
+      nicheId: NicheId.focus,
+    );
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
     if (!accessibilityGranted) {
@@ -209,7 +213,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     if (!mounted) return;
 
     // Usando provider local do Focus
-    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    final focusController = ref.read(focusControllerLocalProvider.notifier);
 
     // Registra sessão de foco quando ativa o módulo
     if (_focusStart != null && _focusEnd != null) {
@@ -259,9 +263,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       isModuleActive: true,
     );
     // Persiste também no Isar local
-    ref.read(focusControllerIsarProvider.notifier).setModuleActive(true);
+    ref.read(focusControllerLocalProvider.notifier).setModuleActive(true);
     // Incrementa streak ao iniciar ciclo de gamificação
-    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    final focusController = ref.read(focusControllerLocalProvider.notifier);
     focusController.incrementStreak();
   }
 
@@ -286,7 +290,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   Future<void> _desativarNichoMonitoramento() async {
     // Usando provider local do Focus
-    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    final focusController = ref.read(focusControllerLocalProvider.notifier);
     final confirmed = await DeactivateModuleDialog.show(
       context: context,
       nicheId: NicheId.focus,
@@ -319,7 +323,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             curve: Curves.easeOutCubic);
       }
       
-      await ref.read(focusControllerIsarProvider.notifier).setModuleActive(false);
+      await ref.read(focusControllerLocalProvider.notifier).setModuleActive(false);
 
       // Sincronizar com a nuvem
       ref.read(cloudSyncServiceProvider).saveModuleStatus(
@@ -339,7 +343,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     bool deactivate = false,
   }) {
     // Usando provider local do Focus para limpar dados
-    final focusController = ref.read(focusControllerIsarProvider.notifier);
+    final focusController = ref.read(focusControllerLocalProvider.notifier);
     focusController.clearAllData();
   }
 
@@ -377,18 +381,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       ),
     );
 
-    // Se tiver apps e o controller estiver ok, avança para a próxima etapa
-    if (_selectedApps.isNotEmpty) {
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(1, // Vai para "Configurações"
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
-      } else {
-        setState(() => _selectedIndex = 1);
-      }
-    } else {
-      setState(() {});
-    }
+    // Removida navegação automática - usuário permanece na aba atual
   }
 
   Future<void> _pickFocusInterval() async {

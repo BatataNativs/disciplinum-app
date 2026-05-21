@@ -81,7 +81,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
           if (accessibilityGranted) {
             // Usando provider local do AdultContent para ativar AppLock
-            ref.read(adultContentServiceIsarProvider);
+            ref.read(adultContentServiceLocalProvider);
             // Ativa o AppLock para os apps selecionados
             LoggerService.instance.i('AdultContent: AppLock ativado para ${_selectedApps.length} apps');
           } else {
@@ -160,7 +160,11 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     }
 
     if (!mounted) return;
-    await PermissionService.ensurePermissions(context, forceUsage: true);
+    await PermissionService.ensurePermissions(
+      context,
+      forceUsage: true,
+      nicheId: NicheId.adultContent,
+    );
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
     if (!accessibilityGranted) return;
@@ -168,7 +172,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
     if (!mounted) return;
 
     // Usando provider local do AdultContent
-    ref.read(adultContentServiceIsarProvider);
+    ref.read(adultContentServiceLocalProvider);
     // Inicia o AppLock para os apps selecionados
     LoggerService.instance.i('AdultContent: Iniciando monitoramento de ${_selectedApps.length} apps');
 
@@ -201,7 +205,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
       isModuleActive: true,
     );
     // Usando provider local do AdultContent
-    ref.read(adultContentServiceIsarProvider);
+    ref.read(adultContentServiceLocalProvider);
     LoggerService.instance.i('AdultContent: Ciclo de gamificação iniciado');
   }
 
@@ -226,7 +230,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
   Future<void> _desativarNichoMonitoramento() async {
     // Usando provider local do AdultContent
-    ref.read(adultContentServiceIsarProvider);
+    ref.read(adultContentServiceLocalProvider);
     final confirmed = await DeactivateModuleDialog.show(
       context: context,
       nicheId: NicheId.adultContent,
@@ -270,7 +274,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
   void _resetMedalsForModule() {
     // Usando provider local do AdultContent
-    ref.read(adultContentServiceIsarProvider);
+    ref.read(adultContentServiceLocalProvider);
     LoggerService.instance.i('AdultContent: Resetando dados do módulo');
   }
 
@@ -307,17 +311,7 @@ class _AvoidAdultContentScreenState extends ConsumerState<AvoidAdultContentScree
 
     if (!mounted) return;
 
-    if (_selectedApps.isNotEmpty) {
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(1,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic);
-      } else {
-        setState(() => _selectedIndex = 1);
-      }
-    } else {
-      setState(() {});
-    }
+    // Removida navegação automática - usuário permanece na aba atual
   }
 
   @override

@@ -139,6 +139,7 @@ flutter:
     - assets/gamification/others/
     - assets/secret_menu/
     - assets/modules/jejum_digital/
+    - assets/modules/binge_eating/
 
 # --- Configuração do Ícone do App ---
 flutter_launcher_icons:

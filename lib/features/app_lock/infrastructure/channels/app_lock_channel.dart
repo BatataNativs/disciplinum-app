@@ -16,4 +16,13 @@ class AppLockChannel {
       throw Exception('Erro ao fechar app bloqueado: $e');
     }
   }
+
+  /// Traz o app Disciplinum para o primeiro plano (sobrepondo o app bloqueado)
+  static Future<void> bringToForeground() async {
+    try {
+      await _channel.invokeMethod('bringToForeground');
+    } catch (e) {
+      // Falha silenciosa ou log
+    }
+  }
 }

@@ -326,7 +326,7 @@ class _ProcrastinationScreenState extends ConsumerState<ProcrastinationScreen>
 
   Future<void> _toggleModule(bool isActive) async {
     // Usar o controller centralizado
-    final controller = ref.read(procrastinationControllerIsarProvider.notifier);
+    final controller = ref.read(procrastinationControllerLocalProvider.notifier);
 
     if (isActive) {
       final confirmed = await AppDialog.showConfirmation(

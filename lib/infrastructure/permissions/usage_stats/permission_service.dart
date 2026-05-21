@@ -344,6 +344,10 @@ class PermissionService {
     switch (nicheId) {
       case NicheId.focus:
         return true; // Focus monitora outros apps
+      case NicheId.bingeEating:
+        return true; // Binge Eating bloqueia apps de delivery
+      case NicheId.digitalDetox:
+        return true; // Digital Detox bloqueia apps de redes sociais
       default:
         return false; // Demais módulos não monitoram apps
     }
@@ -351,12 +355,14 @@ class PermissionService {
 
   /// Retorna o texto personalizado para o diálogo de sobreposição.
   static String _getOverlayPermissionText(NicheId nicheId) {
-    // Apenas módulos que realmente monitoram apps precisam desta permissão
     switch (nicheId) {
       case NicheId.focus:
         return "Para você ser alertado a sair de apps que VOCÊ selecionou para bloqueio ou que você queira evitar (neste caso, você terá 30 segundos para sair do app), ative a permissão de 'Sobrepor a outros apps':";
+      case NicheId.bingeEating:
+        return "Para bloquear apps de delivery quando você tentar abrí-los, o Disciplinum precisa de permissão para 'Sobrepor a outros apps'. Ative essa permissão para que a tela de bloqueio apareça corretamente.";
+      case NicheId.digitalDetox:
+        return "Para bloquear apps de redes sociais durante o jejum digital, o Disciplinum precisa de permissão para 'Sobrepor a outros apps'. Ative essa permissão para que a tela de bloqueio apareça corretamente.";
       default:
-        // Módulos que não monitoram apps não devem pedir esta permissão
         return ""; // Retorna vazio para não mostrar diálogo
     }
   }

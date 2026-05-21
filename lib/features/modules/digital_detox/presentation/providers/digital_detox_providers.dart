@@ -1,10 +1,10 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_service_local.dart';
 
 // ==================== PROVIDERS DE ACESSO ====================
 
 /// Provider para o DigitalDetoxServiceLocal
-/// Segue o mesmo padrÃ£o dos outros mÃ³dulos (ex: focusServiceIsarProvider)
+/// Segue o mesmo padrão dos outros módulos (ex: focusServiceLocalProvider)
 final digitalDetoxServiceLocalProvider = Provider<DigitalDetoxServiceLocal>((ref) {
   return DigitalDetoxServiceLocal.instance;
 });

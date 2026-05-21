@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 class BingeEatingActionsWidget extends StatelessWidget {
   final int selectedIndex;
   final PageController pageController;
-  final VoidCallback onSelectApps;
   final VoidCallback onNotifications;
   final VoidCallback onStatistics;
   final bool gamificationRunning;
@@ -14,7 +13,6 @@ class BingeEatingActionsWidget extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.pageController,
-    required this.onSelectApps,
     required this.onNotifications,
     required this.onStatistics,
     required this.gamificationRunning,
@@ -39,7 +37,9 @@ class BingeEatingActionsWidget extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onSelectApps,
+            onPressed: () {
+              // Botão removido - seleção de apps agora é direta na tela
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,
@@ -59,37 +59,8 @@ class BingeEatingActionsWidget extends StatelessWidget {
           ),
         );
       case 1:
-        // 1: Como funciona - botão para voltar ao módulo
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: () {
-              if (pageController.hasClients) {
-                pageController.animateToPage(
-                  0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.rocket_launch_rounded, size: 20),
-                SizedBox(width: 8),
-                Text("Entendi!"),
-              ],
-            ),
-          ),
-        );
+        // 1: Como funciona - sem botão (removido conforme solicitado)
+        return const SizedBox.shrink();
       default:
         return const SizedBox.shrink();
     }
@@ -111,7 +82,9 @@ class BingeEatingActionsWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: onSelectApps,
+                  onPressed: () {
+                    // Botão removido - seleção de apps agora é direta na tela
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
@@ -125,9 +98,11 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     children: [
                       const Icon(Icons.touch_app_outlined, size: 20),
                       const SizedBox(width: 2),
-                      Text(
-                        'Selecionar Apps',
-                        overflow: TextOverflow.ellipsis,
+                      Flexible(
+                        child: Text(
+                          'Selecionar Apps',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -150,9 +125,11 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     children: [
                       const Icon(Icons.notifications_outlined, size: 20),
                       const SizedBox(width: 2),
-                      Text(
-                        'Notificações',
-                        overflow: TextOverflow.ellipsis,
+                      Flexible(
+                        child: Text(
+                          'Notificações',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -180,9 +157,11 @@ class BingeEatingActionsWidget extends StatelessWidget {
                     children: [
                       const Icon(Icons.bar_chart_rounded, size: 20),
                       const SizedBox(width: 2),
-                      Text(
-                        'Estatísticas',
-                        overflow: TextOverflow.ellipsis,
+                      Flexible(
+                        child: Text(
+                          'Estatísticas',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -208,9 +187,11 @@ class BingeEatingActionsWidget extends StatelessWidget {
                         size: 20,
                       ),
                       const SizedBox(width: 2),
-                      Text(
-                        gamificationRunning ? 'Desativar módulo' : 'Ativar módulo',
-                        overflow: TextOverflow.ellipsis,
+                      Flexible(
+                        child: Text(
+                          gamificationRunning ? 'Desativar módulo' : 'Ativar módulo',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

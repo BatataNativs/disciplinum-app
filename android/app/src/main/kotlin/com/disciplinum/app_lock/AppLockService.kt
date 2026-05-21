@@ -16,6 +16,7 @@ class AppLockService : MethodCallHandler {
     companion object {
         private const val CHANNEL_NAME = "disciplinum/app_lock"
         private const val METHOD_CLOSE_APP = "closeBlockedApp"
+        private const val METHOD_BRING_TO_FOREGROUND = "bringToForeground"
 
         private var instance: AppLockService? = null
 
@@ -49,6 +50,14 @@ class AppLockService : MethodCallHandler {
                     result.error("ERROR", e.message, null)
                 }
             }
+            METHOD_BRING_TO_FOREGROUND -> {
+                try {
+                    bringToForeground()
+                    result.success(true)
+                } catch (e: Exception) {
+                    result.error("ERROR", e.message, null)
+                }
+            }
             else -> {
                 result.notImplemented()
             }
@@ -73,6 +82,20 @@ class AppLockService : MethodCallHandler {
             android.util.Log.d("AppLock", "App bloqueado fechado: $packageName")
         } catch (e: Exception) {
             android.util.Log.e("AppLock", "Erro ao fechar app: $packageName", e)
+        }
+    }
+
+    /// Traz o Disciplinum para o primeiro plano
+    private fun bringToForeground() {
+        try {
+            if (currentActivity != null) {
+                val intent = Intent(currentActivity, currentActivity!!::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                currentActivity?.startActivity(intent)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AppLock", "Erro ao trazer para foreground", e)
         }
     }
 

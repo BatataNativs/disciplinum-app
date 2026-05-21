@@ -27,13 +27,8 @@ class BingeEatingAppLockService {
       }
       
       // Verifica se o app está na lista de monitorados
-      if (!config.monitoredApps.contains(packageName)) {
-        return false;
-      }
-      
-      // Verifica se está em período de bloqueio
-      if (config.blockedUntil != null && config.blockedUntil!.isAfter(DateTime.now())) {
-        return true;
+      if (config.monitoredApps.contains(packageName)) {
+        return true; // Sempre bloqueia se estiver monitorado e ativo
       }
       
       return false;

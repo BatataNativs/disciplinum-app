@@ -136,14 +136,16 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
     }
 
     if (!mounted) return;
-    await PermissionService.ensurePermissions(context, forceUsage: true);
+    await PermissionService.ensurePermissions(
+      context,
+      forceUsage: true,
+      nicheId: NicheId.spending,
+    );
     bool accessibilityGranted =
         await PermissionService.hasAccessibilityPermission();
     if (!accessibilityGranted) return;
 
     if (!mounted) return;
-
-
 
     final granted = await NotificationService.requestPermission();
 

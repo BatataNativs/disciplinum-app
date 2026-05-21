@@ -25,7 +25,7 @@ final focusStreakProvider = Provider<int>((ref) {
 
 /// Provider para verificar se o módulo Focus está ativo
 final focusActiveProvider = Provider<bool>((ref) {
-  final state = ref.watch(focusControllerIsarProvider);
+  final state = ref.watch(focusControllerLocalProvider);
   return state.config?.isModuleActive ?? false;
 });
 

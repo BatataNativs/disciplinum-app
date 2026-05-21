@@ -96,7 +96,7 @@ final smokingCheckinServiceProvider = Provider<SmokingCheckinService>((ref) {
 });
 
 /// Provider para BingeEatingServiceLocal
-final bingeEatingServiceIsarProvider = Provider<BingeEatingServiceLocal>((ref) {
+final bingeEatingServiceLocalProvider = Provider<BingeEatingServiceLocal>((ref) {
   return BingeEatingServiceLocal.instance;
 });
 
@@ -192,13 +192,13 @@ final appMonitoringServiceProvider = Provider<AppMonitoringService>((ref) {
 // ============= AUTH SERVICES =============
 
 /// Provider para AdultContentServiceLocal
-final adultContentServiceIsarProvider = Provider<AdultContentServiceLocal>((ref) {
+final adultContentServiceLocalProvider = Provider<AdultContentServiceLocal>((ref) {
   return AdultContentServiceLocal.instance;
 });
 
 /// Provider para AdultContentControllerLocal
-final adultContentControllerIsarProvider = StateNotifierProvider<AdultContentControllerLocal, AdultContentState>((ref) {
-  final service = ref.watch(adultContentServiceIsarProvider);
+final adultContentControllerLocalProvider = StateNotifierProvider<AdultContentControllerLocal, AdultContentState>((ref) {
+  final service = ref.watch(adultContentServiceLocalProvider);
   return AdultContentControllerLocal(service);
 });
 
@@ -210,13 +210,13 @@ final adultContentServiceProvider = Provider<AdultContentService>((ref) {
 
 
 /// Provider para ProcrastinationServiceLocal
-final procrastinationServiceIsarProvider = Provider<ProcrastinationServiceLocal>((ref) {
+final procrastinationServiceLocalProvider = Provider<ProcrastinationServiceLocal>((ref) {
   return ProcrastinationServiceLocal.instance;
 });
 
 /// Provider para ProcrastinationControllerLocal
-final procrastinationControllerIsarProvider = StateNotifierProvider<ProcrastinationControllerLocal, ProcrastinationState>((ref) {
-  final service = ref.watch(procrastinationServiceIsarProvider);
+final procrastinationControllerLocalProvider = StateNotifierProvider<ProcrastinationControllerLocal, ProcrastinationState>((ref) {
+  final service = ref.watch(procrastinationServiceLocalProvider);
   return ProcrastinationControllerLocal(service);
 });
 
@@ -246,24 +246,24 @@ final focusServiceProvider = Provider<FocusService>((ref) {
 });
 
 /// Provider para FocusServiceLocal
-final focusServiceIsarProvider = Provider<FocusServiceLocal>((ref) {
+final focusServiceLocalProvider = Provider<FocusServiceLocal>((ref) {
   return FocusServiceLocal.instance;
 });
 
 /// Provider para FocusController
-final focusControllerIsarProvider = StateNotifierProvider<FocusController, FocusState>((ref) {
-  final service = ref.watch(focusServiceIsarProvider);
+final focusControllerLocalProvider = StateNotifierProvider<FocusController, FocusState>((ref) {
+  final service = ref.watch(focusServiceLocalProvider);
   return FocusController(service);
 });
 
 /// Provider para ReadingServiceLocal
-final readingServiceIsarProvider = Provider<ReadingServiceLocal>((ref) {
+final readingServiceLocalProvider = Provider<ReadingServiceLocal>((ref) {
   return ReadingServiceLocal.instance;
 });
 
 /// Provider para ReadingControllerLocal
-final readingControllerIsarProvider = StateNotifierProvider<ReadingControllerLocal, ReadingState>((ref) {
-  final service = ref.watch(readingServiceIsarProvider);
+final readingControllerLocalProvider = StateNotifierProvider<ReadingControllerLocal, ReadingState>((ref) {
+  final service = ref.watch(readingServiceLocalProvider);
   return ReadingControllerLocal(service);
 });
 
@@ -347,13 +347,13 @@ final moneySavingOperationRepositoryProvider = Provider<MoneySavingGamificationR
 
 /// Provider para verificar se o módulo Focus está ativo
 final focusActiveProvider = Provider<bool>((ref) {
-  final state = ref.watch(focusControllerIsarProvider);
+  final state = ref.watch(focusControllerLocalProvider);
   return state.config?.isModuleActive ?? false;
 });
 
 /// Provider para verificar se o módulo Reading está ativo
 final readingActiveProvider = Provider<bool>((ref) {
-  final state = ref.watch(readingControllerIsarProvider);
+  final state = ref.watch(readingControllerLocalProvider);
   return state.config?.isModuleActive ?? false;
 });
 

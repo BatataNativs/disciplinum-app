@@ -31,7 +31,7 @@ final procrastinationStreakProvider = Provider<int>((ref) {
 
 /// Provider para verificar se o módulo está ativo
 final procrastinationActiveProvider = Provider<bool>((ref) {
-  final state = ref.watch(procrastinationControllerIsarProvider);
+  final state = ref.watch(procrastinationControllerLocalProvider);
   return state.config?.isModuleActive ?? false;
 });
 

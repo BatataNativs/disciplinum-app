@@ -696,7 +696,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         HapticFeedback.heavyImpact();
         
         // Implementando lógica de desativação local
-        await ref.read(readingControllerIsarProvider.notifier).setModuleActive(false);
+        await ref.read(readingControllerLocalProvider.notifier).setModuleActive(false);
         
         // Sincronizar com a nuvem
         ref.read(cloudSyncServiceProvider).saveModuleStatus(
@@ -721,7 +721,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       }
       
       // Implementando lógica de ativação local
-      await ref.read(readingControllerIsarProvider.notifier).setModuleActive(true);
+      await ref.read(readingControllerLocalProvider.notifier).setModuleActive(true);
       
       // Sincronizar com a nuvem
       ref.read(cloudSyncServiceProvider).saveModuleStatus(
