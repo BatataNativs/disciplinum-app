@@ -1,51 +1,200 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# =========================================================
+# OS / SYSTEM
+# =========================================================
 
-# IntelliJ related
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================================
+# LOGS / TEMP
+# =========================================================
+
+*.log
+*.tmp
+*.temp
+*.cache
+
+# =========================================================
+# IDEs / EDITORS
+# =========================================================
+
+# IntelliJ / Android Studio
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VSCode
+.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Fleet
+.fleet/
+
+# Cursor / Windsurf
+.cursor/
+.windsurf/
+
+# Atom
+.atom/
+
+# History / swap
+.history
+*.swp
+
+# =========================================================
+# FLUTTER / DART
+# =========================================================
+
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
+.packages
 .pub/
-/build/
-/coverage/
+.pub-cache/
+.metadata
 
-# Symbolication related
+# Flutter build
+build/
+coverage/
+
+# Generated docs
+**/doc/api/
+
+# Flutter generated
+**/ios/Flutter/.last_build_id
+
+# Flutter symbolication
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# =========================================================
+# ANDROID
+# =========================================================
+
+.gradle/
+local.properties
+
+# Android build outputs
+android/build/
+android/app/build/
+
+# Android Studio generated
 /android/app/debug
 /android/app/profile
 /android/app/release
-android/app/google-services.json
+
+# Kotlin
+**/kotlin/
+
+# APK / AAB
+*.apk
+*.aab
+
+# =========================================================
+# IOS
+# =========================================================
+
+ios/Pods/
+ios/.symlinks/
+
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/ephemeral/
+
+# Xcode
+xcuserdata/
+*.xcworkspace
+*.xcuserstate
+
+# =========================================================
+# MACOS
+# =========================================================
+
+macos/Flutter/ephemeral/
+
+# =========================================================
+# LINUX
+# =========================================================
+
+linux/flutter/ephemeral/
+
+# =========================================================
+# WINDOWS
+# =========================================================
+
+windows/flutter/ephemeral/
+
+# =========================================================
+# WEB
+# =========================================================
+
+web/build/
+
+# =========================================================
+# SUPABASE
+# =========================================================
+
+supabase/.temp/
+supabase/.branches/
+
+# =========================================================
+# ENV / SECRETS
+# =========================================================
 
 .env
+.env.local
+.env.production
+.env.staging
+
+# KEEP templates/example envs versioned
+!.env.example
+!.env.template
+
+# Secrets
 secrets/
-.env
 
+# Android signing
+*.keystore
+*.jks
+
+# Firebase
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# =========================================================
+# FIREBASE / CRASHLYTICS
+# =========================================================
+
+firebase-debug.log
+
+# =========================================================
+# FASTLANE
+# =========================================================
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+
+# =========================================================
+# TESTS / REPORTS
+# =========================================================
+
+test_driver/failure_screenshots/
+
+# =========================================================
+# FVM
+# =========================================================
+
+.fvm/
+
+# =========================================================
+# MISC
+# =========================================================
+
+.pytest_cache/
+.build/
+.buildlog/
+.svn/
+.swiftpm/
+migrate_working_dir/
