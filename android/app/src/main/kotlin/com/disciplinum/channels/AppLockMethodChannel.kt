@@ -1,0 +1,187 @@
+package com.disciplinum.channels
+
+import android.content.Context
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.embedding.engine.FlutterEngine
+import com.disciplinum.accessibility.DisciplinumAccessibilityService
+import com.disciplinum.lock.LockDecisionEngine
+
+/**
+ * AppLockMethodChannel - Canal de comunicação entre Flutter e Android para App Lock
+ * 
+ * Este canal permite que o Flutter:
+ * - Atualize a lista de apps monitorados
+ * - Atualize o estado dos módulos ativos
+ * - Configure o LockDecisionEngine
+ * - Verifique se o AccessibilityService está ativo
+ */
+class AppLockMethodChannel(private val context: Context) {
+    
+    companion object {
+        const val CHANNEL_NAME = "com.disciplinum.app/app_lock"
+        const val METHOD_UPDATE_MONITORED_APPS = "updateMonitoredApps"
+        const val METHOD_UPDATE_ACTIVE_MODULES = "updateActiveModules"
+        const val METHOD_UPDATE_MODULE_CONFIGS = "updateModuleConfigs"
+        const val METHOD_UPDATE_VIOLATION_COUNTS = "updateViolationCounts"
+        const val METHOD_IS_ACCESSIBILITY_ENABLED = "isAccessibilityEnabled"
+        const val METHOD_REQUEST_OVERLAY_PERMISSION = "requestOverlayPermission"
+        const val METHOD_CHECK_OVERLAY_PERMISSION = "checkOverlayPermission"
+        
+        private var instance: AppLockMethodChannel? = null
+        
+        fun getInstance(): AppLockMethodChannel? = instance
+    }
+    
+    private var methodChannel: MethodChannel? = null
+    private val lockDecisionEngine = LockDecisionEngine(context)
+    
+    init {
+        instance = this
+    }
+    
+    fun setupMethodChannel(flutterEngine: FlutterEngine) {
+        methodChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CHANNEL_NAME
+        )
+        setupMethodCallHandler()
+    }
+    
+    private fun setupMethodCallHandler() {
+        methodChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                METHOD_UPDATE_MONITORED_APPS -> {
+                    try {
+                        val apps = call.argument<List<String>>("apps") ?: emptyList()
+                        updateMonitoredApps(apps.toSet())
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_UPDATE_ACTIVE_MODULES -> {
+                    try {
+                        val modules = call.argument<Map<String, Boolean>>("modules") ?: emptyMap()
+                        updateActiveModules(modules)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_UPDATE_MODULE_CONFIGS -> {
+                    try {
+                        val configs = call.argument<List<Map<String, Any>>>("configs") ?: emptyList()
+                        updateModuleConfigs(configs)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_UPDATE_VIOLATION_COUNTS -> {
+                    try {
+                        val counts = call.argument<Map<String, Int>>("counts") ?: emptyMap()
+                        updateViolationCounts(counts)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_IS_ACCESSIBILITY_ENABLED -> {
+                    try {
+                        val isEnabled = isAccessibilityEnabled()
+                        result.success(isEnabled)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_REQUEST_OVERLAY_PERMISSION -> {
+                    try {
+                        requestOverlayPermission()
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                METHOD_CHECK_OVERLAY_PERMISSION -> {
+                    try {
+                        val hasPermission = checkOverlayPermission()
+                        result.success(hasPermission)
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
+                
+                else -> result.notImplemented()
+            }
+        }
+    }
+    
+    private fun updateMonitoredApps(apps: Set<String>) {
+        // Atualiza o AccessibilityService
+        // Nota: Precisa de uma forma de acessar a instância do service
+        // Isso pode ser feito via singleton ou via Context
+    }
+    
+    private fun updateActiveModules(modules: Map<String, Boolean>) {
+        // Atualiza o AccessibilityService
+    }
+    
+    private fun updateModuleConfigs(configs: List<Map<String, Any>>) {
+        val moduleConfigs = configs.associate { config ->
+            val id = config["id"] as String
+            val name = config["name"] as String
+            val isActive = config["isActive"] as Boolean
+            val startTime = config["startTime"] as? String
+            val endTime = config["endTime"] as? String
+            val maxViolationsPerDay = config["maxViolationsPerDay"] as? Int ?: Int.MAX_VALUE
+            
+            id to LockDecisionEngine.ModuleConfig(
+                id = id,
+                name = name,
+                isActive = isActive,
+                startTime = startTime,
+                endTime = endTime,
+                maxViolationsPerDay = maxViolationsPerDay
+            )
+        }
+        lockDecisionEngine.updateModuleConfigs(moduleConfigs)
+    }
+    
+    private fun updateViolationCounts(counts: Map<String, Int>) {
+        lockDecisionEngine.updateViolationCounts(counts)
+    }
+    
+    private fun isAccessibilityEnabled(): Boolean {
+        val serviceName = "${context.packageName}/.accessibility.DisciplinumAccessibilityService"
+        val enabledServices = android.provider.Settings.Secure.getString(
+            context.contentResolver,
+            "enabled_accessibility_services"
+        )
+        return enabledServices?.contains(serviceName) == true
+    }
+    
+    private fun requestOverlayPermission() {
+        val intent = android.content.Intent(
+            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            android.net.Uri.parse("package:${context.packageName}")
+        )
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
+    
+    private fun checkOverlayPermission(): Boolean {
+        return android.provider.Settings.canDrawOverlays(context)
+    }
+    
+    fun dispose() {
+        methodChannel?.setMethodCallHandler(null)
+        methodChannel = null
+        instance = null
+    }
+}

@@ -114,7 +114,6 @@ flutter:
     - assets/opening/warning1.png
     - assets/opening/warning2.png
     - assets/auth/
-    - assets/images/
     - assets/icons/
     - assets/gamification/insignias/avoidAdultContent/
     - assets/gamification/insignias/bingeEating/
@@ -135,7 +134,6 @@ flutter:
     - assets/gamification/medals/reading/
     - assets/gamification/medals/smoking/
     - assets/gamification/medals/spending/
-    - assets/gamification/trofeus/
     - assets/gamification/others/
     - assets/secret_menu/
     - assets/modules/jejum_digital/
