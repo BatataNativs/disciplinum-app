@@ -3,6 +3,7 @@ import 'package:disciplinum/features/modules/binge_eating/data/repositories/bing
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
 
 /// Configurações de controle de compulsão alimentar
 class BingeEatingConfig {
@@ -194,6 +195,9 @@ class BingeEatingServiceLocal {
       await _repository.saveConfig(entity);
       
       LoggerService.instance.i('Configuração do BingeEating salva com sucesso');
+      
+      // Sincronizar configurações nativas do Android
+      await AppLockSyncService.instance.syncAllConfigs();
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do BingeEating', error: e);
       rethrow;

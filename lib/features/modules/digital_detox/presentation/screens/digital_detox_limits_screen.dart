@@ -1,10 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/features/modules/digital_detox/gamification/presentation/providers/digital_detox_gamification_provider.dart';
 import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
-import 'package:disciplinum/core/logging/logger_service.dart';
 
-/// Tela de configuração de limites de tempo do Jejum Digital
-/// Permite definir limites diários de uso de apps
+/// Tela de estatísticas do Jejum Digital
+/// Exibe métricas de uso e progresso do usuário
 class DigitalDetoxLimitsScreen extends ConsumerStatefulWidget {
   const DigitalDetoxLimitsScreen({super.key});
 
@@ -13,319 +14,406 @@ class DigitalDetoxLimitsScreen extends ConsumerStatefulWidget {
 }
 
 class _DigitalDetoxLimitsScreenState extends ConsumerState<DigitalDetoxLimitsScreen> {
-  bool _enableDailyLimit = false;
-  int _dailyLimitMinutes = 60;
-  String _limitType = "global"; // "perApp" | "global"
-  int _warnBeforeLimitMinutes = 5;
-
   bool _isLoading = true;
-  bool _hasChanges = false;
+  dynamic _config;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _loadConfig();
   }
 
-  Future<void> _loadSettings() async {
+  Future<void> _loadConfig() async {
     try {
       final userId = ref.read(digitalDetoxCurrentUserIdProvider);
       final service = ref.read(digitalDetoxServiceLocalProvider);
       final config = await service.getOrCreateConfig(userId);
-
+      
       if (mounted) {
         setState(() {
-          _enableDailyLimit = config.enableDailyLimit;
-          _dailyLimitMinutes = config.dailyLimitMinutes;
-          _limitType = config.limitType;
-          _warnBeforeLimitMinutes = config.warnBeforeLimitMinutes;
+          _config = config;
           _isLoading = false;
         });
       }
     } catch (e) {
-      LoggerService.instance.e('Erro ao carregar configurações de limites', error: e);
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  Future<void> _saveSettings() async {
-    try {
-      final userId = ref.read(digitalDetoxCurrentUserIdProvider);
-      final service = ref.read(digitalDetoxServiceLocalProvider);
-      final config = await service.getOrCreateConfig(userId);
-
-      config.enableDailyLimit = _enableDailyLimit;
-      config.dailyLimitMinutes = _dailyLimitMinutes;
-      config.limitType = _limitType;
-      config.warnBeforeLimitMinutes = _warnBeforeLimitMinutes;
-
-      await service.saveConfig(config);
-
-      if (mounted) {
-        setState(() => _hasChanges = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Configurações salvas com sucesso!')),
-        );
-      }
-    } catch (e) {
-      LoggerService.instance.e('Erro ao salvar configurações', error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar: $e')),
-        );
-      }
-    }
-  }
-
-  String _formatDuration(int minutes) {
-    final hours = minutes ~/ 60;
-    final mins = minutes % 60;
-    if (hours > 0 && mins > 0) {
-      return '${hours}h ${mins}min';
-    } else if (hours > 0) {
-      return '${hours}h';
-    } else {
-      return '${mins}min';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    final userId = ref.watch(currentUserIdProvider);
+    final gamificationState = ref.watch(digitalDetoxGamificationStateProvider(userId));
+    final gamification = gamificationState.gamification;
+
+    if (_isLoading || gamificationState.isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    if (gamification == null || _config == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Estatísticas de Uso'),
+        ),
+        body: const Center(
+          child: Text('Nenhum dado disponível'),
+        ),
+      );
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentStreak = gamification.currentStreak;
+    final longestStreak = gamification.longestStreak;
+    final totalDisciplinedDays = gamification.totalDisciplinedDays;
+    final monitoredApps = _config.monitoredApps;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Limite de Tempo Diário'),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _saveSettings,
-              child: const Text('SALVAR'),
-            ),
-        ],
+        title: const Text('Estatísticas de Uso'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Toggle principal
-            Card(
-              child: SwitchListTile(
-                title: const Text(
-                  'Ativar Limite de Tempo Diário',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text('Bloquear apps após atingir o tempo limite'),
-                value: _enableDailyLimit,
-                onChanged: (value) {
-                  setState(() {
-                    _enableDailyLimit = value;
-                    _hasChanges = true;
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
+            // Streak Principal
+            _buildStreakCard(context, colorScheme, currentStreak, longestStreak),
+            
+            const SizedBox(height: 16),
+            
+            // Dias Disciplinados
+            _buildDisciplinedDaysCard(context, colorScheme, totalDisciplinedDays),
+            
+            const SizedBox(height: 16),
+            
+            // Apps Monitorados
+            _buildMonitoredAppsCard(context, colorScheme, monitoredApps),
+            
+            const SizedBox(height: 16),
+            
+            // Configurações Ativas
+            _buildActiveConfigCard(context, colorScheme, _config),
+          ],
+        ),
+      ),
+    );
+  }
 
-            if (_enableDailyLimit) ...[
-              // Tipo de limite
-              Text(
-                'Tipo de Limite',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(
-                    value: 'global',
-                    label: Text('Limite Global'),
-                    icon: Icon(Icons.public),
+  Widget _buildStreakCard(BuildContext context, ColorScheme colorScheme, int currentStreak, int longestStreak) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.primary.withValues(alpha: 0.1),
+              colorScheme.primary.withValues(alpha: 0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.local_fire_department,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
                   ),
-                  ButtonSegment(
-                    value: 'perApp',
-                    label: Text('Por App'),
-                    icon: Icon(Icons.apps),
-                  ),
-                ],
-                selected: {_limitType},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _limitType = newSelection.first;
-                    _hasChanges = true;
-                  });
-                },
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _limitType == 'global'
-                    ? 'Limite total para todos os apps juntos'
-                    : 'Cada app tem seu próprio limite',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Limite diÃ¡rio
-              Text(
-                'Tempo Limite Diário',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        _formatDuration(_dailyLimitMinutes),
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Slider(
-                        value: _dailyLimitMinutes.toDouble(),
-                        min: 15,
-                        max: 240,
-                        divisions: 15,
-                        label: _formatDuration(_dailyLimitMinutes),
-                        onChanged: (value) {
-                          setState(() {
-                            _dailyLimitMinutes = value.round();
-                            _hasChanges = true;
-                          });
-                        },
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('15min', style: TextStyle(color: Colors.grey[600])),
-                          Text('4h', style: TextStyle(color: Colors.grey[600])),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Aviso antes do limite
-              Text(
-                'Aviso Antes do Limite',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        '$_warnBeforeLimitMinutes minutos antes',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Slider(
-                        value: _warnBeforeLimitMinutes.toDouble(),
-                        min: 1,
-                        max: 15,
-                        divisions: 14,
-                        label: '$_warnBeforeLimitMinutes min',
-                        onChanged: (value) {
-                          setState(() {
-                            _warnBeforeLimitMinutes = value.round();
-                            _hasChanges = true;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Info card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, color: Colors.orange.shade700),
-                        const SizedBox(width: 8),
                         Text(
-                          'Como funciona',
-                          style: TextStyle(
+                          'Streak Atual',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        Text(
+                          '$currentStreak dias',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '¢ O tempo de uso é contado automaticamente\n'
-                      '¢ Você recebe um aviso antes de atingir o limite\n'
-                      '¢ Após o limite, os apps são bloqueados até o próximo dia\n'
-                      '¢ O contador reseta à meia-noite',
-                      style: TextStyle(
-                        color: Colors.orange.shade700,
-                        height: 1.5,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.emoji_events, color: colorScheme.secondary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Recorde: $longestStreak dias',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            if (!_enableDailyLimit)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
+  Widget _buildDisciplinedDaysCard(BuildContext context, ColorScheme colorScheme, int totalDisciplinedDays) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today,
+                    color: colorScheme.secondary,
+                    size: 28,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'O limite de tempo diário está desativado. Não há restrição de tempo de uso.',
-                        style: TextStyle(color: Colors.grey.shade600),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total de Dias Disciplinados',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        '$totalDisciplinedDays dias',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMonitoredAppsCard(BuildContext context, ColorScheme colorScheme, List<String> monitoredApps) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.apps,
+                    color: colorScheme.tertiary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Apps Monitorados',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${monitoredApps.length} apps',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (monitoredApps.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: monitoredApps.take(5).map((app) => 
+                  Chip(
+                    label: Text(
+                      app,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 12,
+                      ),
+                    ),
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                  )
+                ).toList(),
+              ),
+              if (monitoredApps.length > 5)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '+ ${monitoredApps.length - 5} outros apps',
+                    style: TextStyle(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveConfigCard(BuildContext context, ColorScheme colorScheme, dynamic config) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.settings,
+                    color: colorScheme.onSurface,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Configurações Ativas',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildConfigItem(
+              context,
+              'Bloqueio por Horário',
+              config.enableTimeWindow ? 'Ativado' : 'Desativado',
+              config.enableTimeWindow ? Icons.check_circle : Icons.cancel,
+              config.enableTimeWindow ? colorScheme.primary : colorScheme.error,
+            ),
+            const SizedBox(height: 12),
+            _buildConfigItem(
+              context,
+              'Limite Diário',
+              config.enableDailyLimit ? 'Ativado' : 'Desativado',
+              config.enableDailyLimit ? Icons.check_circle : Icons.cancel,
+              config.enableDailyLimit ? colorScheme.primary : colorScheme.error,
+            ),
+            if (config.enableDailyLimit) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 40),
+                child: Text(
+                  'Tipo: ${config.limitType == 'global' ? 'Global' : 'Por App'}',
+                  style: TextStyle(
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            _buildConfigItem(
+              context,
+              'Bloqueio nos Finais de Semana',
+              config.blockOnWeekends ? 'Ativado' : 'Desativado',
+              config.blockOnWeekends ? Icons.check_circle : Icons.cancel,
+              config.blockOnWeekends ? colorScheme.primary : colorScheme.error,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfigItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -23,6 +23,7 @@ class LockDecisionEngine(private val context: Context) {
         val id: String,
         val name: String,
         val isActive: Boolean,
+        val monitoredPackages: Set<String> = emptySet(), // Lista de packages monitorados por este módulo
         val startTime: String? = null, // formato "HH:mm"
         val endTime: String? = null,   // formato "HH:mm"
         val maxViolationsPerDay: Int = Int.MAX_VALUE
@@ -116,21 +117,16 @@ class LockDecisionEngine(private val context: Context) {
     }
     
     /**
-     * Mapeamento de pacotes para módulos
+     * Mapeamento dinâmico de pacotes para módulos
+     * Busca em todas as configurações de módulos para encontrar qual módulo monitora este package
      */
     private fun getModuleIdForPackage(packageName: String): String? {
-        return when (packageName) {
-            "com.instagram.android" -> "instagram"
-            "com.facebook.katana" -> "facebook"
-            "com.twitter.android" -> "twitter"
-            "com.tiktok.android" -> "tiktok"
-            "com.youtube.android" -> "youtube"
-            "com.reddit.frontpage" -> "reddit"
-            "com.snapchat.android" -> "snapchat"
-            "com.whatsapp" -> "whatsapp"
-            "com.linkedin.android" -> "linkedin"
-            "com.pinterest" -> "pinterest"
-            else -> null
+        // Busca em todas as configs para encontrar o módulo que monitora este package
+        for ((moduleId, config) in moduleConfigs) {
+            if (config.monitoredPackages.contains(packageName)) {
+                return moduleId
+            }
         }
+        return null
     }
 }

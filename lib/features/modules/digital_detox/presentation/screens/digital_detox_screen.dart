@@ -21,6 +21,7 @@ import 'package:disciplinum/features/modules/digital_detox/gamification/domain/s
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
 
 class DigitalDetoxScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -172,6 +173,9 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           // Resetar gamificação mantendo apenas insígnia Madeira
           await _resetGamification();
           
+          // Invalidar activeModulesProvider para atualizar home screen
+          ref.invalidate(activeModulesProvider);
+          
           setState(() => _isModuleActive = false);
           
           if (mounted) {
@@ -207,6 +211,9 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
         for (final app in _selectedApps) {
           await ref.read(digitalDetoxServiceLocalProvider).addMonitoredApp(userId, app);
         }
+
+        // Invalidar activeModulesProvider para atualizar home screen
+        ref.invalidate(activeModulesProvider);
 
         setState(() => _isModuleActive = true);
         

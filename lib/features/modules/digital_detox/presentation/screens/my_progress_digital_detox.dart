@@ -1,556 +1,464 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/core/database/objectbox_service.dart';
-
-import '../../gamification/domain/services/digital_detox_gamification_service.dart';
-import '../../gamification/domain/entities/digital_detox_gamification_entity.dart';
-import '../../gamification/domain/repositories/digital_detox_gamification_repository.dart';
-import '../providers/digital_detox_providers.dart';
+import 'package:disciplinum/core/di/providers.dart';
+import '../../gamification/presentation/providers/digital_detox_gamification_provider.dart';
+import '../../gamification/domain/entities/digital_detox_insignia.dart';
+import '../../gamification/domain/entities/digital_detox_medal.dart';
 import '../screens/digital_detox_fasting_breaks_screen.dart';
 
-/// Tela de progresso e conquistas do Jejum Digital (FASE 8)
-class DigitalDetoxProgressScreen extends ConsumerStatefulWidget {
+/// Tela de progresso e conquistas do Jejum Digital
+class DigitalDetoxProgressScreen extends ConsumerWidget {
   const DigitalDetoxProgressScreen({super.key});
 
   @override
-  ConsumerState<DigitalDetoxProgressScreen> createState() => _DigitalDetoxProgressScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(currentUserIdProvider);
+    final currentStreak = ref.watch(digitalDetoxStreakProvider(userId));
+    final sevenDayCycle = ref.watch(digitalDetoxSevenDayCycleProvider(userId));
+    final earnedInsignias = ref.watch(digitalDetoxEarnedInsigniasProvider(userId));
+    final earnedMedalhas = ref.watch(digitalDetoxEarnedMedalhasProvider(userId));
+    final availableBreaks = ref.watch(digitalDetoxAvailableFastingBreaksProvider(userId));
+    final authService = ref.watch(authServiceProvider);
 
-class _DigitalDetoxProgressScreenState extends ConsumerState<DigitalDetoxProgressScreen> {
-  late DigitalDetoxGamificationService _gamificationService;
-  Map<String, dynamic>? _statistics;
-  bool _isLoading = false;
+    // Lógica para obter o primeiro nome
+    String fullName = authService.userProfile?['name'] ?? 'Usuário';
+    String firstName = fullName.split(' ').first;
+    if (firstName.isEmpty) firstName = 'Usuário';
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeService();
-    _loadStatistics();
-  }
-
-  void _initializeService() {
-    final store = ObjectBoxService.instance.store;
-    _gamificationService = DigitalDetoxGamificationService(
-      DigitalDetoxGamificationRepository(store.box<DigitalDetoxGamificationEntity>()),
-    );
-  }
-
-  Future<void> _loadStatistics() async {
-    setState(() => _isLoading = true);
-    try {
-      final userId = ref.read(digitalDetoxCurrentUserIdProvider);
-      
-      // Criar estatísticas básicas
-      final gamification = _gamificationService.getGamification(userId);
-      _statistics = {
-        'currentStreak': gamification?.currentStreak ?? 0,
-        'longestStreak': gamification?.longestStreak ?? 0,
-        'totalDisciplinedDays': gamification?.totalDisciplinedDays ?? 0,
-        'earnedInsignias': gamification?.earnedInsigniasList ?? [],
-        'earnedMedalhas': gamification?.earnedMedalhasList ?? [],
-        'isModuleActive': gamification?.isModuleActive ?? false,
-      };
-      
-      // Inicializar gamificaÃ§Ã£o se ainda nÃ£o existe
-      _gamificationService.initializeGamification(userId);
-      
-      setState(() => _isLoading = false);
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar estatÃ­sticas: $e')),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading || _statistics == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    final stats = _statistics!;
-    final currentStreak = stats['currentStreak'] as int;
-    final sevenDayCycle = stats['sevenDayCycle'] as int;
-    final daysIn30DayCycle = stats['daysInCurrent30DayCycle'] as int;
-    final availableBreaks = stats['availableBreaks'] as int;
-    final totalInsignias = stats['totalInsignias'] as Map<String, String>;
-    final totalMedals = stats['totalMedals'] as Map<String, int>;
-    final nextInsignia = stats['nextInsignia'] as String?;
-    final daysUntilNextInsignia = stats['daysUntilNextInsignia'] as int;
+    // Contar disciplinum
+    final disciplinumCount = earnedInsignias.where((insignia) => insignia.contains('Disciplinum')).length;
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Progresso e Conquistas'),
-        backgroundColor: Colors.orange.shade700,
-        foregroundColor: Colors.white,
+        title: const Text('Conquistas', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Streak Principal
-            _buildStreakCard(currentStreak, nextInsignia, daysUntilNextInsignia),
-            
-            const SizedBox(height: 16),
-            
-            // Ciclo de 7 Dias
-            _buildSevenDayCycleCard(sevenDayCycle, availableBreaks),
-            
-            const SizedBox(height: 16),
-            
-            // Ciclo de 30 Dias
-            _buildThirtyDayCycleCard(daysIn30DayCycle),
-            
-            const SizedBox(height: 16),
-            
-            // InsÃ­gnias
-            _buildInsigniasCard(totalInsignias),
-            
-            const SizedBox(height: 16),
-            
-            // Medalhas
-            _buildMedalsCard(totalMedals),
-            
-            const SizedBox(height: 16),
-            
-            // Quebras DisponÃ­veis
-            _buildAvailableBreaksCard(availableBreaks),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStreakCard(int currentStreak, String? nextInsignia, int daysUntilNext) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.local_fire_department,
-                  color: Colors.orange,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Streak Principal',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$currentStreak dias vÃ¡lidos consecutivos',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (nextInsignia != null) ...[
-                        Text(
-                          'PrÃ³xima insÃ­gnia: $nextInsignia',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        Text(
-                          'em $daysUntilNext dias',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSevenDayCycleCard(int sevenDayCycle, int availableBreaks) {
-    final progress = sevenDayCycle / 7.0;
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.coffee,
-                  color: Colors.brown,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ciclo de Quebras de Jejum',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$sevenDayCycle/7 dias',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.brown,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (sevenDayCycle >= 7) ...[
-                        Text(
-                          'ðŸŽ Quebra disponÃ­vel!',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'VocÃª tem $availableBreaks quebra(s)',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ] else ...[
-                        LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
-                        ),
-                        Text(
-                          'Faltam ${7 - sevenDayCycle} dias para prÃ³xima quebra',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThirtyDayCycleCard(int daysIn30DayCycle) {
-    final progress = daysIn30DayCycle / 30.0;
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_month,
-                  color: Colors.blue,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ciclo de 30 Dias',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$daysIn30DayCycle/30 dias',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
-                      Text(
-                        'Faltam ${30 - daysIn30DayCycle} dias para prÃ³xima medalha',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInsigniasCard(Map<String, String> totalInsignias) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.military_tech,
-                  color: Colors.purple,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'InsÃ­gnias Conquistadas',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          _buildInsigniaItem('ðŸªµ Madeira', totalInsignias['wood'] == '1'),
-                          _buildInsigniaItem('ðŸ¥ˆ Ferro', totalInsignias['iron'] == '1'),
-                          _buildInsigniaItem('ðŸ¥ˆ AlumÃ­nio', totalInsignias['aluminum'] == '1'),
-                          _buildInsigniaItem('ðŸ¥‡ LatÃ£o', totalInsignias['brass'] == '1'),
-                          _buildInsigniaItem('ðŸ¥‰ Bronze', totalInsignias['bronze'] == '1'),
-                          _buildInsigniaItem('ðŸ¥ˆ Prata', totalInsignias['silver'] == '1'),
-                          _buildInsigniaItem('ðŸ¥‡ Ouro', totalInsignias['gold'] == '1'),
-                          _buildInsigniaItem('ðŸ’Ž Diamante', totalInsignias['diamond'] == '1'),
-                          _buildInsigniaItem('ðŸŽ± Disciplinum', totalInsignias['disciplinum'] == '1'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInsigniaItem(String name, bool earned) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: earned ? Colors.green.shade50 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: earned ? Colors.green.shade200 : Colors.grey.shade300,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            name,
-            style: TextStyle(
-              color: earned ? Colors.green.shade700 : Colors.grey.shade600,
-              fontWeight: earned ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          if (earned) ...[
-            const SizedBox(width: 4),
-            Icon(
-              Icons.check_circle,
-              color: Colors.green.shade700,
-              size: 16,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMedalsCard(Map<String, int> totalMedals) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.emoji_events,
-                  color: Colors.amber,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Medalhas de 30 Dias',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          _buildMedalItem('ðŸ¥‰ Bronze', totalMedals['bronze'] ?? 0),
-                          _buildMedalItem('ðŸ¥ˆ Prata', totalMedals['silver'] ?? 0),
-                          _buildMedalItem('ðŸ¥‡ Ouro', totalMedals['gold'] ?? 0),
-                          _buildMedalItem('ðŸ’Ž Diamante', totalMedals['diamond'] ?? 0),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMedalItem(String name, int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: count > 0 ? Colors.amber.shade50 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: count > 0 ? Colors.amber.shade200 : Colors.grey.shade300,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            name,
-            style: TextStyle(
-              color: count > 0 ? Colors.amber.shade700 : Colors.grey.shade600,
-              fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          if (count > 0) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade700,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '$count',
-                style: const TextStyle(
-                  color: Colors.white,
+            // Header
+            Text(
+              'Olá, $firstName!',
+              style: const TextStyle(
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Seu progresso no módulo: Jejum Digital',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+
+            // Streak atual
+            _buildStatCard(
+              icon: Icons.local_fire_department,
+              value: '$currentStreak',
+              label: 'dias válidos consecutivos',
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 16),
+            _buildStatCard(
+              icon: Icons.refresh,
+              value: '$sevenDayCycle/7',
+              label: 'progresso para a próxima quebra de jejum',
+              color: const Color(0xFFD2691E),
+            ),
+            const SizedBox(height: 16),
+            _buildStatCard(
+              icon: Icons.local_cafe,
+              value: '${availableBreaks.length}',
+              label: 'quebra${availableBreaks.length == 1 ? '' : 's'} de jejum disponível${availableBreaks.length == 1 ? '' : 'is'}',
+              color: const Color(0xFF6366F1),
+            ),
+            const SizedBox(height: 32),
+
+            // INSÍGNIAS
+            const Text(
+              'Insígnias',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por dias disciplinados',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.75,
+                children: DigitalDetoxInsignia.values.map((insignia) {
+                  final isEarned = earnedInsignias.any((earned) => earned.toLowerCase().contains(insignia.name));
+                  // Badge count para insígnia Disciplinum
+                  final badgeCount = (insignia.name == 'disciplinum' && disciplinumCount > 1)
+                      ? disciplinumCount
+                      : null;
+
+                  return _AwardItem(
+                    asset: insignia.asset,
+                    label: insignia.nameBr,
+                    isEarned: isEarned,
+                    requirement: insignia.requirementDescription,
+                    badgeCount: badgeCount,
+                  );
+                }).toList(),
               ),
             ),
-          ],
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 32),
 
-  Widget _buildAvailableBreaksCard(int availableBreaks) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.local_cafe,
-                  color: Colors.brown,
-                  size: 32,
+            // MEDALHAS
+            const Text(
+              'Medalhas',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Conquistas por ciclos de 30 dias',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.9,
+                children: DigitalDetoxMedal.values.map((medal) {
+                  final isEarned = earnedMedalhas.any((earned) => earned.toLowerCase().contains(medal.name)) ||
+                      medal.canBeAwarded(earnedInsignias);
+
+                  return _AwardItem(
+                    asset: medal.asset,
+                    label: medal.nameBr,
+                    isEarned: isEarned,
+                    requirement: medal.requirementDescription,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Contador de Disciplinum
+            if (disciplinumCount > 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quebras de Jejum DisponÃ­veis',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$disciplinumCount insígnia${disciplinumCount > 1 ? 's' : ''} Disciplinum conquistada${disciplinumCount > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
-                      Text(
-                        '$availableBreaks quebra(s) disponÃ­vel(is)',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: availableBreaks > 0 ? Colors.green : Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (availableBreaks == 0) ...[
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 20),
+
+            // Quebras Disponíveis
+            if (availableBreaks.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF8B4513).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.local_cafe, color: Color(0xFFD2691E), size: 20),
+                        const SizedBox(width: 8),
                         Text(
-                          'Complete 7 dias vÃ¡lidos para ganhar uma quebra',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+                          '${availableBreaks.length} quebra${availableBreaks.length > 1 ? 's' : ''} disponível${availableBreaks.length > 1 ? 'is' : ''}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
                         ),
-                      ] else ...[
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // Navegar para tela de quebras
-                            Navigator.of(context).push(
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const DigitalDetoxFastingBreaksScreen(),
                           ),
                         );
-                          },
-                          icon: const Icon(Icons.arrow_forward),
-                          label: Text('Ver Quebras'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.brown,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ],
+                      },
+                      icon: const Icon(Icons.arrow_forward, size: 16),
+                      label: const Text('Ver Quebras'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B4513),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+class _AwardItem extends StatelessWidget {
+  final String asset;
+  final String label;
+  final bool isEarned;
+  final String requirement;
+  final int? badgeCount;
+
+  const _AwardItem({
+    required this.asset,
+    required this.label,
+    required this.isEarned,
+    required this.requirement,
+    this.badgeCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showDetail(context),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ColorFiltered(
+                  colorFilter: isEarned
+                      ? const ColorFilter.mode(
+                          Colors.transparent, BlendMode.multiply)
+                      : const ColorFilter.matrix(<double>[
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                        ]),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Opacity(
+                      opacity: isEarned ? 1.0 : 0.4,
+                      child: Image.asset(asset, fit: BoxFit.contain),
+                    ),
                   ),
                 ),
+                // Badge de contador (tipo notificação)
+                if (badgeCount != null && isEarned)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Text(
+                        '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
               ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: isEarned ? Colors.white : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDetail(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ColorFiltered(
+              colorFilter: isEarned
+                  ? const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply)
+                  : const ColorFilter.matrix(<double>[
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ]),
+              child: Opacity(
+                opacity: isEarned ? 1.0 : 0.4,
+                child: Image.asset(asset, height: 100),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isEarned 
+                ? '✅ Conquistada!\n\nRequisito:\n$requirement'
+                : 'Requisito:\n$requirement',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Ok', style: TextStyle(color: Color(0xFF6366F1))),
+          ),
+        ],
       ),
     );
   }

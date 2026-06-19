@@ -80,6 +80,21 @@
 
         </activity>
 
+        <!-- LockActivity - Activity de bloqueio nativo para App Lock -->
+        <activity
+            android:name="com.disciplinum.lock.LockActivity"
+            android:exported="false"
+            android:theme="@style/NormalTheme"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
         <!-- Receivers de notificação (Plugin flutter_local_notifications) -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"

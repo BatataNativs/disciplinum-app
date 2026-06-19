@@ -2,6 +2,7 @@ import 'package:disciplinum/features/modules/adult_content/data/repositories/adu
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
 
 /// Configurações de controle de conteúdo adulto
 class AdultContentConfig {
@@ -139,6 +140,9 @@ class AdultContentServiceLocal {
       await _repository.saveConfig(entity);
       
       LoggerService.instance.i('Configuração do Adult Content salva com sucesso');
+      
+      // Sincronizar configurações nativas do Android
+      await AppLockSyncService.instance.syncAllConfigs();
     } catch (e) {
       LoggerService.instance.e('Erro ao salvar configuração do Adult Content', error: e);
       rethrow;

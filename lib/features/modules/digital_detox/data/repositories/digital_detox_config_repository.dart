@@ -1,4 +1,4 @@
-﻿import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_config_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -13,16 +13,35 @@ class DigitalDetoxConfigRepository {
 
   Box<DigitalDetoxConfigEntity> get _box => ObjectBoxService.instance.store.box<DigitalDetoxConfigEntity>();
 
-  /// Busca configuraÃ§Ã£o pelo userId
+  /// Busca configuração pelo userId
+  /// Se não encontrar pelo userId real, verifica se há uma entrada orphan de 'guest_user'
+  /// salva erroneamente por race condition no Riverpod, e migra para o userId correto.
   Future<DigitalDetoxConfigEntity?> getConfig(String userId) async {
     try {
-      return _box.query(DigitalDetoxConfigEntity_.userId.equals(userId)).build().findFirst();
+      final found = _box.query(DigitalDetoxConfigEntity_.userId.equals(userId)).build().findFirst();
+      if (found != null) return found;
+      
+      // Se o userId real não foi encontrado, verifica se existe uma entrada salva
+      // erroneamente como 'guest_user' (bug de race condition no provider de auth).
+      // Isso NÃO é dado do modo convidado real — é dado do usuário logado salvo com
+      // chave errada. Fazemos a migração corrigindo o userId.
+      if (userId != 'guest_user') {
+        final orphan = _box.query(DigitalDetoxConfigEntity_.userId.equals('guest_user')).build().findFirst();
+        if (orphan != null) {
+          orphan.userId = userId;
+          _box.put(orphan);
+          LoggerService.instance.i('DigitalDetox: config migrada de guest_user para $userId');
+          return orphan;
+        }
+      }
+      
+      return null;
     } catch (e) {
       return null;
     }
   }
 
-  /// Cria ou retorna configuraÃ§Ã£o existente
+  /// Cria ou retorna configuração existente
   Future<DigitalDetoxConfigEntity> getOrCreateConfig(String userId) async {
     var config = await getConfig(userId);
     if (config == null) {

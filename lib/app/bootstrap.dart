@@ -23,19 +23,18 @@ import 'package:disciplinum/infrastructure/permissions/notifications/notificatio
 class AppBootstrap {
   static bool _isInitialized = false;
 
-  /// Inicializa todos os serviços em paralelo para performance
+  /// Inicializa todos os serviços sequencialmente
   static Future<AppStartupData> initialize() async {
     if (_isInitialized) {
       throw StateError('AppBootstrap already initialized');
     }
 
     try {
-      // Inicialização paralela dos serviços independentes
-      await Future.wait([
-        _initSupabase(),
-        _initAds(),
-        _initTheme(),
-      ]);
+      // Inicialização sequencial dos serviços independentes
+      // Cada método já tem seu próprio tratamento de erro
+      await _initSupabase();
+      await _initAds();
+      await _initTheme();
 
       // Inicializar serviços que dependem de outros (sequencial)
       await _initServices();  // Inicializa Isar

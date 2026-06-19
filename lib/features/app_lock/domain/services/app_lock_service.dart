@@ -6,7 +6,7 @@ import 'package:disciplinum/features/app_lock/infrastructure/services/navigation
 import 'package:disciplinum/features/app_lock/infrastructure/channels/app_lock_channel.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
 import 'package:disciplinum/features/modules/diet/gamification/presentation/providers/diet_gamification_provider.dart';
 import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
@@ -14,11 +14,10 @@ import 'package:disciplinum/features/modules/digital_detox/gamification/domain/e
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/services/digital_detox_gamification_service.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/presentation/providers/binge_eating_gamification_provider.dart';
+import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
-import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
-import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_applock_service.dart';
-import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_applock_service.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart' as ns;
 
 /// Serviço principal de App Lock
 /// Gerencia o sistema de bloqueio consciente para todos os módulos
@@ -36,69 +35,92 @@ class AppLockService {
 
   static const _accessibilityChannel = EventChannel('com.disciplinum.app/accessibility');
   static StreamSubscription? _accessibilitySubscription;
-  static String? _currentlyShowingLockFor;
 
   static void _startAccessibilityListener() {
     if (_accessibilitySubscription != null) return;
     
-    _accessibilitySubscription = _accessibilityChannel.receiveBroadcastStream().listen((packageName) async {
-      LoggerService.instance.system('Acessibilidade ouviu abertura do app: $packageName');
-      if (packageName is String) {
-        await _handleAppOpened(packageName);
+    _accessibilitySubscription = _accessibilityChannel.receiveBroadcastStream().listen((event) async {
+      LoggerService.instance.system('Acessibilidade enviou evento: $event');
+      if (event is Map) {
+        await _handleAccessibilityEvent(event);
       }
     });
     LoggerService.instance.system('Listener de acessibilidade foi INICIADO e registrado no channel com.disciplinum.app/accessibility');
   }
 
-  static Future<void> _handleAppOpened(String packageName) async {
+  static Future<void> _handleAccessibilityEvent(Map event) async {
     try {
+      final type = event['type'] as String?;
+      var packageName = event['packageName'] as String?;
+      
+      if (packageName == null) return;
+      
+      // Corrige erro de digitação no packageName (comm. -> com.)
+      packageName = _fixPackageNameTypo(packageName);
+      
       if (_isSystemPackage(packageName)) {
-        // LoggerService.instance.system('Ignorando pacote de sistema: $packageName');
         return;
       }
       
-      if (_currentlyShowingLockFor == packageName) {
-        return; // Já estamos exibindo a tela de bloqueio para este app, evita loops
-      }
-      
-      LoggerService.instance.system('Analisando bloqueio para o app monitorado: $packageName');
-      
-      // 1. Verificar Jejum Digital
-      try {
-        final detoxAppLock = DigitalDetoxAppLockService.instance;
-        final shouldBlockDetox = await detoxAppLock.shouldBlockApp('current_user', packageName);
+      if (type == 'app_blocked') {
+        // App foi bloqueado nativamente - atualizar gamificação
+        final moduleId = event['moduleId'] as String?;
+        final reason = event['reason'] as String?;
         
-        if (shouldBlockDetox) {
-          _currentlyShowingLockFor = packageName;
-          final appName = _getAppName(packageName);
-          final appIconBytes = await InstalledAppService().getAppIcon(packageName);
-          await detoxAppLock.showAppLockScreen('current_user', packageName, appName, appIconBytes);
-          await AppLockChannel.bringToForeground();
-          return;
-        }
-      } catch (e) {
-        LoggerService.instance.e('Erro ao verificar bloqueio Digital Detox', error: e);
-      }
-
-      // 2. Verificar Binge Eating
-      try {
-        final bingeAppLock = BingeEatingAppLockService.instance;
-        final shouldBlockBinge = await bingeAppLock.shouldBlockApp(packageName);
+        LoggerService.instance.system('App bloqueado nativamente: $packageName (módulo: $moduleId, motivo: $reason)');
         
-        if (shouldBlockBinge) {
-          _currentlyShowingLockFor = packageName;
-          final appName = _getAppName(packageName);
-          final appIconBytes = await InstalledAppService().getAppIcon(packageName);
-          await bingeAppLock.showAppLockScreen(packageName, appName, appIconBytes);
-          await AppLockChannel.bringToForeground();
-          return;
+        // Atualizar gamificação baseado no módulo
+        if (moduleId != null) {
+          await _handleAppBlockedForGamification(packageName, moduleId);
         }
-      } catch (e) {
-        LoggerService.instance.e('Erro ao verificar bloqueio Binge Eating', error: e);
+      } else if (type == 'app_opened') {
+        // App foi aberto mas não bloqueado - apenas logar
+        final reason = event['reason'] as String?;
+        LoggerService.instance.system('App aberto sem bloqueio: $packageName (motivo: $reason)');
       }
-      
     } catch (e) {
-      LoggerService.instance.e('Erro no listener de acessibilidade', error: e);
+      LoggerService.instance.e('Erro ao processar evento de acessibilidade', error: e);
+    }
+  }
+
+  /// Corrige erro de digitação no packageName (comm. -> com.)
+  static String _fixPackageNameTypo(String packageName) {
+    if (packageName.startsWith('comm.')) {
+      return 'com.${packageName.substring(5)}';
+    }
+    return packageName;
+  }
+
+  static Future<void> _handleAppBlockedForGamification(String packageName, String moduleId) async {
+    try {
+      // Mapear moduleId para o serviço de gamificação correspondente
+      switch (moduleId) {
+        case 'instagram':
+        case 'facebook':
+        case 'twitter':
+        case 'tiktok':
+        case 'youtube':
+          // Digital Detox - atualizar gamificação
+          await _handleDigitalDetoxBlocked(packageName);
+          break;
+        default:
+          LoggerService.instance.w('Módulo não mapeado para gamificação: $moduleId');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao atualizar gamificação para app bloqueado', error: e);
+    }
+  }
+
+  static Future<void> _handleDigitalDetoxBlocked(String packageName) async {
+    try {
+      // Digital Detox - incrementar violações ou resetar streak
+      // A lógica específica depende da implementação do módulo
+      LoggerService.instance.gamification('Digital Detox: app bloqueado - $packageName');
+      
+      // Aqui você pode chamar o serviço de gamificação do Digital Detox
+      // para atualizar streaks, medalhas, etc.
+    } catch (e) {
+      LoggerService.instance.e('Erro ao processar bloqueio Digital Detox', error: e);
     }
   }
 
@@ -122,22 +144,6 @@ class AppLockService {
         packageName.endsWith('.launcher');
   }
 
-  static String _getAppName(String packageName) {
-    final appNames = {
-      'com.whatsapp': 'WhatsApp',
-      'com.instagram.android': 'Instagram',
-      'com.facebook.katana': 'Facebook',
-      'com.twitter.android': 'X (Twitter)',
-      'com.zhiliaoapp.musically': 'TikTok',
-      'com.snapchat.android': 'Snapchat',
-      'com.spotify.music': 'Spotify',
-      'com.netflix.mediaclient': 'Netflix',
-      'com.youtube.android': 'YouTube',
-      'com.google.android.youtube': 'YouTube',
-    };
-    return appNames[packageName] ?? packageName.split('.').last;
-  }
-  
   AppLockService._();
 
   /// Mostra a tela de bloqueio para um app específico
@@ -157,7 +163,6 @@ class AppLockService {
       
       // Criar callbacks que fecham a tela automaticamente
       void wrappedExitCallback() async {
-        _currentlyShowingLockFor = null;
         // Fecha a tela de bloqueio primeiro
         AppLockNavigationService.closeAppLockScreen();
         // Executa a ação original
@@ -165,7 +170,6 @@ class AppLockService {
       }
 
       void wrappedOpenCallback() async {
-        _currentlyShowingLockFor = null;
         // Reseta gamificação antes de fechar
         await _resetModuleGamification(nicheId);
         // Fecha a tela de bloqueio
@@ -287,14 +291,13 @@ class AppLockService {
   /// Reseta gamificação do módulo Spending
   Future<void> _resetSpendingGamification() async {
     try {
-      // Implementar reset real para módulo Spending usando Riverpod
+      // Resetar apenas gamificação (streaks, medalhas, score), NÃO apagar dados reais do usuário
       if (_container != null) {
-        final spendingService = _container!.read(spendingServiceProvider);
-        // SpendingService tem método clearAllExpenses() que deleta todas as despesas
-        await spendingService.clearAllExpenses();
-        LoggerService.instance.gamification('Spending gamification resetada com sucesso');
+        final gamificationNotifier = _container!.read(spendingGamificationNotifierProvider.notifier);
+        await gamificationNotifier.resetProgress();
+        LoggerService.instance.gamification('Spending gamification resetada com sucesso (streaks/medalhas)');
       } else {
-        LoggerService.instance.w('Container Riverpod não disponível para SpendingService');
+        LoggerService.instance.w('Container Riverpod não disponível para SpendingGamificationNotifier');
       }
       
     } catch (e) {
@@ -414,29 +417,23 @@ class AppLockService {
     required String body,
   }) async {
     try {
-      // Implementar notificação local real com flutter_local_notifications
-      final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-      // Inicializar notificações
-      await flutterLocalNotificationsPlugin.initialize(
-        settings: InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        ),
-      );
+      // Usar a instância singleton já inicializada no bootstrap
+      // NOTA: Não chamar initialize() novamente pois já foi feito no AppBootstrap
+      final plugin = ns.flutterLocalNotificationsPlugin;
 
       // Criar notificação
-      await flutterLocalNotificationsPlugin.show(
+      await plugin.show(
         id: DateTime.now().millisecondsSinceEpoch.remainder(1000),
         title: title,
         body: body,
         payload: null,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: const fln.NotificationDetails(
+          android: fln.AndroidNotificationDetails(
             'app_lock_channel',
             'App Lock Notifications',
             channelDescription: 'Notificações do sistema de App Lock',
-            importance: Importance.high,
-            priority: Priority.high,
+            importance: fln.Importance.high,
+            priority: fln.Priority.high,
             playSound: true,
             enableVibration: true,
             color: Colors.orange, // Laranja Disciplinum

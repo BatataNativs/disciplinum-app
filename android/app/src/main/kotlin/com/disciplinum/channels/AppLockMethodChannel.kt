@@ -3,7 +3,7 @@ package com.disciplinum.channels
 import android.content.Context
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
-import com.disciplinum.accessibility.DisciplinumAccessibilityService
+import com.disciplinum.app.AccessibilityMonitorService
 import com.disciplinum.lock.LockDecisionEngine
 
 /**
@@ -33,7 +33,6 @@ class AppLockMethodChannel(private val context: Context) {
     }
     
     private var methodChannel: MethodChannel? = null
-    private val lockDecisionEngine = LockDecisionEngine(context)
     
     init {
         instance = this
@@ -123,13 +122,22 @@ class AppLockMethodChannel(private val context: Context) {
     }
     
     private fun updateMonitoredApps(apps: Set<String>) {
-        // Atualiza o AccessibilityService
-        // Nota: Precisa de uma forma de acessar a instância do service
-        // Isso pode ser feito via singleton ou via Context
+        // Atualiza o AccessibilityService com a lista de apps monitorados
+        AccessibilityMonitorService.updateMonitoredApps(apps)
     }
-    
+
     private fun updateActiveModules(modules: Map<String, Boolean>) {
-        // Atualiza o AccessibilityService
+        // Atualiza o LockDecisionEngine com os módulos ativos
+        // Converte o Map<String, Boolean> para ModuleConfigs
+        val moduleConfigs = modules.map { (moduleId, isActive) ->
+            mapOf<String, Any>(
+                "id" to moduleId,
+                "name" to moduleId, // Usar moduleId como nome por enquanto
+                "isActive" to isActive,
+                "maxViolationsPerDay" to Int.MAX_VALUE
+            )
+        }
+        updateModuleConfigs(moduleConfigs)
     }
     
     private fun updateModuleConfigs(configs: List<Map<String, Any>>) {
@@ -137,28 +145,38 @@ class AppLockMethodChannel(private val context: Context) {
             val id = config["id"] as String
             val name = config["name"] as String
             val isActive = config["isActive"] as Boolean
+            val monitoredPackagesRaw = config["monitoredPackages"]
+            val monitoredPackages = if (monitoredPackagesRaw is List<*>) {
+                monitoredPackagesRaw.map { it.toString() }.toSet()
+            } else {
+                emptySet()
+            }
             val startTime = config["startTime"] as? String
             val endTime = config["endTime"] as? String
             val maxViolationsPerDay = config["maxViolationsPerDay"] as? Int ?: Int.MAX_VALUE
             
+            android.util.Log.d("AppLockMethodChannel", "Config parsed: id=$id, isActive=$isActive, pkgs=$monitoredPackages, start=$startTime, end=$endTime")
+
             id to LockDecisionEngine.ModuleConfig(
                 id = id,
                 name = name,
                 isActive = isActive,
+                monitoredPackages = monitoredPackages,
                 startTime = startTime,
                 endTime = endTime,
                 maxViolationsPerDay = maxViolationsPerDay
             )
         }
-        lockDecisionEngine.updateModuleConfigs(moduleConfigs)
+        android.util.Log.d("AppLockMethodChannel", "Updating AccessibilityMonitorService configs: ${moduleConfigs.keys}")
+        AccessibilityMonitorService.updateModuleConfigs(moduleConfigs)
     }
     
     private fun updateViolationCounts(counts: Map<String, Int>) {
-        lockDecisionEngine.updateViolationCounts(counts)
+        AccessibilityMonitorService.updateViolationCounts(counts)
     }
     
     private fun isAccessibilityEnabled(): Boolean {
-        val serviceName = "${context.packageName}/.accessibility.DisciplinumAccessibilityService"
+        val serviceName = "${context.packageName}/.AccessibilityMonitorService"
         val enabledServices = android.provider.Settings.Secure.getString(
             context.contentResolver,
             "enabled_accessibility_services"

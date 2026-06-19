@@ -18,6 +18,8 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
   TimeOfDay _endTime = const TimeOfDay(hour: 22, minute: 0);
   bool _enableDailyLimit = false;
   int _dailyLimitMinutes = 60;
+  String _limitType = "global"; // "perApp" | "global"
+  int _warnBeforeLimitMinutes = 5;
   bool _blockOnWeekends = false;
   TimeOfDay? _weekendStartTime;
   TimeOfDay? _weekendEndTime;
@@ -45,6 +47,13 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
           _blockOnWeekends = config.blockOnWeekends;
           _weekendStartTime = _parseTimeString(config.weekendAllowedStartTime);
           _weekendEndTime = _parseTimeString(config.weekendAllowedEndTime);
+          
+          // Carregar configuração de limite diário
+          _enableDailyLimit = config.enableDailyLimit;
+          _dailyLimitMinutes = config.dailyLimitMinutes;
+          _limitType = config.limitType;
+          _warnBeforeLimitMinutes = config.warnBeforeLimitMinutes;
+          
           _isLoading = false;
         });
       }
@@ -71,6 +80,18 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
 
   String _formatTime(TimeOfDay time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDuration(int minutes) {
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      final mins = minutes % 60;
+      if (mins == 0) {
+        return '${hours}h';
+      }
+      return '${hours}h ${mins}min';
+    }
+    return '${minutes}min';
   }
 
   Future<void> _selectTime(BuildContext context, bool isStart, {bool isWeekend = false}) async {
@@ -121,6 +142,12 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
       config.blockOnWeekends = _blockOnWeekends;
       config.weekendAllowedStartTime = _weekendStartTime != null ? _formatTime(_weekendStartTime!) : null;
       config.weekendAllowedEndTime = _weekendEndTime != null ? _formatTime(_weekendEndTime!) : null;
+      
+      // Salvar configuração de limite diário
+      config.enableDailyLimit = _enableDailyLimit;
+      config.dailyLimitMinutes = _dailyLimitMinutes;
+      config.limitType = _limitType;
+      config.warnBeforeLimitMinutes = _warnBeforeLimitMinutes;
 
       await service.saveConfig(config);
 
@@ -193,30 +220,74 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
             const SizedBox(height: 24),
             
             if (_enableDailyLimit) ...[
+              // Tipo de limite
               Text(
-                'Tempo máximo diário',
+                'Tipo de Limite',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'global',
+                    label: Text('Limite Global'),
+                    icon: Icon(Icons.public),
+                  ),
+                  ButtonSegment(
+                    value: 'perApp',
+                    label: Text('Por App'),
+                    icon: Icon(Icons.apps),
+                  ),
+                ],
+                selected: {_limitType},
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() {
+                    _limitType = newSelection.first;
+                    _hasChanges = true;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _limitType == 'global'
+                    ? 'Limite total para todos os apps juntos'
+                    : 'Cada app tem seu próprio limite',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Slider(
+              ),
+              const SizedBox(height: 24),
+
+              // Limite diário
+              Text(
+                'Tempo Limite Diário',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        _formatDuration(_dailyLimitMinutes),
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Slider(
                         value: _dailyLimitMinutes.toDouble(),
                         min: 15,
-                        max: 480,
-                        divisions: 31,
-                        label: '${(_dailyLimitMinutes ~/ 60)}h ${(_dailyLimitMinutes % 60)}min',
+                        max: 240,
+                        divisions: 15,
+                        label: _formatDuration(_dailyLimitMinutes),
                         onChanged: (value) {
                           setState(() {
                             _dailyLimitMinutes = value.round();
@@ -224,16 +295,62 @@ class _DigitalDetoxTimeSettingsScreenState extends ConsumerState<DigitalDetoxTim
                           });
                         },
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${(_dailyLimitMinutes ~/ 60)}h ${(_dailyLimitMinutes % 60)}min',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('15min', style: TextStyle(color: Colors.grey[600])),
+                          Text('4h', style: TextStyle(color: Colors.grey[600])),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Aviso antes do limite
+              Text(
+                'Aviso Antes do Limite',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Avisar $_warnBeforeLimitMinutes minutos antes',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Slider(
+                        value: _warnBeforeLimitMinutes.toDouble(),
+                        min: 1,
+                        max: 15,
+                        divisions: 14,
+                        label: '$_warnBeforeLimitMinutes min',
+                        onChanged: (value) {
+                          setState(() {
+                            _warnBeforeLimitMinutes = value.round();
+                            _hasChanges = true;
+                          });
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('1min', style: TextStyle(color: Colors.grey[600])),
+                          Text('15min', style: TextStyle(color: Colors.grey[600])),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

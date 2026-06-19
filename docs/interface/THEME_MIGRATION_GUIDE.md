@@ -106,8 +106,8 @@ extension ThemeExtensions on BuildContext {
 | Cores isDark | Propriedade ThemeData |
 |--------------|----------------------|
 | `isDark ? Colors.white : Colors.black87` | `colorScheme.onSurface` |
-| `isDark ? Colors.white70 : Colors.black54` | `colorScheme.onSurface.withOpacity(0.7)` |
-| `isDark ? Colors.white38 : Colors.black38` | `colorScheme.onSurface.withOpacity(0.38)` |
+| `isDark ? Colors.white70 : Colors.black54` | `colorScheme.onSurface.withValues(0.7)` |
+| `isDark ? Colors.white38 : Colors.black38` | `colorScheme.onSurface.withValues(0.38)` |
 | `isDark ? Colors.black : Colors.white` | `colorScheme.surface` |
 | `isDark ? Colors.grey[900] : Colors.grey[50]` | `colorScheme.surface` |
 | Fundo escuro (0xFF0F0F0F, etc) | `theme.scaffoldBackgroundColor` |

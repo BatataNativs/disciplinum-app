@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/bootstrap.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/app/auth_navigation_listener.dart';
+import 'package:disciplinum/app/error_recovery_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/storage/storage_manager.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.dart';
 import 'package:disciplinum/features/app_lock/infrastructure/services/navigation_service.dart';
 import 'package:disciplinum/core/gamification/presentation/widgets/global_achievement_listener.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +45,25 @@ void main() async {
     await StorageManager.checkAndCleanIfNeeded();
     
     final startupData = await AppBootstrap.initialize();
+
+    // Aguarda o Supabase restaurar a sessão antes de subir o app.
+    // Isso garante que currentUserIdProvider terá o UUID real desde o início,
+    // eliminando a race condition que causava saves com 'guest_user'.
+    // Timeout de 4s: se não houver sessão salva (usuário não logado), continua normalmente.
+    if (Supabase.instance.client.auth.currentSession == null) {
+      try {
+        await Supabase.instance.client.auth.onAuthStateChange
+            .where((e) => e.event == AuthChangeEvent.initialSession || e.session != null)
+            .first
+            .timeout(const Duration(seconds: 4));
+        LoggerService.instance.d('✅ Supabase: sessão restaurada antes do runApp');
+      } catch (_) {
+        // Timeout: usuário não está logado, continua normalmente em modo guest
+        LoggerService.instance.d('⚠️ Supabase: nenhuma sessão encontrada (modo guest ou não logado)');
+      }
+    } else {
+      LoggerService.instance.d('✅ Supabase: sessão já disponível imediatamente');
+    }
     
     runApp(
       ProviderScope(
@@ -53,26 +75,9 @@ void main() async {
     );
   } catch (e, stackTrace) {
     LoggerService.instance.e('Error during initialization', error: e, stackTrace: stackTrace);
-    runApp(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text('Erro ao inicializar app'),
-              const SizedBox(height: 8),
-              Text('Detalhes: $e'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => main(),
-                child: const Text('Tentar Novamente'),
-              ),
-            ],
-          ),
-        ),
-      ),
+    runApp(ErrorRecoveryScreen(
+      error: e.toString(),
+      stackTrace: stackTrace,
     ));
   }
 }
@@ -95,20 +100,25 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
       
       // Configurar ProviderContainer para AppLockService
       AppLockService.setContainer(container);
+      
+      // A sessão já foi aguardada no main() antes do runApp.
+      // Disparamos a sincronização diretamente aqui.
+      AppLockSyncService.instance.syncAllConfigs();
 
-      LoggerService.instance.d('🔒 App Lock inicializado');
+      // Também escuta eventos futuros (login/logout) para manter o nativo sincronizado
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        if (data.session != null) {
+          AppLockSyncService.instance.syncAllConfigs();
+        }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final themeController = ref.watch(themeControllerProvider.notifier);
-    final currentTheme = ref.watch(themeControllerProvider);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
     final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
-
-    // Log para debug
-    LoggerService.instance.d('🏗️ DisciplinumApp build: seenOnboarding=$seenOnboarding, user=${authService.currentUser?.id}, theme=${currentTheme.name}');
     
     return GlobalAchievementListener(
       child: AuthNavigationListener(

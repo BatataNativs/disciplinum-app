@@ -12,20 +12,26 @@ import android.util.Log
 import com.disciplinum.app.AccessibilityMonitorService
 import com.disciplinum.app.TimerOverlayManager
 import com.disciplinum.app_lock.AppLockService
+import com.disciplinum.channels.AppLockMethodChannel
 
 class MainActivity : FlutterActivity() {
     private val ACCESSIBILITY_EVENT_CHANNEL = "com.disciplinum.app/accessibility"
     private val ACCESSIBILITY_METHOD_CHANNEL = "com.disciplinum.app/accessibility_methods"
 
     private lateinit var timerOverlayManager: TimerOverlayManager
+    private lateinit var appLockMethodChannel: AppLockMethodChannel
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         timerOverlayManager = TimerOverlayManager(applicationContext)
+        appLockMethodChannel = AppLockMethodChannel(applicationContext)
 
         // Configura o MethodChannel do App Lock
         AppLockService.setupChannel(flutterEngine, this)
         AppLockService.getInstance().setCurrentActivity(this)
+        
+        // Configura o AppLockMethodChannel para LockDecisionEngine
+        appLockMethodChannel.setupMethodChannel(flutterEngine)
 
         // Event Channel para o stream de eventos
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_EVENT_CHANNEL).setStreamHandler(
@@ -185,5 +191,9 @@ class MainActivity : FlutterActivity() {
         super.onDestroy()
         // Limpa a referência da activity no AppLockService
         AppLockService.getInstance().setCurrentActivity(null)
+        // Dispose do AppLockMethodChannel
+        if (::appLockMethodChannel.isInitialized) {
+            appLockMethodChannel.dispose()
+        }
     }
 }

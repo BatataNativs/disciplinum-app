@@ -45,6 +45,16 @@ final digitalDetoxTotalDisciplinedDaysProvider = Provider.family<int, String>((r
   return state.gamification?.totalDisciplinedDays ?? 0;
 });
 
+final digitalDetoxSevenDayCycleProvider = Provider.family<int, String>((ref, userId) {
+  final state = ref.watch(digitalDetoxGamificationStateProvider(userId));
+  return state.gamification?.sevenDayCycle ?? 0;
+});
+
+final digitalDetoxCurrent30DayCycleProvider = Provider.family<int, String>((ref, userId) {
+  final state = ref.watch(digitalDetoxGamificationStateProvider(userId));
+  return state.gamification?.daysInCurrent30DayCycle ?? 0;
+});
+
 final digitalDetoxActiveProvider = Provider.family<bool, String>((ref, userId) {
   final state = ref.watch(digitalDetoxGamificationStateProvider(userId));
   return state.gamification?.isModuleActive ?? false;

@@ -28,7 +28,7 @@ class TaskListWidget extends StatelessWidget {
 
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(16),
-      onReorder: _onReorder,
+      onReorderItem: _onReorder,
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];
