@@ -192,3 +192,12 @@ final digitalDetoxNotifierProvider = StateNotifierProvider.family<DigitalDetoxNo
   final service = ref.watch(digitalDetoxServiceLocalProvider);
   return DigitalDetoxNotifier(service).._loadData(userId);
 });
+
+/// Provider para verificar se o módulo Digital Detox está ativo
+/// Segue o mesmo padrão dos outros módulos (ex: focusActiveProvider, readingActiveProvider)
+final digitalDetoxActiveProvider = FutureProvider<bool>((ref) async {
+  final userId = ref.watch(digitalDetoxCurrentUserIdProvider);
+  final service = ref.watch(digitalDetoxServiceLocalProvider);
+  final config = await service.getConfig(userId);
+  return config?.isModuleActive ?? false;
+});

@@ -361,7 +361,7 @@ final readingActiveProvider = Provider<bool>((ref) {
 /// Sistema completo de módulos - verifica status de cada módulo individualmente
 final activeModulesProvider = FutureProvider<List<NicheId>>((ref) async {
   final activeModules = <NicheId>[];
-  
+
   // Verificar cada módulo usando seus providers locais
   if (ref.watch(smokingActiveProvider)) activeModules.add(NicheId.smoking);
   if (ref.watch(adultContentActiveProvider)) activeModules.add(NicheId.adultContent);
@@ -372,15 +372,12 @@ final activeModulesProvider = FutureProvider<List<NicheId>>((ref) async {
   if (ref.watch(procrastinationActiveProvider)) activeModules.add(NicheId.procrastination);
   if (ref.watch(readingActiveProvider)) activeModules.add(NicheId.reading);
   if (ref.watch(spendingActiveProvider)) activeModules.add(NicheId.spending);
-  // Digital Detox - usar provider local
+  // Digital Detox - usar provider dedicado
   try {
-    // Verificar se módulo está ativo via provider local
-    final userId = ref.watch(currentUserIdProvider);
-    final digitalDetoxService = ref.read(digitalDetoxServiceLocalProvider);
-    final config = await digitalDetoxService.getConfig(userId);
-    if (config?.isModuleActive == true) activeModules.add(NicheId.digitalDetox);
+    final digitalDetoxActive = await ref.watch(digitalDetoxActiveProvider.future);
+    if (digitalDetoxActive) activeModules.add(NicheId.digitalDetox);
   } catch (_) {}
-  
+
   return activeModules;
 });
 

@@ -18,6 +18,7 @@ import 'package:disciplinum/shared/widgets/common/module_screen_header.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/services/digital_detox_gamification_service.dart';
+import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
@@ -166,18 +167,21 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
       if (shouldDeactivate == true && mounted) {
         try {
           HapticFeedback.heavyImpact();
-          
+
           final userId = ref.read(digitalDetoxCurrentUserIdProvider);
           await ref.read(digitalDetoxServiceLocalProvider).deactivateModule(userId);
-          
+
           // Resetar gamificação mantendo apenas insígnia Madeira
           await _resetGamification();
-          
+
+          // Sincronizar configurações com camada nativa Android
+          await AppLockSyncService.instance.syncAllConfigs();
+
           // Invalidar activeModulesProvider para atualizar home screen
           ref.invalidate(activeModulesProvider);
-          
+
           setState(() => _isModuleActive = false);
-          
+
           if (mounted) {
             EnhancedSnackBarHelper.showWarning(context, 'Módulo desativado');
           }
@@ -204,7 +208,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
 
       try {
         HapticFeedback.lightImpact();
-        
+
         final userId = ref.read(digitalDetoxCurrentUserIdProvider);
         await ref.read(digitalDetoxServiceLocalProvider).activateModule(userId);
 
@@ -212,11 +216,14 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           await ref.read(digitalDetoxServiceLocalProvider).addMonitoredApp(userId, app);
         }
 
+        // Sincronizar configurações com camada nativa Android
+        await AppLockSyncService.instance.syncAllConfigs();
+
         // Invalidar activeModulesProvider para atualizar home screen
         ref.invalidate(activeModulesProvider);
 
         setState(() => _isModuleActive = true);
-        
+
         if (mounted) {
           EnhancedSnackBarHelper.showSuccess(context, 'Módulo ativado com sucesso!');
         }

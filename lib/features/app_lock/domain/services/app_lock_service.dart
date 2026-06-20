@@ -95,6 +95,7 @@ class AppLockService {
     try {
       // Mapear moduleId para o serviço de gamificação correspondente
       switch (moduleId) {
+        case 'digital_detox':
         case 'instagram':
         case 'facebook':
         case 'twitter':

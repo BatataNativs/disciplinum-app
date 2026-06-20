@@ -78,7 +78,7 @@ class AppBootstrap {
     try {
       await Supabase.initialize(
         url: AppConfig.supabaseUrl,
-        anonKey: AppConfig.supabaseAnonKey,
+        publishableKey: AppConfig.supabaseAnonKey,
       );
     } catch (e) {
       if (kDebugMode) {

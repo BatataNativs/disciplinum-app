@@ -21,7 +21,6 @@ if (project.hasProperty("dart-defines")) {
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -39,13 +38,9 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     configurations.all {
         resolutionStrategy {
-            // Força versões estáveis que funcionam com AGP 8.7.x
+            // Mantem versões AndroidX estáveis durante a atualização do toolchain Android.
             force("androidx.browser:browser:1.8.0")
             force("androidx.activity:activity:1.9.3")
             force("androidx.activity:activity-ktx:1.9.3")
@@ -76,6 +71,12 @@ android {
         debug {
             isMinifyEnabled = false
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
