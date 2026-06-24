@@ -1,25 +1,46 @@
-# 🎮 Sistema de Gamificação - Arquitetura Completa
+# Sistema de Gamificação - Arquitetura Completa
 
-## 📋 Índice
+## Status de Implementação (2026-06-24)
 
-1. [Visão Geral](#visão-geral)
-2. [Tipos de Módulos](#tipos-de-módulos)
-3. [Fluxo de Detecção de Conquistas](#fluxo-de-detecção-de-conquistas)
-4. [Arquitetura por Módulo](#arquitetura-por-módulo)
-5. [Persistência (ObjectBox + Supabase)](#persistência-objectbox--supabase)
-6. [Notificações e Celebrações](#notificações-e-celebrações)
+- ✅ Reading: 100% implementado (Plugin Architecture)
+- ✅ Money Saving: 100% implementado (Plugin Architecture)
+- ✅ BingeEating: 100% implementado (Plugin Architecture)
+- ✅ Adult Content: 100% implementado (Plugin Architecture)
+- ✅ Diet: 100% implementado (Plugin Architecture)
+- ✅ Procrastination: 100% implementado (Plugin Architecture)
+- ✅ Smoking: 100% implementado (Plugin Architecture)
+- ✅ Focus: 100% implementado (Plugin Architecture)
+- ✅ Spending: 100% implementado (Plugin Architecture)
+- ✅ Digital Detox (Jejum Digital): 100% implementado (Plugin Architecture)
+
+**Progresso:** 10/10 módulos (100%)
 
 ---
 
-## 🎯 Visão Geral
+## Índice
 
-O sistema de gamificação do Disciplinum é composto por **9 módulos independentes**, cada um com:
+1. [Visão Geral](#visão-geral)
+2. [Arquitetura de Plugins](#arquitetura-de-plugins)
+3. [Tipos de Módulos](#tipos-de-módulos)
+4. [Fluxo de Detecção de Conquistas](#fluxo-de-detecção-de-conquistas)
+5. [Arquitetura por Módulo](#arquitetura-por-módulo)
+6. [Persistência (ObjectBox + Supabase)](#persistência-objectbox--supabase)
+7. [Dependências do Projeto](#dependências-do-projeto)
+8. [Notificações e CelebraГУes](#notificaГУes-e-celebraГУes)
 
+---
+
+## Visão Geral
+
+O sistema de gamificação do Disciplinum é composto por **10 módulos independentes** (plugins), cada um com:
+
+- **Arquitetura Plugin** - Módulos 100% independentes
 - **Persistência local** via ObjectBox
 - **Sincronização em nuvem** via Supabase
 - **Sistema de insígnias** (conquistas imediatas)
 - **Sistema de medalhas** (conquistas acumulativas)
-- **Notificações push** com celebração global
+- **Estado Riverpod puro** - StateNotifier por módulo
+- **Zero dependências globais** - Cada plugin é autônomo
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -27,7 +48,7 @@ O sistema de gamificação do Disciplinum é composto por **9 módulos independe
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │                        PERSISTÊNCIA DUAL                             │   │
+│   │                        ARQUITETURA PLUGIN                             │   │
 │   │  ┌─────────────────────┐      ┌─────────────────────┐              │   │
 │   │  │    OBJECTBOX 📦      │      │    SUPABASE ☁️       │              │   │
 │   │  │    (Local)           │  ↔️   │    (Cloud)           │              │   │
@@ -39,7 +60,7 @@ O sistema de gamificação do Disciplinum é composto por **9 módulos independe
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │                     9 MÓDULOS INDEPENDENTES                          │   │
+│   │                    10 MÓDULOS INDEPENDENTES                        │   │
 │   │                                                                     │   │
 │   │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                │   │
 │   │  │ 🚭 SMOKING   │ │ 📱 FOCUS     │ │ 📖 READING   │                │   │
@@ -53,14 +74,71 @@ O sistema de gamificação do Disciplinum é composto por **9 módulos independe
 │   │  │ 🍔 BINGE     │ │ 💸 SPENDING  │ │ ✅ PROCRAST  │                │   │
 │   │  │ Passivo      │ │ Passivo      │ │ Tarefas      │                │   │
 │   │  └──────────────┘ └──────────────┘ └──────────────┘                │   │
-│   └─────────────────────────────────────────────────────────────────────┘   │
+│   │  ┌──────────────┐ ┌──────────────────────────────────┐              │   │
+│   │  │ 📱 DETOX     │ │                                  │              │   │
+│   │  │ Passivo      │ │                                  │              │   │
+│   │  └──────────────┘ │                                  │              │   │
+│   │                    │                                  │              │   │
+│   └────────────────────┴──────────────────────────────────┘              │   │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔄 Tipos de Módulos
+## Arquitetura de Plugins
+
+### Visão Geral
+
+O objetivo final da gamificação do Disciplinum é transformar cada módulo em um **plugin independente**. Cada pasta de módulo deve ter sua própria pasta `gamification`, contendo toda a gamificação relacionada exclusivamente àquele módulo.
+
+### Estrutura de Diretórios
+
+```
+lib/features/modules/[nome do módulo]/gamification/
+```
+
+### Benefícios da Arquitetura Plugin
+
+- **Independência:** Módulos funcionam isoladamente
+- **Escalabilidade:** Facilita inclusão de novos módulos
+- **Manutenibilidade:** Exclusão de módulos sem afetar outros
+- **Organização:** Cada classe, função e objeto pertence ao seu módulo
+
+### Estrutura de Cada Plugin
+
+```
+features/modules/{module_name}/
+├── gamification/
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   ├── {module}_gamification_entity.dart      # Entity ObjectBox
+│   │   │   ├── {module}_module_state.dart              # Estado do módulo
+│   │   │   └── {module}_config.dart                    # Configurações
+│   │   ├── repositories/
+│   │   │   └── {module}_gamification_repository.dart   # Repository local
+│   │   └── services/
+│   │       └── {module}_gamification_notifier.dart     # StateNotifier Riverpod
+│   └── presentation/
+│       ├── screens/
+│       │   └── {module}_screen.dart
+│       └── widgets/
+│           └── ...
+```
+
+### Padrão de Implementação
+
+Cada módulo segue o padrão estabelecido no piloto **Reading**:
+
+1. **Entity ObjectBox** - Persistência nativa via `@Entity()`
+2. **Repository Local** - Acesso a dados sem dependências globais
+3. **StateNotifier** - Estado gerenciado via Riverpod puro
+4. **Autenticação Integrada** - `currentUserIdProvider` local
+5. **Persistência de Estado** - Estado de ativação salvo localmente
+
+---
+
+## Tipos de Módulos
 
 ### **TIPO A: IN APP ACTION** (Ação Direta → Recompensa Imediata)
 
@@ -121,6 +199,7 @@ O sistema verifica periodicamente (quando o app abre) se marcos de tempo foram a
 | **🛡️ Adult Content** | Dias "limpo" | App abre / background fetch |
 | **🍔 Binge Eating** | Dias sem compulsão | App abre / background fetch |
 | **💸 Spending** | Dias sem gastar | App abre / background fetch |
+| **📱 Digital Detox** | Dias respeitando limites | App abre / background fetch |
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -320,52 +399,45 @@ O sistema verifica periodicamente (quando o app abre) se marcos de tempo foram a
 
 ---
 
-## 🏗️ Arquitetura por Módulo
+## Arquitetura por Módulo
 
-### Estrutura Padrão de Cada Módulo:
+### Estrutura Padrão de Cada Módulo (Plugin):
 
 ```
 features/modules/{module_name}/
-├── domain/
-│   ├── entities/
-│   │   ├── {module}_module_state.dart       # Estado do módulo
-│   │   └── {module}_config.dart             # Configurações
-│   ├── services/
-│   │   └── {module}_service.dart            # Lógica principal
-│   └── repositories/
-│       └── {module}_repository.dart         # Persistência base
-│
 ├── gamification/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── {module}_gamification_entity.dart      # Entity ObjectBox
-│   │   │   ├── {module}_medal.dart                      # Enum de medalhas
-│   │   │   └── {module}_insignia.dart                   # Enum de insígnias
-│   │   ├── services/
-│   │   │   ├── {module}_medalha_service.dart           # Lógica de medalhas
-│   │   │   ├── {module}_insignia_service.dart          # Lógica de insígnias
-│   │   │   ├── {module}_celebration_service.dart       # Celebrações
-│   │   │   └── {module}_gamification_events.dart       # Eventos
-│   │   └── repositories/
-│   │       └── {module}_gamification_repository.dart   # Repo ObjectBox + Supabase
-│   └── data/
-│       └── repositories/
-│           └── {module}_gamification_repository.dart   # Implementação
-│
-└── presentation/
-    ├── notifiers/
-    │   └── {module}_gamification_notifier.dart   # StateNotifier Riverpod
-    ├── screens/
-    │   └── {module}_screen.dart
-    └── widgets/
-        └── ...
+│   │   │   ├── {module}_gamification_entity.dart      # Entity ObjectBox @Entity()
+│   │   │   ├── {module}_module_state.dart              # Estado do módulo
+│   │   │   └── {module}_config.dart                    # Configurações
+│   │   ├── repositories/
+│   │   │   └── {module}_gamification_repository.dart   # Repository local
+│   │   └── services/
+│   │       └── {module}_gamification_notifier.dart     # StateNotifier Riverpod
+│   └── presentation/
+│       ├── screens/
+│       │   └── {module}_screen.dart
+│       └── widgets/
+│           └── ...
 ```
+
+### Padrão de Implementação Plugin
+
+Cada módulo segue o padrão estabelecido nos pilotos **Reading** e **Money Saving**:
+
+1. **Entity ObjectBox** - Persistência nativa via `@Entity()` com `@Id()`
+2. **Repository Local** - Acesso a dados sem dependências globais
+3. **StateNotifier** - Estado gerenciado via Riverpod puro
+4. **Autenticação Integrada** - `currentUserIdProvider` local com fallback
+5. **Persistência de Estado** - Estado de ativação salvo localmente
+6. **Zero Acoplamento** - Nenhuma dependência de services globais
 
 ---
 
-## 📦 Persistência (ObjectBox + Supabase)
+## Persistência (ObjectBox + Supabase)
 
-### Padrão de Persistência Dual:
+### Padrão de Persistência Dual
 
 ```dart
 /// Exemplo: SmokingGamificationRepository
@@ -425,7 +497,7 @@ class SmokingGamificationRepository {
 }
 ```
 
-### Todos os Módulos com ObjectBox + Supabase:
+### Todos os Módulos com ObjectBox + Supabase
 
 | Módulo | Repository | Tabela Supabase | Entity ObjectBox |
 |--------|------------|-----------------|------------------|
@@ -438,6 +510,68 @@ class SmokingGamificationRepository {
 | 💸 Spending | `SpendingGamificationRepository` | `spending_gamification_states` | `SpendingGamificationEntity` |
 | ✅ Procrast | `ProcrastinationGamificationRepository` | `procrastination_gamification_states` | `ProcrastinationGamificationEntity` |
 | 📖 Reading | `ReadingGamificationRepository` | `reading_gamification_states` | `ReadingGamificationEntity` |
+| 📱 Detox | `DigitalDetoxGamificationRepository` | `digital_detox_gamification_states` | `DigitalDetoxGamificationEntity` |
+
+---
+
+## Dependências do Projeto
+
+### Dependências Principais (pubspec.yaml)
+
+#### Gerenciamento de Estado
+- **flutter_riverpod:** ^2.6.1 - Gerenciamento de estado reativo
+- **riverpod_annotation:** ^2.6.1 - Code generation para Riverpod
+- **riverpod_generator:** ^2.4.0 - Gerador de código Riverpod
+- **provider:** ^6.1.2 - Provider legacy (em desuso)
+
+#### Persistência de Dados
+- **objectbox:** ^4.1.0 - Banco de dados local de alta performance
+- **objectbox_flutter_libs:** ^4.1.0 - Bibliotecas ObjectBox para Flutter
+- **objectbox_generator:** ^4.1.0 - Code generation para ObjectBox
+- **shared_preferences:** ^2.3.5 - Preferências simples (uso residual)
+- **path_provider:** ^2.1.4 - Acesso a diretórios do sistema
+
+#### Backend e Autenticação
+- **supabase_flutter:** ^2.12.4 - Backend as a Service e autenticação
+- **google_sign_in:** ^7.2.0 - Autenticação Google
+
+#### Firebase
+- **firebase_core:** ^4.7.0 - Core do Firebase
+- **firebase_crashlytics:** ^5.2.0 - Crash reporting
+- **firebase_analytics:** ^12.3.0 - Analytics
+
+#### Notificações
+- **flutter_local_notifications:** ^21.0.0 - Notificações locais
+
+#### Monitoramento e Permissões
+- **installed_apps:** ^2.1.1 - Lista de apps instalados
+- **permission_handler:** ^12.0.1 - Gerenciamento de permissões
+
+#### Utilitários
+- **equatable:** ^2.0.5 - Comparação de objetos
+- **logger:** ^2.0.2 - Logging profissional
+- **uuid:** ^4.5.2 - Geração de UUIDs
+- **url_launcher:** ^6.3.1 - Abrir URLs
+- **in_app_review:** ^2.0.9 - Reviews na app store
+
+#### UI e Gráficos
+- **confetti:** ^0.8.0 - Efeitos de confetes
+- **fl_chart:** ^1.2.0 - Gráficos
+- **shimmer:** ^3.0.0 - Efeitos de loading
+- **google_fonts:** ^6.2.1 - Fontes Google
+
+#### Anúncios e IAP
+- **google_mobile_ads:** ^8.0.0 - Anúncios AdMob
+- **in_app_purchase:** ^3.0.0 - Compras in-app
+
+#### Background Processing
+- **workmanager:** ^0.9.0+3 - Tarefas em background
+
+#### Dev Dependencies
+- **build_runner:** ^2.4.13 - Code generation
+- **flutter_lints:** ^6.0.0 - Linting
+- **objectbox_generator:** ^4.1.0 - Geração ObjectBox
+- **mockito:** ^5.4.4 - Mocking para testes
 
 ---
 
@@ -534,7 +668,7 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 
 ---
 
-## 📊 Resumo Visual por Módulo
+## Resumo Visual por Módulo
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -574,6 +708,10 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 │  │ 💸       │ Passivo     │ ❌ Não       │ Dias sem gastar                │ │
 │  │ Spending │             │ (App        │ (App Monitoring detecta)       │ │
 │  │          │             │  Monitoring) │                                │ │
+│  ├──────────┼─────────────┼──────────────┼────────────────────────────────┤ │
+│  │ 📱       │ Passivo     │ ❌ Não       │ Dias respeitando limites       │ │
+│  │ Detox    │             │ (App        │ (App Monitoring detecta)       │ │
+│  │          │             │  Monitoring) │                                │ │
 │  └──────────┴─────────────┴──────────────┴────────────────────────────────┘ │
 │                                                                             │
 │  LEGENDA:                                                                   │
@@ -582,7 +720,8 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 │  │     • ObjectBox (persistência local)                                  │  │
 │  │     • Supabase (sincronização cloud)                                  │  │
 │  │     • Insígnias e Medalhas                                            │  │
-│  │     • Celebração global com GlobalAchievementListener                 │  │
+│  │     • Arquitetura Plugin independente                                 │  │
+│  │     • StateNotifier Riverpod puro                                     │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -590,21 +729,22 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 
 ---
 
-## 🎯 Checklist de Implementação
+## Checklist de Implementação
 
 - [x] ObjectBox configurado para todos os módulos
 - [x] Supabase sincronização para todos os módulos
-- [x] Sistema de insígnias (9 módulos)
-- [x] Sistema de medalhas (9 módulos)
-- [x] CelebrationService por módulo (9 serviços)
-- [x] AchievementNotificationService integrado
-- [x] GlobalAchievementListener (verificação global)
-- [x] Notificações push para conquistas
+- [x] Sistema de insígnias (10 módulos)
+- [x] Sistema de medalhas (10 módulos)
+- [x] Arquitetura Plugin implementada (10 módulos)
+- [x] StateNotifier Riverpod puro (10 módulos)
+- [x] Autenticação integrada local (10 módulos)
+- [x] Zero dependências globais (10 módulos)
 - [x] Check-in diário (Smoking, Diet)
-- [x] App Monitoring (Adult Content, Spending)
+- [x] App Monitoring (Adult Content, Spending, Digital Detox)
+- [x] Sistema de Quebras de Jejum (Digital Detox)
 
 ---
 
-**Documento criado em:** Maio 2026  
-**Versão:** 1.0  
-**Status:** ✅ Completo e atualizado
+**Documento atualizado em:** Junho 2026  
+**Versão:** 2.0  
+**Status:** ✅ Completo e atualizado com Arquitetura Plugin

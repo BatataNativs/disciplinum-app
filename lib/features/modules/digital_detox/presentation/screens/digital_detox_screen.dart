@@ -1045,7 +1045,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DigitalDetoxLimitsScreen()),
+                  MaterialPageRoute(builder: (_) => const DigitalDetoxStatsScreen()),
                 );
               },
             ),

@@ -152,9 +152,8 @@ class LockActivity : Activity() {
 
     /** Permite abrir o app e fecha o bloqueio */
     private fun openAnyway() {
-        // Adiciona bypass temporário de 10 minutos + grace period de 10 segundos para evitar loop de bloqueio
-        // Baseado em soluções profissionais como InstaGuard e Reels Blocker
-        com.disciplinum.app.AccessibilityMonitorService.addBypassedApp(blockedPackageName)
+        // Cria uma sessão autorizada para o app (válida enquanto ele estiver em foreground)
+        com.disciplinum.app.AccessibilityMonitorService.addAuthorizedSession(blockedPackageName)
 
         // Tenta lançar o app monitorado explicitamente
         try {

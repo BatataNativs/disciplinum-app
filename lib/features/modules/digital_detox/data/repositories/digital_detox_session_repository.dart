@@ -1,4 +1,4 @@
-﻿import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/domain/entities/digital_detox_session_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
 

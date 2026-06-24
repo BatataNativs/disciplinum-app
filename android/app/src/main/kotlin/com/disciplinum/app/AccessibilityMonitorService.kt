@@ -16,11 +16,11 @@ class AccessibilityMonitorService : AccessibilityService() {
         private var lockDecisionEngine: LockDecisionEngine? = null
         private var monitoredApps: Set<String> = emptySet()
         private var moduleConfigs: Map<String, LockDecisionEngine.ModuleConfig> = emptyMap()
-        // Apps temporariamente isentos de bloqueio (usuário escolheu "abrir mesmo assim")
-        private val bypassedApps: MutableMap<String, Long> = mutableMapOf()
-        private const val BYPASS_DURATION_MS = 600_000L // 10 minutos (baseado em apps profissionais como InstaGuard)
-        private const val GRACE_PERIOD_MS = 10_000L // 10 segundos de grace period após reabrir o app
-        private var lastBypassTime: Long = 0L
+        data class AppSession(
+            val packageName: String,
+            val authorizedAt: Long
+        )
+        private val authorizedSessions: MutableMap<String, AppSession> = mutableMapOf()
 
         fun setEventSink(sink: EventChannel.EventSink?) {
             eventSink = sink
@@ -40,32 +40,15 @@ class AccessibilityMonitorService : AccessibilityService() {
             lockDecisionEngine?.updateViolationCounts(counts)
         }
 
-        /** Adiciona um app à lista de bypass temporário (10 minutos) */
-        fun addBypassedApp(packageName: String) {
-            val expiryTime = System.currentTimeMillis() + BYPASS_DURATION_MS
-            bypassedApps[packageName] = expiryTime
-            lastBypassTime = System.currentTimeMillis()
-            android.util.Log.d("AccessMonitor", "Bypass ativado para $packageName por 10 minutos (expira em ${expiryTime})")
+        /** Adiciona um app à lista de sessões autorizadas */
+        fun addAuthorizedSession(packageName: String) {
+            authorizedSessions[packageName] = AppSession(packageName, System.currentTimeMillis())
+            android.util.Log.d("AccessMonitor", "Sessão autorizada para $packageName")
         }
 
-        /** Verifica se o app está no bypass temporário */
-        private fun isBypassed(packageName: String): Boolean {
-            val expiry = bypassedApps[packageName] ?: return false
-            val currentTime = System.currentTimeMillis()
-
-            if (currentTime > expiry) {
-                // Bypass expirou, mas verifica se está na grace period
-                val timeSinceExpiry = currentTime - expiry
-                if (timeSinceExpiry < GRACE_PERIOD_MS) {
-                    android.util.Log.d("AccessMonitor", "$packageName na grace period (${timeSinceExpiry}ms), permitindo acesso")
-                    return true
-                }
-                // Grace period também expirou, remove da lista
-                bypassedApps.remove(packageName)
-                android.util.Log.d("AccessMonitor", "Bypass e grace period expiraram para $packageName")
-                return false
-            }
-            return true
+        /** Verifica se o app possui uma sessão autorizada ativa */
+        private fun isSessionAuthorized(packageName: String): Boolean {
+            return authorizedSessions.containsKey(packageName)
         }
 
         fun getMonitoredApps(): Set<String> = monitoredApps
@@ -94,6 +77,20 @@ class AccessibilityMonitorService : AccessibilityService() {
             val currentTime = System.currentTimeMillis()
             
             if (packageName != null && packageName != currentPackage) {
+                // Ignorar eventos de teclado, systemui ou permissões para não limpar a sessão 
+                // indevidamente quando eles aparecem sobrepostos
+                if (packageName == "com.android.systemui" || 
+                    packageName == "com.google.android.permissioncontroller" ||
+                    packageName.contains("inputmethod")) {
+                    return
+                }
+
+                if (currentPackage != null) {
+                    // Remove a sessão do pacote anterior, pois ele não está mais em foreground
+                    authorizedSessions.remove(currentPackage)
+                    android.util.Log.d("AccessMonitor", "Sessão encerrada para $currentPackage (mudou para $packageName)")
+                }
+                
                 // Debounce: ignora eventos muito próximos (menos de 50ms)
                 if (currentTime - lastEventTime < debounceDelay) {
                     return
@@ -112,13 +109,13 @@ class AccessibilityMonitorService : AccessibilityService() {
     
     private fun processAppEvent(packageName: String) {
         try {
-            // Verifica bypass temporário (usuário escolheu "abrir mesmo assim")
-            if (isBypassed(packageName)) {
-                android.util.Log.d("AccessMonitor", "$packageName está em bypass temporário, ignorando")
+            // Verifica sessão autorizada (usuário escolheu "abrir mesmo assim" anteriormente nesta sessão)
+            if (isSessionAuthorized(packageName)) {
+                android.util.Log.d("AccessMonitor", "$packageName tem sessão autorizada, ignorando")
                 eventSink?.success(mapOf<String, Any>(
                     "type" to "app_opened",
                     "packageName" to packageName,
-                    "reason" to "Bypass temporário ativo"
+                    "reason" to "Sessão em andamento"
                 ))
                 return
             }

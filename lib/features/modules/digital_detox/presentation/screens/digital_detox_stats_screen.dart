@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/presentation/providers/digital_detox_gamification_provider.dart';
@@ -6,14 +6,14 @@ import 'package:disciplinum/features/modules/digital_detox/presentation/provider
 
 /// Tela de estatísticas do Jejum Digital
 /// Exibe métricas de uso e progresso do usuário
-class DigitalDetoxLimitsScreen extends ConsumerStatefulWidget {
-  const DigitalDetoxLimitsScreen({super.key});
+class   DigitalDetoxStatsScreen extends ConsumerStatefulWidget {
+  const DigitalDetoxStatsScreen({super.key});
 
   @override
-  ConsumerState<DigitalDetoxLimitsScreen> createState() => _DigitalDetoxLimitsScreenState();
+  ConsumerState<DigitalDetoxStatsScreen> createState() => _DigitalDetoxStatsScreenState();
 }
 
-class _DigitalDetoxLimitsScreenState extends ConsumerState<DigitalDetoxLimitsScreen> {
+class _DigitalDetoxStatsScreenState extends ConsumerState<DigitalDetoxStatsScreen> {
   bool _isLoading = true;
   dynamic _config;
 

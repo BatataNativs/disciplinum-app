@@ -257,7 +257,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: colorScheme.outline.withValues(alpha: 0.2),
@@ -271,7 +270,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        child: Column(children: children),
+        child: Material(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
+          child: Column(children: children),
+        ),
       );
     }
 

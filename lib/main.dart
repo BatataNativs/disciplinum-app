@@ -116,7 +116,9 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
 
   @override
   Widget build(BuildContext context) {
-    final themeController = ref.watch(themeControllerProvider.notifier);
+    // Observa o estado para reconstruir quando mudar, mas usa o notifier para pegar o themeData
+    ref.watch(themeControllerProvider);
+    final themeController = ref.read(themeControllerProvider.notifier);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
     final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
     
