@@ -4,6 +4,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_fasting_break_domain_repository.dart';
+import 'package:disciplinum/features/modules/digital_detox/data/repositories/digital_detox_config_repository.dart';
 
 // Estado da gamificação do Digital Detox
 class DigitalDetoxGamificationState {
@@ -62,6 +63,13 @@ class DigitalDetoxGamificationNotifier extends StateNotifier<DigitalDetoxGamific
   Future<void> loadGamification(String userId) async {
     state = DigitalDetoxGamificationState(gamification: null, isLoading: true, errorMessage: '', availableBreaks: []);
     try {
+      // Sincronizar configurações da nuvem (apps bloqueados, limites, etc)
+      try {
+        await DigitalDetoxConfigRepository.instance.performFullSync();
+      } catch (e) {
+        LoggerService.instance.w('Aviso: falha ao sincronizar config do Digital Detox: $e');
+      }
+
       final gamification = _repository.getByUserId(userId);
       if (gamification == null) {
         // Criar nova gamificação se não existir

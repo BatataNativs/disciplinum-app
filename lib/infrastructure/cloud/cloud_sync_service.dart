@@ -24,6 +24,7 @@ import 'package:disciplinum/features/modules/spending/domain/repositories/spendi
 import 'package:disciplinum/features/modules/reading/data/repositories/reading_repository.dart';
 import 'package:disciplinum/features/modules/diet/domain/repositories/meal_entry_repository.dart';
 import 'package:disciplinum/features/modules/focus/data/repositories/focus_interval_repository.dart';
+import 'package:disciplinum/features/modules/digital_detox/data/repositories/digital_detox_config_repository.dart';
 
 class CloudSyncService {
   final SupabaseClient supabase;
@@ -340,6 +341,10 @@ class CloudSyncService {
       await _syncSpecificData(
         () => FocusIntervalRepository.instance.performFullSync(),
         'focus_intervals',
+      );
+      await _syncSpecificData(
+        () => DigitalDetoxConfigRepository.instance.performFullSync(),
+        'digital_detox_config',
       );
       
       // === SINCRONIZAÇÃO LEGADA (user_module_status, apps, horários) ===
