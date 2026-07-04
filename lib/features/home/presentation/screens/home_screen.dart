@@ -7,6 +7,8 @@ import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_se
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/infrastructure/ads/consent_service.dart';
+import 'package:disciplinum/infrastructure/ads/widgets/consent_dialog.dart';
 
 import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/common/niche_category.dart';
@@ -30,6 +32,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   bool _permissionsChecked = false;
   bool _isSyncing = false;
+  bool _consentDialogShown = false;
   late final ConfettiController _confettiController;
 
   @override
@@ -40,8 +43,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       InstalledAppService().preload();
-      _checkAndPerformInitialSync();
+      _initializeConsentAndCheckSync();
     });
+  }
+
+  Future<void> _initializeConsentAndCheckSync() async {
+    // Inicializa o ConsentService
+    await ConsentService.instance.initialize();
+    
+    // Verifica se o usuário já respondeu ao consentimento
+    final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
+    
+    if (!hasResponded && mounted) {
+      // Mostra o dialog de consentimento
+      setState(() => _consentDialogShown = true);
+      await showConsentDialog(context);
+      setState(() => _consentDialogShown = false);
+    }
+    
+    // Após o consentimento (ou se já respondeu), verifica a sync
+    _checkAndPerformInitialSync();
   }
 
   Future<void> _checkAndPerformInitialSync({bool isLoginEvent = false}) async {
@@ -848,6 +869,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 ),
               ),
             ),
+            // Overlay de consentimento de anúncios (esmaece a tela enquanto dialog é mostrado)
+            if (_consentDialogShown)
+              Positioned.fill(
+                child: AbsorbPointer(
+                  absorbing: true,
+                  child: Container(
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

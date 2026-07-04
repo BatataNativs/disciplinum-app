@@ -14,6 +14,7 @@ import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/infrastructure/ads/consent_service.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -50,6 +51,28 @@ class NotificationsPausedNotifier extends StateNotifier<bool> {
     if (paused) {
       await NotificationService.cancelAll();
     }
+  }
+}
+
+/// Provider para estado de anúncios personalizados
+final personalizedAdsProvider = StateNotifierProvider<PersonalizedAdsNotifier, bool>((ref) {
+  return PersonalizedAdsNotifier();
+});
+
+/// Notifier para gerenciar estado de anúncios personalizados
+class PersonalizedAdsNotifier extends StateNotifier<bool> {
+  PersonalizedAdsNotifier() : super(true) {
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final enabled = await ConsentService.instance.arePersonalizedAdsEnabled();
+    state = enabled;
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    state = enabled;
+    await ConsentService.instance.setPersonalizedAdsEnabled(enabled);
   }
 }
 
@@ -236,6 +259,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Usar provider local para estado de notificações
     final notificationsPaused = ref.watch(notificationsPausedProvider);
     final notificationsNotifier = ref.read(notificationsPausedProvider.notifier);
+    final personalizedAds = ref.watch(personalizedAdsProvider);
+    final personalizedAdsNotifier = ref.read(personalizedAdsProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget sectionHeader(String title) {
@@ -671,6 +696,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         builder: (context) =>
                             const OnboardingScreen(isReviewMode: true)),
                   ),
+                ),
+                Divider(
+                    height: 1,
+                    color: colorScheme.outline.withValues(alpha: 0.2),
+                    indent: 56),
+                SwitchListTile(
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: colorScheme.primary,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
+                  dense: true,
+                  title: Text(
+                    'Anúncios personalizados',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  subtitle: const Text('Mostrar anúncios baseados no seu interesse'),
+                  secondary: Icon(Icons.ads_click_outlined,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                  value: personalizedAds,
+                  onChanged: (val) async {
+                    await personalizedAdsNotifier.setEnabled(val);
+                    if (context.mounted) {
+                      EnhancedSnackBarHelper.showInfo(
+                        context,
+                        val ? 'Anúncios personalizados ativados' : 'Anúncios personalizados desativados',
+                      );
+                    }
+                  },
                 ),
               ]),
               const SizedBox(height: 32),

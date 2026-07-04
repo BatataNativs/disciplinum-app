@@ -10,6 +10,8 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/infrastructure/ads/consent_service.dart';
+import 'package:disciplinum/infrastructure/ads/widgets/consent_dialog.dart';
 
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
@@ -24,6 +26,7 @@ class HomeScreenGuest extends ConsumerStatefulWidget {
 class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     with WidgetsBindingObserver {
   bool _permissionsChecked = false;
+  bool _consentDialogShown = false;
 
   @override
   void initState() {
@@ -31,7 +34,23 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       InstalledAppService().preload();
+      _initializeConsent();
     });
+  }
+
+  Future<void> _initializeConsent() async {
+    // Inicializa o ConsentService
+    await ConsentService.instance.initialize();
+    
+    // Verifica se o usuário já respondeu ao consentimento
+    final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
+    
+    if (!hasResponded && mounted) {
+      // Mostra o dialog de consentimento
+      setState(() => _consentDialogShown = true);
+      await showConsentDialog(context);
+      setState(() => _consentDialogShown = false);
+    }
   }
 
   @override
@@ -590,6 +609,16 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                 ),
               ],
             ),
+            // Overlay de consentimento de anúncios (esmaece a tela enquanto dialog é mostrado)
+            if (_consentDialogShown)
+              Positioned.fill(
+                child: AbsorbPointer(
+                  absorbing: true,
+                  child: Container(
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
