@@ -46,10 +46,15 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
     
     if (!hasResponded && mounted) {
-      // Mostra o dialog de consentimento
-      setState(() => _consentDialogShown = true);
-      await showConsentDialog(context);
-      setState(() => _consentDialogShown = false);
+      final route = ModalRoute.of(context);
+      if (route != null && route.isCurrent) {
+        // Mostra o dialog de consentimento
+        setState(() => _consentDialogShown = true);
+        await showConsentDialog(context);
+        if (mounted) {
+          setState(() => _consentDialogShown = false);
+        }
+      }
     }
   }
 
@@ -74,6 +79,16 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
       final route = ModalRoute.of(context);
       if (route != null && route.isCurrent) {
         _permissionsChecked = true;
+
+        // Verifica consentimento de ads quando a tela se torna a atual (útil ao retornar do onboarding)
+        final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
+        if (!hasResponded && mounted && !_consentDialogShown) {
+          setState(() => _consentDialogShown = true);
+          await showConsentDialog(context);
+          if (mounted) {
+            setState(() => _consentDialogShown = false);
+          }
+        }
       }
     });
   }

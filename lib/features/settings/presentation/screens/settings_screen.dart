@@ -15,6 +15,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/infrastructure/ads/consent_service.dart';
+import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 
 import 'how_it_works_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -73,6 +74,28 @@ class PersonalizedAdsNotifier extends StateNotifier<bool> {
   Future<void> setEnabled(bool enabled) async {
     state = enabled;
     await ConsentService.instance.setPersonalizedAdsEnabled(enabled);
+  }
+}
+
+/// Provider para estado de análise de uso
+final analyticsEnabledProvider = StateNotifierProvider<AnalyticsEnabledNotifier, bool>((ref) {
+  return AnalyticsEnabledNotifier();
+});
+
+/// Notifier para gerenciar estado de análise de uso
+class AnalyticsEnabledNotifier extends StateNotifier<bool> {
+  AnalyticsEnabledNotifier() : super(true) {
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final enabled = await PrivacyService.isAnalyticsEnabled();
+    state = enabled;
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    state = enabled;
+    await PrivacyService.setAnalyticsEnabled(enabled);
   }
 }
 
@@ -261,6 +284,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notificationsNotifier = ref.read(notificationsPausedProvider.notifier);
     final personalizedAds = ref.watch(personalizedAdsProvider);
     final personalizedAdsNotifier = ref.read(personalizedAdsProvider.notifier);
+    final analyticsEnabled = ref.watch(analyticsEnabledProvider);
+    final analyticsNotifier = ref.read(analyticsEnabledProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget sectionHeader(String title) {
@@ -725,6 +750,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       EnhancedSnackBarHelper.showInfo(
                         context,
                         val ? 'Anúncios personalizados ativados' : 'Anúncios personalizados desativados',
+                      );
+                    }
+                  },
+                ),
+                Divider(
+                    height: 1,
+                    color: colorScheme.outline.withValues(alpha: 0.2),
+                    indent: 56),
+                SwitchListTile(
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: colorScheme.primary,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
+                  dense: true,
+                  title: Text(
+                    'Análise de uso e erros',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  subtitle: const Text('Permitir coleta de dados anônimos'),
+                  secondary: Icon(Icons.analytics_outlined,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                  value: analyticsEnabled,
+                  onChanged: (val) async {
+                    await analyticsNotifier.setEnabled(val);
+                    if (context.mounted) {
+                      EnhancedSnackBarHelper.showInfo(
+                        context,
+                        val ? 'Coleta ativada' : 'Coleta desativada',
                       );
                     }
                   },

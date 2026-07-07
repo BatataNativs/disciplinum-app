@@ -55,10 +55,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
     
     if (!hasResponded && mounted) {
-      // Mostra o dialog de consentimento
-      setState(() => _consentDialogShown = true);
-      await showConsentDialog(context);
-      setState(() => _consentDialogShown = false);
+      // Verifica se a tela ainda é a atual, para não mostrar sobre o onboarding
+      final route = ModalRoute.of(context);
+      if (route != null && route.isCurrent) {
+        // Mostra o dialog de consentimento
+        setState(() => _consentDialogShown = true);
+        await showConsentDialog(context);
+        if (mounted) {
+          setState(() => _consentDialogShown = false);
+        }
+      }
     }
     
     // Após o consentimento (ou se já respondeu), verifica a sync
@@ -276,6 +282,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
         // Verifica medalhas pendentes assim que a tela monta
         _checkPendingMedals();
+        
+        // Verifica consentimento de ads quando a tela se torna a atual (útil ao retornar do onboarding)
+        final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
+        if (!hasResponded && mounted && !_consentDialogShown) {
+          setState(() => _consentDialogShown = true);
+          await showConsentDialog(context);
+          if (mounted) {
+            setState(() => _consentDialogShown = false);
+          }
+        }
       }
     });
   }

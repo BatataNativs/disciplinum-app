@@ -51,7 +51,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
       // --- Rota da Lojinha ---
       if (currentRoute != AppRouter.shop) {
         Navigator.pushNamedAndRemoveUntil(
-          context, AppRouter.shop, (route) => route.isFirst);
+            context, AppRouter.shop, (route) => route.isFirst);
       }
     } else if (index == 3 && currentRoute != AppRouter.settings) {
       // Configurações agora é índice 3
@@ -70,16 +70,15 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
     // Cores ajustadas para Glassmorphism (com fallback para parâmetros)
     final effectiveGlassColor = glassColor ??
         colorScheme.surfaceContainerHighest.withValues(alpha: 0.85);
-    final effectiveBorderColor = borderColor ??
-        colorScheme.outline.withValues(alpha: 0.5);
-    final effectiveActiveIconColor = activeIconColor ??
-        colorScheme.onSurface;
-    final effectiveInactiveIconColor = inactiveIconColor ??
-        colorScheme.onSurface.withValues(alpha: 0.5);
+    final effectiveBorderColor =
+        borderColor ?? colorScheme.outline.withValues(alpha: 0.5);
+    final effectiveActiveIconColor = activeIconColor ?? colorScheme.onSurface;
+    final effectiveInactiveIconColor =
+        inactiveIconColor ?? colorScheme.onSurface.withValues(alpha: 0.5);
     final effectiveActiveIndicatorColor = activeIndicatorColor ??
         colorScheme.surfaceContainerHighest.withValues(alpha: 0.9);
-    final effectiveShadowColor = shadowColor ??
-        Colors.black.withValues(alpha: 0.7);
+    final effectiveShadowColor =
+        shadowColor ?? Colors.black.withValues(alpha: 0.7);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
@@ -107,6 +106,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                // --- Ícone de início ---
                 _buildIconItem(
                   context,
                   ref,
@@ -117,6 +117,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   activeIconColor: effectiveActiveIconColor,
                   inactiveIconColor: effectiveInactiveIconColor,
                 ),
+                // --- Ícone de perfil ---
                 _buildIconItem(
                   context,
                   ref,
@@ -127,7 +128,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   activeIconColor: effectiveActiveIconColor,
                   inactiveIconColor: effectiveInactiveIconColor,
                 ),
-                // --- NOVO ÍCONE: LOJINHA ---
+                // --- Ícone de loja ---
                 _buildIconItem(
                   context,
                   ref,
@@ -138,7 +139,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   activeIconColor: effectiveActiveIconColor,
                   inactiveIconColor: effectiveInactiveIconColor,
                 ),
-                // --- FIM NOVO ÍCONE ---
+                // --- Ícone de configurações ---
                 _buildIconItem(
                   context,
                   ref,

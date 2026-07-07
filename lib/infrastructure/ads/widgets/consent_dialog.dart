@@ -23,18 +23,21 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
   }
 
   Future<void> _loadCurrentPreference() async {
-    final enabled = await ConsentService.instance.arePersonalizedAdsEnabled();
+    final adsEnabled = await ConsentService.instance.arePersonalizedAdsEnabled();
     if (mounted) {
-      setState(() => _personalizedAds = enabled);
+      setState(() {
+        _personalizedAds = adsEnabled;
+      });
     }
   }
 
   Future<void> _savePreference() async {
     setState(() => _isLoading = true);
-    
+
     try {
       await ConsentService.instance.setPersonalizedAdsEnabled(_personalizedAds);
-      
+      await ConsentService.instance.markUserRespondedToConsent();
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -61,7 +64,7 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
@@ -81,7 +84,7 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Checkbox de propaganda personalizada
             Row(
               children: [
@@ -105,12 +108,13 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Nota explicativa
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color:
+                    colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -123,10 +127,10 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Links para políticas de privacidade
             Text(
-              'Políticas de privacidade dos parceiros:',
+              'Políticas de privacidade:',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -138,26 +142,30 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
               spacing: 8,
               runSpacing: 4,
               children: [
-                _buildPrivacyLink('AWS', 'https://aws.amazon.com/privacy/', colorScheme),
-                _buildPrivacyLink('Mintegral', 'https://mintegral.com/privacy/', colorScheme),
-                _buildPrivacyLink('Pangle', 'https://www.pangleglobal.com/privacy/', colorScheme),
-                _buildPrivacyLink('Moloco', 'https://moloco.com/privacy/', colorScheme),
+                _buildPrivacyLink('Google Privacy Policy',
+                    'https://policies.google.com/privacy', colorScheme),
+                _buildPrivacyLink(
+                    'Google Ads Privacy',
+                    'https://policies.google.com/technologies/ads',
+                    colorScheme),
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Botões
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    onPressed:
+                        _isLoading ? null : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                          color: colorScheme.outline.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       'VOLTAR',
@@ -187,7 +195,8 @@ class _ConsentDialogState extends ConsumerState<ConsentDialog> {
                             width: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(

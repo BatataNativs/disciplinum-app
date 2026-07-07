@@ -9,6 +9,7 @@ import 'package:disciplinum/core/database/objectbox_service.dart';
 class ConsentService {
   static const String _consentStatusKey = 'ump_consent_status';
   static const String _personalizedAdsKey = 'personalized_ads_enabled';
+  static const String _customDialogShownKey = 'custom_dialog_shown';
 
   static ConsentService? _instance;
   static ConsentService get instance {
@@ -179,7 +180,13 @@ class ConsentService {
   /// Verifica se o usuário já respondeu ao consentimento
   Future<bool> hasUserRespondedToConsent() async {
     final status = await _prefs.getString(_consentStatusKey);
-    return status != null;
+    final customShown = await _prefs.getBool(_customDialogShownKey);
+    return status != null || customShown == true;
+  }
+
+  /// Marca que o usuário interagiu com o dialog customizado
+  Future<void> markUserRespondedToConsent() async {
+    await _prefs.setBool(_customDialogShownKey, true);
   }
 
   /// Salva o estado do consentimento
