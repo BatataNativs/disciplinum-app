@@ -84,6 +84,7 @@ dependencies:
   
   # Logging profissional
   logger: ^2.0.2
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:
