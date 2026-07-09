@@ -41,6 +41,27 @@ class DisciplinumColors {
 // REUSABLE WIDGETS
 // ============================================================================
 
+class ScrollDownArrow extends StatelessWidget {
+  const ScrollDownArrow({super.key});
+// seta aponta para baixo para indicar que tem mais conteúdo para baixo
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: 24,
+      bottom: 24,
+      child: Icon(
+        Icons.arrow_downward_rounded,
+        color: const Color.fromARGB(116, 255, 255, 255),
+        size: 32,
+      )
+          .animate(onPlay: (controller) => controller.repeat())
+          .fadeIn(duration: 500.ms)
+          .slideY(
+              begin: 0, end: 0.2, duration: 500.ms, curve: Curves.easeInOut),
+    );
+  }
+}
+
 class GlassCard extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -920,531 +941,34 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Widget _buildWelcomePage() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
 
-          // Hero image
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: DisciplinumColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/opening/disciplinado.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                begin: const Offset(0.95, 0.95),
-                end: const Offset(1.05, 1.05),
-                duration: 600.ms,
-                curve: Curves.easeInOut,
-              ),
-
-          const SizedBox(height: 12),
-
-          // Title
-          Text(
-            'Disciplina, foco e bons hábitos',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: DisciplinumColors.onBackground,
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-              shadows: [
-                Shadow(
-                  color: DisciplinumColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
-
-          const SizedBox(height: 6),
-
-          // Subtitle
-          Text(
-            'Transforme seus hábitos diários\ne seja mais disciplinado!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: DisciplinumColors.onSurfaceVariant,
-              height: 1.4,
-              fontSize: 16,
-            ),
-          ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
-
-          const SizedBox(height: 12),
-
-          // Digital Detox highlight
-          PremiumGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            borderRadius: 14,
-            borderColor: DisciplinumColors.detoxPrimary,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.phone_android_rounded,
-                  color: const Color.fromARGB(255, 210, 196, 244),
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    'Este app é um aliado para seus hábitos',
-                    style: TextStyle(
-                      color: const Color.fromARGB(255, 210, 196, 244),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
-
-          const SizedBox(height: 12),
-
-          // Features list
-          Expanded(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: const EdgeInsets.all(10),
+              // Hero image
+              Container(
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(
-                  color: DisciplinumColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: DisciplinumColors.primary.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ele pode te ajudar a:',
-                      style: TextStyle(
-                        color: DisciplinumColors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
+                  borderRadius: BorderRadius.circular(60),
+                  boxShadow: [
+                    BoxShadow(
+                      color: DisciplinumColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                    const SizedBox(height: 8),
-                    const FeatureTile(text: 'Evitar compras impulsivas'),
-                    const FeatureTile(text: 'Juntar dinheiro'),
-                    const FeatureTile(text: 'Focar em tarefas produtivas'),
-                    const FeatureTile(text: 'Parar de fumar'),
-                    const FeatureTile(text: 'Evitar conteúdo adulto'),
-                    const FeatureTile(text: 'Controlar uso do celular'),
-                    const FeatureTile(text: 'Parar de procrastinar'),
-                    const FeatureTile(text: 'Evitar fast food'),
-                    const FeatureTile(text: 'Manter dieta'),
-                    const FeatureTile(text: 'Manter e organizar leitura'),
-                    const SizedBox(height: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            DisciplinumColors.primary.withValues(alpha: 0.2),
-                            DisciplinumColors.primary.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 16,
-                            color: DisciplinumColors.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'E muito mais!',
-                              style: TextStyle(
-                                color: DisciplinumColors.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ).animate().shimmer(duration: 2000.ms, delay: 1000.ms),
                   ],
                 ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModuleExamplePage() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-
-          // Title
-          PremiumGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            borderRadius: 12,
-            borderColor: const Color.fromARGB(255, 92, 218, 246),
-            child: Text(
-              'Exemplo de funcionamento de um dos módulos',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: const Color.fromARGB(255, 228, 226, 233),
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
-
-          const SizedBox(height: 16),
-
-          // Warning badge
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 46, 139, 193)
-                  .withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color.fromARGB(255, 220, 214, 233),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: DisciplinumColors.detoxPrimary,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Módulo Jejum Digital (Bloqueio de Apps)',
-                    style: TextStyle(
-                      color: const Color.fromARGB(255, 179, 174, 191),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/opening/disciplinado.png',
+                    fit: BoxFit.contain,
                   ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
-
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Block screen mockup
-                  const BlockScreenMockup()
-                      .animate()
-                      .fadeIn(duration: 2500.ms, delay: 500.ms),
-
-                  const SizedBox(height: 16),
-
-                  Text(
-                    'Quando você tentar abrir um app bloqueado, uma tela aparecerá\nlembrando-o do seu compromisso com a disciplina.\n\n'
-                    'Os módulos possuem indicadores de funcionamento, pra você acompanhar tudo. Como no exemplo abaixo:',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: DisciplinumColors.onSurfaceVariant,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ).animate().fadeIn(duration: 400.ms, delay: 400.ms),
-
-                  const SizedBox(height: 16),
-
-                  // Stats Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: DashboardStatCard(
-                          value: '5',
-                          label: 'Apps',
-                          icon: Icons.apps_rounded,
-                          iconColor: DisciplinumColors.detoxPrimary,
-                        ).animate().fadeIn(duration: 500.ms, delay: 500.ms),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: DashboardStatCard(
-                          value: 'Ativo',
-                          label: 'Status',
-                          icon: Icons.check_circle_rounded,
-                          iconColor: DisciplinumColors.primary,
-                        ).animate().fadeIn(duration: 500.ms, delay: 600.ms),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: DashboardStatCard(
-                          value: '27',
-                          label: 'Dias',
-                          icon: Icons.calendar_today_rounded,
-                          iconColor: DisciplinumColors.detoxSecondary,
-                        ).animate().fadeIn(duration: 500.ms, delay: 700.ms),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Monitored apps section
-                  Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: DisciplinumColors.detoxPrimary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Apps monitorados (exemplos)',
-                        style: TextStyle(
-                          color: DisciplinumColors.onBackground,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                        ),
-                      ),
-                    ],
-                  ).animate().fadeIn(duration: 400.ms, delay: 800.ms),
-
-                  const SizedBox(height: 12),
-
-                  // Apps grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 4,
-                    childAspectRatio: 0.65,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    children: [
-                      AppCategoryIcon(
-                          icon: FontAwesomeIcons.instagram,
-                          label: 'Instagram',
-                          isSelected: true),
-                      AppCategoryIcon(
-                          icon: FontAwesomeIcons.facebook,
-                          label: 'Facebook',
-                          isSelected: true),
-                      AppCategoryIcon(
-                          icon: FontAwesomeIcons.reddit,
-                          label: 'Reddit',
-                          isSelected: true),
-                      AppCategoryIcon(
-                          icon: FontAwesomeIcons.robot,
-                          label: 'ChatGPT',
-                          isSelected: true),
-                    ],
-                  ).animate().fadeIn(duration: 600.ms, delay: 900.ms),
-
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGamificationPage() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-
-            // Title
-            PremiumGlassCard(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              borderRadius: 14,
-              borderColor: DisciplinumColors.primary,
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.emoji_events_rounded,
-                    color: DisciplinumColors.primary,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Gamificação',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: DisciplinumColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Seu Progresso em Medalhas e Insígnias',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: DisciplinumColors.primary.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
-
-            const SizedBox(height: 16),
-
-            // Description
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: DisciplinumColors.surfaceLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: DisciplinumColors.primary.withValues(alpha: 0.2),
-                  width: 0.5,
-                ),
-              ),
-              child: Text(
-                'À medida que você mantém sua disciplina, ganha recompensas fictícias que representam seu progresso no app.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: DisciplinumColors.onSurfaceVariant,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
-            ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
-
-            const SizedBox(height: 20),
-
-            // Insignias section
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: DisciplinumColors.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Insígnias',
-                  style: TextStyle(
-                    color: DisciplinumColors.onBackground,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
-
-            const SizedBox(height: 12),
-
-            // Insignias Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 4,
-              childAspectRatio: 0.75,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              children: [
-                DisciplineInsignia(
-                  assetPath:
-                      'assets/gamification/insignias/smoking/madeira.png',
-                  label: 'Madeira',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 400.ms),
-                DisciplineInsignia(
-                  assetPath: 'assets/gamification/insignias/smoking/ferro.png',
-                  label: 'Ferro',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 500.ms),
-                DisciplineInsignia(
-                  assetPath:
-                      'assets/gamification/insignias/smoking/aluminio.png',
-                  label: 'Alumínio',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 600.ms),
-                DisciplineInsignia(
-                  assetPath: 'assets/gamification/insignias/smoking/bronze.png',
-                  label: 'Bronze',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 700.ms),
-                DisciplineInsignia(
-                  assetPath: 'assets/gamification/insignias/smoking/latao.png',
-                  label: 'Latão',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 800.ms),
-                DisciplineInsignia(
-                  assetPath: 'assets/gamification/insignias/smoking/prata.png',
-                  label: 'Prata',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 900.ms),
-                DisciplineInsignia(
-                  assetPath: 'assets/gamification/insignias/smoking/ouro.png',
-                  label: 'Ouro',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 1000.ms),
-                DisciplineInsignia(
-                  assetPath:
-                      'assets/gamification/insignias/smoking/diamante.png',
-                  label: 'Diamante',
-                  borderColor: DisciplinumColors.primary,
-                ).animate().fadeIn(duration: 500.ms, delay: 1100.ms),
-              ],
-            ),
-
-            const SizedBox(height: 1),
-
-            // Disciplinum insignia
-            Center(
-              child: PremiumGlassCard(
-                padding: const EdgeInsets.all(16),
-                borderRadius: 18,
-                borderColor: DisciplinumColors.primary,
-                child: DisciplineMedal(
-                  assetPath:
-                      'assets/gamification/insignias/smoking/disciplinum.png',
-                  label: 'Disciplinum',
-                  size: 44,
-                  borderColor: DisciplinumColors.primary,
                 ),
               ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
                     begin: const Offset(0.95, 0.95),
@@ -1452,75 +976,603 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     duration: 600.ms,
                     curve: Curves.easeInOut,
                   ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
-            // Medals section
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: DisciplinumColors.detoxPrimary,
-                    borderRadius: BorderRadius.circular(2),
+              // Title
+              Text(
+                'Disciplina, foco e bons hábitos',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: DisciplinumColors.onBackground,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  shadows: [
+                    Shadow(
+                      color: DisciplinumColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
+
+              const SizedBox(height: 6),
+
+              // Subtitle
+              Text(
+                'Transforme seus hábitos diários\ne seja mais disciplinado!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: DisciplinumColors.onSurfaceVariant,
+                  height: 1.4,
+                  fontSize: 16,
+                ),
+              ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
+
+              const SizedBox(height: 12),
+
+              // Digital Detox highlight
+              PremiumGlassCard(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                borderRadius: 14,
+                borderColor: DisciplinumColors.detoxPrimary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.phone_android_rounded,
+                      color: const Color.fromARGB(255, 210, 196, 244),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        'Este app é um aliado para seus hábitos',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 210, 196, 244),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
+
+              const SizedBox(height: 12),
+
+              // Features list
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: DisciplinumColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: DisciplinumColors.primary.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ele pode te ajudar a:',
+                          style: TextStyle(
+                            color: DisciplinumColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const FeatureTile(text: 'Evitar compras impulsivas'),
+                        const FeatureTile(text: 'Juntar dinheiro'),
+                        const FeatureTile(text: 'Focar em tarefas produtivas'),
+                        const FeatureTile(text: 'Parar de fumar'),
+                        const FeatureTile(text: 'Evitar conteúdo adulto'),
+                        const FeatureTile(text: 'Controlar uso do celular'),
+                        const FeatureTile(text: 'Parar de procrastinar'),
+                        const FeatureTile(text: 'Evitar fast food'),
+                        const FeatureTile(text: 'Manter dieta'),
+                        const FeatureTile(text: 'Manter e organizar leitura'),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                DisciplinumColors.primary
+                                    .withValues(alpha: 0.2),
+                                DisciplinumColors.primary
+                                    .withValues(alpha: 0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 16,
+                                color: DisciplinumColors.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'E muito mais!',
+                                  style: TextStyle(
+                                    color: DisciplinumColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().shimmer(duration: 2000.ms, delay: 1000.ms),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Medalhas',
-                  style: TextStyle(
-                    color: DisciplinumColors.onBackground,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(duration: 400.ms, delay: 1200.ms),
-
-            const SizedBox(height: 12),
-
-            // Medals Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              childAspectRatio: 0.9,
-              mainAxisSpacing: 6,
-              crossAxisSpacing: 6,
-              children: [
-                DisciplineMedal(
-                  assetPath: 'assets/gamification/medals/smoking/bronze.png',
-                  label: 'Bronze',
-                  borderColor: DisciplinumColors.detoxPrimary,
-                  size: 40,
-                ).animate().fadeIn(duration: 500.ms, delay: 1300.ms),
-                DisciplineMedal(
-                  assetPath: 'assets/gamification/medals/smoking/silver.png',
-                  label: 'Prata',
-                  borderColor: DisciplinumColors.detoxSecondary,
-                  size: 40,
-                ).animate().fadeIn(duration: 500.ms, delay: 1400.ms),
-                DisciplineMedal(
-                  assetPath: 'assets/gamification/medals/smoking/gold.png',
-                  label: 'Ouro',
-                  borderColor: DisciplinumColors.primary,
-                  size: 40,
-                ).animate().fadeIn(duration: 500.ms, delay: 1500.ms),
-                DisciplineMedal(
-                  assetPath: 'assets/gamification/medals/smoking/diamond.png',
-                  label: 'Diamante',
-                  borderColor: DisciplinumColors.primary,
-                  size: 40,
-                ).animate().fadeIn(duration: 500.ms, delay: 1600.ms),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
+        const ScrollDownArrow(),
+      ],
+    );
+  }
+
+  Widget _buildModuleExamplePage() {
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // Title
+              PremiumGlassCard(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                borderRadius: 12,
+                borderColor: const Color.fromARGB(255, 92, 218, 246),
+                child: Text(
+                  'Exemplo de funcionamento de um dos módulos',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 228, 226, 233),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
+
+              const SizedBox(height: 16),
+
+              // Warning badge
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 46, 139, 193)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 220, 214, 233),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: DisciplinumColors.detoxPrimary,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Módulo Jejum Digital (Bloqueio de Apps)',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 179, 174, 191),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Block screen mockup
+                      const BlockScreenMockup()
+                          .animate()
+                          .fadeIn(duration: 2500.ms, delay: 500.ms),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'Quando você tentar abrir um app bloqueado, uma tela aparecerá\nlembrando-o do seu compromisso com a disciplina.\n\n'
+                        'Os módulos possuem indicadores de funcionamento, pra você acompanhar tudo. Como no exemplo abaixo:',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: DisciplinumColors.onSurfaceVariant,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ).animate().fadeIn(duration: 400.ms, delay: 400.ms),
+
+                      const SizedBox(height: 16),
+
+                      // Stats Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: DashboardStatCard(
+                              value: '5',
+                              label: 'Apps',
+                              icon: Icons.apps_rounded,
+                              iconColor: DisciplinumColors.detoxPrimary,
+                            ).animate().fadeIn(duration: 500.ms, delay: 500.ms),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: DashboardStatCard(
+                              value: 'Ativo',
+                              label: 'Status',
+                              icon: Icons.check_circle_rounded,
+                              iconColor: DisciplinumColors.primary,
+                            ).animate().fadeIn(duration: 500.ms, delay: 600.ms),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: DashboardStatCard(
+                              value: '27',
+                              label: 'Dias',
+                              icon: Icons.calendar_today_rounded,
+                              iconColor: DisciplinumColors.detoxSecondary,
+                            ).animate().fadeIn(duration: 500.ms, delay: 700.ms),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Monitored apps section
+                      Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: DisciplinumColors.detoxPrimary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Apps monitorados (exemplos)',
+                            style: TextStyle(
+                              color: DisciplinumColors.onBackground,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 400.ms, delay: 800.ms),
+
+                      const SizedBox(height: 12),
+
+                      // Apps grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 4,
+                        childAspectRatio: 0.65,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        children: [
+                          AppCategoryIcon(
+                              icon: FontAwesomeIcons.instagram,
+                              label: 'Instagram',
+                              isSelected: true),
+                          AppCategoryIcon(
+                              icon: FontAwesomeIcons.facebook,
+                              label: 'Facebook',
+                              isSelected: true),
+                          AppCategoryIcon(
+                              icon: FontAwesomeIcons.reddit,
+                              label: 'Reddit',
+                              isSelected: true),
+                          AppCategoryIcon(
+                              icon: FontAwesomeIcons.robot,
+                              label: 'ChatGPT',
+                              isSelected: true),
+                        ],
+                      ).animate().fadeIn(duration: 600.ms, delay: 900.ms),
+
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const ScrollDownArrow(),
+      ],
+    );
+  }
+
+  Widget _buildGamificationPage() {
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+
+                // Title
+                PremiumGlassCard(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  borderRadius: 14,
+                  borderColor: DisciplinumColors.primary,
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        color: DisciplinumColors.primary,
+                        size: 28,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Gamificação',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: DisciplinumColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Seu Progresso em Medalhas e Insígnias',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color:
+                              DisciplinumColors.primary.withValues(alpha: 0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
+
+                const SizedBox(height: 16),
+
+                // Description
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: DisciplinumColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: DisciplinumColors.primary.withValues(alpha: 0.2),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    'À medida que você mantém sua disciplina, ganha recompensas fictícias que representam seu progresso no app.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: DisciplinumColors.onSurfaceVariant,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+
+                const SizedBox(height: 20),
+
+                // Insignias section
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: DisciplinumColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Insígnias',
+                      style: TextStyle(
+                        color: DisciplinumColors.onBackground,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
+
+                const SizedBox(height: 12),
+
+                // Insignias Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.75,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: [
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/madeira.png',
+                      label: 'Madeira',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 400.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/ferro.png',
+                      label: 'Ferro',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 500.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/aluminio.png',
+                      label: 'Alumínio',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 600.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/bronze.png',
+                      label: 'Bronze',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 700.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/latao.png',
+                      label: 'Latão',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 800.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/prata.png',
+                      label: 'Prata',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 900.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/ouro.png',
+                      label: 'Ouro',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1000.ms),
+                    DisciplineInsignia(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/diamante.png',
+                      label: 'Diamante',
+                      borderColor: DisciplinumColors.primary,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1100.ms),
+                  ],
+                ),
+
+                const SizedBox(height: 1),
+
+                // Disciplinum insignia
+                Center(
+                  child: PremiumGlassCard(
+                    padding: const EdgeInsets.all(16),
+                    borderRadius: 18,
+                    borderColor: DisciplinumColors.primary,
+                    child: DisciplineMedal(
+                      assetPath:
+                          'assets/gamification/insignias/smoking/disciplinum.png',
+                      label: 'Disciplinum',
+                      size: 44,
+                      borderColor: DisciplinumColors.primary,
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1.05, 1.05),
+                        duration: 600.ms,
+                        curve: Curves.easeInOut,
+                      ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Medals section
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: DisciplinumColors.detoxPrimary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Medalhas',
+                      style: TextStyle(
+                        color: DisciplinumColors.onBackground,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 400.ms, delay: 1200.ms),
+
+                const SizedBox(height: 12),
+
+                // Medals Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.9,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                  children: [
+                    DisciplineMedal(
+                      assetPath:
+                          'assets/gamification/medals/smoking/bronze.png',
+                      label: 'Bronze',
+                      borderColor: DisciplinumColors.detoxPrimary,
+                      size: 40,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1300.ms),
+                    DisciplineMedal(
+                      assetPath:
+                          'assets/gamification/medals/smoking/silver.png',
+                      label: 'Prata',
+                      borderColor: DisciplinumColors.detoxSecondary,
+                      size: 40,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1400.ms),
+                    DisciplineMedal(
+                      assetPath: 'assets/gamification/medals/smoking/gold.png',
+                      label: 'Ouro',
+                      borderColor: DisciplinumColors.primary,
+                      size: 40,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1500.ms),
+                    DisciplineMedal(
+                      assetPath:
+                          'assets/gamification/medals/smoking/diamond.png',
+                      label: 'Diamante',
+                      borderColor: DisciplinumColors.primary,
+                      size: 40,
+                    ).animate().fadeIn(duration: 500.ms, delay: 1600.ms),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+        const ScrollDownArrow(),
+      ],
     );
   }
 

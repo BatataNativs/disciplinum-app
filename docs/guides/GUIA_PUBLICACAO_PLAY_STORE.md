@@ -401,10 +401,16 @@ Você precisa de uma URL com política de privacidade. Opções:
 2. Preencha o questionário (perguntas sobre violência, conteúdo sexual, etc.)
 3. Para Disciplinum, provavelmente será **Livre** ou **10+**
 
-#### 💰 Configuração de monetização
+#### 💰 Configuração de monetização (AdMob e IAP)
 
-1. Vá em **Monetização** → **Produtos no app**
-2. Configure depois de fazer o primeiro upload (Seção 9)
+1. **AdMob**:
+   - Acesse o painel do [Google AdMob](https://admob.google.com/)
+   - Configure os formulários de consentimento (UMP) em **Privacy & Messaging** (obrigatório!)
+   - Crie/renove blocos de anúncios (se necessário)
+   - Verifique o ID do aplicativo e os IDs dos blocos
+2. **In-App Purchase**:
+   - Vá em **Monetização** → **Produtos no app** na Play Console
+   - Configure depois de fazer o primeiro upload (Seção 9)
 
 ---
 
@@ -630,6 +636,16 @@ Para testar compras sem cobrar de verdade:
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**
 ```
+
+---
+
+### ❌ "Publisher misconfiguration: no form(s) configured" (AdMob)
+
+**Causa**: Formulários de consentimento (UMP) não configurados no AdMob, ou usando ID de teste sem formulários.
+
+**Solução**:
+1. Durante desenvolvimento: O app já lida com isso graciosamente (não precisa fazer nada).
+2. Para produção: Acesse o AdMob → **Privacy & Messaging** → crie e publique formulários de consentimento (EU Consent e/ou US Privacy).
 
 ---
 

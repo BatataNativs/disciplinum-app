@@ -7,13 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; // Clipboard
 
 import 'package:disciplinum/core/theme/app_theme.dart';
-import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart'; 
+import 'package:disciplinum/shared/widgets/common/settings_banner_ad.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
-import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/infrastructure/ads/consent_service.dart';
 import 'package:disciplinum/infrastructure/user_privacy/privacy_service.dart';
 
@@ -24,39 +22,9 @@ import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/features/app_lock/presentation/screens/app_lock_screen.dart';
 import 'secret_menu_screen.dart'; // Importe a nova tela
 
-/// Provider para estado de pausa de notificações
-final notificationsPausedProvider = StateNotifierProvider<NotificationsPausedNotifier, bool>((ref) {
-  final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
-  return NotificationsPausedNotifier(prefs);
-});
-
-/// Notifier para gerenciar estado de pausa de notificações
-class NotificationsPausedNotifier extends StateNotifier<bool> {
-  final ObjectBoxPreferencesRepository _prefs;
-  static const String _key = 'notifications_paused';
-
-  NotificationsPausedNotifier(this._prefs) : super(false) {
-    _loadState();
-  }
-
-  Future<void> _loadState() async {
-    final paused = await _prefs.getBool(_key) ?? false;
-    state = paused;
-  }
-
-  Future<void> setPaused(bool paused) async {
-    state = paused;
-    await _prefs.setBool(_key, paused);
-    
-    // Cancelar ou reagendar notificações baseado no estado
-    if (paused) {
-      await NotificationService.cancelAll();
-    }
-  }
-}
-
 /// Provider para estado de anúncios personalizados
-final personalizedAdsProvider = StateNotifierProvider<PersonalizedAdsNotifier, bool>((ref) {
+final personalizedAdsProvider =
+    StateNotifierProvider<PersonalizedAdsNotifier, bool>((ref) {
   return PersonalizedAdsNotifier();
 });
 
@@ -78,7 +46,8 @@ class PersonalizedAdsNotifier extends StateNotifier<bool> {
 }
 
 /// Provider para estado de análise de uso
-final analyticsEnabledProvider = StateNotifierProvider<AnalyticsEnabledNotifier, bool>((ref) {
+final analyticsEnabledProvider =
+    StateNotifierProvider<AnalyticsEnabledNotifier, bool>((ref) {
   return AnalyticsEnabledNotifier();
 });
 
@@ -141,7 +110,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ).launch();
     } catch (e) {
       if (mounted) {
-        EnhancedSnackBarHelper.showError(context, 'Nenhum app de e-mail encontrado.');
+        EnhancedSnackBarHelper.showError(
+            context, 'Nenhum app de e-mail encontrado.');
       }
     }
   }
@@ -256,14 +226,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.copy,
-                            color: colorScheme.primary),
+                        icon: Icon(Icons.copy, color: colorScheme.primary),
                         onPressed: () {
                           Clipboard.setData(
                             const ClipboardData(text: chavePix),
                           );
                           Navigator.pop(ctx);
-                          EnhancedSnackBarHelper.showSuccess(context, 'Pix copiado!');
+                          EnhancedSnackBarHelper.showSuccess(
+                              context, 'Pix copiado!');
                         },
                       ),
                     ],
@@ -279,9 +249,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Usar provider local para estado de notificações
-    final notificationsPaused = ref.watch(notificationsPausedProvider);
-    final notificationsNotifier = ref.read(notificationsPausedProvider.notifier);
     final personalizedAds = ref.watch(personalizedAdsProvider);
     final personalizedAdsNotifier = ref.read(personalizedAdsProvider.notifier);
     final analyticsEnabled = ref.watch(analyticsEnabledProvider);
@@ -554,355 +521,349 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.only(top: 8, bottom: 120),
                 children: [
                   const SettingsBannerAd(),
-              sectionHeader('Notificações'),
-              settingContainer([
-                SwitchListTile(
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: colorScheme.primary,
-                  inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
-                  dense: true,
-                  title: Text(
-                    'Pausar notificações',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                  sectionHeader('Notificações'),
+                  settingContainer([
+                    SwitchListTile(
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: colorScheme.primary,
+                      inactiveThumbColor: Colors.grey[400],
+                      inactiveTrackColor:
+                          colorScheme.onSurface.withValues(alpha: 0.1),
+                      dense: true,
+                      title: Text(
+                        'Sons de alerta',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: Text(_soundEnabled ? 'Som e vibração' : 'Mudo'),
+                      secondary: Icon(
+                          _soundEnabled ? Icons.volume_up : Icons.vibration,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                      value: _soundEnabled,
+                      onChanged: (val) {
+                        setState(() => _soundEnabled = val);
+                        NotificationService.setSoundEnabled(val);
+                      },
                     ),
-                  ),
-                  subtitle: const Text('Silenciar alertas temporariamente'),
-                  secondary: Icon(Icons.notifications_paused_outlined,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                  value: notificationsPaused,
-                  onChanged: (val) async {
-                    await notificationsNotifier.setPaused(val);
-                    if (context.mounted) {
-                      EnhancedSnackBarHelper.showInfo(
-                        context,
-                        val ? 'Notificações pausadas' : 'Notificações ativadas',
-                      );
-                    }
-                  },
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                SwitchListTile(
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: colorScheme.primary,
-                  inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
-                  dense: true,
-                  title: Text(
-                    'Sons de alerta',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    ListTile(
+                      dense: true,
+                      leading: Icon(Icons.settings_suggest_outlined,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                      title: Text(
+                        'Configurações do Android',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: const Text('Gerenciar permissões do sistema'),
+                      trailing: const Icon(Icons.chevron_right, size: 20),
+                      onTap: NotificationService.openNotificationSettings,
                     ),
-                  ),
-                  subtitle: Text(_soundEnabled ? 'Som e vibração' : 'Mudo'),
-                  secondary: Icon(
-                      _soundEnabled ? Icons.volume_up : Icons.vibration,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                  value: _soundEnabled,
-                  onChanged: (val) {
-                    setState(() => _soundEnabled = val);
-                    NotificationService.setSoundEnabled(val);
-                  },
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                ListTile(
-                  dense: true,
-                  leading: Icon(Icons.settings_suggest_outlined,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                  title: Text(
-                    'Configurações do Android',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                  ]),
+                  sectionHeader('Suporte e Feedback'),
+                  settingContainer([
+                    ListTile(
+                      dense: true,
+                      leading:
+                          const Icon(Icons.star_outline, color: Colors.amber),
+                      title: Text(
+                        'Avalie o App',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      onTap: _avaliarApp,
                     ),
-                  ),
-                  subtitle: const Text('Gerenciar permissões do sistema'),
-                  trailing: const Icon(Icons.chevron_right, size: 20),
-                  onTap: NotificationService.openNotificationSettings,
-                ),
-              ]),
-              sectionHeader('Suporte e Feedback'),
-              settingContainer([
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.star_outline, color: Colors.amber),
-                  title: Text(
-                    'Avalie o App',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    ListTile(
+                      dense: true,
+                      leading:
+                          const Icon(Icons.mail_outline, color: Colors.blue),
+                      title: Text(
+                        'Enviar Feedback',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      onTap: _enviarFeedback,
                     ),
-                  ),
-                  onTap: _avaliarApp,
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.mail_outline, color: Colors.blue),
-                  title: Text(
-                    'Enviar Feedback',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.coffee_outlined,
+                          color: Colors.brown),
+                      title: Text(
+                        'Apoie o Desenvolvedor',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      onTap: () => _mostrarModalCafezinho(context),
                     ),
-                  ),
-                  onTap: _enviarFeedback,
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                ListTile(
-                  dense: true,
-                  leading:
-                      const Icon(Icons.coffee_outlined, color: Colors.brown),
-                  title: Text(
-                    'Apoie o Desenvolvedor',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                  ]),
+                  sectionHeader('Sobre'),
+                  settingContainer([
+                    ListTile(
+                      dense: true,
+                      leading:
+                          const Icon(Icons.info_outline, color: Colors.green),
+                      title: Text(
+                        'Como funciona',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      onTap: _mostrarDialogoComoFunciona,
                     ),
-                  ),
-                  onTap: () => _mostrarModalCafezinho(context),
-                ),
-              ]),
-              sectionHeader('Sobre'),
-              settingContainer([
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.info_outline, color: Colors.green),
-                  title: Text(
-                    'Como funciona',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  onTap: _mostrarDialogoComoFunciona,
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.replay_outlined,
-                      color: Colors.orange),
-                  title: Text(
-                    'Rever tela de apresentação',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const OnboardingScreen(isReviewMode: true)),
-                  ),
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                SwitchListTile(
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: colorScheme.primary,
-                  inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
-                  dense: true,
-                  title: Text(
-                    'Anúncios personalizados',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  subtitle: const Text('Mostrar anúncios baseados no seu interesse'),
-                  secondary: Icon(Icons.ads_click_outlined,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                  value: personalizedAds,
-                  onChanged: (val) async {
-                    await personalizedAdsNotifier.setEnabled(val);
-                    if (context.mounted) {
-                      EnhancedSnackBarHelper.showInfo(
-                        context,
-                        val ? 'Anúncios personalizados ativados' : 'Anúncios personalizados desativados',
-                      );
-                    }
-                  },
-                ),
-                Divider(
-                    height: 1,
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    indent: 56),
-                SwitchListTile(
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: colorScheme.primary,
-                  inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
-                  dense: true,
-                  title: Text(
-                    'Análise de uso e erros',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  subtitle: const Text('Permitir coleta de dados anônimos'),
-                  secondary: Icon(Icons.analytics_outlined,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                  value: analyticsEnabled,
-                  onChanged: (val) async {
-                    await analyticsNotifier.setEnabled(val);
-                    if (context.mounted) {
-                      EnhancedSnackBarHelper.showInfo(
-                        context,
-                        val ? 'Coleta ativada' : 'Coleta desativada',
-                      );
-                    }
-                  },
-                ),
-              ]),
-              const SizedBox(height: 32),
-              Column(
-                children: [
-                  Text(
-                    '“A disciplina é a mãe do sucesso.” – Ésquilo',
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => Navigator.push(
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.replay_outlined,
+                          color: Colors.orange),
+                      title: Text(
+                        'Rever tela de apresentação',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const SecretMenuScreen())),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Disciplinum v1.0.0',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Icon(
-                            Icons.menu_book_rounded,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ],
+                            builder: (context) =>
+                                const OnboardingScreen(isReviewMode: true)),
                       ),
                     ),
-                  ),
-                  // Botões de Dev (remover antes de publicar)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    SwitchListTile(
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: colorScheme.primary,
+                      inactiveThumbColor: Colors.grey[400],
+                      inactiveTrackColor:
+                          colorScheme.onSurface.withValues(alpha: 0.1),
+                      dense: true,
+                      title: Text(
+                        'Anúncios personalizados',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: const Text(
+                          'Mostrar anúncios baseados no seu interesse'),
+                      secondary: Icon(Icons.ads_click_outlined,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                      value: personalizedAds,
+                      onChanged: (val) async {
+                        await personalizedAdsNotifier.setEnabled(val);
+                        if (context.mounted) {
+                          EnhancedSnackBarHelper.showInfo(
+                            context,
+                            val
+                                ? 'Anúncios personalizados ativados'
+                                : 'Anúncios personalizados desativados',
+                          );
+                        }
+                      },
+                    ),
+                    Divider(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                        indent: 56),
+                    SwitchListTile(
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: colorScheme.primary,
+                      inactiveThumbColor: Colors.grey[400],
+                      inactiveTrackColor:
+                          colorScheme.onSurface.withValues(alpha: 0.1),
+                      dense: true,
+                      title: Text(
+                        'Análise de uso e erros',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: const Text('Permitir coleta de dados anônimos'),
+                      secondary: Icon(Icons.analytics_outlined,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                      value: analyticsEnabled,
+                      onChanged: (val) async {
+                        await analyticsNotifier.setEnabled(val);
+                        if (context.mounted) {
+                          EnhancedSnackBarHelper.showInfo(
+                            context,
+                            val ? 'Coleta ativada' : 'Coleta desativada',
+                          );
+                        }
+                      },
+                    ),
+                  ]),
+                  const SizedBox(height: 32),
+                  Column(
                     children: [
-                      // Botão Tema Claro (Somente para Dev)
-                      Tooltip(
-                        message: 'DEV: Testar tema Claro (remover antes de publicar)',
-                        child: IconButton(
-                          icon: const Icon(Icons.wb_sunny, color: Colors.orange),
-                          onPressed: () async {
-                            final controller = ref.read(themeControllerProvider.notifier);
-                            await controller.setTheme(AppTheme.light);
-                            if (context.mounted) {
-                              EnhancedSnackBarHelper.showInfo(context,
-                                  "Dev: Tema Claro ativado (remover antes de publicar!)");
-                            }
-                          },
+                      Text(
+                        '“A disciplina é a mãe do sucesso.” – Ésquilo',
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 12,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Botão Tema Dark (Somente para Dev)
-                      Tooltip(
-                        message: 'DEV: Testar tema Dark (remover antes de publicar)',
-                        child: IconButton(
-                          icon: const Icon(Icons.dark_mode, color: Colors.black),
-                          onPressed: () async {
-                            final controller = ref.read(themeControllerProvider.notifier);
-                            await controller.setTheme(AppTheme.dark);
-                            if (context.mounted) {
-                              EnhancedSnackBarHelper.showInfo(context,
-                                  "Dev: Tema Dark ativado (remover antes de publicar!)");
-                            }
-                          },
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const SecretMenuScreen())),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 8),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Disciplinum v1.0.0',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Icon(
+                                Icons.menu_book_rounded,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Botão Tema Rosa (Somente para Dev)
-                      Tooltip(
-                        message: 'DEV: Testar tema Rosa (remover antes de publicar)',
-                        child: IconButton(
-                          icon: const Icon(Icons.palette, color: Colors.pink),
-                          onPressed: () async {
-                            final controller = ref.read(themeControllerProvider.notifier);
-                            await controller.setTheme(AppTheme.pink);
-                            if (context.mounted) {
-                              EnhancedSnackBarHelper.showInfo(context,
-                                  "Dev: Tema Rosa ativado (remover antes de publicar!)");
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Botão Tema Halloween (Somente para Dev)
-                      Tooltip(
-                        message: 'DEV: Testar tema Halloween (remover antes de publicar)',
-                        child: IconButton(
-                          icon: const Icon(Icons.local_fire_department, color: Colors.deepOrange),
-                          onPressed: () async {
-                            final controller = ref.read(themeControllerProvider.notifier);
-                            await controller.setTheme(AppTheme.halloween);
-                            if (context.mounted) {
-                              EnhancedSnackBarHelper.showInfo(context,
-                                  "Dev: Tema Halloween ativado (remover antes de publicar!)");
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Botão Testar Tela Lock (Somente para Dev)
-                      Tooltip(
-                        message: 'DEV: Testar App Lock (remover antes de publicar)',
-                        child: IconButton(
-                          icon: const Icon(Icons.shield),
-                          onPressed: () => _testarTelaLock(context),
-                          color: Colors.orange.withValues(alpha: 0.6),
-                        ),
+                      // Botões de Dev (remover antes de publicar)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Botão Tema Claro (Somente para Dev)
+                          Tooltip(
+                            message:
+                                'DEV: Testar tema Claro (remover antes de publicar)',
+                            child: IconButton(
+                              icon: const Icon(Icons.wb_sunny,
+                                  color: Colors.orange),
+                              onPressed: () async {
+                                final controller =
+                                    ref.read(themeControllerProvider.notifier);
+                                await controller.setTheme(AppTheme.light);
+                                if (context.mounted) {
+                                  EnhancedSnackBarHelper.showInfo(context,
+                                      "Dev: Tema Claro ativado (remover antes de publicar!)");
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Botão Tema Dark (Somente para Dev)
+                          Tooltip(
+                            message:
+                                'DEV: Testar tema Dark (remover antes de publicar)',
+                            child: IconButton(
+                              icon: const Icon(Icons.dark_mode,
+                                  color: Colors.black),
+                              onPressed: () async {
+                                final controller =
+                                    ref.read(themeControllerProvider.notifier);
+                                await controller.setTheme(AppTheme.dark);
+                                if (context.mounted) {
+                                  EnhancedSnackBarHelper.showInfo(context,
+                                      "Dev: Tema Dark ativado (remover antes de publicar!)");
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Botão Tema Rosa (Somente para Dev)
+                          Tooltip(
+                            message:
+                                'DEV: Testar tema Rosa (remover antes de publicar)',
+                            child: IconButton(
+                              icon:
+                                  const Icon(Icons.palette, color: Colors.pink),
+                              onPressed: () async {
+                                final controller =
+                                    ref.read(themeControllerProvider.notifier);
+                                await controller.setTheme(AppTheme.pink);
+                                if (context.mounted) {
+                                  EnhancedSnackBarHelper.showInfo(context,
+                                      "Dev: Tema Rosa ativado (remover antes de publicar!)");
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Botão Tema Halloween (Somente para Dev)
+                          Tooltip(
+                            message:
+                                'DEV: Testar tema Halloween (remover antes de publicar)',
+                            child: IconButton(
+                              icon: const Icon(Icons.local_fire_department,
+                                  color: Colors.deepOrange),
+                              onPressed: () async {
+                                final controller =
+                                    ref.read(themeControllerProvider.notifier);
+                                await controller.setTheme(AppTheme.halloween);
+                                if (context.mounted) {
+                                  EnhancedSnackBarHelper.showInfo(context,
+                                      "Dev: Tema Halloween ativado (remover antes de publicar!)");
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Botão Testar Tela Lock (Somente para Dev)
+                          Tooltip(
+                            message:
+                                'DEV: Testar App Lock (remover antes de publicar)',
+                            child: IconButton(
+                              icon: const Icon(Icons.shield),
+                              onPressed: () => _testarTelaLock(context),
+                              color: Colors.orange.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -910,11 +871,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
-          ],
         ),
+        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 3),
       ),
-      bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 3),
-    ),
     );
   }
 }

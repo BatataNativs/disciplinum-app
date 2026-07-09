@@ -59,7 +59,15 @@ class ConsentService {
         (FormError error) {
           LoggerService.instance.e(
               'Erro ao atualizar informações de consentimento: ${error.message}');
-          _isInitialized = false;
+          
+          // Handle publisher misconfiguration gracefully (common with test IDs)
+          if (error.message.contains('Publisher misconfiguration') || 
+              error.message.contains('no form(s) configured')) {
+            LoggerService.instance.w('Tratando erro de configuração do editor graciosamente (modo debug/teste)');
+            _isInitialized = true; // Permite que o app continue funcionando
+          } else {
+            _isInitialized = false;
+          }
         },
       );
     } catch (e) {
