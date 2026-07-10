@@ -14,15 +14,11 @@ class LegalFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isLightTheme = colorScheme.brightness == Brightness.light;
 
     final defaultStyle = textStyle ??
         TextStyle(
           fontSize: 12,
-          // Cor hardcoded só no tema claro, nos outros usa colorScheme
-          color: isLightTheme
-              ? Color.fromARGB(255, 137, 136, 136)
-              : colorScheme.onSurface.withValues(alpha: 0.6),
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
         );
 
     return Padding(

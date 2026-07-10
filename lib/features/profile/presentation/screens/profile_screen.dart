@@ -42,6 +42,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
+    final isHalloweenTheme = currentTheme == AppTheme.halloween;
 
     return Container(
       decoration: BoxDecoration(
@@ -438,14 +439,401 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ],
-              
+              // --- DECORAÇÕES DE HALLOWEEN 🎃 ---
+              if (isHalloweenTheme) ...[
+                // == DECORAÇÕES GRANDES (60-80) ==
+                Positioned(
+                  top: 30,
+                  right: -20,
+                  child: Transform.rotate(
+                    angle: 0.2,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 82,
+                        color: colorScheme.primary.withValues(alpha: 0.15),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 230,
+                  left: -35,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Icon(
+                      Icons.psychology,
+                      size: 76,
+                      color: colorScheme.secondary.withValues(alpha: 0.13),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 90,
+                  right: -25,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 84,
+                      color: colorScheme.primary.withValues(alpha: 0.11),
+                    ),
+                  ),
+                ),
+                // == DECORAÇÕES MÉDIAS (35-50) ==
+                Positioned(
+                  top: 50,
+                  left: 85,
+                  child: Transform.rotate(
+                    angle: -0.1,
+                    child: Icon(
+                      Icons.star,
+                      size: 52,
+                      color: colorScheme.secondary.withValues(alpha: 0.19),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 210,
+                  right: 65,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 48,
+                        color: colorScheme.primary.withValues(alpha: 0.18),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 440,
+                  left: 35,
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Icon(
+                      Icons.sports_baseball_outlined,
+                      size: 46,
+                      color: colorScheme.secondary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 340,
+                  right: 50,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.psychology,
+                      size: 50,
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                // == DECORAÇÕES PEQUENAS (originais) ==
+                // Canto superior esquerdo
+                Positioned(
+                  top: 70,
+                  left: 25,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 36,
+                        color: colorScheme.primary.withValues(alpha: 0.24),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 130,
+                  left: 65,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Icon(
+                      Icons.star,
+                      size: 28,
+                      color: colorScheme.secondary.withValues(alpha: 0.21),
+                    ),
+                  ),
+                ),
+                // Canto superior direito
+                Positioned(
+                  top: 90,
+                  right: 35,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 32,
+                      color: colorScheme.primary.withValues(alpha: 0.23),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 170,
+                  right: 75,
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 26,
+                        color: colorScheme.secondary.withValues(alpha: 0.19),
+                      ),
+                    ),
+                  ),
+                ),
+                // Meio esquerdo
+                Positioned(
+                  top: 310,
+                  left: 20,
+                  child: Transform.rotate(
+                    angle: 0.7,
+                    child: Icon(
+                      Icons.star,
+                      size: 30,
+                      color: colorScheme.primary.withValues(alpha: 0.22),
+                    ),
+                  ),
+                ),
+                // Meio direito
+                Positioned(
+                  top: 270,
+                  right: 30,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 34,
+                        color: colorScheme.secondary.withValues(alpha: 0.25),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 390,
+                  right: 55,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 24,
+                      color: colorScheme.primary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                // Inferior esquerdo
+                Positioned(
+                  bottom: 190,
+                  left: 45,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: colorScheme.secondary.withValues(alpha: 0.20),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 270,
+                  left: 15,
+                  child: Transform.rotate(
+                    angle: 0.2,
+                    child: Icon(
+                      Icons.star,
+                      size: 22,
+                      color: colorScheme.primary.withValues(alpha: 0.17),
+                    ),
+                  ),
+                ),
+                // Inferior direito
+                Positioned(
+                  bottom: 140,
+                  right: 25,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: colorScheme.primary.withValues(alpha: 0.22),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 230,
+                  right: 85,
+                  child: Transform.rotate(
+                    angle: -0.1,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 26,
+                      color: colorScheme.secondary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                // Centro espalhado
+                Positioned(
+                  top: 510,
+                  left: 85,
+                  child: Transform.rotate(
+                    angle: 0.8,
+                    child: Icon(
+                      Icons.star,
+                      size: 24,
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 590,
+                  right: 45,
+                  child: Transform.rotate(
+                    angle: -0.6,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: colorScheme.secondary.withValues(alpha: 0.21),
+                      ),
+                    ),
+                  ),
+                ),
+                // Mais decorações adicionais
+                Positioned(
+                  top: 210,
+                  left: 35,
+                  child: Transform.rotate(
+                    angle: 0.3,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 22,
+                      color: colorScheme.primary.withValues(alpha: 0.13),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 470,
+                  left: 55,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 26,
+                        color: colorScheme.secondary.withValues(alpha: 0.15),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 710,
+                  left: 30,
+                  child: Transform.rotate(
+                    angle: 0.5,
+                    child: Icon(
+                      Icons.star,
+                      size: 24,
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 340,
+                  right: 65,
+                  child: Transform.rotate(
+                    angle: 0.1,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: colorScheme.secondary.withValues(alpha: 0.17),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 670,
+                  right: 30,
+                  child: Transform.rotate(
+                    angle: -0.4,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 24,
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 110,
+                  left: 75,
+                  child: Transform.rotate(
+                    angle: 0.6,
+                    child: Icon(
+                      Icons.star,
+                      size: 26,
+                      color: colorScheme.secondary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 70,
+                  right: 65,
+                  child: Transform.rotate(
+                    angle: -0.3,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: colorScheme.primary.withValues(alpha: 0.11),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 840,
+                  left: 50,
+                  child: Transform.rotate(
+                    angle: 0.2,
+                    child: Icon(
+                      Icons.star,
+                      size: 20,
+                      color: colorScheme.secondary.withValues(alpha: 0.10),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 910,
+                  right: 40,
+                  child: Transform.rotate(
+                    angle: -0.7,
+                    child: Text(
+                      '🎃',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: colorScheme.primary.withValues(alpha: 0.13),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
               // --- CONTEÚDO PRINCIPAL ---
               LayoutBuilder(
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -463,13 +851,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: colorScheme.shadow.withValues(alpha: 0.2),
+                                  color:
+                                      colorScheme.shadow.withValues(alpha: 0.2),
                                   blurRadius: 35,
                                   spreadRadius: 6,
                                 ),
                               ],
                               border: Border.all(
-                                color: colorScheme.outline.withValues(alpha: 0.3),
+                                color:
+                                    colorScheme.outline.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -477,148 +867,160 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: const ProfileAvatarSection(),
                           ),
 
-                      const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
-                      // --- SEÇÃO DE INFORMAÇÕES DO PERFIL ---
-                      const ProfileInfoSection(),
+                          // --- SEÇÃO DE INFORMAÇÕES DO PERFIL ---
+                          const ProfileInfoSection(),
 
-                      const SizedBox(height: 18),
+                          const SizedBox(height: 18),
 
-                      // --- BOTÕES DE AÇÃO EM LINHA ---
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // MINHA CONTA
-                          Expanded(
-                            child: Container(
-                              height: 52,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF1F2937), Color(0xFF374151)],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.person_outline, size: 22),
-                                label: const Text(
-                                  'Minha conta',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                                onPressed: () => _showAccountOptions(context, authService),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  shadowColor: Colors.transparent,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  shape: RoundedRectangleBorder(
+                          // --- BOTÕES DE AÇÃO EM LINHA ---
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // MINHA CONTA
+                              Expanded(
+                                child: Container(
+                                  height: 52,
+                                  decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(24),
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF1F2937),
+                                        Color(0xFF374151)
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton.icon(
+                                    icon: const Icon(Icons.person_outline,
+                                        size: 22),
+                                    label: const Text(
+                                      'Minha conta',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    onPressed: () => _showAccountOptions(
+                                        context, authService),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.white,
+                                      shadowColor: Colors.transparent,
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
+                              const SizedBox(width: 12),
 
-                          // TEMA
-                          const Expanded(child: ThemeButton()),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      if (!authService.isAuthenticated) ...[
-                        const SizedBox(height: 10),
-                        Center(
-                          child: Text(
-                            'Faça login para salvar seu progresso!',
-                            style: TextStyle(
-                              color: colorScheme.tertiary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, AppRouter.login),
-                          child: const Text('Fazer Login / Criar Conta'),
-                        ),
-                      ],
-
-                      const SizedBox(height: 12),
-
-                      // --- BOTÃO CONQUISTAS ---
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          gradient: LinearGradient(
-                            colors: [
-                              colorScheme.primary.withValues(alpha: 0.9),
-                              colorScheme.primary.withValues(alpha: 0.7),
+                              // TEMA
+                              const Expanded(child: ThemeButton()),
                             ],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 24,
-                              offset: const Offset(0, 10),
+
+                          const SizedBox(height: 24),
+
+                          if (!authService.isAuthenticated) ...[
+                            const SizedBox(height: 10),
+                            Center(
+                              child: Text(
+                                'Faça login para salvar seu progresso!',
+                                style: TextStyle(
+                                  color: colorScheme.tertiary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, AppRouter.login),
+                              child: const Text('Fazer Login / Criar Conta'),
                             ),
                           ],
-                          border: Border.all(
-                            color: colorScheme.onPrimary.withValues(alpha: 0.5),
-                            width: 2,
-                          ),
-                        ),
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 36),
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, AppRouter.myProgress);
-                          },
-                          icon: const Icon(Icons.bar_chart_rounded, size: 26),
-                          label: const Text(
-                            'CONQUISTAS',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-              );
-            },
+                          const SizedBox(height: 12),
+
+                          // --- BOTÃO CONQUISTAS ---
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                              gradient: LinearGradient(
+                                colors: [
+                                  colorScheme.primary.withValues(alpha: 0.9),
+                                  colorScheme.primary.withValues(alpha: 0.7),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: colorScheme.onPrimary
+                                    .withValues(alpha: 0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: colorScheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 20, horizontal: 36),
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, AppRouter.myProgress);
+                              },
+                              icon:
+                                  const Icon(Icons.bar_chart_rounded, size: 26),
+                              label: const Text(
+                                'CONQUISTAS',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
+        bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 1),
       ),
-    ),
-    bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 1),
-  ),
-);
-}
+    );
+  }
 }

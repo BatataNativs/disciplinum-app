@@ -724,28 +724,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Future<void> _confirmSkip() async {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final shouldSkip = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: theme.brightness == Brightness.dark
-            ? const Color(0xFF1E293B)
-            : Colors.white,
+        backgroundColor: colorScheme.surface,
         title: Text(
           'Pular explicação?',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: theme.brightness == Brightness.dark
-                ? const Color(0xFFFFFFFF)
-                : const Color(0xFF000000),
+            color: colorScheme.onSurface,
           ),
         ),
         content: RichText(
           text: TextSpan(
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFFB0B0B0)
-                  : const Color(0xFF424242),
+              color: colorScheme.onSurfaceVariant,
             ),
             children: [
               const TextSpan(
@@ -757,9 +752,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
               TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFFB0B0B0)
-                      : const Color(0xFF424242),
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 children: [
                   TextSpan(

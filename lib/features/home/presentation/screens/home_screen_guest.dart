@@ -41,10 +41,11 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
   Future<void> _initializeConsent() async {
     // Inicializa o ConsentService
     await ConsentService.instance.initialize();
-    
+
     // Verifica se o usuário já respondeu ao consentimento
-    final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
-    
+    final hasResponded =
+        await ConsentService.instance.hasUserRespondedToConsent();
+
     if (!hasResponded && mounted) {
       final route = ModalRoute.of(context);
       if (route != null && route.isCurrent) {
@@ -81,7 +82,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
         _permissionsChecked = true;
 
         // Verifica consentimento de ads quando a tela se torna a atual (útil ao retornar do onboarding)
-        final hasResponded = await ConsentService.instance.hasUserRespondedToConsent();
+        final hasResponded =
+            await ConsentService.instance.hasUserRespondedToConsent();
         if (!hasResponded && mounted && !_consentDialogShown) {
           setState(() => _consentDialogShown = true);
           await showConsentDialog(context);
@@ -134,15 +136,12 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
 
   // Glow suave para cards ativos - mais elegante e menos intenso
   static const Color _activeGlowColor = Color(0xFF22C55E); // Verde mais suave
-  static const double _activeBlurRadius = 8.0;
-  static const double _activeSpreadRadius = 1.0;
 
   Widget _buildNicheCard(
       Niche niche, ColorScheme colorScheme, TextTheme textTheme, String heroTag,
       {bool isActive = false}) {
-    final theme = Theme.of(context);
     final accentColor = _getNicheColor(niche.id);
-    
+
     return SizedBox(
       height: 195,
       child: GestureDetector(
@@ -155,60 +154,45 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
               end: Alignment.bottomRight,
               colors: isActive
                   ? [
-                      theme.brightness == Brightness.dark
-                          ? colorScheme.surface.withValues(alpha: 0.95)
-                          : colorScheme.surface,
-                      theme.brightness == Brightness.dark
-                          ? _activeGlowColor.withValues(alpha: 0.2)
-                          : _activeGlowColor.withValues(alpha: 0.06),
+                      colorScheme.surface,
+                      _activeGlowColor.withValues(alpha: 0.1),
                     ]
                   : [
-                      theme.brightness == Brightness.dark
-                          ? colorScheme.surface.withValues(alpha: 0.9)
-                          : colorScheme.surface,
-                      theme.brightness == Brightness.dark
-                          ? Colors.black.withValues(alpha: 0.3)
-                          : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      colorScheme.surface,
+                      colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                     ],
             ),
             border: Border.all(
               color: isActive
-                  ? _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.8 : 0.5)
-                  : accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.6 : 0.25),
-              width: isActive ? (theme.brightness == Brightness.dark ? 2.5 : 1.5) : (theme.brightness == Brightness.dark ? 2 : 1.5),
+                  ? _activeGlowColor.withValues(alpha: 0.6)
+                  : accentColor.withValues(alpha: 0.3),
+              width: isActive ? 1.8 : 1.5,
             ),
             boxShadow: isActive
                 ? [
-                    // Glow mais intenso no tema escuro
                     BoxShadow(
-                      color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.25),
-                      blurRadius: theme.brightness == Brightness.dark ? 16 : _activeBlurRadius,
-                      spreadRadius: theme.brightness == Brightness.dark ? 3 : _activeSpreadRadius,
+                      color: _activeGlowColor.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      spreadRadius: 1.5,
+                      offset: const Offset(0, 5),
                     ),
                     BoxShadow(
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.black.withValues(alpha: 0.5)
-                          : Colors.black.withValues(alpha: 0.08),
-                      blurRadius: theme.brightness == Brightness.dark ? 14 : 6,
-                      spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
-                      offset: const Offset(0, 5),
+                      color: colorScheme.shadow.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ]
                 : [
-                    // Sombra intensa no tema escuro
                     BoxShadow(
-                      color: accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.35 : 0.15),
-                      blurRadius: theme.brightness == Brightness.dark ? 20 : 12,
-                      spreadRadius: theme.brightness == Brightness.dark ? 2 : 0,
+                      color: accentColor.withValues(alpha: 0.2),
+                      blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
                     BoxShadow(
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.black.withValues(alpha: 0.6)
-                          : Colors.black.withValues(alpha: 0.08),
-                      blurRadius: theme.brightness == Brightness.dark ? 16 : 8,
-                      spreadRadius: theme.brightness == Brightness.dark ? 2 : -2,
-                      offset: const Offset(0, 6),
+                      color: colorScheme.shadow.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
           ),
@@ -224,19 +208,14 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isActive
-                          ? _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.25 : 0.12)
-                          : accentColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.12),
+                          ? _activeGlowColor.withValues(alpha: 0.15)
+                          : accentColor.withValues(alpha: 0.12),
                       border: isActive
                           ? Border.all(
-                              color: _activeGlowColor.withValues(alpha: theme.brightness == Brightness.dark ? 0.5 : 0.35),
-                              width: theme.brightness == Brightness.dark ? 1.5 : 1,
+                              color: _activeGlowColor.withValues(alpha: 0.4),
+                              width: 1.2,
                             )
-                          : (theme.brightness == Brightness.dark
-                              ? Border.all(
-                                  color: accentColor.withValues(alpha: 0.4),
-                                  width: 1.5,
-                                )
-                              : null),
+                          : null,
                     ),
                     child: Transform.scale(
                       scale: niche.scale,
@@ -281,7 +260,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: isActive ? 0.6 : 0.55),
+                      color: colorScheme.onSurface
+                          .withValues(alpha: isActive ? 0.6 : 0.55),
                       fontSize: 10,
                       height: 1.2,
                     ),
@@ -303,11 +283,12 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     final allCategories = List<NicheCategory>.from(categories);
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
+    final isHalloweenTheme = currentTheme == AppTheme.halloween;
 
     return Scaffold(
       extendBody: true,
       body: Container(
-        color: Theme.of(context).brightness == Brightness.dark ? Colors.black : colorScheme.surface,
+        color: colorScheme.surface,
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -534,6 +515,254 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                 ),
               ),
             ],
+            // --- DECORAÇÕES DE HALLOWEEN 🎃 ---
+            if (isHalloweenTheme) ...[
+              // == DECORAÇÕES GRANDES (60-80) ==
+              Positioned(
+                top: 60,
+                right: -15,
+                child: Transform.rotate(
+                  angle: 0.2,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 78,
+                        color: colorScheme.primary.withValues(alpha: 0.16),
+                      )),
+                ),
+              ),
+              Positioned(
+                top: 250,
+                left: -20,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Icon(
+                    Icons.psychology,
+                    size: 72,
+                    color: colorScheme.secondary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 100,
+                right: -10,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.nightlight_round,
+                    size: 80,
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              // == DECORAÇÕES MÉDIAS (30-45) ==
+              Positioned(
+                top: 45,
+                left: 70,
+                child: Transform.rotate(
+                  angle: -0.1,
+                  child: Icon(
+                    Icons.star,
+                    size: 48,
+                    color: colorScheme.secondary.withValues(alpha: 0.20),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 220,
+                right: 90,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 44,
+                        color: colorScheme.primary.withValues(alpha: 0.18),
+                      )),
+                ),
+              ),
+              Positioned(
+                top: 460,
+                left: 50,
+                child: Transform.rotate(
+                  angle: -0.5,
+                  child: Icon(
+                    Icons.sports_baseball_outlined,
+                    size: 40,
+                    color: colorScheme.secondary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 300,
+                right: 70,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.psychology,
+                    size: 42,
+                    color: colorScheme.primary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              // == DECORAÇÕES PEQUENAS (15-25) ==
+              Positioned(
+                top: 90,
+                left: 35,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: colorScheme.primary.withValues(alpha: 0.22),
+                      )),
+                ),
+              ),
+              Positioned(
+                top: 150,
+                left: 75,
+                child: Transform.rotate(
+                  angle: 0.4,
+                  child: Icon(
+                    Icons.star,
+                    size: 22,
+                    color: colorScheme.secondary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 180,
+                left: 45,
+                child: Transform.rotate(
+                  angle: 0.1,
+                  child: Icon(
+                    Icons.nightlight_round,
+                    size: 25,
+                    color: colorScheme.primary.withValues(alpha: 0.20),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 260,
+                right: 35,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: colorScheme.secondary.withValues(alpha: 0.24),
+                      )),
+                ),
+              ),
+              // == DECORAÇÕES EXTRA PEQUENAS ==
+              Positioned(
+                top: 120,
+                right: 45,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.nightlight_round,
+                    size: 26,
+                    color: colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 350,
+                left: 25,
+                child: Transform.rotate(
+                  angle: 0.7,
+                  child: Icon(
+                    Icons.star,
+                    size: 24,
+                    color: colorScheme.primary.withValues(alpha: 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 400,
+                right: 35,
+                child: Transform.rotate(
+                  angle: -0.3,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 26,
+                        color: colorScheme.secondary.withValues(alpha: 0.2),
+                      )),
+                ),
+              ),
+              Positioned(
+                bottom: 250,
+                left: 55,
+                child: Transform.rotate(
+                  angle: -0.4,
+                  child: Icon(
+                    Icons.star,
+                    size: 20,
+                    color: colorScheme.secondary.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 200,
+                right: 45,
+                child: Transform.rotate(
+                  angle: 0.5,
+                  child: Icon(
+                    Icons.nightlight_round,
+                    size: 24,
+                    color: colorScheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+              ),
+              // == DECORAÇÕES EXTRA ==
+              Positioned(
+                top: 550,
+                left: 105,
+                child: Transform.rotate(
+                  angle: 0.8,
+                  child: Icon(
+                    Icons.star,
+                    size: 18,
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 650,
+                right: 65,
+                child: Transform.rotate(
+                  angle: -0.6,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: colorScheme.secondary.withValues(alpha: 0.16),
+                      )),
+                ),
+              ),
+              Positioned(
+                top: 750,
+                left: 30,
+                child: Transform.rotate(
+                  angle: 0.3,
+                  child: Icon(
+                    Icons.nightlight_round,
+                    size: 16,
+                    color: colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 80,
+                left: 95,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Text('🎃',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: colorScheme.secondary.withValues(alpha: 0.13),
+                      )),
+                ),
+              ),
+            ],
             Positioned(
               top: -180,
               right: -180,
@@ -542,8 +771,7 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                 height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF6366F1)
-                      .withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.08 : 0.04),
+                  color: colorScheme.primary.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -608,8 +836,10 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
                       if (index == 0) {
                         return Consumer(
                           builder: (context, ref, child) {
-                            final activeModulesAsync = ref.watch(activeModulesProvider);
-                            final activeModules = activeModulesAsync.valueOrNull ?? [];
+                            final activeModulesAsync =
+                                ref.watch(activeModulesProvider);
+                            final activeModules =
+                                activeModulesAsync.valueOrNull ?? [];
                             return _buildActiveModulesSection(
                                 activeModules, colorScheme, textTheme);
                           },
@@ -662,9 +892,10 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
           children: category.nicheIds.map((nicheId) {
             final niche = NicheRepository.getById(nicheId);
             final heroTag = 'guest_${category.idPrefix}_${niche.id}';
-            
+
             return SizedBox(
-              width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
+              width: (MediaQuery.of(context).size.width - 44) /
+                  2, // Largura exata para 2 colunas
               child: _buildNicheCard(
                 niche,
                 colorScheme,
@@ -679,8 +910,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
     );
   }
 
-  Widget _buildActiveModulesSection(
-      List<NicheId> activeNiches, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildActiveModulesSection(List<NicheId> activeNiches,
+      ColorScheme colorScheme, TextTheme textTheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -703,7 +934,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
             children: activeNiches.map((nicheId) {
               final niche = NicheRepository.getById(nicheId);
               return SizedBox(
-                width: (MediaQuery.of(context).size.width - 44) / 2, // Largura exata para 2 colunas
+                width: (MediaQuery.of(context).size.width - 44) /
+                    2, // Largura exata para 2 colunas
                 child: _buildNicheCard(
                   niche,
                   colorScheme,
@@ -727,7 +959,8 @@ class _HomeScreenGuestState extends ConsumerState<HomeScreenGuest>
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color:
+                    colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 border: Border.all(
                   color: colorScheme.outline.withValues(alpha: 0.2),
                   width: 1.5,
