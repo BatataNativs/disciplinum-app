@@ -66,76 +66,137 @@ class LockActivity : Activity() {
         buildLockUi(moduleName)
     }
 
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
     private fun buildLockUi(moduleName: String) {
+        // Fundo principal com gradiente escuro
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#0D0D0D"))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.parseColor("#0F0F0F"), Color.parseColor("#1A1A1A"))
+            )
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setPadding(80, 80, 80, 80)
         }
 
-        // Ícone / emoji de cadeado
+        // Card central
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.parseColor("#222222"))
+                cornerRadius = dp(32).toFloat()
+                setStroke(dp(1), Color.parseColor("#333333"))
+            }
+            elevation = dp(16).toFloat()
+            setPadding(dp(24), dp(40), dp(24), dp(40))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(dp(32), 0, dp(32), 0)
+            }
+        }
+
+        // Ícone / emoji de cadeado com fundo circular
         val iconText = TextView(this).apply {
             text = "🔒"
-            textSize = 64f
+            textSize = 52f
             gravity = Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(Color.parseColor("#2D2D2D"))
+                setStroke(dp(1), Color.parseColor("#444444"))
+            }
+            layoutParams = LinearLayout.LayoutParams(dp(100), dp(100)).apply {
+                setMargins(0, 0, 0, dp(24))
+            }
         }
 
         // Título
         val title = TextView(this).apply {
             text = "App Bloqueado"
-            textSize = 24f
+            textSize = 22f
             setTextColor(Color.WHITE)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
-            setPadding(0, 32, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, dp(8))
+            }
         }
 
         // Subtítulo com nome do módulo
         val subtitle = TextView(this).apply {
             text = "Este app está sendo monitorado\npelo módulo \"$moduleName\""
-            textSize = 16f
-            setTextColor(Color.parseColor("#AAAAAA"))
+            textSize = 15f
+            setTextColor(Color.parseColor("#BBBBBB"))
             gravity = Gravity.CENTER
-            setPadding(0, 16, 0, 48)
+            setLineSpacing(dp(4).toFloat(), 1f)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, dp(32))
+            }
         }
 
         // Botão Voltar (ação segura)
-        val btnBack = Button(this).apply {
+        val btnBack = android.widget.Button(this).apply {
             text = "↩ Voltar"
             textSize = 16f
+            isAllCaps = false
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#1DB954"))
-            setPadding(40, 24, 40, 24)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                colors = intArrayOf(Color.parseColor("#1DB954"), Color.parseColor("#1AA34A"))
+                cornerRadius = dp(100).toFloat()
+            }
+            stateListAnimator = null // Remove sombra padrão do botão
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).also { it.setMargins(0, 0, 0, 24) }
+                dp(56)
+            ).apply {
+                setMargins(0, 0, 0, dp(16))
+            }
             setOnClickListener { goHome() }
         }
 
         // Botão Abrir mesmo assim (ação de risco)
-        val btnOpen = Button(this).apply {
+        val btnOpen = android.widget.Button(this).apply {
             text = "Abrir mesmo assim"
             textSize = 14f
+            isAllCaps = false
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#FF6B6B"))
-            setBackgroundColor(Color.parseColor("#222222"))
-            setPadding(40, 24, 40, 24)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.parseColor("#2D2D2D"))
+                setStroke(dp(1), Color.parseColor("#444444"))
+                cornerRadius = dp(100).toFloat()
+            }
+            stateListAnimator = null
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                dp(52)
             )
             setOnClickListener { openAnyway() }
         }
 
-        root.addView(iconText)
-        root.addView(title)
-        root.addView(subtitle)
-        root.addView(btnBack)
-        root.addView(btnOpen)
+        card.addView(iconText)
+        card.addView(title)
+        card.addView(subtitle)
+        card.addView(btnBack)
+        card.addView(btnOpen)
+
+        root.addView(card)
 
         setContentView(root)
     }

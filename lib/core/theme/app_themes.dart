@@ -254,8 +254,8 @@ class AppThemes {
     const pinkPrimary = Color(0xFFC2185B); // Rosa escuro (melhor legibilidade)
     const pinkLight = Color.fromARGB(255, 249, 212, 227); // Rosa claro
     const pinkSecondary = Color(0xFFE91E63); // Rosa médio
-    const scaffoldBg = Color(0xFFFFF0F5); // Lavender Blush (fundo suave)
-    const surfaceLight = Color(0xFFFFEBEE); // Surface claro
+    const scaffoldBg = Color(0xFFFCE4EC); // Pink 50 (fundo rosa para contraste)
+    const surfaceLight = Color(0xFFF8BBD0); // Pink 100
     const surfaceElevated = Color(0xFFFFFFFF); // Cards brancos
     const onSurfacePrimary =
         Color(0xFF210016); // Texto escuro (alta legibilidade)
@@ -435,14 +435,14 @@ class AppThemes {
     final base = ThemeData.dark();
 
     // Cores do tema halloween com boa legibilidade
-    const orangePrimary =
-        Color(0xFFFF5722); // Laranja vibrante (melhor legibilidade)
-    const orangeLight = Color(0xFFFFCC80); // Laranja claro
-    const purpleSecondary = Color(0xFF7B1FA2); // Roxo escuro
+    const orangePrimary = Color(0xFFFF6D00); // Laranja abóbora moranga vivo
+    const orangeLight = Color(0xFFFFB74D); // Laranja claro
+    const purpleSecondary = Color(0xFF6A1B9A); // Roxo escuro
     const purpleLight = Color(0xFFCE93D8); // Roxo claro
-    const scaffoldBg = Color.fromARGB(255, 139, 135, 135); // Fundo muito escuro
-    const surfaceDark = Color.fromARGB(255, 28, 7, 7); // Surface escuro
-    const surfaceElevated = Color.fromARGB(255, 37, 34, 32); // Cards elevados
+    const scaffoldBg =
+        Color(0xFF0F0F1A); // Fundo quase preto (melhor contraste)
+    const surfaceDark = Color(0xFF14141E); // Surface escuro
+    const surfaceElevated = Color(0xFF1F1F2E); // Dialogs e containers
     const onSurfacePrimary = Colors.white; // Texto branco (alta legibilidade)
     const onSurfaceSecondary = Color(0xFFE0E0E0); // Texto cinza claro
     const outlineColor =
@@ -522,7 +522,7 @@ class AppThemes {
           ),
 
       // Componentes específicos
-      cardColor: surfaceElevated.withValues(alpha: 0.95),
+      cardColor: orangePrimary,
 
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

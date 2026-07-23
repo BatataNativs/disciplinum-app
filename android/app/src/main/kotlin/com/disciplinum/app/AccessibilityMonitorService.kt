@@ -134,11 +134,12 @@ class AccessibilityMonitorService : AccessibilityService() {
             
             if (decision?.shouldLock == true) {
                 // Bloqueia nativamente - inicia LockActivity
+                val friendlyName = getFriendlyModuleName(decision.moduleId)
                 val intent = LockActivity.createIntent(
                     this,
                     packageName,
                     decision.moduleId,
-                    decision.moduleId // Usar moduleId como nome por enquanto
+                    friendlyName
                 )
                 startActivity(intent)
 
@@ -159,6 +160,19 @@ class AccessibilityMonitorService : AccessibilityService() {
             }
         } catch (e: Exception) {
             android.util.Log.e("AccessibilityMonitor", "Erro ao processar evento", e)
+        }
+    }
+
+    private fun getFriendlyModuleName(moduleId: String): String {
+        return when (moduleId) {
+            "focus" -> "Foco e Produtividade"
+            "spending" -> "Controle de Gastos"
+            "smoking" -> "Controle do Fumo"
+            "diet" -> "Compulsão Alimentar"
+            "binge_eating" -> "Compulsão Alimentar"
+            "adult_content" -> "Jejum 18+"
+            "digital_detox" -> "Jejum Digital"
+            else -> "Módulo Desconhecido"
         }
     }
 

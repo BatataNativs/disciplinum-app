@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/edit_profile_dialog.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/delete_account_dialog.dart';
@@ -6,7 +7,8 @@ import 'package:disciplinum/features/settings/presentation/screens/sync_backup_s
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-class AccountOptionsDialog extends StatefulWidget {
+
+class AccountOptionsDialog extends ConsumerStatefulWidget {
   final AuthService authService;
 
   const AccountOptionsDialog({
@@ -15,10 +17,11 @@ class AccountOptionsDialog extends StatefulWidget {
   });
 
   @override
-  State<AccountOptionsDialog> createState() => _AccountOptionsDialogState();
+  ConsumerState<AccountOptionsDialog> createState() =>
+      _AccountOptionsDialogState();
 }
 
-class _AccountOptionsDialogState extends State<AccountOptionsDialog>
+class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
@@ -60,7 +63,8 @@ class _AccountOptionsDialogState extends State<AccountOptionsDialog>
             child: Dialog(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(maxWidth: 380),
@@ -247,7 +251,8 @@ class _AccountOptionsDialogState extends State<AccountOptionsDialog>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SyncBackupScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const SyncBackupScreen()),
                     );
                   },
                 ),
@@ -537,9 +542,12 @@ class _AccountOptionsDialogState extends State<AccountOptionsDialog>
 
   void _showEditProfileDialog(BuildContext context) {
     final userProfile = widget.authService.userProfile;
-    LoggerService.instance.d('🔐 AccountOptionsDialog - userProfile completo: $userProfile');
-    LoggerService.instance.d('🔐 AccountOptionsDialog - show_email: ${userProfile?['show_email']}, show_avatar: ${userProfile?['show_avatar']}');
-    
+
+    LoggerService.instance
+        .d('🔐 AccountOptionsDialog - userProfile completo: $userProfile');
+    LoggerService.instance.d(
+        '🔐 AccountOptionsDialog - show_email: ${userProfile?['show_email']}, show_avatar: ${userProfile?['show_avatar']}');
+
     showDialog<bool>(
       context: context,
       builder: (ctx) => EditProfileDialog(

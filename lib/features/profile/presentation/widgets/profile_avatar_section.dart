@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/auth/data/datasources/avatar_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
+
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 class ProfileAvatarSection extends ConsumerStatefulWidget {
   const ProfileAvatarSection({super.key});
 
   @override
-  ConsumerState<ProfileAvatarSection> createState() => _ProfileAvatarSectionState();
+  ConsumerState<ProfileAvatarSection> createState() =>
+      _ProfileAvatarSectionState();
 }
 
 class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
@@ -36,9 +38,11 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
       });
 
       if (ok) {
-        EnhancedSnackBarHelper.showSuccess(context, 'Foto de perfil atualizada!');
+        EnhancedSnackBarHelper.showSuccess(
+            context, 'Foto de perfil atualizada!');
       } else {
-        EnhancedSnackBarHelper.showError(context, 'Erro ao enviar foto de perfil!');
+        EnhancedSnackBarHelper.showError(
+            context, 'Erro ao enviar foto de perfil!');
       }
     }
   }
@@ -46,11 +50,14 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
   @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider);
+
     final theme = Theme.of(context);
     final userName = authService.isAuthenticated
         ? (authService.userProfile?['name'] ?? 'Usuário')
         : 'Usuário Anônimo';
 
+    // Usa userProfile diretamente (persiste na tabela users)
+    final showAvatarConfig = authService.userProfile?['show_avatar'] ?? true;
     final String? currentAvatarUrl = authService.userProfile?['avatar_url'];
     const double avatarRadius = 70.0;
 
@@ -66,9 +73,6 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
                   child: CircularProgressIndicator(),
                 )
               : Builder(builder: (context) {
-                  final profile = authService.userProfile;
-                  final bool showAvatarConfig = profile?['show_avatar'] ?? true;
-
                   if (!showAvatarConfig) {
                     return CircleAvatar(
                       radius: avatarRadius,
@@ -82,20 +86,22 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
                     radius: avatarRadius,
                     backgroundColor: theme.colorScheme.primaryContainer,
                     foregroundColor: theme.colorScheme.onPrimaryContainer,
-                    backgroundImage: (currentAvatarUrl != null && currentAvatarUrl.isNotEmpty)
+                    backgroundImage: (currentAvatarUrl != null &&
+                            currentAvatarUrl.isNotEmpty)
                         ? NetworkImage(currentAvatarUrl)
                         : null,
-                    child: (currentAvatarUrl == null || currentAvatarUrl.isEmpty)
-                        ? Text(
-                            userName.isNotEmpty
-                                ? userName[0].toUpperCase()
-                                : 'U',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
+                    child:
+                        (currentAvatarUrl == null || currentAvatarUrl.isEmpty)
+                            ? Text(
+                                userName.isNotEmpty
+                                    ? userName[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                   );
                 }),
         ),

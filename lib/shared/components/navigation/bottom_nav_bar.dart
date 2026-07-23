@@ -29,12 +29,27 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
     HapticFeedback.lightImpact();
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
-    if (index == 0 && currentRoute != AppRouter.home) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRouter.home,
-        (route) => route.isFirst,
-      );
+    if (index == 0) {
+      final authService = ref.read(authServiceProvider);
+      if (authService.isAuthenticated) {
+        // Usuário logado: navega para a Home autenticada
+        if (currentRoute != AppRouter.home) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRouter.home,
+            (route) => route.isFirst,
+          );
+        }
+      } else {
+        // Convidado: navega para a Home de convidado
+        if (currentRoute != AppRouter.homeGuest) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRouter.homeGuest,
+            (route) => route.isFirst,
+          );
+        }
+      }
     } else if (index == 1) {
       if (currentRoute == AppRouter.profile) return;
       final authService = ref.read(authServiceProvider);

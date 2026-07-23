@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
-import 'package:disciplinum/core/di/user_choices_provider.dart';
+
 
 class EditProfileDialog extends ConsumerStatefulWidget {
   final AuthService authService;
@@ -24,15 +24,29 @@ class EditProfileDialog extends ConsumerStatefulWidget {
 }
 
 class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
+  late TextEditingController _nameController;
+  late TextEditingController _bioController;
   late bool showEmail;
   late bool showAvatar;
 
   @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+    _bioController = TextEditingController(text: widget.initialBio);
+    showEmail = widget.initialShowEmail;
+    showAvatar = widget.initialShowAvatar;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final userChoicesAsync = ref.watch(userChoicesProvider);
-    showEmail = userChoicesAsync.value?.showEmail ?? widget.initialShowEmail;
-    showAvatar = userChoicesAsync.value?.showAvatar ?? widget.initialShowAvatar;
-    
     return AlertDialog(
       title: const Text('Editar Perfil'),
       content: SingleChildScrollView(
@@ -40,60 +54,49 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
+            // Nome
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(),
               ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Foto de Perfil',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      // Avatar
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: const Icon(Icons.person, size: 40),
-                      ),
-                      const SizedBox(width: 16),
-                      // Toggle para mostrar/ocultar avatar
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Exibir minha foto',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 4),
-                          Switch(
-                            value: showAvatar,
-                            onChanged: (value) => showAvatar = value,
-                            activeThumbColor: Colors.blue,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+            ),
+            const SizedBox(height: 16),
+
+            // Bio
+            TextField(
+              controller: _bioController,
+              decoration: const InputDecoration(
+                labelText: 'Bio',
+                border: OutlineInputBorder(),
               ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+
+            // Toggle para mostrar/ocultar email
+            SwitchListTile(
+              title: const Text('Exibir e-mail'),
+              subtitle: const Text('Mostrar seu e-mail no perfil'),
+              value: showEmail,
+              onChanged: (value) {
+                setState(() {
+                  showEmail = value;
+                });
+              },
+            ),
+
+            // Toggle para mostrar/ocultar avatar
+            SwitchListTile(
+              title: const Text('Exibir foto de perfil'),
+              subtitle: const Text('Mostrar sua foto no perfil'),
+              value: showAvatar,
+              onChanged: (value) {
+                setState(() {
+                  showAvatar = value;
+                });
+              },
             ),
           ],
         ),
@@ -117,22 +120,28 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
 
   Future<void> _save(BuildContext context) async {
     try {
-      final controller = ref.read(userChoicesControllerProvider);
-      final success = await controller.updateShowEmail(showEmail) &&
-                   await controller.updateShowAvatar(showAvatar);
+      // Atualiza name, bio, show_email e show_avatar no authService (tabela users - Supabase cloud)
+      final profileSuccess = await widget.authService.updateProfile({
+        'name': _nameController.text,
+        'bio': _bioController.text,
+        'show_email': showEmail,
+        'show_avatar': showAvatar,
+      });
 
-      if (success && context.mounted) {
+      // Usamos apenas profileSuccess como critério primário pois authService garante persistência cloud
+      if (profileSuccess && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Perfil atualizado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao atualizar perfil'),
+          SnackBar(
+            content: Text(
+                'Erro ao atualizar perfil: ${widget.authService.errorMessage}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -140,13 +149,12 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro inesperado ao atualizar perfil'),
+          SnackBar(
+            content: Text('Erro inesperado ao atualizar perfil: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
   }
-
 }

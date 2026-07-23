@@ -81,7 +81,6 @@ class GlassMorphismCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final effectiveGlowColor = glowColor ?? HomeColors.primary;
 
     return SizedBox(
@@ -90,7 +89,7 @@ class GlassMorphismCard extends StatelessWidget {
       child: Container(
         padding: padding,
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(
             color: borderColor.withValues(alpha: 0.2),
@@ -118,7 +117,7 @@ class GlassMorphismCard extends StatelessWidget {
   }
 }
 
-class PremiumHeaderCard extends StatelessWidget {
+class PremiumHeaderCard extends ConsumerWidget {
   final String title;
   final String subtitle;
   final Widget? leading;
@@ -135,28 +134,54 @@ class PremiumHeaderCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final currentTheme = ref.watch(themeControllerProvider);
+    final isPinkTheme = currentTheme == AppTheme.pink;
+    final isHalloweenTheme = currentTheme == AppTheme.halloween;
+
+    // Cores da borda/gradiente externo
+    final List<Color> gradientColors;
+    final Color shadowColor;
+    final Color fillColor;
+
+    if (isPinkTheme) {
+      gradientColors = const [Color(0xFFEC4899), Color(0xFFF9A8D4)];
+      shadowColor = const Color(0xFFEC4899);
+      fillColor = const Color(0xFFFFF0F5); // Rosa bem claro
+    } else if (isHalloweenTheme) {
+      gradientColors = const [Color(0xFFE0E0E0), Color(0xFFBDBDBD)];
+      shadowColor = const Color(0xFF9E9E9E);
+      fillColor = const Color(0xFF2D2D2D); // Grafite
+    } else {
+      gradientColors = [borderColor, borderColor.withValues(alpha: 0.6)];
+      shadowColor = borderColor;
+      fillColor = theme.cardColor;
+    }
 
     return Container(
       padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            borderColor,
-            borderColor.withValues(alpha: 0.6),
-          ],
+          colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          color: colorScheme.surface,
+          color: fillColor,
           child: Row(
             children: [
               if (leading != null) ...[
@@ -214,6 +239,8 @@ class ModernNicheCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isHalloweenTheme = theme.primaryColor == const Color(0xFFFF6D00);
+    final textColor = isHalloweenTheme ? Colors.black : colorScheme.onSurface;
     final accentColor = _getNicheColor(niche.id);
     final glowColor = isActive ? HomeColors.success : accentColor;
     final customIcon = nicheIcons[niche.id] ?? FontAwesomeIcons.star;
@@ -222,7 +249,7 @@ class ModernNicheCard extends StatelessWidget {
       height: 195,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: colorScheme.surface,
+        color: theme.cardColor,
         border: Border.all(
           color: isActive
               ? glowColor.withValues(alpha: 0.6)
@@ -231,10 +258,10 @@ class ModernNicheCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withValues(alpha: 0.2),
-            blurRadius: 12,
+            color: glowColor.withValues(alpha: 0.3),
+            blurRadius: 24,
             spreadRadius: 1.5,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 10),
           ),
           BoxShadow(
             color: colorScheme.shadow.withValues(alpha: 0.1),
@@ -263,17 +290,22 @@ class ModernNicheCard extends StatelessWidget {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              glowColor.withValues(alpha: 0.15),
-                              Colors.transparent,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: isHalloweenTheme ? Colors.black : null,
+                          gradient: isHalloweenTheme
+                              ? null
+                              : LinearGradient(
+                                  colors: [
+                                    glowColor.withValues(alpha: 0.15),
+                                    Colors.transparent,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                           border: Border.all(
-                            color: glowColor.withValues(alpha: 0.3),
-                            width: 1.2,
+                            color: isHalloweenTheme
+                                ? glowColor.withValues(alpha: 0.7)
+                                : glowColor.withValues(alpha: 0.3),
+                            width: isHalloweenTheme ? 1.8 : 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -287,7 +319,7 @@ class ModernNicheCard extends StatelessWidget {
                           child: FaIcon(
                             customIcon,
                             size: 33,
-                            color: glowColor,
+                            color: isHalloweenTheme ? glowColor : glowColor,
                           ),
                         ),
                       ),
@@ -302,7 +334,7 @@ class ModernNicheCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 13.5,
-                      color: colorScheme.onSurface,
+                      color: textColor,
                       height: 1.15,
                     ),
                   ),
@@ -316,7 +348,8 @@ class ModernNicheCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.55),
+                          color: textColor.withValues(
+                              alpha: isHalloweenTheme ? 0.75 : 0.55),
                           fontSize: 10.5,
                           height: 1.2,
                         ),
@@ -400,7 +433,7 @@ class ModernEmptyStateCard extends StatelessWidget {
       height: 195,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border.all(
           color: colorScheme.outline.withValues(alpha: 0.2),
           width: 1.2,
@@ -781,225 +814,236 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return GlobalCelebrationWidget(
       child: SmokingCelebrationWidget(
-        child: Scaffold(
-          extendBody: true,
-          backgroundColor: colorScheme.surface,
-          body: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              // Flores (Tema Rosa)
-              if (isPinkTheme) ...[
-                Positioned(
-                    top: 80,
-                    right: -10,
-                    child: Transform.rotate(
-                        angle: 0.6,
-                        child: Icon(Icons.local_florist,
-                            size: 72,
-                            color:
-                                colorScheme.primary.withValues(alpha: 0.14)))),
-                Positioned(
-                    top: 280,
-                    left: -25,
-                    child: Transform.rotate(
-                        angle: -0.4,
-                        child: Icon(Icons.filter_vintage,
-                            size: 68,
-                            color: colorScheme.secondary
-                                .withValues(alpha: 0.12)))),
-                Positioned(
-                    bottom: 120,
-                    right: -15,
-                    child: Transform.rotate(
-                        angle: 0.3,
-                        child: Icon(Icons.spa,
-                            size: 76,
-                            color:
-                                colorScheme.primary.withValues(alpha: 0.13)))),
-                Positioned(
-                    top: 45,
-                    left: 60,
-                    child: Transform.rotate(
-                        angle: -0.2,
-                        child: Icon(Icons.eco,
-                            size: 42,
-                            color: colorScheme.secondary
-                                .withValues(alpha: 0.18)))),
-                Positioned(
-                    top: 200,
-                    right: 80,
-                    child: Transform.rotate(
-                        angle: 0.7,
-                        child: Icon(Icons.local_florist,
-                            size: 38,
-                            color:
-                                colorScheme.primary.withValues(alpha: 0.20)))),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest,
               ],
-              // Decorações de Halloween 🎃
-              if (isHalloweenTheme) ...[
-                Positioned(
-                    top: 60,
-                    right: -15,
-                    child: Transform.rotate(
-                        angle: 0.2,
-                        child: Text('🎃',
-                            style: TextStyle(
-                              fontSize: 78,
-                              color:
-                                  colorScheme.primary.withValues(alpha: 0.16),
-                            )))),
-                Positioned(
-                    top: 250,
-                    left: -20,
-                    child: Transform.rotate(
-                        angle: -0.3,
-                        child: Icon(Icons.psychology, // Fantasma/mente
-                            size: 72,
-                            color: colorScheme.secondary
-                                .withValues(alpha: 0.14)))),
-                Positioned(
-                    bottom: 100,
-                    right: -10,
-                    child: Transform.rotate(
-                        angle: 0.4,
-                        child: Icon(Icons.nightlight_round, // Lua/vampiro
-                            size: 80,
-                            color:
-                                colorScheme.primary.withValues(alpha: 0.12)))),
-                Positioned(
-                    top: 120,
-                    left: 70,
-                    child: Transform.rotate(
-                        angle: -0.1,
-                        child: Icon(Icons.star, // Estrela
-                            size: 48,
-                            color: colorScheme.secondary
-                                .withValues(alpha: 0.20)))),
-                Positioned(
-                    top: 350,
-                    right: 90,
-                    child: Transform.rotate(
-                        angle: 0.5,
-                        child: Text('🎃',
-                            style: TextStyle(
-                              fontSize: 44,
-                              color:
-                                  colorScheme.primary.withValues(alpha: 0.18),
-                            )))),
-              ],
+            ),
+          ),
+          child: Scaffold(
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            body: Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                // Flores (Tema Rosa)
+                if (isPinkTheme) ...[
+                  Positioned(
+                      top: 80,
+                      right: -10,
+                      child: Transform.rotate(
+                          angle: 0.6,
+                          child: Icon(Icons.local_florist,
+                              size: 72,
+                              color: colorScheme.primary
+                                  .withValues(alpha: 0.14)))),
+                  Positioned(
+                      top: 280,
+                      left: -25,
+                      child: Transform.rotate(
+                          angle: -0.4,
+                          child: Icon(Icons.filter_vintage,
+                              size: 68,
+                              color: colorScheme.secondary
+                                  .withValues(alpha: 0.12)))),
+                  Positioned(
+                      bottom: 120,
+                      right: -15,
+                      child: Transform.rotate(
+                          angle: 0.3,
+                          child: Icon(Icons.spa,
+                              size: 76,
+                              color: colorScheme.primary
+                                  .withValues(alpha: 0.13)))),
+                  Positioned(
+                      top: 45,
+                      left: 60,
+                      child: Transform.rotate(
+                          angle: -0.2,
+                          child: Icon(Icons.eco,
+                              size: 42,
+                              color: colorScheme.secondary
+                                  .withValues(alpha: 0.18)))),
+                  Positioned(
+                      top: 200,
+                      right: 80,
+                      child: Transform.rotate(
+                          angle: 0.7,
+                          child: Icon(Icons.local_florist,
+                              size: 38,
+                              color: colorScheme.primary
+                                  .withValues(alpha: 0.20)))),
+                ],
+                // Decorações de Halloween 🎃
+                if (isHalloweenTheme) ...[
+                  Positioned(
+                      top: 60,
+                      right: -15,
+                      child: Transform.rotate(
+                          angle: 0.2,
+                          child: const Opacity(
+                              opacity: 0.15,
+                              child:
+                                  Text('🎃', style: TextStyle(fontSize: 78))))),
+                  Positioned(
+                      top: 250,
+                      left: -20,
+                      child: Transform.rotate(
+                          angle: -0.3,
+                          child: const Opacity(
+                              opacity: 0.15,
+                              child:
+                                  Text('👻', style: TextStyle(fontSize: 72))))),
+                  Positioned(
+                      bottom: 100,
+                      right: -10,
+                      child: Transform.rotate(
+                          angle: 0.4,
+                          child: const Opacity(
+                              opacity: 0.15,
+                              child:
+                                  Text('🦇', style: TextStyle(fontSize: 80))))),
+                  Positioned(
+                      top: 120,
+                      left: 70,
+                      child: Transform.rotate(
+                          angle: -0.1,
+                          child: const Opacity(
+                              opacity: 0.15,
+                              child: Text('🕸️',
+                                  style: TextStyle(fontSize: 48))))),
+                  Positioned(
+                      top: 350,
+                      right: 90,
+                      child: Transform.rotate(
+                          angle: 0.5,
+                          child: const Opacity(
+                              opacity: 0.15,
+                              child:
+                                  Text('💀', style: TextStyle(fontSize: 44))))),
+                ],
 
-              // Background Circle
-              Positioned(
-                top: -180,
-                right: -180,
-                child: Container(
-                  width: 220,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primary.withValues(alpha: 0.06),
+                // Background Circle
+                Positioned(
+                  top: -180,
+                  right: -180,
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colorScheme.primary.withValues(alpha: 0.06),
+                    ),
                   ),
                 ),
-              ),
 
-              // Main Content
-              CustomScrollView(
-                slivers: [
-                  // Header
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 16,
-                        left: 20,
-                        right: 20,
-                        bottom: 16,
+                // Main Content
+                CustomScrollView(
+                  slivers: [
+                    // Header
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: MediaQuery.of(context).padding.top + 16,
+                          left: 20,
+                          right: 20,
+                          bottom: 16,
+                        ),
+                        child: PremiumHeaderCard(
+                          title: 'Bem-vindo de volta!',
+                          subtitle: 'Sua jornada de disciplina continua aqui',
+                          leading: Image.asset('assets/logo.png', height: 48),
+                          borderColor: HomeColors.primary,
+                        )
+                            .animate()
+                            .fadeIn(duration: 500.ms)
+                            .slideY(begin: -0.1),
                       ),
-                      child: PremiumHeaderCard(
-                        title: 'Bem-vindo de volta!',
-                        subtitle: 'Sua jornada de disciplina continua aqui',
-                        leading: Image.asset('assets/logo.png', height: 48),
-                        borderColor: HomeColors.primary,
-                      ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
                     ),
-                  ),
 
-                  // Active Modules Section (agora mais para cima)
-                  SliverToBoxAdapter(
-                    child: Padding(
+                    // Active Modules Section (agora mais para cima)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 8),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final activeModulesAsync =
+                                ref.watch(activeModulesProvider);
+                            final activeModules =
+                                activeModulesAsync.valueOrNull ?? [];
+                            return _buildActiveModulesSection(activeModules);
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // Categories
+                    SliverPadding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 8),
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final activeModulesAsync =
-                              ref.watch(activeModulesProvider);
-                          final activeModules =
-                              activeModulesAsync.valueOrNull ?? [];
-                          return _buildActiveModulesSection(activeModules);
-                        },
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final category = categories[index];
+                            return _buildCategorySection(category, index);
+                          },
+                          childCount: categories.length,
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Categories
-                  SliverPadding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final category = categories[index];
-                          return _buildCategorySection(category, index);
-                        },
-                        childCount: categories.length,
-                      ),
-                    ),
-                  ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                ),
 
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                ],
-              ),
-
-              // Overlays
-              if (_isSyncing)
-                Positioned.fill(
-                  child: AbsorbPointer(
-                    absorbing: true,
-                    child: Container(
-                      color: Colors.black54,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 3),
-                            const SizedBox(height: 20),
-                            Text('Sincronizando dados...',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 8),
-                            Text(
-                                'Aguarde enquanto recuperamos seus dados da nuvem',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: Colors.white70),
-                                textAlign: TextAlign.center),
-                          ],
+                // Overlays
+                if (_isSyncing)
+                  Positioned.fill(
+                    child: AbsorbPointer(
+                      absorbing: true,
+                      child: Container(
+                        color: Colors.black54,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 3),
+                              const SizedBox(height: 20),
+                              Text('Sincronizando dados...',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500)),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'Aguarde enquanto recuperamos seus dados da nuvem',
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(color: Colors.white70),
+                                  textAlign: TextAlign.center),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-              if (_consentDialogShown)
-                Positioned.fill(
-                  child: AbsorbPointer(
-                    absorbing: true,
-                    child: Container(color: Colors.black54),
+                if (_consentDialogShown)
+                  Positioned.fill(
+                    child: AbsorbPointer(
+                      absorbing: true,
+                      child: Container(color: Colors.black54),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
+            bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
           ),
-          bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
         ),
       ),
     );

@@ -461,11 +461,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: -35,
                   child: Transform.rotate(
                     angle: -0.3,
-                    child: Icon(
-                      Icons.psychology,
-                      size: 76,
-                      color: colorScheme.secondary.withValues(alpha: 0.13),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 76))),
                   ),
                 ),
                 Positioned(
@@ -473,11 +469,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: -25,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 84,
-                      color: colorScheme.primary.withValues(alpha: 0.11),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 84))),
                   ),
                 ),
                 // == DECORAÇÕES MÉDIAS (35-50) ==
@@ -486,11 +478,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 85,
                   child: Transform.rotate(
                     angle: -0.1,
-                    child: Icon(
-                      Icons.star,
-                      size: 52,
-                      color: colorScheme.secondary.withValues(alpha: 0.19),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🕸️', style: TextStyle(fontSize: 52))),
                   ),
                 ),
                 Positioned(
@@ -498,13 +486,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 65,
                   child: Transform.rotate(
                     angle: 0.5,
-                    child: Text(
-                      '🎃',
-                      style: TextStyle(
-                        fontSize: 48,
-                        color: colorScheme.primary.withValues(alpha: 0.18),
-                      ),
-                    ),
+                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 48))),
                   ),
                 ),
                 Positioned(
@@ -512,11 +494,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 35,
                   child: Transform.rotate(
                     angle: -0.5,
-                    child: Icon(
-                      Icons.sports_baseball_outlined,
-                      size: 46,
-                      color: colorScheme.secondary.withValues(alpha: 0.16),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('💀', style: TextStyle(fontSize: 46))),
                   ),
                 ),
                 Positioned(
@@ -524,11 +502,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 50,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: Icon(
-                      Icons.psychology,
-                      size: 50,
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 50))),
                   ),
                 ),
                 // == DECORAÇÕES PEQUENAS (originais) ==
@@ -552,11 +526,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 65,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: Icon(
-                      Icons.star,
-                      size: 28,
-                      color: colorScheme.secondary.withValues(alpha: 0.21),
-                    ),
+                    child: const Opacity(opacity: 0.18, child: Text('🦇', style: TextStyle(fontSize: 28))),
                   ),
                 ),
                 // Canto superior direito
@@ -565,11 +535,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 35,
                   child: Transform.rotate(
                     angle: 0.3,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 32,
-                      color: colorScheme.primary.withValues(alpha: 0.23),
-                    ),
+                    child: const Opacity(opacity: 0.20, child: Text('🕸️', style: TextStyle(fontSize: 32))),
                   ),
                 ),
                 Positioned(
@@ -577,13 +543,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 75,
                   child: Transform.rotate(
                     angle: -0.5,
-                    child: Text(
-                      '🎃',
-                      style: TextStyle(
-                        fontSize: 26,
-                        color: colorScheme.secondary.withValues(alpha: 0.19),
-                      ),
-                    ),
+                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 // Meio esquerdo
@@ -592,11 +552,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 20,
                   child: Transform.rotate(
                     angle: 0.7,
-                    child: Icon(
-                      Icons.star,
-                      size: 30,
-                      color: colorScheme.primary.withValues(alpha: 0.22),
-                    ),
+                    child: const Opacity(opacity: 0.17, child: Text('💀', style: TextStyle(fontSize: 30))),
                   ),
                 ),
                 // Meio direito
@@ -619,11 +575,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 55,
                   child: Transform.rotate(
                     angle: 0.6,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 24,
-                      color: colorScheme.primary.withValues(alpha: 0.16),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 // Inferior esquerdo
@@ -632,13 +584,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 45,
                   child: Transform.rotate(
                     angle: -0.4,
-                    child: Text(
-                      '🎃',
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: colorScheme.secondary.withValues(alpha: 0.20),
-                      ),
-                    ),
+                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 28))),
                   ),
                 ),
                 Positioned(
@@ -646,11 +592,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 15,
                   child: Transform.rotate(
                     angle: 0.2,
-                    child: Icon(
-                      Icons.star,
-                      size: 22,
-                      color: colorScheme.primary.withValues(alpha: 0.17),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 // Inferior direito
@@ -673,11 +615,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 85,
                   child: Transform.rotate(
                     angle: -0.1,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 26,
-                      color: colorScheme.secondary.withValues(alpha: 0.18),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🕸️', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 // Centro espalhado
@@ -686,11 +624,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 85,
                   child: Transform.rotate(
                     angle: 0.8,
-                    child: Icon(
-                      Icons.star,
-                      size: 24,
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                    ),
+                    child: const Opacity(opacity: 0.14, child: Text('💀', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -713,11 +647,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 35,
                   child: Transform.rotate(
                     angle: 0.3,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 22,
-                      color: colorScheme.primary.withValues(alpha: 0.13),
-                    ),
+                    child: const Opacity(opacity: 0.13, child: Text('🦇', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 Positioned(
@@ -725,13 +655,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 55,
                   child: Transform.rotate(
                     angle: -0.2,
-                    child: Text(
-                      '🎃',
-                      style: TextStyle(
-                        fontSize: 26,
-                        color: colorScheme.secondary.withValues(alpha: 0.15),
-                      ),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🎃', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 Positioned(
@@ -739,11 +663,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 30,
                   child: Transform.rotate(
                     angle: 0.5,
-                    child: Icon(
-                      Icons.star,
-                      size: 24,
-                      color: colorScheme.primary.withValues(alpha: 0.14),
-                    ),
+                    child: const Opacity(opacity: 0.13, child: Text('💀', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -765,11 +685,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 30,
                   child: Transform.rotate(
                     angle: -0.4,
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 24,
-                      color: colorScheme.primary.withValues(alpha: 0.12),
-                    ),
+                    child: const Opacity(opacity: 0.12, child: Text('👻', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -777,11 +693,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 75,
                   child: Transform.rotate(
                     angle: 0.6,
-                    child: Icon(
-                      Icons.star,
-                      size: 26,
-                      color: colorScheme.secondary.withValues(alpha: 0.16),
-                    ),
+                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 Positioned(
@@ -789,13 +701,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 65,
                   child: Transform.rotate(
                     angle: -0.3,
-                    child: Text(
-                      '🎃',
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: colorScheme.primary.withValues(alpha: 0.11),
-                      ),
-                    ),
+                    child: const Opacity(opacity: 0.11, child: Text('🎃', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 Positioned(
@@ -803,11 +709,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 50,
                   child: Transform.rotate(
                     angle: 0.2,
-                    child: Icon(
-                      Icons.star,
-                      size: 20,
-                      color: colorScheme.secondary.withValues(alpha: 0.10),
-                    ),
+                    child: const Opacity(opacity: 0.10, child: Text('💀', style: TextStyle(fontSize: 20))),
                   ),
                 ),
                 Positioned(

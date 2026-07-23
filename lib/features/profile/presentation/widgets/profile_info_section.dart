@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
+
 class ProfileInfoSection extends ConsumerWidget {
   const ProfileInfoSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authService = ref.watch(authServiceProvider);
+
     final userName = authService.isAuthenticated
         ? (authService.userProfile?['name'] ?? 'Usuário')
         : 'Usuário Anônimo';
-    
+
+    // Usa userProfile diretamente (persiste na tabela users)
+    final showEmail = authService.userProfile?['show_email'] ?? true;
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -54,13 +59,12 @@ class ProfileInfoSection extends ConsumerWidget {
           ),
 
           // EMAIL
-          if (authService.isAuthenticated &&
-              (authService.userProfile?['show_email'] ?? true))
+          if (authService.isAuthenticated && showEmail)
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 18, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -75,7 +79,7 @@ class ProfileInfoSection extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  authService.userProfile?['email'] ?? '',
+                  authService.currentUser?.email ?? '',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
