@@ -62,8 +62,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       return;
     }
     if (_passwordController.text.isEmpty ||
-        _passwordController.text.length < 6) {
-      _showSnack('Senha deve ter pelo menos 6 caracteres');
+        _passwordController.text.length < 8) {
+      _showSnack('Senha deve ter pelo menos 8 caracteres');
       return;
     }
     if (_authMode == 1 &&

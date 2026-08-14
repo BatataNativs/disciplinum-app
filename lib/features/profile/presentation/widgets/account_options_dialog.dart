@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/edit_profile_dialog.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/delete_account_dialog.dart';
 import 'package:disciplinum/features/settings/presentation/screens/sync_backup_screen.dart';
@@ -9,7 +9,7 @@ import 'package:disciplinum/core/logging/logger_service.dart';
 
 
 class AccountOptionsDialog extends ConsumerStatefulWidget {
-  final AuthService authService;
+  final AuthController authService;
 
   const AccountOptionsDialog({
     super.key,

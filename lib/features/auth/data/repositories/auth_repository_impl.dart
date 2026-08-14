@@ -78,10 +78,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl}) async {
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      _logger.i('Repository: Atualizando senha');
+      await _datasource.updatePassword(newPassword);
+    } catch (e) {
+      _logger.e('Repository: Erro ao atualizar senha: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
     try {
       _logger.i('Repository: Atualizando perfil do usuário: $userId');
-      return await _datasource.updateProfile(userId, name: name, avatarUrl: avatarUrl);
+      return await _datasource.updateProfile(userId, name: name, avatarUrl: avatarUrl, bio: bio, showAvatar: showAvatar, showEmail: showEmail);
     } catch (e) {
       _logger.e('Repository: Erro ao atualizar perfil: $e');
       rethrow;

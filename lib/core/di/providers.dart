@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/modules/sync/sync_validation_service.dart';
@@ -15,7 +15,11 @@ import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart' as iap;
 import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitlement_repository.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart' as auth;
+import 'package:disciplinum/features/auth/data/datasources/supabase_auth_datasource.dart';
+import 'package:disciplinum/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:disciplinum/features/auth/domain/repositories/auth_repository.dart';
+import 'package:disciplinum/features/auth/domain/entities/auth_state.dart' as auth_state;
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/digital_detox/presentation/providers/digital_detox_providers.dart';
@@ -149,11 +153,28 @@ final iapServiceProvider = StateNotifierProvider<iap.IapService, iap.IapState>((
   return iap.IapService(repository);
 });
 
-/// Provider para AuthService
-final authServiceProvider = StateNotifierProvider<auth.AuthService, auth.AuthState>((ref) {
-  final prefs = ref.watch(preferencesServiceProvider);
-  final cloudSync = ref.watch(cloudSyncServiceProvider);
-  return auth.AuthService(prefs, cloudSync);
+/// Provider para SupabaseAuthDatasource
+final supabaseAuthDatasourceProvider = Provider<SupabaseAuthDatasource>((ref) {
+  return SupabaseAuthDatasource(
+    supabase: Supabase.instance.client,
+    logger: ref.watch(loggerServiceProvider),
+  );
+});
+
+/// Provider para AuthRepository
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepositoryImpl(
+    datasource: ref.watch(supabaseAuthDatasourceProvider),
+    logger: ref.watch(loggerServiceProvider),
+  );
+});
+
+/// Provider para AuthController
+final authServiceProvider = StateNotifierProvider<AuthController, auth_state.AuthState>((ref) {
+  return AuthController(
+    repository: ref.watch(authRepositoryProvider),
+    logger: ref.watch(loggerServiceProvider),
+  );
 });
 
 /// Provider para obter o userId atual do usuário autenticado

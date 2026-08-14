@@ -378,46 +378,52 @@ class FeatureTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: DisciplinumColors.glassLight,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: DisciplinumColors.primary.withValues(alpha: 0.2),
           width: 0.5,
         ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize
+            .min, // Garante que o Row ocupe apenas o espaço necessário
         children: [
           Container(
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             decoration: BoxDecoration(
               color: DisciplinumColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(9),
               border: Border.all(
                 color: DisciplinumColors.primary,
-                width: 1.5,
+                width: 1.2,
               ),
             ),
             child: Center(
               child: Icon(
                 Icons.check_rounded,
-                size: 14,
+                size: 12,
                 color: DisciplinumColors.primary,
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+          const SizedBox(width: 7),
+          Flexible(
+            // Usar Flexible para permitir que o texto ocupe o espaço disponível
             child: Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 color: DisciplinumColors.onSurface,
                 fontWeight: FontWeight.w500,
-                fontSize: 15,
+                fontSize: 11,
+                height: 1.1,
               ),
+              maxLines: 2,
+              overflow: TextOverflow
+                  .ellipsis, // Adicionado para evitar transbordamento
             ),
           ),
         ],
@@ -889,7 +895,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     )
                   else
                     const Spacer(),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 85),
                   Expanded(
                     child: NeonButton(
                       text: isLastPage ? finishButtonText : 'Próximo',
@@ -898,12 +904,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           _finishOnboarding();
                         } else {
                           _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 180),
                             curve: Curves.easeInOut,
                           );
                         }
                       },
-                      icon: !isLastPage ? Icons.arrow_forward_rounded : null,
+                      icon: !isLastPage ? Icons.arrow_forward_ios_sharp : null,
                     ).animate().scale(
                           begin: const Offset(0.95, 0.95),
                           duration: 300.ms,
@@ -979,7 +985,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 style: TextStyle(
                   color: DisciplinumColors.onBackground,
                   fontWeight: FontWeight.bold,
-                  fontSize: 24,
+                  fontSize: 18,
                   shadows: [
                     Shadow(
                       color: DisciplinumColors.primary.withValues(alpha: 0.2),
@@ -999,7 +1005,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 style: TextStyle(
                   color: DisciplinumColors.onSurfaceVariant,
                   height: 1.4,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
 
@@ -1038,84 +1044,79 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
               // Features list
               Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: DisciplinumColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: DisciplinumColors.primary.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ele pode te ajudar a:',
-                          style: TextStyle(
-                            color: DisciplinumColors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12), // Reduzi o padding horizontal
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ele pode te ajudar a:',
+                        style: TextStyle(
+                          color: DisciplinumColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
                         ),
-                        const SizedBox(height: 8),
-                        const FeatureTile(text: 'Evitar compras impulsivas'),
-                        const FeatureTile(text: 'Juntar dinheiro'),
-                        const FeatureTile(text: 'Focar em tarefas produtivas'),
-                        const FeatureTile(text: 'Parar de fumar'),
-                        const FeatureTile(text: 'Evitar conteúdo adulto'),
-                        const FeatureTile(text: 'Controlar uso do celular'),
-                        const FeatureTile(text: 'Parar de procrastinar'),
-                        const FeatureTile(text: 'Evitar fast food'),
-                        const FeatureTile(text: 'Manter dieta'),
-                        const FeatureTile(text: 'Manter e organizar leitura'),
-                        const SizedBox(height: 2),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                DisciplinumColors.primary
-                                    .withValues(alpha: 0.2),
-                                DisciplinumColors.primary
-                                    .withValues(alpha: 0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 16,
-                                color: DisciplinumColors.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'E muito mais!',
-                                  style: TextStyle(
-                                    color: DisciplinumColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 14,
+                        runSpacing: 10,
+                        children: const [
+                          FeatureTile(text: 'Evitar compras impulsivas'),
+                          FeatureTile(text: 'Juntar dinheiro'),
+                          FeatureTile(text: 'Focar em tarefas produtivas'),
+                          FeatureTile(text: 'Parar de fumar'),
+                          FeatureTile(text: 'Evitar conteúdo adulto'),
+                          FeatureTile(text: 'Controlar uso do celular'),
+                          FeatureTile(text: 'Parar de procrastinar'),
+                          FeatureTile(text: 'Evitar fast food'),
+                          FeatureTile(text: 'Manter dieta'),
+                          FeatureTile(text: 'Manter e organizar leitura'),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              DisciplinumColors.primary.withValues(alpha: 0.2),
+                              DisciplinumColors.primary.withValues(alpha: 0.05),
                             ],
                           ),
-                        ).animate().shimmer(duration: 2000.ms, delay: 1000.ms),
-                      ],
-                    ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 16,
+                              color: DisciplinumColors.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'E muito mais!',
+                                style: TextStyle(
+                                  color: DisciplinumColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().shimmer(duration: 2000.ms, delay: 1000.ms),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const ScrollDownArrow(),
       ],
     );
   }

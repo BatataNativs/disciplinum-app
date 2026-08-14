@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_st
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Diet
 /// Segue o padrão dos outros módulos para independência total
 /// Gerencia estado da UI e interage com services de domínio específicos do Diet
 class DietGamificationController extends ChangeNotifier {
   final DietGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   DietModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class DietGamificationController extends ChangeNotifier {
 
   DietGamificationController({
     required DietGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

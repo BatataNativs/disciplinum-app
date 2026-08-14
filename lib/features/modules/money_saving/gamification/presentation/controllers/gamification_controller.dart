@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/money_saving/domain/entities/money_
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Money Saving
 /// Duplicado da gamificação central para independência total do módulo
 /// Gerencia estado da UI e interage com services de domínio específicos do Money Saving
 class MoneySavingGamificationController extends ChangeNotifier {
   final MoneySavingGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   // Estado privado
   MoneySavingModuleState? _moduleState;
@@ -34,7 +34,7 @@ class MoneySavingGamificationController extends ChangeNotifier {
 
   MoneySavingGamificationController({
     required MoneySavingGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository,
        _authService = authService;
 

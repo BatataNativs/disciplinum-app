@@ -77,9 +77,45 @@ class AppLockService {
         // App foi aberto mas não bloqueado - apenas logar
         final reason = event['reason'] as String?;
         LoggerService.instance.system('App aberto sem bloqueio: $packageName (motivo: $reason)');
+      } else if (type == 'rule_violated') {
+        final moduleId = event['moduleId'] as String?;
+        LoggerService.instance.gamification('Regra violada nativamente para módulo: $moduleId (app: $packageName)');
+        if (moduleId != null) {
+          final nicheId = _getNicheIdFromModuleId(moduleId);
+          if (nicheId != null) {
+            await instance._resetModuleGamification(nicheId);
+            // Mostrar notificação de reset
+            final friendlyModuleName = _getModuleName(nicheId);
+            await instance._showBasicNotification(
+              title: '⚠️ Regra Violada!',
+              body: 'Você acessou um aplicativo bloqueado pelo módulo $friendlyModuleName. Seu progresso foi resetado.',
+            );
+          }
+        }
       }
     } catch (e) {
       LoggerService.instance.e('Erro ao processar evento de acessibilidade', error: e);
+    }
+  }
+
+  static NicheId? _getNicheIdFromModuleId(String moduleId) {
+    switch (moduleId) {
+      case 'focus':
+        return NicheId.focus;
+      case 'spending':
+        return NicheId.spending;
+      case 'smoking':
+        return NicheId.smoking;
+      case 'diet':
+        return NicheId.diet;
+      case 'binge_eating':
+        return NicheId.bingeEating;
+      case 'adult_content':
+        return NicheId.adultContent;
+      case 'digital_detox':
+        return NicheId.digitalDetox;
+      default:
+        return null;
     }
   }
 

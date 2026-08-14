@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
 class DeleteAccountDialog extends StatelessWidget {
-  final AuthService authService;
+  final AuthController authService;
 
   const DeleteAccountDialog({
     super.key,

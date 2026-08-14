@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/procrastination/domain/entities/pro
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/repositories/procrastination_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Procrastination
 /// Segue o padrão dos outros módulos para independência total
 /// Gerencia estado da UI e interage com services de domínio específicos do Procrastination
 class ProcrastinationGamificationController extends ChangeNotifier {
   final ProcrastinationGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   ProcrastinationModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class ProcrastinationGamificationController extends ChangeNotifier {
 
   ProcrastinationGamificationController({
     required ProcrastinationGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

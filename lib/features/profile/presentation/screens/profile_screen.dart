@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/profile_avatar_section.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/profile_info_section.dart';
 import 'package:disciplinum/features/profile/presentation/widgets/theme_button.dart';
@@ -29,7 +29,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  void _showAccountOptions(BuildContext context, AuthService authService) {
+  void _showAccountOptions(BuildContext context, AuthController authService) {
     showDialog(
       context: context,
       builder: (ctx) => AccountOptionsDialog(authService: authService),

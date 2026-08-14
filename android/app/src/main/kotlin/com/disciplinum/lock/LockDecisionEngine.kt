@@ -26,17 +26,53 @@ class LockDecisionEngine(private val context: Context) {
         val monitoredPackages: Set<String> = emptySet(), // Lista de packages monitorados por este módulo
         val startTime: String? = null, // formato "HH:mm"
         val endTime: String? = null,   // formato "HH:mm"
-        val maxViolationsPerDay: Int = Int.MAX_VALUE
+        val maxViolationsPerDay: Int = Int.MAX_VALUE,
+        
+        // Campos otimizados pré-processados
+        val parsedStartTime: java.time.LocalTime? = null,
+        val parsedEndTime: java.time.LocalTime? = null
     )
     
     private var moduleConfigs: Map<String, ModuleConfig> = emptyMap()
     private var violationCounts: Map<String, Int> = emptyMap()
     
+    // Mapa O(1) de pacote para moduleId
+    private var packageToModuleMap: Map<String, String> = emptyMap()
+    
     /**
-     * Atualiza as configurações dos módulos
+     * Atualiza as configurações dos módulos e pré-computa os mapas de decisão
      */
     fun updateModuleConfigs(configs: Map<String, ModuleConfig>) {
-        moduleConfigs = configs
+        val optimizedConfigs = mutableMapOf<String, ModuleConfig>()
+        val newPackageMap = mutableMapOf<String, String>()
+        
+        for ((moduleId, config) in configs) {
+            // Pré-processa as datas
+            var pStart: java.time.LocalTime? = null
+            var pEnd: java.time.LocalTime? = null
+            
+            try {
+                if (config.startTime != null) pStart = java.time.LocalTime.parse(config.startTime)
+                if (config.endTime != null) pEnd = java.time.LocalTime.parse(config.endTime)
+            } catch (e: Exception) {
+                android.util.Log.e("LockDecisionEngine", "Erro ao fazer parse de data para o módulo $moduleId: ${config.startTime} - ${config.endTime}")
+            }
+            
+            val optimizedConfig = config.copy(
+                parsedStartTime = pStart,
+                parsedEndTime = pEnd
+            )
+            
+            optimizedConfigs[moduleId] = optimizedConfig
+            
+            // Popula o mapa reverso O(1)
+            for (pkg in config.monitoredPackages) {
+                newPackageMap[pkg] = moduleId
+            }
+        }
+        
+        moduleConfigs = optimizedConfigs
+        packageToModuleMap = newPackageMap
     }
     
     /**
@@ -71,9 +107,9 @@ class LockDecisionEngine(private val context: Context) {
             )
         }
         
-        // Verifica horário restrito
-        if (config.startTime != null && config.endTime != null) {
-            if (!isWithinAllowedTime(config.startTime, config.endTime)) {
+        // Verifica horário restrito de forma otimizada
+        if (config.parsedStartTime != null && config.parsedEndTime != null) {
+            if (!isWithinAllowedTime(config.parsedStartTime, config.parsedEndTime)) {
                 return LockDecision(
                     shouldLock = false,
                     reason = "Fora do horário permitido",
@@ -101,12 +137,10 @@ class LockDecisionEngine(private val context: Context) {
     }
     
     /**
-     * Verifica se o horário atual está dentro do período permitido
+     * Verifica se o horário atual está dentro do período permitido usando os objetos cacheados
      */
-    private fun isWithinAllowedTime(startTime: String, endTime: String): Boolean {
+    private fun isWithinAllowedTime(start: java.time.LocalTime, end: java.time.LocalTime): Boolean {
         val now = java.time.LocalTime.now()
-        val start = java.time.LocalTime.parse(startTime)
-        val end = java.time.LocalTime.parse(endTime)
         
         return if (start.isBefore(end)) {
             now.isAfter(start) && now.isBefore(end)
@@ -117,16 +151,9 @@ class LockDecisionEngine(private val context: Context) {
     }
     
     /**
-     * Mapeamento dinâmico de pacotes para módulos
-     * Busca em todas as configurações de módulos para encontrar qual módulo monitora este package
+     * Mapeamento dinâmico de pacotes para módulos - Agora com busca O(1)
      */
     private fun getModuleIdForPackage(packageName: String): String? {
-        // Busca em todas as configs para encontrar o módulo que monitora este package
-        for ((moduleId, config) in moduleConfigs) {
-            if (config.monitoredPackages.contains(packageName)) {
-                return moduleId
-            }
-        }
-        return null
+        return packageToModuleMap[packageName]
     }
 }

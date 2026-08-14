@@ -40,6 +40,8 @@ class AccessibilityMonitorService : AccessibilityService() {
             lockDecisionEngine?.updateViolationCounts(counts)
         }
 
+        private const val SESSION_DURATION_MS = 5 * 60 * 1000L // 5 minutos
+
         /** Adiciona um app à lista de sessões autorizadas */
         fun addAuthorizedSession(packageName: String) {
             authorizedSessions[packageName] = AppSession(packageName, System.currentTimeMillis())
@@ -48,7 +50,29 @@ class AccessibilityMonitorService : AccessibilityService() {
 
         /** Verifica se o app possui uma sessão autorizada ativa */
         private fun isSessionAuthorized(packageName: String): Boolean {
-            return authorizedSessions.containsKey(packageName)
+            val session = authorizedSessions[packageName] ?: return false
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - session.authorizedAt < SESSION_DURATION_MS) {
+                return true
+            }
+            authorizedSessions.remove(packageName)
+            return false
+        }
+
+        /** Notifica o Flutter de que uma regra foi violada */
+        fun notifyRuleViolated(moduleId: String, packageName: String) {
+            Handler(Looper.getMainLooper()).post {
+                try {
+                    eventSink?.success(mapOf<String, Any>(
+                        "type" to "rule_violated",
+                        "moduleId" to moduleId,
+                        "packageName" to packageName
+                    ))
+                    android.util.Log.d("AccessMonitor", "Evento rule_violated enviado: módulo $moduleId, pacote $packageName")
+                } catch (e: Exception) {
+                    android.util.Log.e("AccessMonitor", "Erro ao enviar rule_violated para o Flutter", e)
+                }
+            }
         }
 
         fun getMonitoredApps(): Set<String> = monitoredApps
@@ -65,10 +89,47 @@ class AccessibilityMonitorService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        
+        // Tenta carregar as configs salvas nativamente no SharedPreferences
+        try {
+            val prefs = getSharedPreferences("DisciplinumAppLockPrefs", android.content.Context.MODE_PRIVATE)
+            val configsJson = prefs.getString("module_configs", null)
+            if (configsJson != null) {
+                val jsonArray = org.json.JSONArray(configsJson)
+                val loadedConfigs = mutableMapOf<String, LockDecisionEngine.ModuleConfig>()
+                
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val id = obj.getString("id")
+                    
+                    val pkgsArray = obj.getJSONArray("monitoredPackages")
+                    val pkgs = mutableSetOf<String>()
+                    for (j in 0 until pkgsArray.length()) {
+                        pkgs.add(pkgsArray.getString(j))
+                    }
+                    
+                    val config = LockDecisionEngine.ModuleConfig(
+                        id = id,
+                        name = obj.getString("name"),
+                        isActive = obj.getBoolean("isActive"),
+                        monitoredPackages = pkgs,
+                        startTime = if (obj.isNull("startTime")) null else obj.getString("startTime"),
+                        endTime = if (obj.isNull("endTime")) null else obj.getString("endTime"),
+                        maxViolationsPerDay = if (obj.has("maxViolationsPerDay")) obj.getInt("maxViolationsPerDay") else Int.MAX_VALUE
+                    )
+                    loadedConfigs[id] = config
+                }
+                moduleConfigs = loadedConfigs
+                android.util.Log.d("AccessMonitor", "Configs carregadas do SharedPreferences com sucesso!")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AccessMonitor", "Erro ao carregar configs do SharedPreferences", e)
+        }
+
         // Inicializa LockDecisionEngine
         lockDecisionEngine = LockDecisionEngine(this)
         lockDecisionEngine?.updateModuleConfigs(moduleConfigs)
-        android.util.Log.d("AccessMonitor", "onServiceConnected: engine criado, ${moduleConfigs.size} configs carregadas")
+        android.util.Log.d("AccessMonitor", "onServiceConnected: engine criado, ${moduleConfigs.size} configs ativas")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -86,9 +147,16 @@ class AccessibilityMonitorService : AccessibilityService() {
                 }
 
                 if (currentPackage != null) {
-                    // Remove a sessão do pacote anterior, pois ele não está mais em foreground
-                    authorizedSessions.remove(currentPackage)
-                    android.util.Log.d("AccessMonitor", "Sessão encerrada para $currentPackage (mudou para $packageName)")
+                    val session = authorizedSessions[currentPackage]
+                    if (session != null && (currentTime - session.authorizedAt < 2000)) {
+                        // Grace period: não remove a sessão se foi autorizada há menos de 2 segundos.
+                        // Isso previne que transições de tela rápidas/instáveis matem a autorização.
+                        android.util.Log.d("AccessMonitor", "Sessão mantida (grace period) para $currentPackage")
+                    } else {
+                        // Remove a sessão do pacote anterior, pois ele não está mais em foreground
+                        authorizedSessions.remove(currentPackage)
+                        android.util.Log.d("AccessMonitor", "Sessão encerrada para $currentPackage (mudou para $packageName)")
+                    }
                 }
                 
                 // Debounce: ignora eventos muito próximos (menos de 50ms)
@@ -175,6 +243,7 @@ class AccessibilityMonitorService : AccessibilityService() {
             else -> "Módulo Desconhecido"
         }
     }
+
 
     override fun onInterrupt() {
         // Obrigatório, mas não precisamos fazer nada aqui

@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Focus (versão plugin)
 /// Segue o padrão dos outros módulos para independência total
 /// Gerencia estado da UI e interage com services de domínio específicos do Focus
 class FocusGamificationController extends ChangeNotifier {
   final FocusGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   FocusModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class FocusGamificationController extends ChangeNotifier {
 
   FocusGamificationController({
     required FocusGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

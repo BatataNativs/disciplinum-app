@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Binge Eating
 /// Duplicado da gamificação central para independência total do módulo
 /// Gerencia estado da UI e interage com services de domínio específicos do Binge Eating
 class BingeEatingGamificationController extends ChangeNotifier {
   final BingeEatingGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   BingeEatingModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class BingeEatingGamificationController extends ChangeNotifier {
 
   BingeEatingGamificationController({
     required BingeEatingGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

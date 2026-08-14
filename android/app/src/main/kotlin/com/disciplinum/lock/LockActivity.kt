@@ -46,6 +46,7 @@ class LockActivity : Activity() {
     }
 
     private var blockedPackageName: String = ""
+    private var moduleId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +61,7 @@ class LockActivity : Activity() {
         )
 
         blockedPackageName = intent.getStringExtra(EXTRA_PACKAGE_NAME) ?: ""
-        val moduleId = intent.getStringExtra(EXTRA_MODULE_ID) ?: ""
+        moduleId = intent.getStringExtra(EXTRA_MODULE_ID) ?: ""
         val moduleName = intent.getStringExtra(EXTRA_MODULE_NAME) ?: moduleId
 
         buildLockUi(moduleName)
@@ -216,6 +217,9 @@ class LockActivity : Activity() {
         // Cria uma sessão autorizada para o app (válida enquanto ele estiver em foreground)
         com.disciplinum.app.AccessibilityMonitorService.addAuthorizedSession(blockedPackageName)
 
+        // Notifica o Flutter de que a regra foi violada para esse módulo
+        com.disciplinum.app.AccessibilityMonitorService.notifyRuleViolated(moduleId, blockedPackageName)
+
         // Tenta lançar o app monitorado explicitamente
         try {
             val launchIntent = packageManager.getLaunchIntentForPackage(blockedPackageName)
@@ -223,6 +227,7 @@ class LockActivity : Activity() {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(launchIntent)
+                finish() // FECHA IMEDIATAMENTE após lançar
                 android.util.Log.d("LockActivity", "App lançado: $blockedPackageName")
             } else {
                 // Se não conseguir lançar, volta para home
@@ -235,11 +240,6 @@ class LockActivity : Activity() {
             goHome()
             return
         }
-
-        // Pequeno delay antes de fechar para garantir que o app seja lançado
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            finish()
-        }, 300)
     }
 
     override fun onBackPressed() {

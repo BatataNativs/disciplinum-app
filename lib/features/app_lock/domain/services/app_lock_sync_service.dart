@@ -2,8 +2,10 @@ import 'package:disciplinum/features/app_lock/infrastructure/channels/app_lock_c
 import 'package:disciplinum/features/modules/digital_detox/domain/services/digital_detox_service_local.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
+import 'package:disciplinum/features/modules/spending/domain/services/spending_service_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+
 
 /// Serviço responsável por sincronizar as configurações dos módulos
 /// com a camada nativa do Android (LockDecisionEngine).
@@ -78,8 +80,34 @@ class AppLockSyncService {
         'monitoredPackages': adultConfig.monitoredApps,
       });
 
+      // 4. Spending (Controle de Gastos)
+      final spendingConfig = await SpendingServiceLocal.instance.getConfig(userId);
+      if (spendingConfig != null) {
+        final isSpendingActive = spendingConfig.isModuleActive && spendingConfig.enableAppLock;
+        if (isSpendingActive) {
+          allMonitoredApps.addAll(spendingConfig.monitoredApps);
+        }
+
+        String? startTime;
+        String? endTime;
+        if (spendingConfig.enableTimeWindow) {
+          startTime = spendingConfig.allowedEndTime;
+          endTime = spendingConfig.allowedStartTime;
+        }
+
+        configs.add({
+          'id': 'spending',
+          'name': 'Controle de Gastos',
+          'isActive': isSpendingActive,
+          'monitoredPackages': spendingConfig.monitoredApps,
+          'startTime': startTime,
+          'endTime': endTime,
+        });
+      }
+
       LoggerService.instance.i('AppLockSyncService: Enviando updateModuleConfigs: $configs');
       LoggerService.instance.i('AppLockSyncService: Enviando updateMonitoredApps: $allMonitoredApps');
+
 
       // Envia os dados para a camada nativa
       await AppLockChannel.updateModuleConfigs(configs);

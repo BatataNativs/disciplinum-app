@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 
 class EditProfileDialog extends ConsumerStatefulWidget {
-  final AuthService authService;
+  final AuthController authService;
   final String initialName;
   final String initialBio;
   final bool initialShowEmail;
@@ -121,12 +121,12 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   Future<void> _save(BuildContext context) async {
     try {
       // Atualiza name, bio, show_email e show_avatar no authService (tabela users - Supabase cloud)
-      final profileSuccess = await widget.authService.updateProfile({
-        'name': _nameController.text,
-        'bio': _bioController.text,
-        'show_email': showEmail,
-        'show_avatar': showAvatar,
-      });
+      final profileSuccess = await widget.authService.updateProfile(
+        name: _nameController.text,
+        bio: _bioController.text,
+        showEmail: showEmail,
+        showAvatar: showAvatar,
+      );
 
       // Usamos apenas profileSuccess como critério primário pois authService garante persistência cloud
       if (profileSuccess && context.mounted) {

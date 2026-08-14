@@ -324,7 +324,7 @@ Chefe da Seção Regional de Criptozoologia de Minas Gerais \n(SRC-MG)
     if (auth.userProfile != null && auth.userProfile!['name'] != null) {
       userName = auth.userProfile!['name'];
     } else if (auth.currentUser?.email != null) {
-      userName = auth.currentUser!.email!.split('@').first;
+      userName = auth.currentUser!.email.split('@').first;
     }
 
     showDialog(

@@ -4,8 +4,6 @@ import 'package:disciplinum/features/auth/domain/entities/auth_credentials.dart'
 import 'package:disciplinum/features/auth/domain/entities/auth_result.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-/// Datasource para autenticação com Supabase - Versão Final Corrigida
-/// Problemas de lint resolvidos
 class SupabaseAuthDatasource {
   final SupabaseClient _supabase;
   final LoggerService _logger;
@@ -16,11 +14,10 @@ class SupabaseAuthDatasource {
   })  : _supabase = supabase,
         _logger = logger;
 
-  /// Realiza login com email e senha
   Future<AuthResult> signInWithEmail(AuthCredentials credentials) async {
     try {
       _logger.i('Iniciando signin com email: ${credentials.email}');
-      
+
       final response = await _supabase.auth.signInWithPassword(
         email: credentials.email,
         password: credentials.password,
@@ -28,16 +25,13 @@ class SupabaseAuthDatasource {
 
       final user = response.user;
       if (user == null) {
-        return AuthResult.error('Usuário não encontrado', errorType: AuthErrorType.userNotFound);
+        return AuthResult.error('Usuario nao encontrado', errorType: AuthErrorType.userNotFound);
       }
 
-      _logger.i('Login bem-sucedido para usuário: ${user.id}');
-      
-      final appUser = _convertSupabaseUser(user);
-      return AuthResult.success(appUser);
-      
+      _logger.i('Login bem-sucedido para usuario: ${user.id}');
+      return AuthResult.success(_convertSupabaseUser(user));
     } on AuthException catch (e) {
-      _logger.e('Erro de autenticação: ${e.message}');
+      _logger.e('Erro de autenticacao: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
       _logger.e('Erro inesperado no signin: $e');
@@ -45,29 +39,23 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Realiza cadastro com email e senha
   Future<AuthResult> signUpWithEmail(AuthCredentials credentials) async {
     try {
       _logger.i('Iniciando signup para email: ${credentials.email}');
-      
+
       final response = await _supabase.auth.signUp(
         email: credentials.email,
         password: credentials.password,
-        data: {
-          'name': credentials.name,
-        },
+        data: {'name': credentials.name},
       );
 
       final user = response.user;
       if (user == null) {
-        return AuthResult.error('Erro ao criar usuário', errorType: AuthErrorType.serverError);
+        return AuthResult.error('Erro ao criar usuario', errorType: AuthErrorType.serverError);
       }
 
-      _logger.i('Cadastro bem-sucedido para usuário: ${user.id}');
-      
-      final appUser = _convertSupabaseUser(user);
-      return AuthResult.success(appUser);
-      
+      _logger.i('Cadastro bem-sucedido para usuario: ${user.id}');
+      return AuthResult.success(_convertSupabaseUser(user));
     } on AuthException catch (e) {
       _logger.e('Erro de cadastro: ${e.message}');
       return _handleAuthException(e);
@@ -77,12 +65,11 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Realiza login com redes sociais
   Future<AuthResult> signInWithSocial(AuthCredentials credentials) async {
     try {
       _logger.i('Iniciando login social: ${credentials.authType.name}');
-      
-      OAuthProvider provider;
+
+      late final OAuthProvider provider;
       switch (credentials.authType) {
         case AuthType.google:
           provider = OAuthProvider.google;
@@ -94,25 +81,18 @@ class SupabaseAuthDatasource {
           provider = OAuthProvider.facebook;
           break;
         default:
-          return AuthResult.error('Provedor não suportado', errorType: AuthErrorType.socialAuthError);
+          return AuthResult.error('Provedor nao suportado', errorType: AuthErrorType.socialAuthError);
       }
 
-      // Para OAuth, o fluxo é diferente - redireciona para o provedor
-      // O resultado será capturado pelo stream de auth state changes
       await _supabase.auth.signInWithOAuth(
         provider,
         redirectTo: 'io.supabase.disciplinum://auth/callback',
       );
 
-      // Para OAuth, o fluxo é assíncrono - o resultado será processado pelo stream de auth state changes
       _logger.i('Login social iniciado, aguardando callback do provedor');
-      
-      // Retorna um resultado indicando que o processo foi iniciado
-      // O usuário final será processado pelo authStateChanges stream
       return AuthResult.oauthInitiated();
-      
     } on AuthException catch (e) {
-      _logger.e('Erro de autenticação social: ${e.message}');
+      _logger.e('Erro de autenticacao social: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
       _logger.e('Erro inesperado no login social: $e');
@@ -120,7 +100,6 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Realiza logout
   Future<void> signOut() async {
     try {
       _logger.i('Iniciando signout');
@@ -132,36 +111,45 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Recupera senha
   Future<void> resetPassword(String email) async {
     try {
-      _logger.i('Enviando email de recuperação para: $email');
+      _logger.i('Enviando email de recuperacao para: $email');
       await _supabase.auth.resetPasswordForEmail(email);
-      _logger.i('Email de recuperação enviado');
+      _logger.i('Email de recuperacao enviado');
     } catch (e) {
-      _logger.e('Erro ao enviar email de recuperação: $e');
+      _logger.e('Erro ao enviar email de recuperacao: $e');
       rethrow;
     }
   }
 
-  /// Obtém usuário atual
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      _logger.i('Atualizando senha do usuario autenticado');
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      _logger.i('Senha atualizada com sucesso');
+    } catch (e) {
+      _logger.e('Erro ao atualizar senha: $e');
+      rethrow;
+    }
+  }
+
   Future<auth.User?> getCurrentUser() async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return null;
-      
       return _convertSupabaseUser(user);
     } catch (e) {
-      _logger.e('Erro ao obter usuário atual: $e');
+      _logger.e('Erro ao obter usuario atual: $e');
       return null;
     }
   }
 
-  /// Atualiza perfil do usuário
-  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl}) async {
+  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
     try {
-      _logger.i('Atualizando perfil do usuário: $userId');
-      
+      _logger.i('Atualizando perfil do usuario: $userId');
+
       final updates = <String, dynamic>{};
       if (name != null) {
         updates['name'] = name;
@@ -169,16 +157,23 @@ class SupabaseAuthDatasource {
       if (avatarUrl != null) {
         updates['avatar_url'] = avatarUrl;
       }
+      if (bio != null) {
+        updates['bio'] = bio;
+      }
+      if (showAvatar != null) {
+        updates['show_avatar'] = showAvatar;
+      }
+      if (showEmail != null) {
+        updates['show_email'] = showEmail;
+      }
 
       final response = await _supabase.auth.updateUser(
-        UserAttributes(
-          data: updates,
-        ),
+        UserAttributes(data: updates),
       );
 
       final user = response.user;
       if (user == null) {
-        throw Exception('Erro ao atualizar perfil: usuário não encontrado');
+        throw Exception('Erro ao atualizar perfil: usuario nao encontrado');
       }
 
       _logger.i('Perfil atualizado com sucesso: ${user.id}');
@@ -189,7 +184,6 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Stream de mudanças de autenticação
   Stream<auth.User?> get authStateChanges {
     return _supabase.auth.onAuthStateChange.map((event) {
       final user = event.session?.user;
@@ -198,18 +192,17 @@ class SupabaseAuthDatasource {
     });
   }
 
-  /// Verifica se email está verificado
   Future<bool> isEmailVerified(String userId) async {
     try {
-      _logger.i('Verificando se email está verificado para usuário: $userId');
-      
+      _logger.i('Verificando se email esta verificado para usuario: $userId');
+
       final user = _supabase.auth.currentUser;
       if (user == null || user.id != userId) {
         return false;
       }
-      
+
       final isVerified = user.emailConfirmedAt != null;
-      _logger.i('Email verificado: $isVerified para usuário: $userId');
+      _logger.i('Email verificado: $isVerified para usuario: $userId');
       return isVerified;
     } catch (e) {
       _logger.e('Erro ao verificar email: $e');
@@ -217,48 +210,45 @@ class SupabaseAuthDatasource {
     }
   }
 
-  /// Reenvia verificação de email
   Future<void> resendEmailVerification() async {
     try {
-      _logger.i('Reenviando verificação de email');
-      
+      _logger.i('Reenviando verificacao de email');
       await _supabase.auth.resend(
         type: OtpType.signup,
         email: _supabase.auth.currentUser?.email ?? '',
       );
-      
-      _logger.i('Verificação de email reenviada com sucesso');
+      _logger.i('Verificacao de email reenviada com sucesso');
     } catch (e) {
-      _logger.e('Erro ao reenviar verificação de email: $e');
+      _logger.e('Erro ao reenviar verificacao de email: $e');
       rethrow;
     }
   }
 
-  /// Exclui conta do usuário
   Future<void> deleteAccount(String userId) async {
     try {
-      _logger.i('Excluindo conta do usuário: $userId');
-      
-      // Primeiro faz logout
-      await _supabase.auth.signOut();
-      
-      // Nota: A exclusão real da conta deve ser feita via RPC ou admin
-      // Por enquanto, apenas fazemos logout
-      _logger.i('Usuário deslogado. Exclusão completa requer implementação via admin');
-      
-      // NOTA: Exclusão completa requer Supabase Admin API ou RPC function
-      // Implementar quando tivermos permissões de admin ou criar RPC no Supabase
-      throw UnimplementedError('Exclusão completa requer Admin API - implementar futuramente');
+      _logger.i('Excluindo conta do usuario: $userId');
+
+      if (userId.isEmpty) {
+        throw ArgumentError('userId cannot be empty');
+      }
+
+      await _supabase.rpc('delete_user', params: {'user_id': userId});
+
+      try {
+        await _supabase.auth.signOut();
+      } catch (signOutError) {
+        _logger.w('Falha ao fazer signOut apos delete_user: $signOutError');
+      }
+
+      _logger.i('Conta excluida com sucesso');
     } catch (e) {
       _logger.e('Erro ao excluir conta: $e');
       rethrow;
     }
   }
 
-  /// Obtém o SupabaseClient para uso externo
   SupabaseClient get supabaseClient => _supabase;
 
-  /// Converte usuário do Supabase para nossa entity
   auth.User _convertSupabaseUser(User supabaseUser) {
     return auth.User(
       id: supabaseUser.id,
@@ -272,23 +262,28 @@ class SupabaseAuthDatasource {
     );
   }
 
-  /// Trata exceções de autenticação do Supabase
   AuthResult _handleAuthException(AuthException e) {
     final message = e.message.toLowerCase();
-    
-    switch (message) {
-      case 'invalid login credentials':
-        return AuthResult.error('E-mail ou senha incorretos', errorType: AuthErrorType.invalidCredentials);
-      case 'user not found':
-        return AuthResult.error('Usuário não encontrado', errorType: AuthErrorType.userNotFound);
-      case 'user_already_registered':
-        return AuthResult.error('Este e-mail já está cadastrado', errorType: AuthErrorType.emailAlreadyExists);
-      case 'weak_password':
-        return AuthResult.error('A senha deve ter pelo menos 6 caracteres', errorType: AuthErrorType.weakPassword);
-      case 'invalid_email':
-        return AuthResult.error('E-mail inválido', errorType: AuthErrorType.invalidEmail);
-      default:
-        return AuthResult.error(message, errorType: AuthErrorType.unknown);
+
+    if (message.contains('invalid login credentials')) {
+      return AuthResult.error('Credenciais invalidas', errorType: AuthErrorType.invalidCredentials);
     }
+    if (message.contains('email not confirmed')) {
+      return AuthResult.error('Email nao confirmado', errorType: AuthErrorType.emailNotVerified);
+    }
+    if (message.contains('user already registered')) {
+      return AuthResult.error('Email ja cadastrado', errorType: AuthErrorType.emailAlreadyExists);
+    }
+    if (message.contains('password should be at least')) {
+      return AuthResult.error('Senha fraca', errorType: AuthErrorType.weakPassword);
+    }
+    if (message.contains('invalid email')) {
+      return AuthResult.error('Email invalido', errorType: AuthErrorType.invalidEmail);
+    }
+    if (message.contains('network')) {
+      return AuthResult.error('Erro de conexao', errorType: AuthErrorType.networkError);
+    }
+
+    return AuthResult.error(e.message, errorType: AuthErrorType.unknown);
   }
 }

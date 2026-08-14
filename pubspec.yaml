@@ -144,6 +144,7 @@ flutter:
     - assets/secret_menu/
     - assets/modules/jejum_digital/
     - assets/modules/binge_eating/
+    - assets/modules/spending/
 
 # --- Configuração do Ícone do App ---
 flutter_launcher_icons:

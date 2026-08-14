@@ -169,6 +169,36 @@ class AppLockMethodChannel(private val context: Context) {
         }
         android.util.Log.d("AppLockMethodChannel", "Updating AccessibilityMonitorService configs: ${moduleConfigs.keys}")
         AccessibilityMonitorService.updateModuleConfigs(moduleConfigs)
+        
+        // Salva as configurações de forma persistente no Android (para sobrevivência ao reboot)
+        try {
+            val jsonArray = org.json.JSONArray()
+            for (config in configs) {
+                val jsonObject = org.json.JSONObject()
+                jsonObject.put("id", config["id"])
+                jsonObject.put("name", config["name"])
+                jsonObject.put("isActive", config["isActive"])
+                
+                val pkgsArray = org.json.JSONArray()
+                val monitoredPackagesRaw = config["monitoredPackages"]
+                if (monitoredPackagesRaw is List<*>) {
+                    monitoredPackagesRaw.forEach { pkgsArray.put(it.toString()) }
+                }
+                jsonObject.put("monitoredPackages", pkgsArray)
+                
+                jsonObject.put("startTime", config["startTime"])
+                jsonObject.put("endTime", config["endTime"])
+                jsonObject.put("maxViolationsPerDay", config["maxViolationsPerDay"] ?: Int.MAX_VALUE)
+                
+                jsonArray.put(jsonObject)
+            }
+            
+            val prefs = context.getSharedPreferences("DisciplinumAppLockPrefs", Context.MODE_PRIVATE)
+            prefs.edit().putString("module_configs", jsonArray.toString()).apply()
+            android.util.Log.d("AppLockMethodChannel", "Saved configs to SharedPreferences")
+        } catch (e: Exception) {
+            android.util.Log.e("AppLockMethodChannel", "Erro ao salvar configs no SharedPreferences", e)
+        }
     }
     
     private fun updateViolationCounts(counts: Map<String, Int>) {

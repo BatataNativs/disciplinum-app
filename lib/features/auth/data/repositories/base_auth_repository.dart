@@ -3,60 +3,79 @@ import 'package:disciplinum/features/auth/domain/entities/user.dart';
 import 'package:disciplinum/features/auth/domain/entities/auth_credentials.dart';
 import 'package:disciplinum/features/auth/domain/entities/auth_result.dart';
 
-/// Classe base abstrata que implementa métodos comuns
-/// Permite que AuthRepositoryImpl estenda sem erros de compilação
 abstract class BaseAuthRepository implements AuthRepository {
   @override
-  @override
   Future<AuthResult> signIn(AuthCredentials credentials) async {
-    throw UnimplementedError('signIn não implementado');
+    throw UnimplementedError('signIn not implemented');
   }
 
-  @override
   @override
   Future<AuthResult> signUp(AuthCredentials credentials) async {
-    throw UnimplementedError('signUp não implementado');
+    throw UnimplementedError('signUp not implemented');
   }
 
-  @override
   @override
   Future<AuthResult> signInWithSocial(AuthCredentials credentials) async {
-    throw UnimplementedError('signInWithSocial não implementado');
+    throw UnimplementedError('signInWithSocial not implemented');
   }
 
-  @override
   @override
   Future<void> signOut() async {
-    throw UnimplementedError('signOut não implementado');
+    throw UnimplementedError('signOut not implemented');
   }
 
-  @override
   @override
   Future<void> resetPassword(String email) async {
-    throw UnimplementedError('resetPassword não implementado');
+    throw UnimplementedError('resetPassword not implemented');
   }
 
   @override
-  @override
-  Future<User> updateProfile(String userId, {String? name, String? avatarUrl}) async {
-    throw UnimplementedError('updateProfile não implementado');
+  Future<void> updatePassword(String newPassword) async {
+    throw UnimplementedError('updatePassword not implemented');
   }
 
   @override
+  Future<User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
+    throw UnimplementedError('updateProfile not implemented');
+  }
+
   @override
   Future<User?> getCurrentUser() async {
-    throw UnimplementedError('getCurrentUser não implementado');
+    throw UnimplementedError('getCurrentUser not implemented');
   }
 
-  @override
   @override
   Stream<User?> get userChanges {
-    throw UnimplementedError('userChanges não implementado');
+    throw UnimplementedError('userChanges not implemented');
   }
 
   @override
-  @override
   bool get isAuthenticated {
-    throw UnimplementedError('isAuthenticated não implementado');
+    throw UnimplementedError('isAuthenticated not implemented');
+  }
+
+  @override
+  Future<String?> getAccessToken() async {
+    throw UnimplementedError('getAccessToken not implemented');
+  }
+
+  @override
+  Future<String?> refreshToken() async {
+    throw UnimplementedError('refreshToken not implemented');
+  }
+
+  @override
+  Future<bool> isEmailVerified(String userId) async {
+    throw UnimplementedError('isEmailVerified not implemented');
+  }
+
+  @override
+  Future<void> resendEmailVerification() async {
+    throw UnimplementedError('resendEmailVerification not implemented');
+  }
+
+  @override
+  Future<void> deleteAccount(String userId) async {
+    throw UnimplementedError('deleteAccount not implemented');
   }
 }

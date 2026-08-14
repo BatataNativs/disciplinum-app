@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/adult_content/domain/entities/adult
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/repositories/adult_content_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Adult Content
 /// Duplicado da gamificação central para independência total do módulo
 /// Gerencia estado da UI e interage com services de domínio específicos do Adult Content
 class AdultContentGamificationController extends ChangeNotifier {
   final AdultContentGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   AdultContentModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class AdultContentGamificationController extends ChangeNotifier {
 
   AdultContentGamificationController({
     required AdultContentGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

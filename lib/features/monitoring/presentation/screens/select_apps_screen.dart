@@ -251,6 +251,93 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
     EnhancedSnackBarHelper.showInfo(context, 'App removido: $packageName');
   }
 
+  Widget _buildSuggestions() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final Map<NicheId, List<Map<String, String>>> suggestionsByNiche = {
+      NicheId.spending: [
+        {'name': 'Mercado Livre', 'package': 'com.mercadolibre'},
+        {'name': 'Amazon Shopping', 'package': 'com.amazon.mShop.android.shopping'},
+        {'name': 'Shopee', 'package': 'com.shopee.br'},
+        {'name': 'Shein', 'package': 'com.zzkko'},
+        {'name': 'AliExpress', 'package': 'com.alibaba.aliexpresshd'},
+        {'name': 'Magalu', 'package': 'br.com.magazineluiza'},
+        {'name': 'Americanas', 'package': 'br.com.americanas.mais'},
+        {'name': 'Casas Bahia', 'package': 'com.novapontocom.casasbahia'},
+      ],
+      NicheId.digitalDetox: [
+        {'name': 'Instagram', 'package': 'com.instagram.android'},
+        {'name': 'Facebook', 'package': 'com.facebook.katana'},
+        {'name': 'TikTok', 'package': 'com.zhiliaoapp.musically'},
+        {'name': 'Snapchat', 'package': 'com.snapchat.android'},
+        {'name': 'Twitter/X', 'package': 'com.twitter.android'},
+        {'name': 'WhatsApp', 'package': 'com.whatsapp'},
+        {'name': 'YouTube', 'package': 'com.google.android.youtube'},
+        {'name': 'Telegram', 'package': 'org.telegram.messenger'},
+      ],
+    };
+
+    final suggestions = suggestionsByNiche[_nicheId];
+    if (suggestions == null || suggestions.isEmpty) return const SizedBox.shrink();
+
+    // Filtra sugestões de apps que realmente estão instalados no dispositivo
+    final installedSuggestions = suggestions.where((s) {
+      final pkg = s['package']!;
+      return _allApps.any((app) => app.packageName == pkg);
+    }).toList();
+
+    if (installedSuggestions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Text(
+            'Sugestões',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: installedSuggestions.map((app) {
+              final pkg = app['package']!;
+              final name = app['name']!;
+              final isSelected = _selected.contains(pkg);
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: FilterChip(
+                  label: Text(name),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    setState(() {
+                      if (val) {
+                        _selected.add(pkg);
+                      } else {
+                        _selected.remove(pkg);
+                      }
+                      _applyFiltersAndSort();
+                    });
+                  },
+                  selectedColor: Colors.green.withValues(alpha: 0.2),
+                  checkmarkColor: Colors.green,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -339,6 +426,7 @@ class _SelectAppsScreenState extends ConsumerState<SelectAppsScreen> {
                               },
                             ),
                             const SizedBox(height: 12),
+                            _buildSuggestions(),
                             // App list
                             Expanded(
                               child: _filteredApps.isEmpty

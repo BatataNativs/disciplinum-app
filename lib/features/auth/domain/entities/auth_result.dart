@@ -84,7 +84,7 @@ extension AuthErrorTypeExtension on AuthErrorType {
       case AuthErrorType.emailAlreadyExists:
         return 'Este e-mail já está cadastrado';
       case AuthErrorType.weakPassword:
-        return 'A senha deve ter pelo menos 6 caracteres';
+        return 'A senha deve ter pelo menos 8 caracteres';
       case AuthErrorType.invalidEmail:
         return 'E-mail inválido';
       case AuthErrorType.networkError:

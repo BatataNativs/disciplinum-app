@@ -62,7 +62,7 @@ class AuthCredentials extends Equatable {
 
   /// Validação básica de password
   bool get isPasswordValid {
-    return password.length >= 6;
+    return password.length >= 8;
   }
 
   /// Validação para signup

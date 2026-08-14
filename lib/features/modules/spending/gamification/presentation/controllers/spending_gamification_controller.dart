@@ -3,14 +3,14 @@ import 'package:disciplinum/features/modules/spending/domain/entities/spending_m
 import 'package:disciplinum/features/modules/spending/gamification/domain/repositories/spending_gamification_repository.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/features/auth/domain/services/auth_service.dart';
+import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Controller de UI para gamificação do Spending
 /// Segue o padrão dos outros módulos para independência total
 /// Gerencia estado da UI e interage com services de domínio específicos do Spending
 class SpendingGamificationController extends ChangeNotifier {
   final SpendingGamificationRepository _repository;
-  final AuthService _authService;
+  final AuthController _authService;
   
   SpendingModuleState? _moduleState;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class SpendingGamificationController extends ChangeNotifier {
 
   SpendingGamificationController({
     required SpendingGamificationRepository repository,
-    required AuthService authService,
+    required AuthController authService,
   }) : _repository = repository, _authService = authService;
 
   // Getters públicos

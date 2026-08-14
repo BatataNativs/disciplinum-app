@@ -30,8 +30,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final newPass = _passwordController.text;
     final confirmPass = _confirmPasswordController.text;
 
-    if (newPass.isEmpty || newPass.length < 6) {
-      SnackBarHelper.showError(context, 'A senha deve ter pelo menos 6 caracteres');
+    if (newPass.isEmpty || newPass.length < 8) {
+      SnackBarHelper.showError(context, 'A senha deve ter pelo menos 8 caracteres');
       return;
     }
 
