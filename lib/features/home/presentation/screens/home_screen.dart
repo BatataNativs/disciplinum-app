@@ -40,14 +40,15 @@ class HomeColors {
 
 Map<int, FaIconData> nicheIcons = {
   1: FontAwesomeIcons.smoking,
-  2: FontAwesomeIcons.utensils,
-  3: FontAwesomeIcons.carrot,
-  4: FontAwesomeIcons.moneyBillWave,
-  5: FontAwesomeIcons.clock,
-  6: FontAwesomeIcons.lock,
+  2: FontAwesomeIcons.pizzaSlice,
+  3: FontAwesomeIcons.utensils,
+  4: FontAwesomeIcons.wallet,
+  5: FontAwesomeIcons.hourglassHalf,
+  6: FontAwesomeIcons.userSecret,
   7: FontAwesomeIcons.piggyBank,
   8: FontAwesomeIcons.calendarCheck,
   9: FontAwesomeIcons.bookOpen,
+  10: FontAwesomeIcons.mobileScreen,
 };
 
 // ============================================================================
@@ -387,7 +388,7 @@ class ModernNicheCard extends StatelessWidget {
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9));
+    );
   }
 
   Color _getNicheColor(int nicheId) {
@@ -395,17 +396,19 @@ class ModernNicheCard extends StatelessWidget {
       case 1:
       case 2:
       case 3:
-        return const Color(0xFF10B981);
+        return const Color.fromARGB(255, 203, 64, 13);
       case 8:
       case 5:
-        return const Color(0xFF3B82F6);
+        return const Color.fromARGB(255, 76, 171, 13);
       case 4:
       case 7:
-        return const Color(0xFFF59E0B);
+        return const Color.fromARGB(255, 8, 45, 148);
       case 6:
-        return const Color(0xFF8B5CF6);
+        return const Color.fromARGB(255, 96, 96, 97);
       case 9:
         return const Color(0xFFF97316);
+      case 10:
+        return const Color.fromARGB(255, 12, 167, 167);
       default:
         return HomeColors.primary;
     }
@@ -482,7 +485,7 @@ class ModernEmptyStateCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms);
+    );
   }
 }
 
@@ -1078,7 +1081,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             }).toList(),
           ),
       ],
-    ).animate().fadeIn(duration: 500.ms, delay: 200.ms);
+    ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
   Widget _buildCategorySection(NicheCategory category, int categoryIndex) {
@@ -1115,8 +1118,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         const SizedBox(height: 8),
       ],
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, delay: 300.ms + (categoryIndex * 100).ms);
+    ).animate().fadeIn(duration: 300.ms, delay: 3.ms + (categoryIndex * 50).ms);
   }
 }

@@ -24,7 +24,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return await _datasource.signInWithEmail(credentials);
     } catch (e) {
       _logger.e('Repository: Erro no signin: $e');
-      return AuthResult.error('Erro ao fazer login', errorType: AuthErrorType.unknown);
+      return AuthResult.error('Erro ao fazer login',
+          errorType: AuthErrorType.unknown);
     }
   }
 
@@ -35,23 +36,27 @@ class AuthRepositoryImpl implements AuthRepository {
       return await _datasource.signUpWithEmail(credentials);
     } catch (e) {
       _logger.e('Repository: Erro no signup: $e');
-      return AuthResult.error('Erro ao fazer cadastro', errorType: AuthErrorType.unknown);
+      return AuthResult.error('Erro ao fazer cadastro',
+          errorType: AuthErrorType.unknown);
     }
   }
 
   @override
   Future<AuthResult> signInWithSocial(AuthCredentials credentials) async {
     try {
-      _logger.i('Repository: Iniciando login social: ${credentials.authType.name}');
-      
+      _logger.i(
+          'Repository: Iniciando login social: ${credentials.authType.name}');
+
       // Implementar social auth usando o datasource
       final result = await _datasource.signInWithSocial(credentials);
-      
-      _logger.i('Repository: Login social finalizado: ${result.isSuccess ? 'sucesso' : 'erro'}');
+
+      _logger.i(
+          'Repository: Login social finalizado: ${result.isSuccess ? 'sucesso' : 'erro'}');
       return result;
     } catch (e) {
       _logger.e('Repository: Erro no login social: $e');
-      return AuthResult.error('Erro ao fazer login social', errorType: AuthErrorType.socialAuthError);
+      return AuthResult.error('Erro ao fazer login social',
+          errorType: AuthErrorType.socialAuthError);
     }
   }
 
@@ -89,10 +94,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
+  Future<auth.User> updateProfile(String userId,
+      {String? name,
+      String? avatarUrl,
+      String? bio,
+      bool? showAvatar,
+      bool? showEmail}) async {
     try {
       _logger.i('Repository: Atualizando perfil do usuário: $userId');
-      return await _datasource.updateProfile(userId, name: name, avatarUrl: avatarUrl, bio: bio, showAvatar: showAvatar, showEmail: showEmail);
+      return await _datasource.updateProfile(userId,
+          name: name,
+          avatarUrl: avatarUrl,
+          bio: bio,
+          showAvatar: showAvatar,
+          showEmail: showEmail);
     } catch (e) {
       _logger.e('Repository: Erro ao atualizar perfil: $e');
       rethrow;
@@ -107,6 +122,17 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       _logger.e('Repository: Erro ao obter usuário atual: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    try {
+      _logger.d('Repository: Obtendo perfil do usuario: $userId');
+      return await _datasource.getUserProfile(userId);
+    } catch (e) {
+      _logger.e('Repository: Erro ao obter perfil do usuario: $e');
+      rethrow;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -138,6 +139,54 @@ final loggerServiceProvider = Provider<LoggerService>((ref) {
 final preferencesServiceProvider = Provider<PreferencesService>((ref) {
   final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
   return PreferencesService(prefs);
+});
+
+const _appLocalePreferenceKey = 'app_locale_override';
+
+class AppLocaleNotifier extends StateNotifier<Locale?> {
+  final ObjectBoxPreferencesRepository _prefs;
+
+  AppLocaleNotifier(this._prefs) : super(null) {
+    _loadSavedLocale();
+  }
+
+  Future<void> _loadSavedLocale() async {
+    final saved = await _prefs.getString(_appLocalePreferenceKey);
+    state = _localeFromTag(saved);
+  }
+
+  Future<void> setSystemLocale() async {
+    state = null;
+    await _prefs.remove(_appLocalePreferenceKey);
+  }
+
+  Future<void> setLocale(Locale locale) async {
+    state = locale;
+    await _prefs.setString(_appLocalePreferenceKey, _localeToTag(locale));
+  }
+
+  Locale? _localeFromTag(String? tag) {
+    if (tag == null || tag.isEmpty) return null;
+
+    final parts = tag.split('_');
+    if (parts.length == 1) {
+      return Locale(parts[0]);
+    }
+
+    return Locale(parts[0], parts[1]);
+  }
+
+  String _localeToTag(Locale locale) {
+    final countryCode = locale.countryCode;
+    if (countryCode == null || countryCode.isEmpty) {
+      return locale.languageCode;
+    }
+    return '${locale.languageCode}_$countryCode';
+  }
+}
+
+final appLocaleProvider = StateNotifierProvider<AppLocaleNotifier, Locale?>((ref) {
+  return AppLocaleNotifier(ref.watch(objectboxPreferencesRepositoryProvider));
 });
 
 /// Provider para smokingServiceProvider

@@ -94,7 +94,7 @@ class NicheRepository {
           id: nicheId.id,
           nicheId: nicheId,
           name: 'Jejum Digital',
-          description: 'Controle inteligente do uso de redes sociais e apps',
+          description: 'Controle o seu tempo de tela',
           icon: '📱',
           color: '#FF9800',
         );

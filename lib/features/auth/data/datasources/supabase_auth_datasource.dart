@@ -152,6 +152,27 @@ class SupabaseAuthDatasource {
     }
   }
 
+  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    try {
+      _logger.i('Obtendo perfil do usuario: $userId');
+
+      final response =
+          await _supabase.from('users').select().eq('id', userId).maybeSingle();
+
+      if (response == null) {
+        _logger.w('Perfil nao encontrado para usuario: $userId');
+        return null;
+      }
+
+      _logger.i('Perfil obtido com sucesso: $userId');
+
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      _logger.e('Erro ao obter perfil do usuario: $e');
+      rethrow;
+    }
+  }
+
   Future<auth.User> updateProfile(String userId,
       {String? name,
       String? avatarUrl,
@@ -178,11 +199,25 @@ class SupabaseAuthDatasource {
         updates['show_email'] = showEmail;
       }
 
-      final response = await _supabase.auth.updateUser(
-        UserAttributes(data: updates),
-      );
+      if (updates.isNotEmpty) {
+        await _supabase.from('users').update(updates).eq('id', userId);
+      }
 
-      final user = response.user;
+      final authMetadataUpdates = <String, dynamic>{};
+      if (name != null) {
+        authMetadataUpdates['name'] = name;
+      }
+      if (avatarUrl != null) {
+        authMetadataUpdates['avatar_url'] = avatarUrl;
+      }
+
+      if (authMetadataUpdates.isNotEmpty) {
+        await _supabase.auth.updateUser(
+          UserAttributes(data: authMetadataUpdates),
+        );
+      }
+
+      final user = _supabase.auth.currentUser;
       if (user == null) {
         throw Exception('Erro ao atualizar perfil: usuario nao encontrado');
       }

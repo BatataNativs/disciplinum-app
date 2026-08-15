@@ -16,6 +16,7 @@ class ProfileAvatarSection extends ConsumerStatefulWidget {
 
 class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
   bool _loadingAvatar = false;
+  int _avatarRefreshToken = 0;
 
   Future<void> _changeAvatar() async {
     if (_loadingAvatar) return;
@@ -35,6 +36,9 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
       if (!mounted) return;
       setState(() {
         _loadingAvatar = false;
+        if (ok) {
+          _avatarRefreshToken++;
+        }
       });
 
       if (ok) {
@@ -88,7 +92,9 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
                     foregroundColor: theme.colorScheme.onPrimaryContainer,
                     backgroundImage: (currentAvatarUrl != null &&
                             currentAvatarUrl.isNotEmpty)
-                        ? NetworkImage(currentAvatarUrl)
+                        ? NetworkImage(
+                            '$currentAvatarUrl?v=$_avatarRefreshToken',
+                          )
                         : null,
                     child:
                         (currentAvatarUrl == null || currentAvatarUrl.isEmpty)

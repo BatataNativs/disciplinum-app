@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:isolate';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/bootstrap.dart';
@@ -118,6 +119,7 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
   Widget build(BuildContext context) {
     // Observa o estado para reconstruir quando mudar, mas usa o notifier para pegar o themeData
     ref.watch(themeControllerProvider);
+    final appLocale = ref.watch(appLocaleProvider);
     final themeController = ref.read(themeControllerProvider.notifier);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
     final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
@@ -128,6 +130,16 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
           title: 'Disciplinum',
           navigatorKey: AppLockNavigationService.navigatorKey, // Key para App Lock
           theme: themeController.themeData, // Tema dinâmico baseado no tema selecionado
+          locale: appLocale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('pt', 'BR'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           debugShowCheckedModeBanner: false,
           // Se usuário está logado, vai para AuthWrapper (que leva para Home)
           // Se não viu onboarding e não está logado, vai para onboarding

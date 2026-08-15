@@ -9,8 +9,20 @@ abstract class AuthRepository {
   Future<void> signOut();
   Future<void> resetPassword(String email);
   Future<void> updatePassword(String newPassword);
-  Future<User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showEmail, bool? showAvatar});
+
+  Future<User> updateProfile(
+    String userId, {
+    String? name,
+    String? avatarUrl,
+    String? bio,
+    bool? showEmail,
+    bool? showAvatar,
+  });
+
   Future<User?> getCurrentUser();
+
+  Future<Map<String, dynamic>?> getUserProfile(String userId);
+
   Stream<User?> get userChanges;
   bool get isAuthenticated;
   Future<String?> getAccessToken();

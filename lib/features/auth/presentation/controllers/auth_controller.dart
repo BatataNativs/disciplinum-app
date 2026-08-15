@@ -81,9 +81,17 @@ class AuthController extends StateNotifier<AuthState> {
       final result = await _repository.signIn(credentials);
 
       if (result.isSuccess) {
-        state = result.user == null
-            ? const AuthState()
-            : state.copyWith(currentUser: result.user);
+        if (result.user == null) {
+          state = const AuthState();
+        } else {
+          final profile = await _loadUserProfile(result.user!.id);
+
+          state = state.copyWith(
+            currentUser: result.user,
+            userProfile: profile,
+          );
+        }
+
         return true;
       }
 
@@ -115,9 +123,17 @@ class AuthController extends StateNotifier<AuthState> {
       final result = await _repository.signUp(credentials);
 
       if (result.isSuccess) {
-        state = result.user == null
-            ? const AuthState()
-            : state.copyWith(currentUser: result.user);
+        if (result.user == null) {
+          state = const AuthState();
+        } else {
+          final profile = await _loadUserProfile(result.user!.id);
+
+          state = state.copyWith(
+            currentUser: result.user,
+            userProfile: profile,
+          );
+        }
+
         return true;
       }
 
@@ -145,9 +161,17 @@ class AuthController extends StateNotifier<AuthState> {
       final result = await _repository.signInWithSocial(credentials);
 
       if (result.isSuccess) {
-        state = result.user == null
-            ? const AuthState()
-            : state.copyWith(currentUser: result.user);
+        if (result.user == null) {
+          state = const AuthState();
+        } else {
+          final profile = await _loadUserProfile(result.user!.id);
+
+          state = state.copyWith(
+            currentUser: result.user,
+            userProfile: profile,
+          );
+        }
+
         return true;
       }
 
@@ -234,7 +258,13 @@ class AuthController extends StateNotifier<AuthState> {
         showEmail: showEmail,
       );
 
-      state = state.copyWith(currentUser: updatedUser);
+      final profile = await _loadUserProfile(user.id);
+
+      state = state.copyWith(
+        currentUser: updatedUser,
+        userProfile: profile,
+      );
+
       return true;
     } catch (e) {
       _logger.e('AuthController: Erro ao atualizar perfil', error: e);
@@ -294,9 +324,20 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       _setLoading(true);
       _clearError();
+
       final user = await _repository.getCurrentUser();
-      state =
-          user == null ? const AuthState() : state.copyWith(currentUser: user);
+
+      if (user == null) {
+        state = const AuthState();
+        return;
+      }
+
+      final profile = await _loadUserProfile(user.id);
+
+      state = state.copyWith(
+        currentUser: user,
+        userProfile: profile,
+      );
     } catch (e) {
       _logger.e('AuthController: Erro ao carregar usuario', error: e);
       _setError('Erro ao carregar usuario');
@@ -309,26 +350,37 @@ class AuthController extends StateNotifier<AuthState> {
     final user = currentUser;
     if (user == null) {
       _setError('Usuário não logado');
-      return false; // ✅ Retorna false se não houver usuário
+      return false;
     }
 
     try {
       await _repository.deleteAccount(user.id);
-      state = const AuthState(); // Limpa o estado do usuário
-      return true; // ✅ Retorna true se a exclusão for bem-sucedida
+      state = const AuthState();
+      return true;
     } catch (e) {
       _logger.e('AuthController: Erro ao excluir conta', error: e);
-      _setError(
-          'Erro ao excluir conta: ${e.toString()}'); // ✅ Atualiza o estado de erro
-      return false; // ✅ Retorna false se falhar
+      _setError('Erro ao excluir conta: ${e.toString()}');
+      return false;
     }
   }
 
   void _initializeAuthState() {
     _loadCurrentUser();
-    _userChangesSubscription = _repository.userChanges.listen((user) {
-      state =
-          user == null ? const AuthState() : state.copyWith(currentUser: user);
+
+    _userChangesSubscription = _repository.userChanges.listen((user) async {
+      if (user == null) {
+        state = const AuthState();
+        return;
+      }
+
+      final profile = await _loadUserProfile(user.id);
+
+      if (!mounted) return;
+
+      state = state.copyWith(
+        currentUser: user,
+        userProfile: profile,
+      );
     });
   }
 
@@ -336,14 +388,38 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       _setLoading(true);
       _clearError();
+
       final user = await _repository.getCurrentUser();
-      state =
-          user == null ? const AuthState() : state.copyWith(currentUser: user);
+
+      if (user == null) {
+        state = const AuthState();
+        return;
+      }
+
+      final profile = await _loadUserProfile(user.id);
+
+      state = state.copyWith(
+        currentUser: user,
+        userProfile: profile,
+      );
     } catch (e) {
       _logger.e('AuthController: Erro ao carregar usuario', error: e);
       _setError('Erro ao carregar usuario');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _loadUserProfile(String userId) async {
+    try {
+      _logger.d('AuthController: Obtendo perfil do usuario: $userId');
+      return await _repository.getUserProfile(userId);
+    } catch (e) {
+      _logger.e(
+        'AuthController: Erro ao carregar perfil do usuario',
+        error: e,
+      );
+      return null;
     }
   }
 

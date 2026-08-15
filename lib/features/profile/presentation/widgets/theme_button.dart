@@ -23,7 +23,7 @@ class ThemeButton extends ConsumerWidget {
         ],
       ),
       child: ElevatedButton.icon(
-        icon: const Text('🎨', style: TextStyle(fontSize: 22)),
+        icon: Icon(Icons.palette, color: Colors.white, size: 22),
         label: const Text(
           'Temas',
           style: TextStyle(

@@ -461,7 +461,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: -35,
                   child: Transform.rotate(
                     angle: -0.3,
-                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 76))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('👻', style: TextStyle(fontSize: 76))),
                   ),
                 ),
                 Positioned(
@@ -469,7 +471,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: -25,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 84))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🦇', style: TextStyle(fontSize: 84))),
                   ),
                 ),
                 // == DECORAÇÕES MÉDIAS (35-50) ==
@@ -478,7 +482,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 85,
                   child: Transform.rotate(
                     angle: -0.1,
-                    child: const Opacity(opacity: 0.15, child: Text('🕸️', style: TextStyle(fontSize: 52))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🕸️', style: TextStyle(fontSize: 52))),
                   ),
                 ),
                 Positioned(
@@ -486,7 +492,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 65,
                   child: Transform.rotate(
                     angle: 0.5,
-                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 48))),
+                    child: const Opacity(
+                        opacity: 0.18,
+                        child: Text('🎃', style: TextStyle(fontSize: 48))),
                   ),
                 ),
                 Positioned(
@@ -494,7 +502,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 35,
                   child: Transform.rotate(
                     angle: -0.5,
-                    child: const Opacity(opacity: 0.15, child: Text('💀', style: TextStyle(fontSize: 46))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('💀', style: TextStyle(fontSize: 46))),
                   ),
                 ),
                 Positioned(
@@ -502,7 +512,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 50,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 50))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('👻', style: TextStyle(fontSize: 50))),
                   ),
                 ),
                 // == DECORAÇÕES PEQUENAS (originais) ==
@@ -526,7 +538,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 65,
                   child: Transform.rotate(
                     angle: 0.4,
-                    child: const Opacity(opacity: 0.18, child: Text('🦇', style: TextStyle(fontSize: 28))),
+                    child: const Opacity(
+                        opacity: 0.18,
+                        child: Text('🦇', style: TextStyle(fontSize: 28))),
                   ),
                 ),
                 // Canto superior direito
@@ -535,7 +549,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 35,
                   child: Transform.rotate(
                     angle: 0.3,
-                    child: const Opacity(opacity: 0.20, child: Text('🕸️', style: TextStyle(fontSize: 32))),
+                    child: const Opacity(
+                        opacity: 0.20,
+                        child: Text('🕸️', style: TextStyle(fontSize: 32))),
                   ),
                 ),
                 Positioned(
@@ -543,7 +559,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 75,
                   child: Transform.rotate(
                     angle: -0.5,
-                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 26))),
+                    child: const Opacity(
+                        opacity: 0.18,
+                        child: Text('🎃', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 // Meio esquerdo
@@ -552,7 +570,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 20,
                   child: Transform.rotate(
                     angle: 0.7,
-                    child: const Opacity(opacity: 0.17, child: Text('💀', style: TextStyle(fontSize: 30))),
+                    child: const Opacity(
+                        opacity: 0.17,
+                        child: Text('💀', style: TextStyle(fontSize: 30))),
                   ),
                 ),
                 // Meio direito
@@ -575,7 +595,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 55,
                   child: Transform.rotate(
                     angle: 0.6,
-                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 24))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🦇', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 // Inferior esquerdo
@@ -584,7 +606,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 45,
                   child: Transform.rotate(
                     angle: -0.4,
-                    child: const Opacity(opacity: 0.18, child: Text('🎃', style: TextStyle(fontSize: 28))),
+                    child: const Opacity(
+                        opacity: 0.18,
+                        child: Text('🎃', style: TextStyle(fontSize: 28))),
                   ),
                 ),
                 Positioned(
@@ -592,7 +616,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 15,
                   child: Transform.rotate(
                     angle: 0.2,
-                    child: const Opacity(opacity: 0.15, child: Text('👻', style: TextStyle(fontSize: 22))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('👻', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 // Inferior direito
@@ -615,7 +641,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 85,
                   child: Transform.rotate(
                     angle: -0.1,
-                    child: const Opacity(opacity: 0.15, child: Text('🕸️', style: TextStyle(fontSize: 26))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🕸️', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 // Centro espalhado
@@ -624,7 +652,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 85,
                   child: Transform.rotate(
                     angle: 0.8,
-                    child: const Opacity(opacity: 0.14, child: Text('💀', style: TextStyle(fontSize: 24))),
+                    child: const Opacity(
+                        opacity: 0.14,
+                        child: Text('💀', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -647,7 +677,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 35,
                   child: Transform.rotate(
                     angle: 0.3,
-                    child: const Opacity(opacity: 0.13, child: Text('🦇', style: TextStyle(fontSize: 22))),
+                    child: const Opacity(
+                        opacity: 0.13,
+                        child: Text('🦇', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 Positioned(
@@ -655,7 +687,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 55,
                   child: Transform.rotate(
                     angle: -0.2,
-                    child: const Opacity(opacity: 0.15, child: Text('🎃', style: TextStyle(fontSize: 26))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🎃', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 Positioned(
@@ -663,7 +697,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 30,
                   child: Transform.rotate(
                     angle: 0.5,
-                    child: const Opacity(opacity: 0.13, child: Text('💀', style: TextStyle(fontSize: 24))),
+                    child: const Opacity(
+                        opacity: 0.13,
+                        child: Text('💀', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -685,7 +721,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 30,
                   child: Transform.rotate(
                     angle: -0.4,
-                    child: const Opacity(opacity: 0.12, child: Text('👻', style: TextStyle(fontSize: 24))),
+                    child: const Opacity(
+                        opacity: 0.12,
+                        child: Text('👻', style: TextStyle(fontSize: 24))),
                   ),
                 ),
                 Positioned(
@@ -693,7 +731,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 75,
                   child: Transform.rotate(
                     angle: 0.6,
-                    child: const Opacity(opacity: 0.15, child: Text('🦇', style: TextStyle(fontSize: 26))),
+                    child: const Opacity(
+                        opacity: 0.15,
+                        child: Text('🦇', style: TextStyle(fontSize: 26))),
                   ),
                 ),
                 Positioned(
@@ -701,7 +741,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 65,
                   child: Transform.rotate(
                     angle: -0.3,
-                    child: const Opacity(opacity: 0.11, child: Text('🎃', style: TextStyle(fontSize: 22))),
+                    child: const Opacity(
+                        opacity: 0.11,
+                        child: Text('🎃', style: TextStyle(fontSize: 22))),
                   ),
                 ),
                 Positioned(
@@ -709,7 +751,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   left: 50,
                   child: Transform.rotate(
                     angle: 0.2,
-                    child: const Opacity(opacity: 0.10, child: Text('💀', style: TextStyle(fontSize: 20))),
+                    child: const Opacity(
+                        opacity: 0.10,
+                        child: Text('💀', style: TextStyle(fontSize: 20))),
                   ),
                 ),
                 Positioned(
@@ -739,7 +783,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
 
                           // --- AVATAR COM GLASSMORPHISM ---
                           Container(
@@ -754,15 +798,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      colorScheme.shadow.withValues(alpha: 0.2),
+                                      colorScheme.shadow.withValues(alpha: 0.9),
                                   blurRadius: 35,
-                                  spreadRadius: 6,
+                                  spreadRadius: 3,
                                 ),
                               ],
                               border: Border.all(
                                 color:
                                     colorScheme.outline.withValues(alpha: 0.3),
-                                width: 2,
+                                width: 3,
                               ),
                             ),
                             padding: const EdgeInsets.all(10),
