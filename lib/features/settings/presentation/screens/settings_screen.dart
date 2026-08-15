@@ -721,11 +721,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           color: colorScheme.onSurface.withValues(alpha: 0.7)),
                       value: analyticsEnabled,
                       onChanged: (val) async {
+                        if (!val) {
+                          // Mostrar diálogo de confirmação APENAS ao desativar
+                          final shouldDisable = await showDialog<bool>(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text(
+                                        'Desativar coleta de dados?'),
+                                    content: const Text(
+                                      'Tem certeza que deseja desativar a coleta de dados de uso e erros? '
+                                      'Isso pode limitar nossas melhorias no app.',
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(
+                                            context, false), // Cancelar
+                                        child: const Text('Manter Ativado'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(
+                                            context, true), // Confirmar
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.red,
+                                        ),
+                                        child: const Text('Desativar'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ) ??
+                              false;
+
+                          if (!shouldDisable) {
+                            return; // Não altera o estado se o usuário cancelar
+                          }
+                        }
+
+                        // Se o usuário confirmou (ou está ativando), prossegue
                         await analyticsNotifier.setEnabled(val);
                         if (context.mounted) {
                           EnhancedSnackBarHelper.showInfo(
                             context,
-                            val ? 'Coleta ativada' : 'Coleta desativada',
+                            val
+                                ? 'Coleta de dados ativada'
+                                : 'Coleta de dados desativada',
                           );
                         }
                       },

@@ -295,7 +295,8 @@ class AuthController extends StateNotifier<AuthState> {
       _setLoading(true);
       _clearError();
       final user = await _repository.getCurrentUser();
-      state = user == null ? const AuthState() : state.copyWith(currentUser: user);
+      state =
+          user == null ? const AuthState() : state.copyWith(currentUser: user);
     } catch (e) {
       _logger.e('AuthController: Erro ao carregar usuario', error: e);
       _setError('Erro ao carregar usuario');
@@ -304,26 +305,30 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<bool> deleteAccount() async {
     final user = currentUser;
     if (user == null) {
-      _setError('Usuario nao logado');
-      throw Exception('Usuario nao logado');
+      _setError('Usuário não logado');
+      return false; // ✅ Retorna false se não houver usuário
     }
 
     try {
       await _repository.deleteAccount(user.id);
-      state = const AuthState();
+      state = const AuthState(); // Limpa o estado do usuário
+      return true; // ✅ Retorna true se a exclusão for bem-sucedida
     } catch (e) {
       _logger.e('AuthController: Erro ao excluir conta', error: e);
-      rethrow;
+      _setError(
+          'Erro ao excluir conta: ${e.toString()}'); // ✅ Atualiza o estado de erro
+      return false; // ✅ Retorna false se falhar
     }
   }
 
   void _initializeAuthState() {
     _loadCurrentUser();
     _userChangesSubscription = _repository.userChanges.listen((user) {
-      state = user == null ? const AuthState() : state.copyWith(currentUser: user);
+      state =
+          user == null ? const AuthState() : state.copyWith(currentUser: user);
     });
   }
 
@@ -332,7 +337,8 @@ class AuthController extends StateNotifier<AuthState> {
       _setLoading(true);
       _clearError();
       final user = await _repository.getCurrentUser();
-      state = user == null ? const AuthState() : state.copyWith(currentUser: user);
+      state =
+          user == null ? const AuthState() : state.copyWith(currentUser: user);
     } catch (e) {
       _logger.e('AuthController: Erro ao carregar usuario', error: e);
       _setError('Erro ao carregar usuario');

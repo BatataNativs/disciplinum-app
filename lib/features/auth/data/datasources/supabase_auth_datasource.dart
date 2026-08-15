@@ -25,7 +25,8 @@ class SupabaseAuthDatasource {
 
       final user = response.user;
       if (user == null) {
-        return AuthResult.error('Usuario nao encontrado', errorType: AuthErrorType.userNotFound);
+        return AuthResult.error('Usuario nao encontrado',
+            errorType: AuthErrorType.userNotFound);
       }
 
       _logger.i('Login bem-sucedido para usuario: ${user.id}');
@@ -35,7 +36,8 @@ class SupabaseAuthDatasource {
       return _handleAuthException(e);
     } catch (e) {
       _logger.e('Erro inesperado no signin: $e');
-      return AuthResult.error('Erro ao fazer login', errorType: AuthErrorType.unknown);
+      return AuthResult.error('Erro ao fazer login',
+          errorType: AuthErrorType.unknown);
     }
   }
 
@@ -51,7 +53,8 @@ class SupabaseAuthDatasource {
 
       final user = response.user;
       if (user == null) {
-        return AuthResult.error('Erro ao criar usuario', errorType: AuthErrorType.serverError);
+        return AuthResult.error('Erro ao criar usuario',
+            errorType: AuthErrorType.serverError);
       }
 
       _logger.i('Cadastro bem-sucedido para usuario: ${user.id}');
@@ -61,7 +64,8 @@ class SupabaseAuthDatasource {
       return _handleAuthException(e);
     } catch (e) {
       _logger.e('Erro inesperado no signup: $e');
-      return AuthResult.error('Erro ao fazer cadastro', errorType: AuthErrorType.unknown);
+      return AuthResult.error('Erro ao fazer cadastro',
+          errorType: AuthErrorType.unknown);
     }
   }
 
@@ -81,7 +85,8 @@ class SupabaseAuthDatasource {
           provider = OAuthProvider.facebook;
           break;
         default:
-          return AuthResult.error('Provedor nao suportado', errorType: AuthErrorType.socialAuthError);
+          return AuthResult.error('Provedor nao suportado',
+              errorType: AuthErrorType.socialAuthError);
       }
 
       await _supabase.auth.signInWithOAuth(
@@ -96,7 +101,8 @@ class SupabaseAuthDatasource {
       return _handleAuthException(e);
     } catch (e) {
       _logger.e('Erro inesperado no login social: $e');
-      return AuthResult.error('Erro ao fazer login social', errorType: AuthErrorType.socialAuthError);
+      return AuthResult.error('Erro ao fazer login social',
+          errorType: AuthErrorType.socialAuthError);
     }
   }
 
@@ -146,7 +152,12 @@ class SupabaseAuthDatasource {
     }
   }
 
-  Future<auth.User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
+  Future<auth.User> updateProfile(String userId,
+      {String? name,
+      String? avatarUrl,
+      String? bio,
+      bool? showAvatar,
+      bool? showEmail}) async {
     try {
       _logger.i('Atualizando perfil do usuario: $userId');
 
@@ -224,71 +235,69 @@ class SupabaseAuthDatasource {
     }
   }
 
- Future<void> deleteAccount(String userId) async {
-  try {
-    _logger.i('Excluindo conta do usuario: $userId');
-
-    if (userId.isEmpty) {
-      throw ArgumentError('userId cannot be empty');
-    }
-
-    // Garante que só podemos excluir a conta atualmente autenticada.
-    final currentUser = _supabase.auth.currentUser;
-
-    if (currentUser == null || currentUser.id != userId) {
-      throw Exception(
-        'Usuario autenticado diferente do usuario a ser excluido',
-      );
-    }
-
-    // 1. Remove o avatar do Storage.
-    //
-    // O AvatarService grava sempre em:
-    // avatars/{userId}/avatar.png
+  Future<void> deleteAccount(String userId) async {
     try {
-      await _supabase.storage
-          .from('avatars')
-          .remove(['$userId/avatar.png']);
+      _logger.i('Excluindo conta do usuario: $userId');
 
-      _logger.i('Avatar removido do Storage: $userId/avatar.png');
-    } catch (storageError) {
-      // Não continuamos se o Storage falhar.
+      if (userId.isEmpty) {
+        throw ArgumentError('userId cannot be empty');
+      }
+
+      // Garante que só podemos excluir a conta atualmente autenticada.
+      final currentUser = _supabase.auth.currentUser;
+
+      if (currentUser == null || currentUser.id != userId) {
+        throw Exception(
+          'Usuario autenticado diferente do usuario a ser excluido',
+        );
+      }
+
+      // 1. Remove o avatar do Storage.
       //
-      // Isso evita excluir a conta deixando um objeto órfão
-      // no Storage.
-      _logger.e(
-        'Erro ao remover avatar do Storage: $storageError',
+      // O AvatarService grava sempre em:
+      // avatars/{userId}/avatar.png
+      try {
+        await _supabase.storage.from('avatars').remove(['$userId/avatar.png']);
+
+        _logger.i('Avatar removido do Storage: $userId/avatar.png');
+      } catch (storageError) {
+        // Não continuamos se o Storage falhar.
+        //
+        // Isso evita excluir a conta deixando um objeto órfão
+        // no Storage.
+        _logger.e(
+          'Erro ao remover avatar do Storage: $storageError',
+        );
+        rethrow;
+      }
+
+      // 2. Exclui a conta através da RPC.
+      //
+      // A RPC valida novamente:
+      // auth.uid() == userId
+      //
+      // Depois remove auth.users, e os registros relacionados
+      // são removidos pelos ON DELETE CASCADE.
+      await _supabase.rpc(
+        'delete_user',
+        params: {'user_id': userId},
       );
+
+      // 3. Encerra a sessão local.
+      try {
+        await _supabase.auth.signOut();
+      } catch (signOutError) {
+        _logger.w(
+          'Falha ao fazer signOut apos delete_user: $signOutError',
+        );
+      }
+
+      _logger.i('Conta excluida com sucesso');
+    } catch (e) {
+      _logger.e('Erro ao excluir conta: $e');
       rethrow;
     }
-
-    // 2. Exclui a conta através da RPC.
-    //
-    // A RPC valida novamente:
-    // auth.uid() == userId
-    //
-    // Depois remove auth.users, e os registros relacionados
-    // são removidos pelos ON DELETE CASCADE.
-    await _supabase.rpc(
-      'delete_user',
-      params: {'user_id': userId},
-    );
-
-    // 3. Encerra a sessão local.
-    try {
-      await _supabase.auth.signOut();
-    } catch (signOutError) {
-      _logger.w(
-        'Falha ao fazer signOut apos delete_user: $signOutError',
-      );
-    }
-
-    _logger.i('Conta excluida com sucesso');
-  } catch (e) {
-    _logger.e('Erro ao excluir conta: $e');
-    rethrow;
   }
-}
 
   SupabaseClient get supabaseClient => _supabase;
 
@@ -309,22 +318,28 @@ class SupabaseAuthDatasource {
     final message = e.message.toLowerCase();
 
     if (message.contains('invalid login credentials')) {
-      return AuthResult.error('Credenciais invalidas', errorType: AuthErrorType.invalidCredentials);
+      return AuthResult.error('Credenciais invalidas',
+          errorType: AuthErrorType.invalidCredentials);
     }
     if (message.contains('email not confirmed')) {
-      return AuthResult.error('Email nao confirmado', errorType: AuthErrorType.emailNotVerified);
+      return AuthResult.error('Email nao confirmado',
+          errorType: AuthErrorType.emailNotVerified);
     }
     if (message.contains('user already registered')) {
-      return AuthResult.error('Email ja cadastrado', errorType: AuthErrorType.emailAlreadyExists);
+      return AuthResult.error('Email ja cadastrado',
+          errorType: AuthErrorType.emailAlreadyExists);
     }
     if (message.contains('password should be at least')) {
-      return AuthResult.error('Senha fraca', errorType: AuthErrorType.weakPassword);
+      return AuthResult.error('Senha fraca',
+          errorType: AuthErrorType.weakPassword);
     }
     if (message.contains('invalid email')) {
-      return AuthResult.error('Email invalido', errorType: AuthErrorType.invalidEmail);
+      return AuthResult.error('Email invalido',
+          errorType: AuthErrorType.invalidEmail);
     }
     if (message.contains('network')) {
-      return AuthResult.error('Erro de conexao', errorType: AuthErrorType.networkError);
+      return AuthResult.error('Erro de conexao',
+          errorType: AuthErrorType.networkError);
     }
 
     return AuthResult.error(e.message, errorType: AuthErrorType.unknown);
