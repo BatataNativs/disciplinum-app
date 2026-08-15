@@ -224,28 +224,71 @@ class SupabaseAuthDatasource {
     }
   }
 
-  Future<void> deleteAccount(String userId) async {
+ Future<void> deleteAccount(String userId) async {
+  try {
+    _logger.i('Excluindo conta do usuario: $userId');
+
+    if (userId.isEmpty) {
+      throw ArgumentError('userId cannot be empty');
+    }
+
+    // Garante que só podemos excluir a conta atualmente autenticada.
+    final currentUser = _supabase.auth.currentUser;
+
+    if (currentUser == null || currentUser.id != userId) {
+      throw Exception(
+        'Usuario autenticado diferente do usuario a ser excluido',
+      );
+    }
+
+    // 1. Remove o avatar do Storage.
+    //
+    // O AvatarService grava sempre em:
+    // avatars/{userId}/avatar.png
     try {
-      _logger.i('Excluindo conta do usuario: $userId');
+      await _supabase.storage
+          .from('avatars')
+          .remove(['$userId/avatar.png']);
 
-      if (userId.isEmpty) {
-        throw ArgumentError('userId cannot be empty');
-      }
-
-      await _supabase.rpc('delete_user', params: {'user_id': userId});
-
-      try {
-        await _supabase.auth.signOut();
-      } catch (signOutError) {
-        _logger.w('Falha ao fazer signOut apos delete_user: $signOutError');
-      }
-
-      _logger.i('Conta excluida com sucesso');
-    } catch (e) {
-      _logger.e('Erro ao excluir conta: $e');
+      _logger.i('Avatar removido do Storage: $userId/avatar.png');
+    } catch (storageError) {
+      // Não continuamos se o Storage falhar.
+      //
+      // Isso evita excluir a conta deixando um objeto órfão
+      // no Storage.
+      _logger.e(
+        'Erro ao remover avatar do Storage: $storageError',
+      );
       rethrow;
     }
+
+    // 2. Exclui a conta através da RPC.
+    //
+    // A RPC valida novamente:
+    // auth.uid() == userId
+    //
+    // Depois remove auth.users, e os registros relacionados
+    // são removidos pelos ON DELETE CASCADE.
+    await _supabase.rpc(
+      'delete_user',
+      params: {'user_id': userId},
+    );
+
+    // 3. Encerra a sessão local.
+    try {
+      await _supabase.auth.signOut();
+    } catch (signOutError) {
+      _logger.w(
+        'Falha ao fazer signOut apos delete_user: $signOutError',
+      );
+    }
+
+    _logger.i('Conta excluida com sucesso');
+  } catch (e) {
+    _logger.e('Erro ao excluir conta: $e');
+    rethrow;
   }
+}
 
   SupabaseClient get supabaseClient => _supabase;
 
