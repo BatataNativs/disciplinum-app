@@ -8,6 +8,7 @@ import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/di/user_choices_provider.dart';
 import 'package:disciplinum/infrastructure/ads/consent_service.dart';
 import 'package:disciplinum/infrastructure/ads/widgets/consent_dialog.dart';
 import 'package:disciplinum/shared/models/common/niche.dart';
@@ -142,7 +143,6 @@ class PremiumHeaderCard extends ConsumerWidget {
     final isPinkTheme = currentTheme == AppTheme.pink;
     final isHalloweenTheme = currentTheme == AppTheme.halloween;
 
-    // Cores da borda/gradiente externo
     final List<Color> gradientColors;
     final Color shadowColor;
     final Color fillColor;
@@ -150,11 +150,11 @@ class PremiumHeaderCard extends ConsumerWidget {
     if (isPinkTheme) {
       gradientColors = const [Color(0xFFEC4899), Color(0xFFF9A8D4)];
       shadowColor = const Color(0xFFEC4899);
-      fillColor = const Color(0xFFFFF0F5); // Rosa bem claro
+      fillColor = const Color(0xFFFFF0F5);
     } else if (isHalloweenTheme) {
       gradientColors = const [Color(0xFFE0E0E0), Color(0xFFBDBDBD)];
       shadowColor = const Color(0xFF9E9E9E);
-      fillColor = const Color(0xFF2D2D2D); // Grafite
+      fillColor = const Color(0xFF2D2D2D);
     } else {
       gradientColors = [borderColor, borderColor.withValues(alpha: 0.6)];
       shadowColor = borderColor;
@@ -228,12 +228,16 @@ class ModernNicheCard extends StatelessWidget {
   final Niche niche;
   final String heroTag;
   final bool isActive;
+  final bool isHidden;
+  final VoidCallback? onVisibilityToggle;
 
   const ModernNicheCard({
     super.key,
     required this.niche,
     required this.heroTag,
     this.isActive = false,
+    this.isHidden = false,
+    this.onVisibilityToggle,
   });
 
   @override
@@ -245,145 +249,210 @@ class ModernNicheCard extends StatelessWidget {
     final accentColor = _getNicheColor(niche.id);
     final glowColor = isActive ? HomeColors.success : accentColor;
     final customIcon = nicheIcons[niche.id] ?? FontAwesomeIcons.star;
+    final cardBorderColor = isHidden
+        ? accentColor.withValues(alpha: 0.18)
+        : (isActive
+            ? glowColor.withValues(alpha: 0.6)
+            : accentColor.withValues(alpha: 0.25));
 
-    return Container(
-      height: 195,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: theme.cardColor,
-        border: Border.all(
-          color: isActive
-              ? glowColor.withValues(alpha: 0.6)
-              : accentColor.withValues(alpha: 0.25),
-          width: isActive ? 1.8 : 1.2,
+    return AnimatedOpacity(
+      opacity: isHidden ? 0.72 : 1.0,
+      duration: const Duration(milliseconds: 180),
+      child: Container(
+        height: 195,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: theme.cardColor,
+          border: Border.all(
+            color: cardBorderColor,
+            width: isActive ? 1.8 : 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: glowColor.withValues(alpha: isHidden ? 0.16 : 0.3),
+              blurRadius: 24,
+              spreadRadius: 1.5,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: glowColor.withValues(alpha: 0.3),
-            blurRadius: 24,
-            spreadRadius: 1.5,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _onTap(context),
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 100,
-                    child: Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isHalloweenTheme ? Colors.black : null,
-                          gradient: isHalloweenTheme
-                              ? null
-                              : LinearGradient(
-                                  colors: [
-                                    glowColor.withValues(alpha: 0.15),
-                                    Colors.transparent,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Material(
+            color: Colors.transparent,
+            child: Stack(
+              children: [
+                // InkWell cobrindo todo o card para navegar
+                Positioned.fill(
+                  child: InkWell(
+                    onTap: () => _onTap(context),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                // Conteúdo visual (ignora toques para que passem ao InkWell de fundo)
+                IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 100,
+                          child: Center(
+                            child: Container(
+                              width: 72,
+                              height: 72,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isHalloweenTheme ? Colors.black : null,
+                                gradient: isHalloweenTheme
+                                    ? null
+                                    : LinearGradient(
+                                        colors: [
+                                          glowColor.withValues(alpha: 0.15),
+                                          Colors.transparent,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                border: Border.all(
+                                  color: isHalloweenTheme
+                                      ? glowColor.withValues(alpha: 0.7)
+                                      : glowColor.withValues(alpha: 0.3),
+                                  width: isHalloweenTheme ? 1.8 : 1.2,
                                 ),
-                          border: Border.all(
-                            color: isHalloweenTheme
-                                ? glowColor.withValues(alpha: 0.7)
-                                : glowColor.withValues(alpha: 0.3),
-                            width: isHalloweenTheme ? 1.8 : 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: glowColor.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: Offset.zero,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: glowColor.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: Offset.zero,
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: FaIcon(
+                                  customIcon,
+                                  size: 33,
+                                  color: glowColor,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: FaIcon(
-                            customIcon,
-                            size: 33,
-                            color: isHalloweenTheme ? glowColor : glowColor,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    niche.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                      color: textColor,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        niche.homePhrase,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: textColor.withValues(
-                              alpha: isHalloweenTheme ? 0.75 : 0.55),
-                          fontSize: 10.5,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (isActive)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: glowColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: glowColor.withValues(alpha: 0.3),
-                            width: 0.5,
+                        const SizedBox(height: 8),
+                        Text(
+                          niche.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                            color: textColor,
+                            height: 1.15,
                           ),
                         ),
-                        child: Text(
-                          'ATIVO',
-                          style: TextStyle(
-                            color: glowColor,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                        const SizedBox(height: 4),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              niche.homePhrase,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: textColor.withValues(
+                                    alpha: isHalloweenTheme ? 0.75 : 0.55),
+                                fontSize: 10.5,
+                                height: 1.2,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        if (isActive)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: glowColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: glowColor.withValues(alpha: 0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                'ATIVO',
+                                style: TextStyle(
+                                  color: glowColor,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (isHidden)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.08),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                'OCULTO',
+                                style: TextStyle(
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+                // Botão de visibilidade explícito no topo do Stack
+                if (onVisibilityToggle != null)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: IconButton(
+                      icon: Icon(
+                        isHidden
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        size: 20,
+                        color: isHidden ? HomeColors.success : Colors.grey[400],
+                      ),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        onVisibilityToggle!();
+                      },
+                      tooltip: isHidden ? 'Exibir' : 'Ocultar',
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -396,18 +465,24 @@ class ModernNicheCard extends StatelessWidget {
       case 1:
       case 2:
       case 3:
+        // módulos: Cigarro, Compulsão Alimentar, Dieta
         return const Color.fromARGB(255, 203, 64, 13);
       case 8:
       case 5:
-        return const Color.fromARGB(255, 76, 171, 13);
+        // módulos: Foco e Produtividade, Evitar Procrastinação
+        return const Color.fromARGB(255, 61, 136, 11);
       case 4:
       case 7:
-        return const Color.fromARGB(255, 8, 45, 148);
+        // módulos financeiros
+        return const Color.fromARGB(255, 32, 85, 233);
       case 6:
+        // módulo: Jejum 18+
         return const Color.fromARGB(255, 96, 96, 97);
       case 9:
-        return const Color(0xFFF97316);
+        // módulo: Leitura
+        return const Color.fromARGB(255, 12, 167, 167);
       case 10:
+        //  módulo: Jejum Digital
         return const Color.fromARGB(255, 12, 167, 167);
       default:
         return HomeColors.primary;
@@ -558,11 +633,122 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
+class _HiddenModulesPrompt extends StatelessWidget {
+  final bool isExpanded;
+  final VoidCallback onTap;
+
+  const _HiddenModulesPrompt({
+    required this.isExpanded,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.45,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.visibility_rounded,
+                size: 20,
+                color: colorScheme.onSurface.withValues(alpha: 0.65),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isExpanded
+                      ? 'Ocultar módulos ocultados'
+                      : 'Exibir módulos ocultados',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                  ),
+                ),
+              ),
+              Icon(
+                isExpanded
+                    ? Icons.expand_less_rounded
+                    : Icons.chevron_right_rounded,
+                size: 20,
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HiddenModulesSection extends StatelessWidget {
+  final List<NicheId> hiddenModules;
+  final Future<void> Function(NicheId nicheId, bool isVisible)
+      onToggleVisibility;
+
+  const _HiddenModulesSection({
+    required this.hiddenModules,
+    required this.onToggleVisibility,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: hiddenModules.map((nicheId) {
+            final niche = NicheRepository.getById(nicheId);
+
+            return SizedBox(
+              width: (MediaQuery.of(context).size.width - 52) / 2,
+              child: ModernNicheCard(
+                niche: niche,
+                heroTag: 'hidden_${niche.id}',
+                isHidden: true,
+                onVisibilityToggle: () {
+                  onToggleVisibility(nicheId, true);
+                },
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+}
+
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   bool _permissionsChecked = false;
   bool _isSyncing = false;
   bool _consentDialogShown = false;
+  bool _showHiddenModules = false;
   late final ConfettiController _confettiController;
 
   @override
@@ -785,26 +971,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Color _getNicheColor(int nicheId) {
-    switch (nicheId) {
-      case 1:
-      case 2:
-      case 3:
-        return const Color(0xFF10B981);
-      case 8:
-      case 5:
-        return const Color(0xFF3B82F6);
-      case 4:
-      case 7:
-        return const Color(0xFFF59E0B);
-      case 6:
-        return const Color(0xFF8B5CF6);
-      case 9:
-        return const Color(0xFFF97316);
-      default:
-        return HomeColors.primary;
-    }
+  String _moduleVisibilityKey(NicheId nicheId) => nicheId.name;
+
+  bool _isModuleHidden(
+      NicheId nicheId, Map<String, bool> moduleVisibility) {
+    return moduleVisibility[_moduleVisibilityKey(nicheId)] == false;
   }
+
+Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
+    
+    await ref
+        .read(userChoicesControllerProvider)
+        .updateModuleVisibility(_moduleVisibilityKey(nicheId), isVisible);
+        
+    ref.invalidate(userChoicesProvider); 
+}
 
   @override
   Widget build(BuildContext context) {
@@ -814,6 +995,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
     final isHalloweenTheme = currentTheme == AppTheme.halloween;
+    final userChoicesAsync = ref.watch(userChoicesProvider);
+    final moduleVisibility =
+        userChoicesAsync.valueOrNull?.moduleVisibility ?? const <String, bool>{};
+    final hiddenModules = NicheId.values
+        .where((nicheId) => _isModuleHidden(nicheId, moduleVisibility))
+        .toList();
+
+    debugPrint('📱 [HomeScreen] Build chamado! Mapa de visibilidade atual: $moduleVisibility');
 
     return GlobalCelebrationWidget(
       child: SmokingCelebrationWidget(
@@ -834,7 +1023,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             body: Stack(
               clipBehavior: Clip.hardEdge,
               children: [
-                // Flores (Tema Rosa)
                 if (isPinkTheme) ...[
                   Positioned(
                       top: 80,
@@ -863,26 +1051,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               size: 76,
                               color: colorScheme.primary
                                   .withValues(alpha: 0.13)))),
-                  Positioned(
-                      top: 45,
-                      left: 60,
-                      child: Transform.rotate(
-                          angle: -0.2,
-                          child: Icon(Icons.eco,
-                              size: 42,
-                              color: colorScheme.secondary
-                                  .withValues(alpha: 0.18)))),
-                  Positioned(
-                      top: 200,
-                      right: 80,
-                      child: Transform.rotate(
-                          angle: 0.7,
-                          child: Icon(Icons.local_florist,
-                              size: 38,
-                              color: colorScheme.primary
-                                  .withValues(alpha: 0.20)))),
                 ],
-                // Decorações de Halloween 🎃
                 if (isHalloweenTheme) ...[
                   Positioned(
                       top: 60,
@@ -902,53 +1071,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               opacity: 0.15,
                               child:
                                   Text('👻', style: TextStyle(fontSize: 72))))),
-                  Positioned(
-                      bottom: 100,
-                      right: -10,
-                      child: Transform.rotate(
-                          angle: 0.4,
-                          child: const Opacity(
-                              opacity: 0.15,
-                              child:
-                                  Text('🦇', style: TextStyle(fontSize: 80))))),
-                  Positioned(
-                      top: 120,
-                      left: 70,
-                      child: Transform.rotate(
-                          angle: -0.1,
-                          child: const Opacity(
-                              opacity: 0.15,
-                              child: Text('🕸️',
-                                  style: TextStyle(fontSize: 48))))),
-                  Positioned(
-                      top: 350,
-                      right: 90,
-                      child: Transform.rotate(
-                          angle: 0.5,
-                          child: const Opacity(
-                              opacity: 0.15,
-                              child:
-                                  Text('💀', style: TextStyle(fontSize: 44))))),
                 ],
-
-                // Background Circle
-                Positioned(
-                  top: -180,
-                  right: -180,
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: colorScheme.primary.withValues(alpha: 0.06),
-                    ),
-                  ),
-                ),
-
-                // Main Content
                 CustomScrollView(
                   slivers: [
-                    // Header
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.only(
@@ -968,8 +1093,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             .slideY(begin: -0.1),
                       ),
                     ),
-
-                    // Active Modules Section (agora mais para cima)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -980,13 +1103,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ref.watch(activeModulesProvider);
                             final activeModules =
                                 activeModulesAsync.valueOrNull ?? [];
-                            return _buildActiveModulesSection(activeModules);
+                            return _buildActiveModulesSection(
+                              activeModules,
+                              hiddenModules,
+                              moduleVisibility,
+                            );
                           },
                         ),
                       ),
                     ),
-
-                    // Categories
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 8),
@@ -994,18 +1119,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final category = categories[index];
-                            return _buildCategorySection(category, index);
+                            return _buildCategorySection(
+                              category,
+                              index,
+                              hiddenModules,
+                              moduleVisibility,
+                            );
                           },
                           childCount: categories.length,
                         ),
                       ),
                     ),
-
+                    if (hiddenModules.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                          child: _HiddenModulesPrompt(
+                            isExpanded: _showHiddenModules,
+                            onTap: () {
+                              setState(() {
+                                _showHiddenModules = !_showHiddenModules;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    if (_showHiddenModules && hiddenModules.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                          child: _HiddenModulesSection(
+                            hiddenModules: hiddenModules,
+                            onToggleVisibility: _toggleModuleVisibility,
+                          ),
+                        ),
+                      ),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
                 ),
-
-                // Overlays
                 if (_isSyncing)
                   Positioned.fill(
                     child: AbsorbPointer(
@@ -1023,59 +1174,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   style: theme.textTheme.titleMedium?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w500)),
-                              const SizedBox(height: 8),
-                              Text(
-                                  'Aguarde enquanto recuperamos seus dados da nuvem',
-                                  style: theme.textTheme.bodySmall
-                                      ?.copyWith(color: Colors.white70),
-                                  textAlign: TextAlign.center),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                if (_consentDialogShown)
-                  Positioned.fill(
-                    child: AbsorbPointer(
-                      absorbing: true,
-                      child: Container(color: Colors.black54),
-                    ),
-                  ),
               ],
             ),
-            bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
+            bottomNavigationBar:
+                const DisciplinumBottomNavBar(currentIndex: 0),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildActiveModulesSection(List<NicheId> activeNiches) {
+  Widget _buildActiveModulesSection(
+    List<NicheId> activeNiches,
+    List<NicheId> hiddenModules,
+    Map<String, bool> moduleVisibility,
+  ) {
+    final visibleActiveNiches = activeNiches
+        .where((nicheId) => !hiddenModules.contains(nicheId))
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
+        const SectionHeader(
           title: 'Módulos Ativos',
           subtitle: 'Seus módulos em andamento',
           accentColor: HomeColors.success,
         ),
         const SizedBox(height: 12),
-        if (activeNiches.isEmpty)
+        if (visibleActiveNiches.isEmpty)
           const ModernEmptyStateCard()
         else
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: activeNiches.map((nicheId) {
+            children: visibleActiveNiches.map((nicheId) {
               final niche = NicheRepository.getById(nicheId);
+              final isCurrentlyHidden =
+                  moduleVisibility[_moduleVisibilityKey(nicheId)] == false;
+
               return SizedBox(
                 width: (MediaQuery.of(context).size.width - 52) / 2,
                 child: ModernNicheCard(
                   niche: niche,
                   heroTag: 'active_${niche.id}',
                   isActive: true,
+                  isHidden: isCurrentlyHidden,
+                  onVisibilityToggle: () {
+                    _toggleModuleVisibility(nicheId, isCurrentlyHidden);
+                  },
                 ),
               );
             }).toList(),
@@ -1084,9 +1237,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
-  Widget _buildCategorySection(NicheCategory category, int categoryIndex) {
-    final firstNiche = category.nicheIds.isNotEmpty
-        ? NicheRepository.getById(category.nicheIds.first)
+  Widget _buildCategorySection(
+    NicheCategory category,
+    int categoryIndex,
+    List<NicheId> hiddenModules,
+    Map<String, bool> moduleVisibility,
+  ) {
+    final visibleNicheIds = category.nicheIds
+        .where((nicheId) => !hiddenModules.contains(nicheId))
+        .toList();
+
+    if (visibleNicheIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final firstNiche = visibleNicheIds.isNotEmpty
+        ? NicheRepository.getById(visibleNicheIds.first)
         : null;
 
     return Column(
@@ -1103,15 +1269,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: category.nicheIds.map((nicheId) {
+          children: visibleNicheIds.map((nicheId) {
             final niche = NicheRepository.getById(nicheId);
             final heroTag = '${category.idPrefix}_${niche.id}';
+            final isCurrentlyHidden =
+                moduleVisibility[_moduleVisibilityKey(nicheId)] == false;
+
             return SizedBox(
               width: (MediaQuery.of(context).size.width - 52) / 2,
               child: ModernNicheCard(
                 niche: niche,
                 heroTag: heroTag,
                 isActive: false,
+                isHidden: isCurrentlyHidden,
+                onVisibilityToggle: () {
+                  _toggleModuleVisibility(nicheId, isCurrentlyHidden);
+                },
               ),
             );
           }).toList(),
@@ -1119,5 +1292,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         const SizedBox(height: 8),
       ],
     ).animate().fadeIn(duration: 300.ms, delay: 3.ms + (categoryIndex * 50).ms);
+  }
+
+  Color _getNicheColor(int nicheId) {
+    switch (nicheId) {
+      case 1:
+      case 2:
+      case 3:
+        return const Color(0xFF10B981);
+      case 8:
+      case 5:
+        return const Color(0xFF3B82F6);
+      case 4:
+      case 7:
+        return const Color(0xFFF59E0B);
+      case 6:
+        return const Color(0xFF8B5CF6);
+      case 9:
+        return const Color(0xFFF97316);
+      case 10:
+        return const Color(0xFF06B6D4);
+      default:
+        return HomeColors.primary;
+    }
   }
 }
