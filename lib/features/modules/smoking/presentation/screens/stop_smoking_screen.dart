@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
-import 'health_detail_screen.dart';
-import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
-import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
-import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/shared/models/common/niche.dart';
-import 'savings_detail_screen.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
-import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
-import 'daily_checkins_stats.dart';
-import 'package:disciplinum/shared/models/user_niche_time.dart';
-import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
-import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_header_widget.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_segmented_control.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_tab_content.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_actions_widget.dart';
+import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/daily_checkins_stats.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/health_detail_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/savings_detail_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_notifications_screen.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart'
     as smoking_progress;
-import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_notifications_screen.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
-import 'package:disciplinum/shared/widgets/shared_widgets.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_consumption_bottom_sheet.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_dashboard_hero.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_info_dialog.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_top_action_bar.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/stop_smoking_header_widget.dart';
+import 'package:disciplinum/features/schedule/presentation/screens/schedule_screen.dart';
+import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
+import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/shared/models/common/niche.dart';
+import 'package:disciplinum/shared/models/enums/niche_id.dart';
+import 'package:disciplinum/shared/models/user_niche_time.dart';
+import 'package:disciplinum/shared/repositories/niche_repository.dart';
+import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
+import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
+import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
+import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StopSmokingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -48,9 +48,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   TimeOfDay? _checkinTime;
 
-  late PageController _pageController;
-  int _selectedIndex = 0; // 0=Parar de fumar, 1=Como funciona
-
   final Niche _niche = NicheRepository.getById(NicheId.smoking);
 
   final TextEditingController _priceController = TextEditingController();
@@ -62,8 +59,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _pageController = PageController(
-        initialPage: 0); // Garante que inicie na aba "Parar de fumar"
     _loadSettings();
   }
 
@@ -72,7 +67,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     WidgetsBinding.instance.removeObserver(this);
     _priceController.dispose();
     _packsController.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
@@ -95,7 +89,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
-      // Se o módulo está desativado, não recarregar horários de check-in
       if (!_gamificationRunning) {
         if (_checkinTime != null) {
           if (mounted) {
@@ -142,11 +135,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     final service = ref.read(smokingServiceProvider);
     final data = await service.getSettings();
 
-    // Usa SmokingGamificationNotifier como fonte primária do status real do módulo
     final gamificationState = ref.read(smokingGamificationNotifierProvider);
     final bool isModuleActive = gamificationState.isModuleActive;
 
-    // Fallback para CloudSyncService apenas se notifier não tiver dados
     final bool moduleRunning;
     if (!isModuleActive && gamificationState.gamification == null) {
       final status = await ref
@@ -167,16 +158,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       if (settings != null) {
         _selectedCurrency = settings!.currency;
 
-        // Se módulo está ativo, preencher campos com valores salvos do gamification
         if (_gamificationRunning) {
-          final gamificationState =
-              ref.read(smokingGamificationNotifierProvider);
-          if (gamificationState.gamification != null) {
-            // Preencher com valores salvos
-            final packCost = gamificationState.gamification!.packCost;
-            final dailyCost = gamificationState.gamification!.dailyCost;
+          final gState = ref.read(smokingGamificationNotifierProvider);
+          if (gState.gamification != null) {
+            final packCost = gState.gamification!.packCost;
+            final dailyCost = gState.gamification!.dailyCost;
 
-            // Formatar preço para o formato correto (com vírgula para BRL)
             if (_selectedCurrency == 'R\$' || _selectedCurrency == 'ARS\$') {
               _priceController.text =
                   packCost.toStringAsFixed(2).replaceAll('.', ',');
@@ -184,25 +171,19 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               _priceController.text = packCost.toStringAsFixed(2);
             }
 
-            // Calcular packs per day a partir do dailyCost e packCost
             final packsPerDay = packCost > 0 ? (dailyCost / packCost) : 0;
             _packsController.text = packsPerDay.toStringAsFixed(1);
-
-            LoggerService.instance.d(
-                '🔥 Campos preenchidos com valores salvos: packCost=$packCost, dailyCost=$dailyCost, packsPerDay=$packsPerDay');
           } else {
             _priceController.clear();
             _packsController.clear();
           }
         } else {
-          // Módulo não está ativo - campos vazios para preenchimento manual
           _priceController.clear();
           _packsController.clear();
         }
 
         if (!_gamificationRunning) {
           _selectedDate = DateTime.now();
-          // Garantir que horário de check-in seja nulo quando módulo está desativado
           if (_checkinTime != null) {
             setState(() {
               _checkinTime = null;
@@ -215,69 +196,10 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         _reloadCheckinData();
         _syncCheckInWithGamification(onlySyncSchedules: !_gamificationRunning);
       } else {
-        // Se não há configurações, garante que os campos estejam vazios
         _priceController.clear();
         _packsController.clear();
       }
     }
-  }
-
-  void _formatCurrencyInput(String value) {
-    if (value.isEmpty) {
-      _priceController.clear();
-      return;
-    }
-
-    String numbers = value.replaceAll(RegExp(r'[^\d]'), '');
-    if (numbers.isEmpty) {
-      _priceController.clear();
-      return;
-    }
-
-    double val = double.parse(numbers) / 100;
-
-    String formatted;
-    switch (_selectedCurrency) {
-      case 'R\$':
-      case 'ARS\$':
-        formatted =
-            val.toStringAsFixed(2).replaceAll('.', ',').replaceAllMapped(
-                  RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                  (match) => '${match.group(1)}.',
-                );
-        break;
-      case 'US\$':
-        String baseText = val.toStringAsFixed(2);
-        List<String> parts = baseText.split('.');
-        String integerPart = parts[0];
-        String decimalPart = parts.length > 1 ? parts[1] : '';
-
-        integerPart = integerPart.replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (match) => '${match.group(1)},',
-        );
-
-        formatted =
-            decimalPart.isNotEmpty ? '$integerPart.$decimalPart' : integerPart;
-        break;
-      case 'EUR':
-        formatted = val.toStringAsFixed(2).replaceAll('.', ',');
-        break;
-      default:
-        formatted = val.toStringAsFixed(2);
-    }
-
-    // Se o valor formatado for essencialmente zero, limpa o campo para mostrar o hint
-    if (val <= 0.009) {
-      // Valores muito próximos de zero
-      _priceController.clear();
-      return;
-    }
-
-    _priceController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
   }
 
   Future<void> _syncCheckInWithGamification(
@@ -295,60 +217,61 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     }
     if (!mounted) return;
 
-    // Usando provider local do Smoking
     ref.read(stopSmokingControllerProvider);
 
     if (onlySyncSchedules) {
-      // Sincronização e agendamentos agora são responsabilidade do NotificationScheduler e CloudSyncService
       return;
     }
 
     if (times.isNotEmpty && _gamificationRunning) {
       await PermissionService.ensurePermissions(context,
           nicheId: NicheId.smoking);
-      // Inicia o ciclo de monitoramento local
       LoggerService.instance.i('Smoking: Iniciando ciclo de monitoramento');
     }
   }
 
-  Future<void> _saveSettings(
-      double price, int packs, DateTime date, String currency) async {
-    LoggerService.instance.d('_saveSettings iniciado');
-    LoggerService.instance
-        .d('price=$price, packs=$packs, date=$date, currency=$currency');
-
+  Future<void> _saveSettings({
+    required double price,
+    required int packs,
+    required DateTime quitDate,
+    required String currency,
+  }) async {
     setState(() => isSaving = true);
 
     final newSettings = SmokingSettingsModel(
-      dailyCigarettes: (packs * 20).round(), // Assume 20 cigarros por maço
+      dailyCigarettes: (packs * 20).round(),
       pricePerPack: price,
       cigarettesPerPack: 20,
-      startDate: date,
-      quitDate: date,
+      startDate: quitDate,
+      quitDate: _gamificationRunning ? (settings?.quitDate ?? quitDate) : quitDate,
       currency: currency,
     );
 
-    LoggerService.instance.d('newSettings criado: ${newSettings.toJson()}');
-
     try {
-      LoggerService.instance.d('Salvando configurações...');
       await ref.read(smokingServiceProvider).saveSettings(newSettings);
-      LoggerService.instance.i('Configurações salvas com sucesso');
 
       if (mounted) {
         setState(() {
           settings = newSettings;
+          _selectedCurrency = currency;
+          _selectedDate = quitDate;
+          if (currency == 'R\$' || currency == 'ARS\$') {
+            _priceController.text =
+                price.toStringAsFixed(2).replaceAll('.', ',');
+          } else {
+            _priceController.text = price.toStringAsFixed(2);
+          }
+          _packsController.text = packs.toString();
           isSaving = false;
         });
-        LoggerService.instance.d('Estado atualizado');
 
         await _syncCheckInWithGamification(onlySyncSchedules: true);
-        LoggerService.instance.d('Sync com gamificação concluída');
 
         if (mounted) {
           EnhancedSnackBarHelper.showSuccess(
-              context, 'Informacoes salvas com sucesso!');
-          LoggerService.instance.d('SnackBar exibido');
+            context,
+            'Informações de consumo salvas com sucesso!',
+          );
         }
       }
     } catch (e) {
@@ -361,79 +284,43 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   }
 
   Future<void> _ativarNichoMonitoramento() async {
-    LoggerService.instance.d('🔥 _ativarNichoMonitoramento iniciado');
     HapticFeedback.mediumImpact();
     await PermissionService.ensurePermissions(context,
         nicheId: NicheId.smoking);
 
     if (!mounted) return;
 
-    // VALIDAÇÃO: Verificar se PREENCHEU informações de consumo E configurou check-in diário
-    String priceText = _priceController.text.trim();
-    String packsText = _packsController.text.trim();
-    bool hasCurrentConsumptionInfo =
-        priceText.isNotEmpty && packsText.isNotEmpty;
-    bool hasCheckinConfigured = _checkinTime != null;
+    final hasConsumptionInfo = settings?.isConfigured ?? false;
+    final hasCheckinConfigured = _checkinTime != null;
 
-    LoggerService.instance.d('🔥 priceText: "$priceText"');
-    LoggerService.instance.d('🔥 packsText: "$packsText"');
-    LoggerService.instance
-        .d('🔥 hasCurrentConsumptionInfo: $hasCurrentConsumptionInfo');
-    LoggerService.instance.d('🔥 hasCheckinConfigured: $hasCheckinConfigured');
-    LoggerService.instance.d('🔥 _checkinTime: $_checkinTime');
-
-    // SÓ permite ativar se AMBAS as informações estiverem configuradas
-    if (!hasCurrentConsumptionInfo || !hasCheckinConfigured) {
-      if (!hasCurrentConsumptionInfo && !hasCheckinConfigured) {
-        LoggerService.instance.d(
-            '🔥 Mostrando: Configure informações de consumo e check-in diário');
+    if (!hasConsumptionInfo || !hasCheckinConfigured) {
+      if (!hasConsumptionInfo && !hasCheckinConfigured) {
         EnhancedSnackBarHelper.showWarning(
           context,
-          "Configure informações de consumo e check-in diário.",
+          "Configure as informações de consumo e o check-in diário para iniciar.",
         );
-      } else if (!hasCurrentConsumptionInfo) {
-        LoggerService.instance
-            .d('🔥 Mostrando: Configure informações de consumo');
+      } else if (!hasConsumptionInfo) {
         EnhancedSnackBarHelper.showWarning(
           context,
-          "Configure informações de consumo.",
+          "Configure as informações de consumo para iniciar.",
         );
       } else {
-        LoggerService.instance.d('🔥 Mostrando: Configure check-in diário');
         EnhancedSnackBarHelper.showWarning(
           context,
-          "Configure check-in diário.",
+          "Configure o check-in diário para iniciar.",
         );
       }
       return;
     }
 
-    LoggerService.instance
-        .d('🔥 Todas as validações passaram, continuando ativação');
     bool notificationGranted = await NotificationService.requestPermission();
-    LoggerService.instance.d('🔥 notificationGranted: $notificationGranted');
 
     if (notificationGranted) {
       if (settings != null) {
         setState(() => isSaving = true);
         try {
           final now = DateTime.now();
-          final updatedSettings = SmokingSettingsModel(
-            dailyCigarettes: settings!.dailyCigarettes,
-            pricePerPack: settings!.pricePerPack,
-            cigarettesPerPack: settings!.cigarettesPerPack,
-            startDate: settings!.startDate,
-            quitDate: now,
-            currency: settings!.currency,
-            lastPackPrice: settings!.lastPackPrice,
-            lastPacksPerDay: settings!.lastPacksPerDay,
-            lastQuitDate: settings!.lastQuitDate,
-            lastCurrency: settings!.lastCurrency,
-            lastSavedTotal: settings!.lastSavedTotal,
-            lastEndDate: settings!.lastEndDate,
-          );
-          LoggerService.instance
-              .d('🔥 Salvando configurações para ativação...');
+          final updatedSettings = settings!.copyWith(quitDate: now);
           await ref.read(smokingServiceProvider).saveSettings(updatedSettings);
           if (mounted) {
             setState(() {
@@ -441,17 +328,13 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               isSaving = false;
             });
           }
-          LoggerService.instance.d('🔥 Configurações salvas com sucesso');
         } catch (e) {
-          LoggerService.instance.e('🔥 Erro ao salvar configurações', error: e);
+          LoggerService.instance.e('Erro ao salvar configurações', error: e);
           if (mounted) setState(() => isSaving = false);
         }
       }
-      LoggerService.instance.d('🔥 Iniciando ciclo de gamificação');
       await _startGamificationCycle();
     } else {
-      LoggerService.instance
-          .d('🔥 Mostrando diálogo de configurações de notificação');
       _showNotificationSettingsDialog();
     }
   }
@@ -463,43 +346,40 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         .read(cloudSyncServiceProvider)
         .saveModuleStatus(nicheId: NicheId.smoking, isModuleActive: true);
 
-    // Calcular custo diário das configurações
     final dailyCost =
         settings != null ? (settings!.packPrice * settings!.packsPerDay) : 0.0;
     final packCost = settings?.packPrice ?? 0.0;
 
-    // Ativar o módulo no SmokingGamificationNotifier (estado REAL da gamificação)
     await ref.read(smokingGamificationNotifierProvider.notifier).activateModule(
           dailyCost: dailyCost,
           packCost: packCost,
         );
 
-    LoggerService.instance.i('Smoking: Ciclo de gamificação iniciado');
+    if (mounted) {
+      EnhancedSnackBarHelper.showSuccess(
+        context,
+        'Módulo ativado! Parabéns pela decisão!',
+      );
+    }
   }
 
   Future<void> _desativarNichoMonitoramento() async {
-    LoggerService.instance.d('🔥🔥🔥 _desativarNichoMonitoramento() INICIADO');
-    // Usando provider local do Smoking
     ref.read(stopSmokingControllerProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => DeactivateModuleDialog(
         nicheId: NicheId.smoking,
         customMessage:
-            "Ao desativar o módulo, seu progresso será reiniciado. Deseja continuar?",
+            "Ao desativar o módulo, seu progresso atual será arquivado. Deseja continuar?",
       ),
     );
 
-    LoggerService.instance.d('🔥🔥🔥 Diálogo retornou: confirmed=$confirmed');
-
     if (confirmed == true) {
-      LoggerService.instance.d('🔥🔥🔥 Usuário CONFIRMOU desativação');
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       setState(() => isLoading = true);
 
       try {
-        LoggerService.instance.d('🔥🔥🔥 Executando archiveAndReset...');
         await ref.read(smokingServiceProvider).archiveAndReset();
         await ref
             .read(cloudSyncServiceProvider)
@@ -508,47 +388,24 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             .read(cloudSyncServiceProvider)
             .removeAllTimesForNiche(nicheId: NicheId.smoking.id + 100);
 
-        // Remover horários de check-in do armazenamento local (modo guest)
         final prefs = ref.read(preferencesServiceProvider);
         await prefs.removeAllTimesForNiche(nicheId: NicheId.smoking.id);
         await prefs.removeAllTimesForNiche(nicheId: NicheId.smoking.id + 100);
-        LoggerService.instance
-            .d('🗑️ Horários de check-in removidos do armazenamento local');
-
-        // Usando provider local do Smoking para resetar dados
-        await ref.read(smokingServiceProvider).archiveAndReset();
 
         if (mounted) {
           final data = await ref.read(smokingServiceProvider).getSettings();
-
-          // Usando provider local do Smoking para obter status atualizado
-          LoggerService.instance
-              .i('Smoking: Módulo desativado, dados resetados');
 
           setState(() {
             settings = data;
             _gamificationRunning = false;
             isLoading = false;
-            _selectedIndex = 0;
-            _checkinTime = null; // Limpar horário de check-in
+            _checkinTime = null;
           });
 
-          if (_pageController.hasClients) {
-            _pageController.animateToPage(0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic);
-          }
-
-          // Desativar no SmokingGamificationNotifier (estado REAL da gamificação)
-          LoggerService.instance
-              .d(' Desativando no SmokingGamificationNotifier...');
           await ref
               .read(smokingGamificationNotifierProvider.notifier)
               .deactivateModule();
-          LoggerService.instance
-              .d(' SmokingGamificationNotifier desativado com sucesso');
 
-          // Sincronizar com a nuvem
           await ref.read(cloudSyncServiceProvider).saveModuleStatus(
                 nicheId: NicheId.smoking,
                 isModuleActive: false,
@@ -573,10 +430,23 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           );
         }
       }
-    } else {
-      LoggerService.instance
-          .d('🔥🔥🔥 Usuário CANCELOU desativação (confirmed=$confirmed)');
     }
+  }
+
+  void _openConsumptionBottomSheet() {
+    SmokingConsumptionBottomSheet.show(
+      context,
+      isModuleActive: _gamificationRunning,
+      initialPrice: _priceController.text.isNotEmpty
+          ? _priceController.text
+          : (settings?.packPrice.toStringAsFixed(2) ?? '10,00'),
+      initialPacks: _packsController.text.isNotEmpty
+          ? _packsController.text
+          : (settings?.packsPerDay.toStringAsFixed(0) ?? '1'),
+      initialCurrency: _selectedCurrency,
+      initialDate: _selectedDate,
+      onSave: _saveSettings,
+    );
   }
 
   Future<void> _showNotificationSettingsDialog() async {
@@ -586,351 +456,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           'Para receber os lembretes de check-in, habilite as notificações do app nas configurações.',
       onOpenSettings: () => NotificationService.openNotificationSettings(),
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(_niche.name),
-          centerTitle: true,
-        ),
-        body: Shimmer.fromColors(
-          baseColor: colorScheme.surfaceContainerHighest,
-          highlightColor: colorScheme.surface,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                    height: 60, width: double.infinity, color: Colors.white),
-                const SizedBox(height: 16),
-                Container(height: 20, width: 200, color: Colors.white),
-                const SizedBox(height: 8),
-                Container(
-                    height: 40, width: double.infinity, color: Colors.white),
-                const SizedBox(height: 16),
-                Container(
-                    height: 50, width: double.infinity, color: Colors.white),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SmokingCelebrationWidget(
-      child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                colorScheme.surface,
-                colorScheme.surfaceContainerHighest,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Header Row
-                StopSmokingHeaderWidget(
-                  niche: _niche,
-                  onBackPressed: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: StopSmokingSegmentedControl(
-                          selectedIndex: _selectedIndex,
-                          onIndexChanged: (index) {
-                            HapticFeedback.selectionClick();
-                            if (_pageController.hasClients) {
-                              _pageController.animateToPage(index,
-                                  duration: const Duration(milliseconds: 250),
-                                  curve: Curves.easeOutQuad);
-                            } else {
-                              setState(() => _selectedIndex = index);
-                            }
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _selectedIndex = index;
-                            });
-                          },
-                          children: [
-                            // 0: Parar de fumar (módulo)
-                            SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Column(
-                                children: [
-                                  StopSmokingTabContent(
-                                    tabIndex: 0,
-                                    isModuleActive: _gamificationRunning,
-                                    priceController: _priceController,
-                                    packsController: _packsController,
-                                    selectedCurrency: _selectedCurrency,
-                                    selectedDate: _selectedDate,
-                                    checkinTime: _checkinTime,
-                                    onCurrencyChanged: (newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          _selectedCurrency = newValue;
-                                          _formatCurrencyInput(
-                                              _priceController.text);
-                                        });
-                                      }
-                                    },
-                                    onPriceChanged: _formatCurrencyInput,
-                                    onDateTap: () async {
-                                      final picked = await showDatePicker(
-                                        context: context,
-                                        initialDate: _selectedDate,
-                                        firstDate: DateTime(2000),
-                                        lastDate: DateTime.now(),
-                                        locale: const Locale('pt', 'BR'),
-                                      );
-                                      if (picked != null) {
-                                        setState(() {
-                                          _selectedDate = picked;
-                                        });
-                                      }
-                                    },
-                                    onDeleteTime: _showDeleteTimeDialog,
-                                  ),
-                                  const SizedBox(height: 100),
-                                ],
-                              ),
-                            ),
-                            // 1: Como funciona
-                            SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Column(
-                                children: [
-                                  StopSmokingTabContent(
-                                    tabIndex: 1,
-                                    priceController: _priceController,
-                                    packsController: _packsController,
-                                    selectedCurrency: _selectedCurrency,
-                                    selectedDate: _selectedDate,
-                                    checkinTime: _checkinTime,
-                                    onCurrencyChanged: (newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          _selectedCurrency = newValue;
-                                          _formatCurrencyInput(
-                                              _priceController.text);
-                                        });
-                                      }
-                                    },
-                                    onPriceChanged: _formatCurrencyInput,
-                                    onDateTap: () async {
-                                      final picked = await showDatePicker(
-                                        context: context,
-                                        initialDate: _selectedDate,
-                                        firstDate: DateTime(2000),
-                                        lastDate: DateTime.now(),
-                                        locale: const Locale('pt', 'BR'),
-                                      );
-                                      if (picked != null) {
-                                        setState(() {
-                                          _selectedDate = picked;
-                                        });
-                                      }
-                                    },
-                                    onDeleteTime: _showDeleteTimeDialog,
-                                  ),
-                                  const SizedBox(height: 100),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    StopSmokingActionsWidget(
-                      selectedIndex: _selectedIndex,
-                      isSaving: isSaving,
-                      pageController: _pageController,
-                      onOpenCheckInManager: _openCheckInManager,
-                      onShowStatisticsMenu: _showStatisticsMenu,
-                      onOpenNotifications: _openNotificationsScreen,
-                      gamificationRunning: _gamificationRunning,
-                      onToggleModule: () {
-                        LoggerService.instance
-                            .d('🔥 Botão Ativar/Desativar Módulo pressionado');
-                        LoggerService.instance.d(
-                            '🔥 _gamificationRunning atual: $_gamificationRunning');
-                        if (_gamificationRunning) {
-                          LoggerService.instance
-                              .d('🔥 Chamando DESATIVAR (módulo está ativo)');
-                          _desativarNichoMonitoramento();
-                        } else {
-                          LoggerService.instance
-                              .d('🔥 Chamando ATIVAR (módulo está inativo)');
-                          _ativarNichoMonitoramento();
-                        }
-                      },
-                      onSaveSettings: () {
-                        LoggerService.instance.d('Botão Salvar pressionado');
-                        LoggerService.instance.d(
-                            '_priceController.text="${_priceController.text}"');
-                        LoggerService.instance.d(
-                            '_packsController.text="${_packsController.text}"');
-
-                        // Verifica se os campos têm valores válidos
-                        String priceText = _priceController.text.trim();
-                        String packsText = _packsController.text.trim();
-
-                        LoggerService.instance.d('🔍 priceText: "$priceText"');
-                        LoggerService.instance.d('🔍 packsText: "$packsText"');
-
-                        // Validação - campos não podem estar vazios
-                        bool hasPrice = priceText.isNotEmpty;
-                        bool hasPacks = packsText.isNotEmpty;
-
-                        LoggerService.instance
-                            .d('🔍 hasPrice: $hasPrice, hasPacks: $hasPacks');
-
-                        LoggerService.instance
-                            .d('hasPrice=$hasPrice, hasPacks=$hasPacks');
-
-                        // Adiciona mensagem de validação se necessário
-                        if (!hasPrice && !hasPacks) {
-                          LoggerService.instance.w('Ambos os campos vazios');
-                          EnhancedSnackBarHelper.showWarning(context,
-                              'Por favor, preencha o preço do maço e a quantidade de maços por dia.');
-                          return;
-                        }
-
-                        if (!hasPrice) {
-                          LoggerService.instance.w('Preço vazio');
-                          EnhancedSnackBarHelper.showWarning(
-                              context, 'Por favor, preencha o preço do maço.');
-                          return;
-                        }
-
-                        if (!hasPacks) {
-                          LoggerService.instance.w('Maços vazio');
-                          EnhancedSnackBarHelper.showWarning(context,
-                              'Por favor, preencha a quantidade de maços por dia.');
-                          return;
-                        }
-
-                        // Validação adicional - não pode ser zero
-                        String cleanPrice = priceText;
-                        if (_selectedCurrency == 'US\$') {
-                          cleanPrice = cleanPrice.replaceAll(',', '');
-                        } else {
-                          cleanPrice = cleanPrice
-                              .replaceAll('.', '')
-                              .replaceAll(',', '.');
-                        }
-                        // Fallback caso sobre algo (ex letras)
-                        cleanPrice =
-                            cleanPrice.replaceAll(RegExp(r'[^\d.]'), '');
-
-                        LoggerService.instance
-                            .d('🔍 cleanPrice: "$cleanPrice"');
-
-                        double priceValue = double.tryParse(cleanPrice) ?? 0.0;
-                        // Converte packsText para double primeiro, depois para int
-                        double packsDouble = double.tryParse(packsText) ?? 0.0;
-                        int packsValue = packsDouble.round();
-
-                        LoggerService.instance.d('🔍 priceValue: $priceValue');
-                        LoggerService.instance.d('🔍 packsValue: $packsValue');
-
-                        if (priceValue <= 0) {
-                          LoggerService.instance.w('Preço inválido (zero)');
-                          EnhancedSnackBarHelper.showWarning(context,
-                              'Por favor, informe um preço válido para o maço.');
-                          return;
-                        }
-
-                        if (packsValue <= 0) {
-                          LoggerService.instance.w('Maços inválido (zero)');
-                          EnhancedSnackBarHelper.showWarning(context,
-                              'Por favor, informe uma quantidade válida de maços por dia.');
-                          return;
-                        }
-
-                        LoggerService.instance
-                            .d('Validação passou, processando salvamento');
-                        LoggerService.instance.d('cleanPrice="$cleanPrice"');
-                        LoggerService.instance
-                            .d('Convertendo para double: $priceValue');
-                        LoggerService.instance
-                            .d('Convertendo packs: $packsValue');
-
-                        _saveSettings(
-                          priceValue,
-                          packsValue,
-                          _selectedDate,
-                          _selectedCurrency,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteTimeDialog() async {
-    final formatted =
-        "${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}";
-
-    final shouldDelete = await AppDialog.showConfirmation(
-          context: context,
-          title: 'Excluir horário?',
-          content:
-              'Deseja excluir o horário $formatted do seu check-in diário?',
-          confirmText: 'Sim',
-          cancelText: 'Não',
-          isDangerous: true,
-        ) ??
-        false;
-
-    if (!shouldDelete) return;
-
-    await ref.read(cloudSyncServiceProvider).removeUserNicheTime(
-          nicheId: NicheId.smoking.id,
-          hour: _checkinTime!.hour,
-          minute: _checkinTime!.minute,
-        );
-
-    if (mounted) {
-      setState(() {
-        _checkinTime = null;
-      });
-      await _syncCheckInWithGamification(onlySyncSchedules: true);
-    }
   }
 
   void _openCheckInManager() {
@@ -964,7 +489,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    'Check-in Diario',
+                    'Check-in Diário',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -986,7 +511,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             const SizedBox(height: 8),
             Text(
               'O Check-in Diário é o seu compromisso de registrar se você resistiu ao hábito de fumar hoje. '
-              'Ele é fundamental para manter seu progresso.',
+              'Ele é fundamental para manter sua sequência e evolução.',
               style: TextStyle(
                 fontSize: 14,
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -1005,9 +530,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             const SizedBox(height: 8),
             Text(
               'Você receberá uma notificação diária no horário configurado para confirmar que '
-              'manteve a disciplina. Toque em "Sim!" quando não fumar, ou "Não, tive recaída" '
-              'se necessário. Além disso, receberá frases motivacionais 3x ao dia '
-              '(manhã, tarde e noite).',
+              'manteve a disciplina sem fumar. Toque em "Sim!" para pontuar.',
               style: TextStyle(
                 fontSize: 14,
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -1020,7 +543,9 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 Expanded(
                   child: ModernStartButton(
                     icon: Icons.access_time_rounded,
-                    label: 'Configurar Horário',
+                    label: _checkinTime != null
+                        ? 'Alterar Horário (${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')})'
+                        : 'Configurar Horário',
                     color: const Color(0xFF6366F1),
                     onTap: () async {
                       Navigator.pop(ctx);
@@ -1080,7 +605,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estatísticas',
+              'Estatísticas e Saúde',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -1104,8 +629,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             ),
             ListActionTile(
               icon: Icons.savings_outlined,
-              label: 'Economia',
-              color: Colors.green,
+              label: 'Economia Financeira',
+              color: const Color(0xFF10B981),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -1128,8 +653,8 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
             ),
             ListActionTile(
               icon: Icons.health_and_safety_outlined,
-              label: 'Saúde',
-              color: Colors.blue,
+              label: 'Recuperação da Saúde',
+              color: const Color(0xFF3B82F6),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -1150,16 +675,17 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
               },
             ),
             ListActionTile(
-              icon: Icons.bar_chart_rounded,
-              label: 'Conquistas',
-              color: Colors.blue,
+              icon: Icons.emoji_events_outlined,
+              label: 'Conquistas e Medalhas',
+              color: const Color(0xFFF59E0B),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) =>
-                          const smoking_progress.MyProgressSmoking()),
+                    builder: (_) =>
+                        const smoking_progress.MyProgressSmoking(),
+                  ),
                 );
               },
             ),
@@ -1175,6 +701,107 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       context,
       MaterialPageRoute(
         builder: (_) => const SmokingNotificationsScreen(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final gamificationState = ref.watch(smokingGamificationNotifierProvider);
+
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_niche.name),
+          centerTitle: true,
+        ),
+        body: Shimmer.fromColors(
+          baseColor: colorScheme.surfaceContainerHighest,
+          highlightColor: colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                    height: 60, width: double.infinity, color: Colors.white),
+                const SizedBox(height: 16),
+                Container(height: 20, width: 200, color: Colors.white),
+                const SizedBox(height: 8),
+                Container(
+                    height: 40, width: double.infinity, color: Colors.white),
+                const SizedBox(height: 16),
+                Container(
+                    height: 50, width: double.infinity, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SmokingCelebrationWidget(
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header com botão ?
+                StopSmokingHeaderWidget(
+                  niche: _niche,
+                  onBackPressed: () => Navigator.pop(context),
+                  onHelpPressed: () => SmokingInfoDialog.show(context),
+                ),
+
+                // Nova Barra de Ações Superior (4 botões modernos e padronizados)
+                SmokingTopActionBar(
+                  isModuleActive: _gamificationRunning,
+                  onOpenCheckIn: _openCheckInManager,
+                  onOpenNotifications: _openNotificationsScreen,
+                  onOpenStatistics: _showStatisticsMenu,
+                  onToggleModule: () {
+                    if (_gamificationRunning) {
+                      _desativarNichoMonitoramento();
+                    } else {
+                      _ativarNichoMonitoramento();
+                    }
+                  },
+                ),
+
+                // Conteúdo Principal Scrollável e Limpo
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: SmokingDashboardHero(
+                      isModuleActive: _gamificationRunning,
+                      settings: settings,
+                      checkinTime: _checkinTime,
+                      earnedInsignias: gamificationState.earnedInsignias,
+                      earnedMedalhas: gamificationState.earnedMedalhas,
+                      onOpenConsumptionSettings: _openConsumptionBottomSheet,
+                      onOpenCheckInManager: _openCheckInManager,
+                      onOpenStatistics: _showStatisticsMenu,
+                      onActivateModule: _ativarNichoMonitoramento,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
