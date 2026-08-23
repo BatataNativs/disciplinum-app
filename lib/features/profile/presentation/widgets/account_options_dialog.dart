@@ -165,9 +165,9 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
             },
           ),
           _buildListTile(
-            icon: FontAwesomeIcons.cloudArrowDown,
-            title: 'Sincronizar',
-            subtitle: 'Backup na nuvem',
+            icon: FontAwesomeIcons.database,
+            title: 'Backup e Sincronização',
+            subtitle: 'Salvar local (JSON) ou na nuvem',
             iconColor: Colors.teal.shade700,
             iconBgColor: Colors.teal.withValues(alpha: 0.1),
             onTap: () {

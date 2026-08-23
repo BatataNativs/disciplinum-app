@@ -164,83 +164,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  String _languageLabel(Locale? locale) {
-    if (locale == null) return 'Padrão do sistema';
-    switch (locale.languageCode) {
-      case 'pt':
-        return 'Português (Brasil)';
-      case 'en':
-        return 'English';
-      default:
-        return locale.toLanguageTag();
-    }
-  }
-
-  Future<void> _showLanguageSelector() async {
-    final currentLocale = ref.read(appLocaleProvider);
-
-    final selected = await showModalBottomSheet<String?>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (sheetContext) {
-        final colorScheme = Theme.of(sheetContext).colorScheme;
-
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Idioma do app'),
-                subtitle: const Text('Escolha o idioma padrão do Disciplinum'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings_suggest_outlined),
-                title: const Text('Padrão do sistema'),
-                subtitle: Text(
-                  'Usa o idioma do aparelho',
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.65),
-                  ),
-                ),
-                trailing: currentLocale == null
-                    ? Icon(Icons.check, color: colorScheme.primary)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop('system'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('Português (Brasil)'),
-                trailing: currentLocale == const Locale('pt', 'BR')
-                    ? Icon(Icons.check, color: colorScheme.primary)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop('pt_BR'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('English'),
-                trailing: currentLocale == const Locale('en')
-                    ? Icon(Icons.check, color: colorScheme.primary)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop('en'),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (!mounted || selected == null) return;
-    final notifier = ref.read(appLocaleProvider.notifier);
-    if (selected == 'system') {
-      await notifier.setSystemLocale();
-    } else if (selected == 'pt_BR') {
-      await notifier.setLocale(const Locale('pt', 'BR'));
-    } else if (selected == 'en') {
-      await notifier.setLocale(const Locale('en'));
-    }
-  }
 
   void _mostrarModalCafezinho(BuildContext context) {
     const String chavePix = 'f3b7c116-1d53-4a51-a6a2-5de1f36e688e';
@@ -331,7 +254,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final personalizedAdsNotifier = ref.read(personalizedAdsProvider.notifier);
     final analyticsEnabled = ref.watch(analyticsEnabledProvider);
     final analyticsNotifier = ref.read(analyticsEnabledProvider.notifier);
-    final appLocale = ref.watch(appLocaleProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget sectionHeader(String title) {
@@ -371,6 +293,134 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           borderRadius: BorderRadius.circular(12),
           clipBehavior: Clip.antiAlias,
           child: Column(children: children),
+        ),
+      );
+    }
+
+    Widget buildSettingTile({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required Color iconColor,
+      required Color iconBgColor,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: iconColor, size: 20),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget buildSettingSwitch({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required Color iconColor,
+      required Color iconBgColor,
+      required bool value,
+      required ValueChanged<bool> onChanged,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: colorScheme.primary,
+              activeThumbColor: Colors.white,
+              inactiveThumbColor: Colors.grey[400],
+              inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+          ],
         ),
       );
     }
@@ -600,48 +650,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.only(top: 8, bottom: 120),
                 children: [
                   const SettingsBannerAd(),
-                  sectionHeader('Idioma'),
-                  settingContainer([
-                    ListTile(
-                      dense: true,
-                      leading: Icon(
-                        Icons.language,
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                      title: Text(
-                        'Idioma do app',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: Text(_languageLabel(appLocale)),
-                      trailing: const Icon(Icons.chevron_right, size: 20),
-                      onTap: _showLanguageSelector,
-                    ),
-                  ]),
                   sectionHeader('Notificações'),
                   settingContainer([
-                    SwitchListTile(
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: colorScheme.primary,
-                      inactiveThumbColor: Colors.grey[400],
-                      inactiveTrackColor:
-                          colorScheme.onSurface.withValues(alpha: 0.1),
-                      dense: true,
-                      title: Text(
-                        'Sons de alerta',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: Text(_soundEnabled ? 'Som e vibração' : 'Mudo'),
-                      secondary: Icon(
-                          _soundEnabled ? Icons.volume_up : Icons.vibration,
-                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                    buildSettingSwitch(
+                      icon: _soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                      title: 'Sons de alerta',
+                      subtitle: _soundEnabled ? 'Som e vibração ativados' : 'Lembretes em mudo',
+                      iconColor: Colors.purple.shade400,
+                      iconBgColor: Colors.purple.withValues(alpha: 0.1),
                       value: _soundEnabled,
                       onChanged: (val) {
                         setState(() => _soundEnabled = val);
@@ -652,108 +668,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    ListTile(
-                      dense: true,
-                      leading: Icon(Icons.settings_suggest_outlined,
-                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                      title: Text(
-                        'Configurações do Android',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: const Text('Gerenciar permissões do sistema'),
-                      trailing: const Icon(Icons.chevron_right, size: 20),
+                    buildSettingTile(
+                      icon: Icons.settings_suggest_rounded,
+                      title: 'Configurações do Android',
+                      subtitle: 'Gerenciar permissões do sistema',
+                      iconColor: Colors.teal.shade400,
+                      iconBgColor: Colors.teal.withValues(alpha: 0.1),
                       onTap: NotificationService.openNotificationSettings,
                     ),
                   ]),
                   sectionHeader('Suporte e Feedback'),
                   settingContainer([
-                    ListTile(
-                      dense: true,
-                      leading:
-                          const Icon(Icons.star_outline, color: Colors.amber),
-                      title: Text(
-                        'Avalie o App',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                    buildSettingTile(
+                      icon: Icons.star_rate_rounded,
+                      title: 'Avalie o App',
+                      subtitle: 'Deixe sua opinião na Google Play',
+                      iconColor: Colors.amber.shade700,
+                      iconBgColor: Colors.amber.withValues(alpha: 0.1),
                       onTap: _avaliarApp,
                     ),
                     Divider(
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    ListTile(
-                      dense: true,
-                      leading:
-                          const Icon(Icons.mail_outline, color: Colors.blue),
-                      title: Text(
-                        'Enviar Feedback',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                    buildSettingTile(
+                      icon: Icons.mail_rounded,
+                      title: 'Enviar Feedback',
+                      subtitle: 'Entre em contato ou envie sugestões',
+                      iconColor: Colors.blue.shade400,
+                      iconBgColor: Colors.blue.withValues(alpha: 0.1),
                       onTap: _enviarFeedback,
                     ),
                     Divider(
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.coffee_outlined,
-                          color: Colors.brown),
-                      title: Text(
-                        'Apoie o Desenvolvedor',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                    buildSettingTile(
+                      icon: Icons.coffee_rounded,
+                      title: 'Apoie o Desenvolvedor',
+                      subtitle: 'Contribua com o projeto por Pix',
+                      iconColor: Colors.brown.shade400,
+                      iconBgColor: Colors.brown.withValues(alpha: 0.1),
                       onTap: () => _mostrarModalCafezinho(context),
                     ),
                   ]),
                   sectionHeader('Sobre'),
                   settingContainer([
-                    ListTile(
-                      dense: true,
-                      leading:
-                          const Icon(Icons.info_outline, color: Colors.green),
-                      title: Text(
-                        'Como funciona',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                    buildSettingTile(
+                      icon: Icons.info_outline_rounded,
+                      title: 'Como funciona',
+                      subtitle: 'Entenda os pilares do autocontrole',
+                      iconColor: Colors.green.shade400,
+                      iconBgColor: Colors.green.withValues(alpha: 0.1),
                       onTap: _mostrarDialogoComoFunciona,
                     ),
                     Divider(
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.replay_outlined,
-                          color: Colors.orange),
-                      title: Text(
-                        'Rever tela de apresentação',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                    buildSettingTile(
+                      icon: Icons.replay_rounded,
+                      title: 'Rever tela de apresentação',
+                      subtitle: 'Assista a introdução e tutoriais',
+                      iconColor: Colors.orange.shade400,
+                      iconBgColor: Colors.orange.withValues(alpha: 0.1),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -765,25 +743,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    SwitchListTile(
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: colorScheme.primary,
-                      inactiveThumbColor: Colors.grey[400],
-                      inactiveTrackColor:
-                          colorScheme.onSurface.withValues(alpha: 0.1),
-                      dense: true,
-                      title: Text(
-                        'Anúncios personalizados',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: const Text(
-                          'Mostrar anúncios baseados no seu interesse'),
-                      secondary: Icon(Icons.ads_click_outlined,
-                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                    buildSettingSwitch(
+                      icon: Icons.ads_click_rounded,
+                      title: 'Anúncios personalizados',
+                      subtitle: 'Mostrar anúncios baseados no seu interesse',
+                      iconColor: Colors.indigo.shade400,
+                      iconBgColor: Colors.indigo.withValues(alpha: 0.1),
                       value: personalizedAds,
                       onChanged: (val) async {
                         await personalizedAdsNotifier.setEnabled(val);
@@ -801,24 +766,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 1,
                         color: colorScheme.outline.withValues(alpha: 0.2),
                         indent: 56),
-                    SwitchListTile(
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: colorScheme.primary,
-                      inactiveThumbColor: Colors.grey[400],
-                      inactiveTrackColor:
-                          colorScheme.onSurface.withValues(alpha: 0.1),
-                      dense: true,
-                      title: Text(
-                        'Análise de uso e erros',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: const Text('Permitir coleta de dados anônimos'),
-                      secondary: Icon(Icons.analytics_outlined,
-                          color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                    buildSettingSwitch(
+                      icon: Icons.analytics_rounded,
+                      title: 'Análise de uso e erros',
+                      subtitle: 'Permitir coleta de dados anônimos',
+                      iconColor: Colors.pink.shade400,
+                      iconBgColor: Colors.pink.withValues(alpha: 0.1),
                       value: analyticsEnabled,
                       onChanged: (val) async {
                         if (!val) {

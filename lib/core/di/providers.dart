@@ -14,6 +14,7 @@ import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/storage/preferences_service.dart';
 import 'package:disciplinum/infrastructure/ads/ad_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
+import 'package:disciplinum/infrastructure/backup/local_backup_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart' as iap;
 import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitlement_repository.dart';
 import 'package:disciplinum/features/auth/data/datasources/supabase_auth_datasource.dart';
@@ -393,6 +394,11 @@ final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
     supabase: Supabase.instance.client,
     prefsRepo: prefs,
   );
+});
+
+/// Provider para LocalBackupService
+final localBackupServiceProvider = Provider<LocalBackupService>((ref) {
+  return LocalBackupService(ObjectBoxService.instance.store);
 });
 
 /// Provider para AdService

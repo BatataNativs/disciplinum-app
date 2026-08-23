@@ -32,8 +32,10 @@ dependencies:
   path_provider: ^2.1.4
   
   # Banco de Dados ObjectBox (migrado de Isar)
-  objectbox: ^4.1.0
-  objectbox_flutter_libs: ^4.1.0
+  # NOTA: objectbox 5.x é incompatível com riverpod_generator 4.x (conflito de analyzer).
+  # Manter em 4.3.0 até que um dos dois resolva a dependência.
+  objectbox: ^4.3.0
+  objectbox_flutter_libs: ^4.3.0
   path: ^1.8.3
   
   # Gerenciamento de Estado
@@ -51,7 +53,7 @@ dependencies:
   # Firebase (Core + Crashlytics)
   firebase_core: ^4.7.0
   firebase_crashlytics: ^5.2.0
-  firebase_analytics: ^12.3.0
+  firebase_analytics: ^12.4.6
   
   # Utilitários de Device e UI
   device_info_plus: ^13.1.0
@@ -67,20 +69,22 @@ dependencies:
 
   # Abrir URLs
   url_launcher: ^6.3.1
-  in_app_review: ^2.0.9
+  in_app_review: ^2.0.12
   google_fonts: ^6.2.1
   intl: ^0.20.2
+  file_picker: ^12.0.0
+  share_plus: ^13.3.0
   flutter_localizations:
     sdk: flutter
   timezone: ^0.11.0
-  flutter_timezone: ^5.0.2
+  flutter_timezone: ^5.1.0
   table_calendar: ^3.2.0
   uuid: ^4.5.2
   fl_chart: ^1.2.0
   confetti: ^0.8.0
   
   # Background processing para notificações de conquistas
-  workmanager: ^0.9.0+3
+  workmanager: ^0.10.9
   
   # Logging profissional
   logger: ^2.0.2
@@ -96,11 +100,11 @@ dev_dependencies:
   flutter_native_splash: ^2.4.3
   
   # Riverpod Code Generation
-  riverpod_generator: ^2.4.0
-  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.5
+  build_runner: ^2.5.4
   
   # ObjectBox Code Generation
-  objectbox_generator: ^4.1.0
+  objectbox_generator: ^4.3.0
   
   # Testes
   mockito: ^5.4.4

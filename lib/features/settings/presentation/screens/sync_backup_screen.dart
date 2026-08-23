@@ -6,6 +6,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/infrastructure/backup/local_backup_service.dart';
 import 'package:intl/intl.dart';
 
 class SyncBackupScreen extends ConsumerStatefulWidget {
@@ -99,6 +100,41 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     }
   }
 
+  Future<void> _handleLocalBackupAction(String type, Future<BackupResult> Function() action) async {
+    setState(() => _isProcessing = true);
+    
+    try {
+      LoggerService.instance.i('Iniciando operação de backup local: $type...');
+      final result = await action();
+      
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+
+      if (result.success) {
+        if (type == 'export') {
+          EnhancedSnackBarHelper.showSuccess(
+            context, 
+            'Backup exportado com sucesso!'
+          );
+        } else {
+          ref.invalidate(activeModulesProvider);
+          EnhancedSnackBarHelper.showSuccess(
+            context, 
+            'Backup importado e restaurado com sucesso!'
+          );
+        }
+      } else {
+        if (!mounted) return;
+        EnhancedSnackBarHelper.showError(context, result.errorMessage ?? 'Falha na operação local.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        EnhancedSnackBarHelper.showError(context, 'Erro inesperado: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -158,32 +194,81 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 60),
-                  _buildHeader(colorScheme),
-                  const SizedBox(height: 40),
-                  _buildSyncCard(
-                    title: 'Fazer Backup Agora',
-                    description: 'Envia seus dados locais para a nuvem de forma segura e criptografada.',
-                    icon: Icons.cloud_upload_outlined,
-                    gradientColors: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    onTap: () => _handleAction('backup', () => ref.read(cloudSyncServiceProvider).syncNow()),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSyncCard(
-                    title: 'Sincronizar com Nuvem',
-                    description: 'Mescla dados locais com a nuvem. Ideal para múltiplos dispositivos.',
-                    icon: Icons.sync_rounded,
-                    gradientColors: const [Color(0xFF10B981), Color(0xFF14B8A6)],
-                    onTap: () => _handleAction('sync', () => ref.read(cloudSyncServiceProvider).syncNow()),
-                  ),
-                  const Spacer(),
-                  _buildStatusFooter(),
-                ],
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildHeader(colorScheme),
+                    const SizedBox(height: 30),
+                    
+                    // Seção de Nuvem
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        'NUVEM (SUPABASE)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    _buildSyncCard(
+                      title: 'Fazer Backup Agora',
+                      description: 'Envia seus dados locais para a nuvem de forma segura.',
+                      icon: Icons.cloud_upload_outlined,
+                      gradientColors: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                      onTap: () => _handleAction('backup', () => ref.read(cloudSyncServiceProvider).syncNow()),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSyncCard(
+                      title: 'Sincronizar com Nuvem',
+                      description: 'Mescla dados locais com a nuvem. Ideal para múltiplos dispositivos.',
+                      icon: Icons.sync_rounded,
+                      gradientColors: const [Color(0xFF10B981), Color(0xFF14B8A6)],
+                      onTap: () => _handleAction('sync', () => ref.read(cloudSyncServiceProvider).syncNow()),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Seção Local
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        'BACKUP LOCAL',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    _buildSyncCard(
+                      title: 'Exportar para JSON',
+                      description: 'Exporta todas as suas informações locais e compartilha o arquivo.',
+                      icon: Icons.file_download_outlined,
+                      gradientColors: const [Color(0xFFFF8A65), Color(0xFFFF5722)],
+                      onTap: () => _handleLocalBackupAction('export', () => ref.read(localBackupServiceProvider).exportAndShare()),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSyncCard(
+                      title: 'Restaurar de JSON',
+                      description: 'Seleciona e restaura um arquivo de backup local (.json).',
+                      icon: Icons.file_upload_outlined,
+                      gradientColors: const [Color(0xFF4FC3F7), Color(0xFF0288D1)],
+                      onTap: () => _handleLocalBackupAction('import', () => ref.read(localBackupServiceProvider).importFromDevice()),
+                    ),
+                    
+                    const SizedBox(height: 30),
+                    _buildStatusFooter(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -229,7 +314,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                               const SizedBox(height: 20),
                               // Texto principal bem visível
                               Text(
-                                'Sincronizando...',
+                                'Processando...',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -239,7 +324,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                               const SizedBox(height: 8),
                               // Subtítulo
                               Text(
-                                'Aguarde enquanto seus dados são salvos na nuvem',
+                                'Aguarde enquanto seus dados são processados',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -305,7 +390,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Seus dados são sincronizados de forma segura via Supabase.',
+          'Escolha entre salvar na nuvem ou exportar localmente em formato JSON.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,

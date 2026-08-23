@@ -48,15 +48,17 @@ O sistema de gamificação do Disciplinum é composto por **10 módulos independ
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │                        ARQUITETURA PLUGIN                             │   │
-│   │  ┌─────────────────────┐      ┌─────────────────────┐              │   │
-│   │  │    OBJECTBOX 📦      │      │    SUPABASE ☁️       │              │   │
-│   │  │    (Local)           │  ↔️   │    (Cloud)           │              │   │
-│   │  │  • Estado do módulo  │      │  • Backup na nuvem   │              │   │
-│   │  │  • Insígnias         │      │  • Sync multi-device │              │   │
-│   │  │  • Medalhas          │      │  • Dados do usuário  │              │   │
-│   │  │  • Streaks           │      │                      │              │   │
-│   │  └─────────────────────┘      └─────────────────────┘              │   │
+│   │               ARQUITETURA LOCAL-FIRST COM SYNC/BACKUP               │   │
+│   │                                                                     │   │
+│   │  ┌─────────────────────┐       (Manual)       ┌──────────────────┐  │   │
+│   │  │    OBJECTBOX 📦      │ ──────────────────> │  EXPORT JSON 💾  │  │   │
+│   │  │  (Armazenamento)    │ <────────────────── │  (Backup Físico) │  │   │
+│   │  │ • Estado do módulo  │                      └──────────────────┘  │   │
+│   │  │ • Insígnias         │                                            │   │
+│   │  │ • Medalhas          │       (Manual)       ┌──────────────────┐  │   │
+│   │  │ • Streaks           │ <──────────────────> │   SUPABASE ☁️    │  │   │
+│   │  └─────────────────────┘         Sync         │ (Cloud Backup)   │  │   │
+│   │                                               └──────────────────┘  │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -435,9 +437,27 @@ Cada módulo segue o padrão estabelecido nos pilotos **Reading** e **Money Savi
 
 ---
 
-## Persistência (ObjectBox + Supabase)
+## Persistência (Local-First com ObjectBox, Cloud Sync sob Demanda e Backup JSON)
 
-### Padrão de Persistência Dual
+O Disciplinum adota uma arquitetura **Local-First**, priorizando o armazenamento local para performance e total privacidade do usuário.
+
+### Estratégias de Persistência
+
+1. **Persistência Local Primária (ObjectBox):**
+   - Todos os dados, estados dos módulos, progresso de gamificação (medalhas/insígnias), históricos de check-ins e escolhas do usuário são salvos localmente e de forma síncrona em boxes do ObjectBox.
+   - O funcionamento do aplicativo é 100% offline e independente de rede por padrão.
+
+2. **Sincronização em Nuvem sob Demanda (Supabase):**
+   - O processo de sincronização com o Supabase **não é automático** na inicialização do app ou durante a navegação.
+   - O usuário aciona manualmente o upload ou a mesclagem de dados (sincronização) por meio de botões específicos nas configurações do app.
+   - A autenticação (e-mail/senha ou Google) é opcional e serve principalmente para o vínculo de conta se o usuário desejar usar a sincronização em nuvem.
+
+3. **Backup Manual (JSON):**
+   - Para usuários que buscam total privacidade (sem necessidade de criação de conta) ou portabilidade direta de dados, o app fornece exportação e importação manual local.
+   - O `LocalBackupService` serializa os dados do ObjectBox para um arquivo JSON compactado e utiliza o Share Sheet nativo do sistema operacional (`share_plus`) para permitir que o usuário envie esse arquivo para onde quiser (como e-mail, nuvens pessoais, WhatsApp, etc.).
+   - O processo de restauração é feito selecionando o arquivo JSON exportado por meio de um seletor nativo de arquivos (`file_picker`), substituindo e populando o banco local de forma imediata dentro de uma transação segura (`store.runInTransaction`).
+
+### Padrão de Persistência Local-First (Exemplo Conceitual)
 
 ```dart
 /// Exemplo: SmokingGamificationRepository
@@ -451,11 +471,8 @@ class SmokingGamificationRepository {
   Future<void> saveSmokingState(SmokingModuleState state) async {
     final entity = SmokingGamificationEntity.fromModuleState(state);
     
-    // Salva no ObjectBox local
+    // Salva no ObjectBox local (Síncrono e imediato)
     box.put(entity);
-    
-    // Sincroniza com Supabase
-    await syncWithSupabase(state);
   }
   
   Future<SmokingModuleState?> getSmokingState() async {
@@ -465,7 +482,7 @@ class SmokingGamificationRepository {
   }
   
   // ═══════════════════════════════════════════════════════════
-  // PERSISTÊNCIA EM NUVEM - Supabase
+  // PERSISTÊNCIA EM NUVEM - Supabase (Disparado sob demanda pelo CloudSyncService)
   // ═══════════════════════════════════════════════════════════
   
   Future<void> syncWithSupabase(SmokingModuleState state) async {
@@ -497,20 +514,20 @@ class SmokingGamificationRepository {
 }
 ```
 
-### Todos os Módulos com ObjectBox + Supabase
+### Todos os Módulos com ObjectBox + Supabase + Backup JSON
 
 | Módulo | Repository | Tabela Supabase | Entity ObjectBox |
 |--------|------------|-----------------|------------------|
-| 🚭 Smoking | `SmokingGamificationRepository` | `smoking_gamification_states` | `SmokingGamificationEntity` |
-| 📱 Focus | `FocusGamificationRepository` | `focus_gamification_states` | `FocusGamificationEntity` |
-| 🍽️ Diet | `DietGamificationRepository` | `diet_gamification_states` | `DietGamificationEntity` |
-| 💰 Money | `MoneySavingGamificationRepository` | `money_saving_gamification_states` | `MoneySavingGamificationEntity` |
-| 🛡️ Adult | `AdultContentGamificationRepository` | `adult_content_gamification_states` | `AdultContentGamificationEntity` |
-| 🍔 Binge | `BingeEatingGamificationRepository` | `binge_eating_gamification_states` | `BingeEatingGamificationEntity` |
-| 💸 Spending | `SpendingGamificationRepository` | `spending_gamification_states` | `SpendingGamificationEntity` |
-| ✅ Procrast | `ProcrastinationGamificationRepository` | `procrastination_gamification_states` | `ProcrastinationGamificationEntity` |
-| 📖 Reading | `ReadingGamificationRepository` | `reading_gamification_states` | `ReadingGamificationEntity` |
-| 📱 Detox | `DigitalDetoxGamificationRepository` | `digital_detox_gamification_states` | `DigitalDetoxGamificationEntity` |
+| 🚭 Smoking | `SmokingGamificationRepository` | `smoking_daily_checkins` & settings | `SmokingGamificationEntity` |
+| 📱 Focus | `FocusGamificationRepository` | `focus_intervals` & settings | `FocusGamificationEntity` & `FocusIntervalEntity` |
+| 🍽️ Diet | `DietGamificationRepository` | `diet_meals` & settings | `DietGamificationEntity` & `MealEntryEntity` |
+| 💰 Money | `MoneySavingGamificationRepository` | Settings | `MoneySavingGamificationEntity` |
+| 🛡️ Adult | `AdultContentGamificationRepository` | Settings | `AdultContentGamificationEntity` |
+| 🍔 Binge | `BingeEatingGamificationRepository` | Settings | `BingeEatingGamificationEntity` |
+| 💸 Spending | `SpendingGamificationRepository` | Settings | `SpendingGamificationEntity` & `ExpenseEntity` |
+| ✅ Procrast | `ProcrastinationGamificationRepository` | Settings | `ProcrastinationGamificationEntity` |
+| 📖 Reading | `ReadingGamificationRepository` | `reading_books` & settings | `ReadingGamificationEntity` & `ReadingBookEntity` |
+| 📱 Detox | `DigitalDetoxGamificationRepository` | Settings | `DigitalDetoxGamificationEntity` |
 
 ---
 

@@ -18,8 +18,6 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
-import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart'
-    as smoking;
 import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
 import 'package:disciplinum/core/gamification/presentation/widgets/global_celebration_widget.dart';
 
@@ -746,7 +744,6 @@ class _HiddenModulesSection extends StatelessWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   bool _permissionsChecked = false;
-  bool _isSyncing = false;
   bool _consentDialogShown = false;
   bool _showHiddenModules = false;
   late final ConfettiController _confettiController;
@@ -759,11 +756,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       InstalledAppService().preload();
-      _initializeConsentAndCheckSync();
+      _initializeConsent();
     });
   }
 
-  Future<void> _initializeConsentAndCheckSync() async {
+  Future<void> _initializeConsent() async {
     await ConsentService.instance.initialize();
     final hasResponded =
         await ConsentService.instance.hasUserRespondedToConsent();
@@ -776,97 +773,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         if (mounted) setState(() => _consentDialogShown = false);
       }
     }
-    _checkAndPerformInitialSync();
   }
 
-  Future<void> _checkAndPerformInitialSync({bool isLoginEvent = false}) async {
-    if (!mounted) return;
-    final route = ModalRoute.of(context);
-    if (route == null || !route.isCurrent) return;
-    if (_isSyncing) return;
-
-    final authService = ref.read(authServiceProvider);
-    final currentUserId = authService.currentUser?.id;
-    if (currentUserId == null) return;
-
-    final syncState = ref.read(initialSyncCompletedProvider.notifier);
-    final checkResult = await syncState.checkShouldSync(currentUserId,
-        isLoginEvent: isLoginEvent);
-    if (!checkResult.shouldSync) {
-      ref.read(initialSyncCompletedProvider.notifier).markSessionSynced();
-      return;
-    }
-
-    await _performInitialSync(currentUserId);
-  }
-
-  Future<void> _performInitialSync(String userId) async {
-    if (!mounted) return;
-    setState(() => _isSyncing = true);
-
-    try {
-      final cloudSync = ref.read(cloudSyncServiceProvider);
-      final success = await cloudSync.syncNow();
-
-      if (!mounted) return;
-
-      if (success) {
-        ref.invalidate(activeModulesProvider);
-        ref.invalidate(smoking.smokingGamificationNotifierProvider);
-        await Future.delayed(const Duration(milliseconds: 500));
-        final activeModules = ref.read(activeModulesProvider).valueOrNull ?? [];
-        _showSnack(
-            activeModules.isNotEmpty
-                ? 'Dados sincronizados.'
-                : 'Sincronização concluída, mas nenhum módulo ativo foi encontrado.',
-            isSuccess: activeModules.isNotEmpty);
-      } else {
-        _showSnack(
-            'Não foi possível sincronizar. Tente manualmente nas configurações.',
-            isError: true);
-      }
-    } catch (e) {
-      if (mounted) _showSnack('Erro ao sincronizar dados.', isError: true);
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-        await ref
-            .read(initialSyncCompletedProvider.notifier)
-            .markSynced(userId);
-      }
-    }
-  }
-
-  void _showSnack(String message,
-      {bool isSuccess = false, bool isError = false}) {
-    if (!mounted) return;
-    final backgroundColor = isError
-        ? Colors.red
-        : (isSuccess ? const Color(0xFF10B981) : Colors.white);
-    final foregroundColor =
-        backgroundColor == Colors.white ? Colors.black87 : Colors.white;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(children: [
-          Icon(
-            isError
-                ? Icons.error_outline
-                : (isSuccess ? Icons.cloud_done : Icons.cloud),
-            color: foregroundColor,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-              child: Text(message, style: TextStyle(color: foregroundColor))),
-        ]),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -891,7 +799,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final hasUser = next.currentUser != null;
       if (!hadUser && hasUser) {
         ref.read(initialSyncCompletedProvider.notifier).resetSessionOnly();
-        _checkAndPerformInitialSync(isLoginEvent: true);
       } else if (hadUser && !hasUser) {
         ref.read(initialSyncCompletedProvider.notifier).resetSessionOnly();
       }
@@ -1157,29 +1064,6 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
                 ),
-                if (_isSyncing)
-                  Positioned.fill(
-                    child: AbsorbPointer(
-                      absorbing: true,
-                      child: Container(
-                        color: Colors.black54,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 3),
-                              const SizedBox(height: 20),
-                              Text('Sincronizando dados...',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
             bottomNavigationBar:
