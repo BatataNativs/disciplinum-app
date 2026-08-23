@@ -117,7 +117,7 @@ class AppThemes {
           ),
 
       // Componentes específicos
-      cardColor: surfaceElevated.withValues(alpha: 0.9),
+      cardColor: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.9),
 
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -214,28 +214,195 @@ class AppThemes {
 
   static ThemeData get lightTheme {
     final base = ThemeData.light();
-    const darkBlue = Color(0xFF1F13C6);
+
+    // Cores primárias (índigo vibrante)
+    const primaryIndigo = Color(0xFF4F46E5);
+    const primaryIndigoLight = Color(0xFF818CF8);
+    const primaryIndigoDark = Color(0xFF3730A3);
+
+    // Backgrounds — tudo branco/off-white limpo
+    const scaffoldBg = Colors.white;
+    const surfaceWhite = Colors.white;
+    const surfaceContainer = Color(0xFFF8F9FF); // Off-white levíssimo com tom índigo
+    const surfaceElevated = Color(0xFFEEF0FF); // Fundo de cards/dialogs com leve tom
+
+    // Texto
+    const onSurfacePrimary = Color(0xFF1A1A2E); // Quase preto, mais elegante que black87
+    const onSurfaceSecondary = Color(0xFF4A4A6A); // Cinza-azulado médio
+    const onSurfaceMuted = Color(0xFF8888AA); // Placeholder/dica
+
+    // Bordas
+    const outlineColor = Color(0x1A4F46E5); // indigo com ~10% opacidade
+    const outlineVariant = Color(0x0D4F46E5); // indigo com ~5% opacidade
+
+    // Erro
+    const errorColor = Color(0xFFDC2626);
 
     return base.copyWith(
-      scaffoldBackgroundColor: const Color.fromARGB(
-          255, 241, 241, 241), // Cor de fundo (tela perfil e configurações)
-      primaryColor: darkBlue,
+      scaffoldBackgroundColor: scaffoldBg,
+      primaryColor: primaryIndigo,
+
+      // ColorScheme completo
       colorScheme: base.colorScheme.copyWith(
-        primary: const Color.fromARGB(255, 16, 10, 88),
-        secondary: const Color.fromARGB(255, 16, 10, 88),
+        primary: primaryIndigo,
+        onPrimary: Colors.white,
+        primaryContainer: surfaceElevated,
+        onPrimaryContainer: primaryIndigoDark,
+
+        secondary: primaryIndigoLight,
+        onSecondary: Colors.white,
+        secondaryContainer: surfaceElevated,
+        onSecondaryContainer: primaryIndigo,
+
+        surface: surfaceWhite,
+        onSurface: onSurfacePrimary,
+        surfaceContainerHighest: surfaceElevated,
+        surfaceContainerHigh: surfaceContainer,
+        surfaceContainer: surfaceContainer,
+        surfaceTint: primaryIndigo,
+
+        error: errorColor,
+        onError: Colors.white,
+
+        outline: outlineColor,
+        outlineVariant: outlineVariant,
+
+        brightness: Brightness.light,
       ),
-      textTheme: base.textTheme.apply(
-        fontFamily: 'Roboto',
-        bodyColor: Colors.black87,
-        displayColor: Colors.black87,
-      ),
-      cardColor:
-          const Color.fromARGB(255, 241, 241, 241).withValues(alpha: 0.95),
+
+      // TextTheme
+      textTheme: base.textTheme
+          .apply(
+            fontFamily: 'Roboto',
+            bodyColor: onSurfacePrimary,
+            displayColor: onSurfacePrimary,
+          )
+          .copyWith(
+            displayLarge:
+                base.textTheme.displayLarge?.copyWith(color: onSurfacePrimary),
+            displayMedium:
+                base.textTheme.displayMedium?.copyWith(color: onSurfacePrimary),
+            displaySmall:
+                base.textTheme.displaySmall?.copyWith(color: onSurfacePrimary),
+            headlineLarge:
+                base.textTheme.headlineLarge?.copyWith(color: onSurfacePrimary),
+            headlineMedium:
+                base.textTheme.headlineMedium?.copyWith(color: onSurfacePrimary),
+            headlineSmall:
+                base.textTheme.headlineSmall?.copyWith(color: primaryIndigo),
+            titleLarge: base.textTheme.titleLarge?.copyWith(
+                color: onSurfacePrimary, fontWeight: FontWeight.bold),
+            titleMedium:
+                base.textTheme.titleMedium?.copyWith(color: onSurfacePrimary),
+            titleSmall:
+                base.textTheme.titleSmall?.copyWith(color: onSurfaceSecondary),
+            bodyLarge:
+                base.textTheme.bodyLarge?.copyWith(color: onSurfacePrimary),
+            bodyMedium:
+                base.textTheme.bodyMedium?.copyWith(color: onSurfaceSecondary),
+            bodySmall:
+                base.textTheme.bodySmall?.copyWith(color: onSurfaceSecondary),
+            labelLarge:
+                base.textTheme.labelLarge?.copyWith(color: primaryIndigo),
+            labelMedium:
+                base.textTheme.labelMedium?.copyWith(color: onSurfaceSecondary),
+            labelSmall:
+                base.textTheme.labelSmall?.copyWith(color: onSurfaceMuted),
+          ),
+
+      // Componentes específicos
+      cardColor: surfaceWhite,
+
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        iconTheme: IconThemeData(color: primaryIndigo),
+        titleTextStyle: TextStyle(
+          color: onSurfacePrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryIndigo,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+      ),
+
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primaryIndigo,
+          side: const BorderSide(color: primaryIndigo, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primaryIndigo,
+        ),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surfaceContainer,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: outlineColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: outlineColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryIndigo, width: 1.5),
+        ),
+        hintStyle: const TextStyle(color: onSurfaceMuted),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: surfaceWhite,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        elevation: 4,
+      ),
+
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: surfaceWhite,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      dividerTheme: const DividerThemeData(
+        color: outlineColor,
+        thickness: 1,
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: surfaceElevated,
+        deleteIconColor: primaryIndigo,
+        labelStyle: const TextStyle(color: onSurfacePrimary),
+        side: const BorderSide(color: outlineColor),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FastPageTransitionsBuilder(),
@@ -522,7 +689,7 @@ class AppThemes {
           ),
 
       // Componentes específicos
-      cardColor: orangePrimary,
+      cardColor: orangePrimary.withValues(alpha: 0.5),
 
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

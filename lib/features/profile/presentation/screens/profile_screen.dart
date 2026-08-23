@@ -10,6 +10,7 @@ import 'package:disciplinum/features/profile/presentation/widgets/account_option
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/core/theme/app_theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -467,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 90,
+                  top: 750,
                   right: -25,
                   child: Transform.rotate(
                     angle: 0.4,
@@ -508,7 +509,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 340,
+                  top: 450,
                   right: 50,
                   child: Transform.rotate(
                     angle: 0.4,
@@ -546,7 +547,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // Canto superior direito
                 Positioned(
                   top: 90,
-                  right: 35,
+                  right: 85,
                   child: Transform.rotate(
                     angle: 0.3,
                     child: const Opacity(
@@ -602,8 +603,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 // Inferior esquerdo
                 Positioned(
-                  bottom: 190,
-                  left: 45,
+                  top: 620,
+                  left: 160,
                   child: Transform.rotate(
                     angle: -0.4,
                     child: const Opacity(
@@ -612,7 +613,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 270,
+                  top: 550,
                   left: 15,
                   child: Transform.rotate(
                     angle: 0.2,
@@ -623,8 +624,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 // Inferior direito
                 Positioned(
-                  bottom: 140,
-                  right: 25,
+                  top: 700,
+                  right: 120,
                   child: Transform.rotate(
                     angle: 0.5,
                     child: Text(
@@ -637,7 +638,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 230,
+                  top: 600,
                   right: 85,
                   child: Transform.rotate(
                     angle: -0.1,
@@ -659,7 +660,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 Positioned(
                   top: 590,
-                  right: 45,
+                  right: 150,
                   child: Transform.rotate(
                     angle: -0.6,
                     child: Text(
@@ -684,7 +685,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 Positioned(
                   top: 470,
-                  left: 55,
+                  left: 140,
                   child: Transform.rotate(
                     angle: -0.2,
                     child: const Opacity(
@@ -718,7 +719,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 Positioned(
                   top: 670,
-                  right: 30,
+                  right: 100,
                   child: Transform.rotate(
                     angle: -0.4,
                     child: const Opacity(
@@ -727,8 +728,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 110,
-                  left: 75,
+                  top: 720,
+                  left: 180,
                   child: Transform.rotate(
                     angle: 0.6,
                     child: const Opacity(
@@ -737,8 +738,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 70,
-                  right: 65,
+                  top: 770,
+                  right: 150,
                   child: Transform.rotate(
                     angle: -0.3,
                     child: const Opacity(
@@ -789,24 +790,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  colorScheme.onSurface.withValues(alpha: 0.1),
-                                  colorScheme.onSurface.withValues(alpha: 0.05),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      colorScheme.shadow.withValues(alpha: 0.9),
-                                  blurRadius: 35,
-                                  spreadRadius: 3,
-                                ),
-                              ],
                               border: Border.all(
                                 color:
-                                    colorScheme.outline.withValues(alpha: 0.3),
-                                width: 3,
+                                    colorScheme.outline.withValues(alpha: 0.6),
+                                width: 6,
                               ),
                             ),
                             padding: const EdgeInsets.all(10),
@@ -846,8 +833,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ],
                                   ),
                                   child: ElevatedButton.icon(
-                                    icon: const Icon(Icons.person_outline,
-                                        size: 22),
+                                    icon: isHalloweenTheme
+                                        ? FaIcon(FontAwesomeIcons.skull, size: 18)
+                                        : const Icon(Icons.person_outline, size: 22),
                                     label: const Text(
                                       'Minha conta',
                                       style: TextStyle(

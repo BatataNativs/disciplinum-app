@@ -7,6 +7,8 @@ import 'package:disciplinum/features/profile/presentation/widgets/delete_account
 import 'package:disciplinum/features/settings/presentation/screens/sync_backup_screen.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
 
 class AccountOptionsDialog extends ConsumerStatefulWidget {
   final AuthController authService;
@@ -102,7 +104,9 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.person_rounded, size: 48),
+          ref.watch(themeControllerProvider) == AppTheme.halloween
+              ? FaIcon(FontAwesomeIcons.skull, size: 42)
+              : const Icon(Icons.person_rounded, size: 48),
           const SizedBox(width: 16),
           Expanded(
             child: Padding(

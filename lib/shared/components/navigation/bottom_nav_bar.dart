@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/theme/app_theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DisciplinumBottomNavBar extends ConsumerWidget {
   final int currentIndex;
@@ -81,19 +83,23 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
 
     // Cores ajustadas para Glassmorphism (com fallback para parâmetros)
     final effectiveGlassColor = glassColor ??
-        colorScheme.surfaceContainerHighest.withValues(alpha: 0.85);
+        (isDark
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.85)
+            : colorScheme.surface.withValues(alpha: 0.95));
     final effectiveBorderColor =
-        borderColor ?? colorScheme.outline.withValues(alpha: 0.5);
-    final effectiveActiveIconColor = activeIconColor ?? colorScheme.onSurface;
+        borderColor ?? colorScheme.outline.withValues(alpha: isDark ? 0.5 : 0.3);
+    final effectiveActiveIconColor =
+        activeIconColor ?? colorScheme.primary;
     final effectiveInactiveIconColor =
-        inactiveIconColor ?? colorScheme.onSurface.withValues(alpha: 0.5);
+        inactiveIconColor ?? colorScheme.onSurface.withValues(alpha: 0.4);
     final effectiveActiveIndicatorColor = activeIndicatorColor ??
-        colorScheme.surfaceContainerHighest.withValues(alpha: 0.9);
-    final effectiveShadowColor =
-        shadowColor ?? Colors.black.withValues(alpha: 0.7);
+        colorScheme.primary.withValues(alpha: isDark ? 0.2 : 0.12);
+    final effectiveShadowColor = shadowColor ??
+        Colors.black.withValues(alpha: isDark ? 0.7 : 0.12);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
@@ -137,7 +143,9 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                   context,
                   ref,
                   index: 1,
-                  icon: Icons.person_rounded,
+                  icon: ref.watch(themeControllerProvider) == AppTheme.halloween
+                      ? FontAwesomeIcons.skull
+                      : Icons.person_rounded,
                   isActive: currentIndex == 1,
                   activeIndicatorColor: effectiveActiveIndicatorColor,
                   activeIconColor: effectiveActiveIconColor,
@@ -177,7 +185,7 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref, {
     required int index,
-    IconData? icon,
+    dynamic icon,
     String? assetPath,
     required bool isActive,
     required Color activeIndicatorColor,
@@ -212,11 +220,17 @@ class DisciplinumBottomNavBar extends ConsumerWidget {
                       color: isActive ? activeIconColor : inactiveIconColor,
                       fit: BoxFit.contain,
                     )
-                  : Icon(
-                      icon,
-                      color: isActive ? activeIconColor : inactiveIconColor,
-                      size: 26,
-                    ),
+                  : icon is FaIconData
+                      ? FaIcon(
+                          icon,
+                          color: isActive ? activeIconColor : inactiveIconColor,
+                          size: 22,
+                        )
+                      : Icon(
+                          icon as IconData?,
+                          color: isActive ? activeIconColor : inactiveIconColor,
+                          size: 26,
+                        ),
             ),
           ),
         ),
