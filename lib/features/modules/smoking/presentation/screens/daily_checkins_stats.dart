@@ -89,30 +89,19 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.surface,
-            colorScheme.surfaceContainerHighest,
-          ],
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text(
+          'Check-ins Diários',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text(
-            'Check-ins Diários',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: _loadData,
                 child: SingleChildScrollView(
@@ -130,7 +119,6 @@ class _DailyCheckinsStatsState extends ConsumerState<DailyCheckinsStats> {
                   ),
                 ),
               ),
-      ),
     );
   }
 

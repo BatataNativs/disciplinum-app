@@ -130,24 +130,13 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
 
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            colorScheme.surface,
-            colorScheme.surfaceContainerHighest,
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text("Economia Detalhada"),
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text("Economia Detalhada"),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
         body: GestureDetector(
           onHorizontalDragEnd: (details) {
             // Swipe para esquerda -> próxima aba (Última Tentativa)
@@ -342,7 +331,6 @@ class _SavingsDetailScreenState extends ConsumerState<SavingsDetailScreen>
             ],
           ),
         ),
-      ),
       ),
     );
   }

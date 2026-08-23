@@ -3,19 +3,17 @@ import 'package:flutter/services.dart';
 
 /// Barra superior moderna e padronizada com 4 ações rápidas para o módulo Smoking
 class SmokingTopActionBar extends StatelessWidget {
-  final bool isModuleActive;
   final VoidCallback onOpenCheckIn;
   final VoidCallback onOpenNotifications;
   final VoidCallback onOpenStatistics;
-  final VoidCallback onToggleModule;
+  final VoidCallback onOpenAchievements;
 
   const SmokingTopActionBar({
     super.key,
-    required this.isModuleActive,
     required this.onOpenCheckIn,
     required this.onOpenNotifications,
     required this.onOpenStatistics,
-    required this.onToggleModule,
+    required this.onOpenAchievements,
   });
 
   @override
@@ -67,14 +65,13 @@ class SmokingTopActionBar extends StatelessWidget {
           ),
           const SizedBox(width: 4),
 
-          // 4. Ativar / Desativar
+          // 4. Conquistas (Gamificação)
           Expanded(
             child: _buildActionItem(
               context,
-              icon: Icons.power_settings_new_rounded,
-              label: isModuleActive ? 'Ativo' : 'Ativar',
-              isActiveStatus: isModuleActive,
-              onTap: onToggleModule,
+              icon: Icons.emoji_events_outlined,
+              label: 'Conquistas',
+              onTap: onOpenAchievements,
             ),
           ),
         ],
@@ -87,13 +84,9 @@ class SmokingTopActionBar extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
-    bool isActiveStatus = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    final Color itemColor = isActiveStatus
-        ? const Color(0xFF10B981) // Verde esmeralda moderno para status ativo
-        : colorScheme.onSurface.withValues(alpha: 0.85);
+    final Color itemColor = colorScheme.onSurface.withValues(alpha: 0.85);
 
     return Material(
       color: Colors.transparent,
@@ -106,42 +99,20 @@ class SmokingTopActionBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
-            color: isActiveStatus
-                ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                : colorScheme.surface.withValues(alpha: 0.7),
+            color: colorScheme.surface.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(11),
             border: Border.all(
-              color: isActiveStatus
-                  ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                  : colorScheme.outline.withValues(alpha: 0.08),
+              color: colorScheme.outline.withValues(alpha: 0.08),
             ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    size: 20,
-                    color: itemColor,
-                  ),
-                  if (isActiveStatus)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF10B981),
-                        ),
-                      ),
-                    ),
-                ],
+              Icon(
+                icon,
+                size: 20,
+                color: itemColor,
               ),
               const SizedBox(height: 4),
               Text(
@@ -163,4 +134,3 @@ class SmokingTopActionBar extends StatelessWidget {
     );
   }
 }
-

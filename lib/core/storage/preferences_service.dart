@@ -276,4 +276,20 @@ class PreferencesService {
     await _prefsRepo.remove(_smokingKey);
     await _prefsRepo.remove(_guestFlagKey);
   }
+
+  // ============================================================
+  // ================== GENERIC KEY-VALUE ========================
+  // ============================================================
+
+  Future<String?> getString(String key) async {
+    return await _prefsRepo.getString(key);
+  }
+
+  Future<void> setString(String key, String value) async {
+    await _prefsRepo.setString(key, value);
+  }
+
+  Future<void> removeKey(String key) async {
+    await _prefsRepo.remove(key);
+  }
 }

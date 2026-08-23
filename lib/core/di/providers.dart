@@ -28,6 +28,8 @@ import 'package:disciplinum/features/modules/digital_detox/presentation/provider
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_diary_service.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_craving_service.dart';
 import 'package:disciplinum/core/theme/theme_controller.dart';
 import 'package:disciplinum/core/theme/app_theme.dart';
 import 'package:disciplinum/infrastructure/repositories/module_repository.dart';
@@ -194,6 +196,18 @@ final appLocaleProvider = StateNotifierProvider<AppLocaleNotifier, Locale?>((ref
 final smokingServiceProvider = Provider<SmokingService>((ref) {
   final prefs = ref.watch(preferencesServiceProvider);
   return SmokingService(prefs);
+});
+
+/// Provider para smokingDiaryServiceProvider
+final smokingDiaryServiceProvider = Provider<SmokingDiaryService>((ref) {
+  final prefs = ref.watch(preferencesServiceProvider);
+  return SmokingDiaryService(prefs);
+});
+
+/// Provider para smokingCravingServiceProvider
+final smokingCravingServiceProvider = Provider<SmokingCravingService>((ref) {
+  final prefs = ref.watch(preferencesServiceProvider);
+  return SmokingCravingService(prefs);
 });
 
 /// Provider para IapService

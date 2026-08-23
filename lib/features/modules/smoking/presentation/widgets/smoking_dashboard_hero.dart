@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
 import 'package:disciplinum/features/modules/smoking/domain/services/smoking_motivational_phrase_service.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/widgets/smoking_tools_bar.dart';
 
 /// Hero Dashboard moderno para o módulo Smoking
 class SmokingDashboardHero extends StatelessWidget {
@@ -12,8 +13,13 @@ class SmokingDashboardHero extends StatelessWidget {
   final List<String> earnedMedalhas;
   final VoidCallback onOpenConsumptionSettings;
   final VoidCallback onOpenCheckInManager;
-  final VoidCallback onOpenStatistics;
-  final VoidCallback onActivateModule;
+  final VoidCallback onToggleModule;
+  final VoidCallback? onOpenSavings;
+  final VoidCallback? onOpenCigarettesAvoided;
+  final VoidCallback? onOpenBreathing;
+  final VoidCallback? onOpenDiary;
+  final VoidCallback? onOpenSos;
+  final VoidCallback? onOpenTriggers;
 
   const SmokingDashboardHero({
     super.key,
@@ -24,8 +30,13 @@ class SmokingDashboardHero extends StatelessWidget {
     this.earnedMedalhas = const [],
     required this.onOpenConsumptionSettings,
     required this.onOpenCheckInManager,
-    required this.onOpenStatistics,
-    required this.onActivateModule,
+    required this.onToggleModule,
+    this.onOpenSavings,
+    this.onOpenCigarettesAvoided,
+    this.onOpenBreathing,
+    this.onOpenDiary,
+    this.onOpenSos,
+    this.onOpenTriggers,
   });
 
   @override
@@ -70,13 +81,13 @@ class SmokingDashboardHero extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF4F46E5),
-                const Color(0xFF6366F1),
-                const Color(0xFF818CF8),
+                Color(0xFF4F46E5),
+                Color(0xFF6366F1),
+                Color(0xFF818CF8),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
@@ -172,10 +183,10 @@ class SmokingDashboardHero extends StatelessWidget {
               ),
               const SizedBox(height: 18),
 
-              // 3 Métricas Rápidas
+              // Métricas Rápidas Clicáveis
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(16),
@@ -187,11 +198,12 @@ class SmokingDashboardHero extends StatelessWidget {
                         label: 'Economia',
                         value: '$currency ${moneySaved.toStringAsFixed(2)}',
                         icon: Icons.savings_outlined,
+                        onTap: onOpenSavings,
                       ),
                     ),
                     Container(
                       width: 1,
-                      height: 30,
+                      height: 32,
                       color: Colors.white.withValues(alpha: 0.2),
                     ),
                     Expanded(
@@ -199,6 +211,7 @@ class SmokingDashboardHero extends StatelessWidget {
                         label: 'Não fumados',
                         value: '$cigarettesAvoided unid',
                         icon: Icons.smoke_free_rounded,
+                        onTap: onOpenCigarettesAvoided,
                       ),
                     ),
                   ],
@@ -224,10 +237,10 @@ class SmokingDashboardHero extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.auto_awesome_rounded,
                   size: 20,
-                  color: const Color(0xFF6366F1),
+                  color: Color(0xFF6366F1),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -247,7 +260,7 @@ class SmokingDashboardHero extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // Opções / Botões de Gestão (Sem formulários soltos)
+        // Opções / Botões de Gestão
         Text(
           'Configurações e Gestão',
           style: TextStyle(
@@ -281,16 +294,66 @@ class SmokingDashboardHero extends StatelessWidget {
           badgeColor: checkinTime != null ? null : Colors.orange,
           onTap: onOpenCheckInManager,
         ),
-        const SizedBox(height: 8),
 
-        _buildOptionTile(
-          context,
-          icon: Icons.insights_rounded,
-          title: 'Estatísticas e Saúde',
-          subtitle: 'Acesse gráficos, economia e marcos biológicos',
-          badgeText: 'Visualizar',
-          onTap: onOpenStatistics,
+        const SizedBox(height: 20),
+
+        // Nova Barra de 4 Ferramentas para Lidar com a Vontade (Respirar, Diário, SOS Vontade, Gatilhos)
+        if (onOpenBreathing != null &&
+            onOpenDiary != null &&
+            onOpenSos != null &&
+            onOpenTriggers != null)
+          SmokingToolsBar(
+            onOpenBreathing: onOpenBreathing!,
+            onOpenDiary: onOpenDiary!,
+            onOpenSos: onOpenSos!,
+            onOpenTriggers: onOpenTriggers!,
+          ),
+
+        const SizedBox(height: 24),
+
+        // Botão Destaque: Módulo Ativo / Desativar
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              onToggleModule();
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                  width: 1.5,
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.power_settings_new_rounded,
+                    size: 20,
+                    color: Color(0xFF10B981),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Módulo Ativo • Desativar',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -407,36 +470,45 @@ class SmokingDashboardHero extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Botão Principal Ativar Módulo
-        SizedBox(
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () {
+        // Botão Destaque: Ativar Módulo
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
               HapticFeedback.mediumImpact();
-              onActivateModule();
+              onToggleModule();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              elevation: 2,
-              shadowColor: const Color(0xFF6366F1).withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.rocket_launch_rounded, size: 20),
-                SizedBox(width: 10),
-                Text(
-                  'Iniciar Minha Jornada',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                border: Border.all(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                  width: 1.5,
                 ),
-              ],
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.power_settings_new_rounded,
+                    size: 20,
+                    color: Color(0xFFEF4444),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Ativar Módulo (Iniciar Jornada)',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -448,37 +520,61 @@ class SmokingDashboardHero extends StatelessWidget {
     required String label,
     required String value,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.8)),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          if (onTap != null) {
+            HapticFeedback.lightImpact();
+            onTap();
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.85)),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                  if (onTap != null) ...[
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 14,
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                  ],
+                ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
-      ],
+      ),
     );
   }
 
@@ -581,4 +677,3 @@ class SmokingDashboardHero extends StatelessWidget {
     );
   }
 }
-

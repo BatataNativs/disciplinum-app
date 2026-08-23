@@ -430,8 +430,8 @@ class ModernNicheCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Botão de visibilidade explícito no topo do Stack
-                if (onVisibilityToggle != null)
+                // Botão de visibilidade explícito no topo do Stack (não exibir se o módulo estiver ativo)
+                if (onVisibilityToggle != null && !isActive)
                   Positioned(
                     top: 6,
                     right: 6,
@@ -1100,8 +1100,6 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
             runSpacing: 12,
             children: visibleActiveNiches.map((nicheId) {
               final niche = NicheRepository.getById(nicheId);
-              final isCurrentlyHidden =
-                  moduleVisibility[_moduleVisibilityKey(nicheId)] == false;
 
               return SizedBox(
                 width: (MediaQuery.of(context).size.width - 52) / 2,
@@ -1109,10 +1107,6 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
                   niche: niche,
                   heroTag: 'active_${niche.id}',
                   isActive: true,
-                  isHidden: isCurrentlyHidden,
-                  onVisibilityToggle: () {
-                    _toggleModuleVisibility(nicheId, isCurrentlyHidden);
-                  },
                 ),
               );
             }).toList(),

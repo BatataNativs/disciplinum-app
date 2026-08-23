@@ -216,63 +216,95 @@ class SmokingMotivationalPhraseService {
   }
 
   /// Gera frase para marcos de saúde significativos
-  String? _getPhraseForHealthMilestone(int days) {
-    // Marcos de saúde baseados em evidências científicas
-    if (days == 1) {
-      return '⏱️ 24 horas sem fumar: Seu coração já bate mais devagar e sua pressão diminuiu.';
-    } else if (days == 2) {
-      return '🫁 48 horas: Seus nervos estão se regenerando. O paladar e olfato melhoram!';
-    } else if (days == 3) {
-      return '💨 3 dias: A nicotina saiu completamente do seu corpo. Respire fundo!';
-    } else if (days == 7) {
-      return '🌟 Uma semana sem fumar! Seu pulmão está 10% mais limpo.';
-    } else if (days == 14) {
-      return '💪 Duas semanas! Circulação melhorada - menos fadiga e dor no peito.';
-    } else if (days == 30) {
-      return '🫁 Um mês! Capacidade pulmonar aumentou em até 30%. Respire livre!';
-    } else if (days == 90) {
-      return '❤️ Três meses! Risco de ataque cardíaco já diminuiu significativamente.';
-    } else if (days == 180) {
-      return '🌟 Seis meses sem fumar! Risco de doença cardíaca caiu pela metade.';
-    } else if (days == 365) {
-      return '🎉 UM ANO! Risco de doença cardíaca igual a de não-fumante. Você venceu!';
-    }
-    return null;
+String? _getPhraseForHealthMilestone(int days) {
+  // Marcos baseados em informações de saúde pública e literatura
+  // sobre os benefícios de parar de fumar.
+  if (days == 1) {
+    return '⏱️ 24 horas sem fumar: Seu corpo já está eliminando o monóxido de carbono e iniciando a recuperação.';
+  } else if (days == 2) {
+    return '👃 48 horas: Seu paladar e seu olfato começam a melhorar. Aos poucos, você volta a sentir mais do mundo.';
+  } else if (days == 3) {
+    return '🫁 3 dias: A nicotina já foi eliminada do organismo e sua respiração pode começar a ficar mais fácil.';
+  } else if (days == 7) {
+    return '🌟 Uma semana sem fumar! Você já atravessou uma das fases mais difíceis. Continue firme.';
+  } else if (days == 14) {
+    return '💪 Duas semanas: Sua circulação começa a melhorar e sua função pulmonar já pode estar se recuperando.';
+  } else if (days == 30) {
+    return '🏆 Um mês sem fumar! Tosse e falta de ar tendem a melhorar ao longo dos próximos meses.';
+  } else if (days == 90) {
+    return '🫁 Três meses: Sua circulação e sua função pulmonar continuam melhorando. Cada dia conta.';
+  } else if (days == 180) {
+    return '🌟 Seis meses sem fumar! Tosse, chiado e falta de ar podem estar bem menores. Seu corpo continua se recuperando.';
+  } else if (days == 365) {
+    return '🎉 UM ANO! O risco adicional de doença coronariana caiu aproximadamente pela metade em comparação com quem continua fumando.';
   }
 
-  /// Frases por período do dia (fallback)
-  String _getPhraseByTimeOfDay(TimeOfDay time) {
-    final hour = time.hour;
+  return null;
+}
 
-    if (hour >= 5 && hour < 12) {
-      // Manhã (5h - 12h)
-      return _getRandomPhrase([
-        '🌅 Bom dia! Comece o dia sem fumar e com muita energia positiva.',
-        '☀️ Novo dia, nova oportunidade de cuidar da sua saúde.',
-        '🌄 Manhã de vitória! Mantenha o foco no seu objetivo.',
-        '💪 Acordar sem a necessidade de fumar é uma sensação incrível, né?',
-        '🎯 Bom dia! Cada manhã sem fumar é um presente para seu corpo.',
-      ]);
-    } else if (hour >= 12 && hour < 18) {
-      // Tarde (12h - 18h)
-      return _getRandomPhrase([
-        '☀️ Boa tarde! Mantenha a disciplina no meio do dia.',
-        '💪 Você está indo bem! Não deixe o cansaço vencer.',
-        '🌤️ Tarde de conquistas! Cada hora sem fumar é progresso.',
-        '⭐ Lembre-se do seu "porquê". A disciplina vale a pena!',
-        '🎯 Boa tarde! Respire fundo e sinta seu corpo agradecendo.',
-      ]);
-    } else {
-      // Noite (18h - 5h)
-      return _getRandomPhrase([
-        '🌙 Boa noite! Termine o dia com orgulho da sua disciplina.',
-        '⭐ Um dia sem fumar é uma vitória. Descanse sabendo que venceu!',
-        '🌌 Noite de paz! Seu corpo agradece cada dia de liberdade.',
-        '💪 O dia acabou e você venceu! Prepare-se para amanhã.',
-        '🌜 Boa noite! Sonhe com uma vida cada vez mais saudável.',
-      ]);
-    }
+/// Frases por período do dia (fallback)
+String _getPhraseByTimeOfDay(TimeOfDay time) {
+  final hour = time.hour;
+
+  if (hour >= 5 && hour < 12) {
+    // Manhã (5h - 11h59)
+    return _getRandomPhrase([
+      '🌅 Bom dia! Mais uma manhã sem fumar. Continue construindo essa nova rotina.',
+      '☀️ Novo dia, nova oportunidade de cuidar de você.',
+      '🌄 Bom dia! Hoje você não precisa repetir os hábitos de ontem.',
+      '💪 Acordar sem depender do cigarro é mais uma pequena vitória.',
+      '🎯 Bom dia! Lembre-se do motivo que fez você decidir parar.',
+      '🌱 Cada manhã sem fumar é mais um passo para uma rotina mais livre.',
+      '☀️ Você já venceu o primeiro desafio do dia: começar sem fumar.',
+      '🔥 O cigarro ficou no passado. Hoje é mais um dia para seguir em frente.',
+      '🏆 Mais uma manhã conquistada. Não negocie com a vontade de fumar.',
+      '🫁 Respire fundo. Seu dia começou, e você continua no controle.',
+      '💚 Seu corpo trabalha a seu favor enquanto você mantém a decisão.',
+      '🚀 Comece o dia lembrando: vontade passa, decisão permanece.',
+      '🎯 Não pense em nunca mais. Pense em não fumar hoje.',
+      '🌤️ Uma manhã de cada vez. Um dia de cada vez. Uma vitória de cada vez.',
+      '💪 Você não precisa de um cigarro para começar bem o dia.',
+    ]);
+  } else if (hour >= 12 && hour < 18) {
+    // Tarde (12h - 17h59)
+    return _getRandomPhrase([
+      '☀️ Boa tarde! Continue firme. O seu objetivo ainda vale a pena.',
+      '💪 Você chegou até aqui sem fumar. Não deixe uma vontade momentânea decidir por você.',
+      '🌤️ Mais uma tarde livre do cigarro. Continue no comando.',
+      '⭐ Lembre-se do seu "porquê". A disciplina vale a pena.',
+      '🎯 Boa tarde! Respire fundo e deixe a vontade passar.',
+      '🏆 Cada hora sem fumar é mais uma hora vencida.',
+      '💚 Seu esforço de hoje está construindo um hábito novo.',
+      '🔥 A vontade pode aparecer, mas você não é obrigado a obedecê-la.',
+      '🫁 Pare por alguns segundos, respire fundo e siga em frente.',
+      '🚫 Não troque uma conquista por alguns minutos de vontade.',
+      '💪 A tarde está passando. Você também vai passar por essa vontade.',
+      '🌱 Mudanças grandes são feitas de decisões pequenas repetidas todos os dias.',
+      '🎯 Seu objetivo não mudou só porque hoje ficou difícil.',
+      '⭐ Mais uma tarde sem cigarro. Mais uma prova de que você consegue.',
+      '🚀 Continue. O desconforto é passageiro, mas a conquista fica.',
+    ]);
+  } else {
+    // Noite (18h - 4h59)
+    return _getRandomPhrase([
+      '🌙 Boa noite! Termine o dia com orgulho da decisão que tomou.',
+      '⭐ Mais um dia sem fumar. Isso é uma vitória real.',
+      '🌌 O dia está acabando, e você continua no controle.',
+      '💪 Você chegou ao fim de mais um dia sem precisar voltar ao cigarro.',
+      '🌜 Boa noite! Amanhã você terá mais um dia para continuar essa conquista.',
+      '🏆 Feche o dia contando mais uma vitória: você não fumou.',
+      '🫁 Respire fundo. Seu corpo agradece cada dia longe da fumaça.',
+      '🌙 A vontade pode aparecer, mas a noite também vai passar.',
+      '💚 Descanse sabendo que hoje você manteve sua decisão.',
+      '🎯 Um dia de cada vez. Hoje você conseguiu.',
+      '⭐ Não precisa vencer o resto da vida hoje. Só precisa vencer esta noite.',
+      '🔥 Mais um dia no placar. Continue aumentando essa sequência.',
+      '🌌 Deixe o cigarro fora da sua noite. Amanhã é outra oportunidade de vencer.',
+      '💪 Você não chegou até aqui por acaso. Continue.',
+      '🏁 Mais um dia concluído sem fumar. Amanhã começamos outra rodada.',
+    ]);
   }
+}
 
   String _getRandomPhrase(List<String> phrases) {
     return phrases[_random.nextInt(phrases.length)];

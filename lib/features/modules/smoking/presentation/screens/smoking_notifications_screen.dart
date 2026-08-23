@@ -31,6 +31,8 @@ class _SmokingNotificationsScreenState
   // Key para persistência local
   static const String _notificationsEnabledKey = 'smoking_notifications_enabled';
 
+  int get _remindersNicheId => _niche.id + 100;
+
   @override
   void initState() {
     super.initState();
@@ -52,12 +54,12 @@ class _SmokingNotificationsScreenState
         days = DateTime.now().difference(smokingSettings.quitDate!).inDays;
       }
       
-      // Carregar horários configurados
+      // Carregar horários configurados dos lembretes motivacionais
       final isGuest = await prefsService.isGuestMode();
       final times = isGuest
-          ? await prefsService.loadUserNicheTimes(nicheId: _niche.id)
+          ? await prefsService.loadUserNicheTimes(nicheId: _remindersNicheId)
           : await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
-              nicheId: _niche.id);
+              nicheId: _remindersNicheId);
 
       if (mounted) {
         setState(() {
@@ -82,7 +84,7 @@ class _SmokingNotificationsScreenState
     await prefsRepo.setBool(_notificationsEnabledKey, enabled);
     
     if (!enabled) {
-      // Cancelar todas as notificações do módulo
+      // Cancelar apenas as notificações de lembretes motivacionais
       await _cancelAllNotifications();
     } else if (_reminderCount > 0) {
       // Reagendar notificações existentes
@@ -95,13 +97,10 @@ class _SmokingNotificationsScreenState
   }
 
   Future<void> _cancelAllNotifications() async {
-    // Cancelar notificações de lembrete (IDs 1001-1008)
+    // Cancelar apenas notificações de lembrete motivacional (IDs 1001-1008)
     for (int i = 1; i <= 8; i++) {
       await NotificationService.cancelNotification(1000 + i);
     }
-    
-    // Cancelar notificação de check-in (ID 1000)
-    await NotificationService.cancelNotification(1000);
   }
 
   Future<void> _rescheduleNotifications() async {
@@ -109,9 +108,9 @@ class _SmokingNotificationsScreenState
     final prefsService = ref.read(preferencesServiceProvider);
     final isGuest = await prefsService.isGuestMode();
     final times = isGuest
-        ? await prefsService.loadUserNicheTimes(nicheId: _niche.id)
+        ? await prefsService.loadUserNicheTimes(nicheId: _remindersNicheId)
         : await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
-            nicheId: _niche.id);
+            nicheId: _remindersNicheId);
     
     for (int i = 0; i < times.length; i++) {
       final time = times[i];
@@ -238,42 +237,54 @@ class _SmokingNotificationsScreenState
       return;
     }
 
+    final prefs = ref.read(preferencesServiceProvider);
+    final isGuest = await prefs.isGuestMode();
+    final currentItems = isGuest
+        ? await prefs.loadUserNicheTimes(nicheId: _remindersNicheId)
+        : await ref.read(cloudSyncServiceProvider).loadUserNicheTimes(
+            nicheId: _remindersNicheId);
+    final initialTimes = currentItems
+        .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
+        .toList();
+
+    if (!mounted) return;
+
     final result = await Navigator.push<int>(
       context,
       MaterialPageRoute(
         builder: (_) => ScheduleScreen(
           args: ScheduleScreenArgs(
-            nicheId: _niche.nicheId.id,
+            nicheId: _remindersNicheId,
             maxSlots: 8,
             title: 'Lembretes Motivacionais',
-            initialTimes: [],
+            initialTimes: initialTimes,
             onChanged: (times) async {
               // Salvar horários
-              final prefs = ref.read(preferencesServiceProvider);
-              final isGuest = await prefs.isGuestMode();
+              final prefsService = ref.read(preferencesServiceProvider);
+              final isGuestUser = await prefsService.isGuestMode();
               
-              // Limpar horários antigos
-              if (isGuest) {
-                await prefs.removeAllTimesForNiche(nicheId: _niche.id);
+              // Limpar horários antigos dos lembretes
+              if (isGuestUser) {
+                await prefsService.removeAllTimesForNiche(nicheId: _remindersNicheId);
               } else {
                 await ref.read(cloudSyncServiceProvider).removeAllTimesForNiche(
-                    nicheId: _niche.id);
+                    nicheId: _remindersNicheId);
               }
               
-              // Salvar novos horários
+              // Salvar novos horários dos lembretes
               for (int i = 0; i < times.length; i++) {
                 final time = times[i];
                 final phrase = _getMotivationalPhraseForTime(time.hour);
                 
-                if (isGuest) {
-                  await prefs.addUserNicheTime(
-                    nicheId: _niche.id,
+                if (isGuestUser) {
+                  await prefsService.addUserNicheTime(
+                    nicheId: _remindersNicheId,
                     hour: time.hour,
                     minute: time.minute,
                   );
                 } else {
                   await ref.read(cloudSyncServiceProvider).addUserNicheTime(
-                    nicheId: _niche.id,
+                    nicheId: _remindersNicheId,
                     hour: time.hour,
                     minute: time.minute,
                   );
@@ -329,73 +340,61 @@ class _SmokingNotificationsScreenState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            colorScheme.surface,
-            colorScheme.surfaceContainerHighest,
-          ],
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(
-            'Notificações',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
-              letterSpacing: -0.5,
-            ),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: IconThemeData(
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Notificações',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: colorScheme.onSurface,
+            letterSpacing: -0.5,
           ),
         ),
-        body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
-                ),
-              )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Toggle principal - Habilitar/Desabilitar
-                    _buildToggleCard(),
-                    const SizedBox(height: 24),
-
-                    // Seção: Lembretes Motivacionais
-                    _buildSectionHeader(
-                      title: 'Lembretes Motivacionais',
-                      subtitle: 'Até 8 horários por dia com frases inspiradoras',
-                      icon: Icons.notifications_active_rounded,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildRemindersCard(),
-                    const SizedBox(height: 24),
-
-                    // Seção: Como Funciona
-                    _buildSectionHeader(
-                      title: 'Como Funciona',
-                      subtitle: 'Frases adaptadas ao seu progresso',
-                      icon: Icons.question_mark_outlined,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildHowItWorksCard(),
-                  ],
-                ),
-              ),
+        centerTitle: true,
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        iconTheme: IconThemeData(
+          color: colorScheme.onSurface,
+        ),
       ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Toggle principal - Habilitar/Desabilitar
+                  _buildToggleCard(),
+                  const SizedBox(height: 24),
+
+                  // Seção: Lembretes Motivacionais
+                  _buildSectionHeader(
+                    title: 'Lembretes Motivacionais',
+                    subtitle: 'Até 8 horários por dia com frases inspiradoras',
+                    icon: Icons.notifications_active_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRemindersCard(),
+                  const SizedBox(height: 24),
+
+                  // Seção: Como Funciona
+                  _buildSectionHeader(
+                    title: 'Como Funciona',
+                    subtitle: 'Frases adaptadas ao seu progresso',
+                    icon: Icons.question_mark_outlined,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildHowItWorksCard(),
+                ],
+              ),
+            ),
     );
   }
 

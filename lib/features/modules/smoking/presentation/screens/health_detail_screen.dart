@@ -18,20 +18,10 @@ class HealthDetailScreen extends ConsumerWidget {
     final effectiveDuration = isModuleActive ? settings.timeSmokeFree : Duration.zero;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.surface,
-              colorScheme.surfaceContainerHighest,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
               // Header
               Padding(
                 padding:
@@ -92,7 +82,6 @@ class HealthDetailScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

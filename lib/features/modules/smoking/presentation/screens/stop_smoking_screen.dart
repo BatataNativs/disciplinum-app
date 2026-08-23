@@ -10,6 +10,11 @@ import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smok
 import 'package:disciplinum/features/modules/smoking/presentation/screens/daily_checkins_stats.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/health_detail_screen.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/savings_detail_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/cigarettes_avoided_detail_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_breathing_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_diary_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_sos_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_triggers_screen.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_notifications_screen.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/widgets/my_progress_smoking.dart'
     as smoking_progress;
@@ -25,7 +30,6 @@ import 'package:disciplinum/shared/models/common/niche.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/shared/repositories/niche_repository.dart';
-import 'package:disciplinum/shared/widgets/buttons/modern_start_button.dart';
 import 'package:disciplinum/shared/widgets/dialogs/deactivate_module_dialog.dart';
 import 'package:disciplinum/shared/widgets/dialogs/permission_dialog.dart';
 import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
@@ -89,17 +93,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
   Future<void> _reloadCheckinData() async {
     try {
-      if (!_gamificationRunning) {
-        if (_checkinTime != null) {
-          if (mounted) {
-            setState(() {
-              _checkinTime = null;
-            });
-          }
-        }
-        return;
-      }
-
       final prefs = ref.read(preferencesServiceProvider);
       final isGuest = await prefs.isGuestMode();
       final List<UserNicheTime> checkinTimes;
@@ -184,11 +177,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
         if (!_gamificationRunning) {
           _selectedDate = DateTime.now();
-          if (_checkinTime != null) {
-            setState(() {
-              _checkinTime = null;
-            });
-          }
         } else {
           _selectedDate = settings!.quitDate ?? DateTime.now();
         }
@@ -465,125 +453,303 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: colorScheme.outline.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: const Icon(Icons.check_circle_outline,
-                      color: Color(0xFF6366F1), size: 24),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    'Check-in Diário',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+              ),
+              const SizedBox(height: 16),
+
+              // Header Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.alarm_on_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 22,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'O que é?',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'O Check-in Diário é o seu compromisso de registrar se você resistiu ao hábito de fumar hoje. '
-              'Ele é fundamental para manter sua sequência e evolução.',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Como funciona?',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Você receberá uma notificação diária no horário configurado para confirmar que '
-              'manteve a disciplina sem fumar. Toque em "Sim!" para pontuar.',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ModernStartButton(
-                    icon: Icons.access_time_rounded,
-                    label: _checkinTime != null
-                        ? 'Alterar Horário (${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')})'
-                        : 'Configurar Horário',
-                    color: const Color(0xFF6366F1),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      final nicheId = _niche.id;
-                      final initialItems = await ref
-                          .read(cloudSyncServiceProvider)
-                          .loadUserNicheTimes(nicheId: nicheId);
-                      final initialTimes = initialItems
-                          .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
-                          .toList();
-
-                      if (!mounted) return;
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ScheduleScreen(
-                            args: ScheduleScreenArgs(
-                              nicheId: nicheId,
-                              maxSlots: 1,
-                              title: 'Horário de Check-in',
-                              initialTimes: initialTimes,
-                              onChanged: (times) {
-                                _syncCheckInWithGamification(
-                                    onlySyncSchedules: true);
-                                _reloadCheckinData();
-                              },
-                            ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Check-in Diário',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: -0.3,
                           ),
                         ),
-                      );
-                    },
+                        Text(
+                          'Compromisso diário de consistência',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Card de Status do Horário
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: _checkinTime != null
+                      ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                      : Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _checkinTime != null
+                        ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                        : Colors.amber.withValues(alpha: 0.3),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
+                child: Row(
+                  children: [
+                    Icon(
+                      _checkinTime != null
+                          ? Icons.check_circle_rounded
+                          : Icons.info_outline_rounded,
+                      color: _checkinTime != null
+                          ? const Color(0xFF10B981)
+                          : Colors.amber.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _checkinTime != null
+                            ? 'Horário configurado: ${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')}'
+                            : 'Nenhum horário definido ainda',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _checkinTime != null
+                              ? const Color(0xFF10B981)
+                              : Colors.amber.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Informações Explicativas em Cards
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: colorScheme.outline.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.task_alt_rounded,
+                            size: 16,
+                            color: Color(0xFF6366F1),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'O que é o Check-in?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'É o seu registro diário confirmando que você resistiu ao cigarro hoje, mantendo sua sequência ativa.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.35,
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.65),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_active_outlined,
+                            size: 16,
+                            color: Color(0xFF6366F1),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Como funciona?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'No horário agendado, você receberá uma notificação direta para confirmar sua disciplina sem esforço.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.35,
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.65),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Botão Ação
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    Navigator.pop(ctx);
+                    final nicheId = _niche.id;
+                    final initialItems = await ref
+                        .read(cloudSyncServiceProvider)
+                        .loadUserNicheTimes(nicheId: nicheId);
+                    final initialTimes = initialItems
+                        .map((t) => TimeOfDay(hour: t.hour, minute: t.minute))
+                        .toList();
+
+                    if (!mounted) return;
+
+                    await navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => ScheduleScreen(
+                          args: ScheduleScreenArgs(
+                            nicheId: nicheId,
+                            maxSlots: 1,
+                            title: 'Horário de Check-in',
+                            initialTimes: initialTimes,
+                            onChanged: (times) async {
+                              await _syncCheckInWithGamification(
+                                  onlySyncSchedules: true);
+                              await _reloadCheckinData();
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+
+                    if (mounted) {
+                      await _reloadCheckinData();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.alarm_add_rounded, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        _checkinTime != null
+                            ? 'Alterar Horário (${_checkinTime!.hour.toString().padLeft(2, '0')}:${_checkinTime!.minute.toString().padLeft(2, '0')})'
+                            : 'Definir Horário do Check-in',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -674,21 +840,6 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                 );
               },
             ),
-            ListActionTile(
-              icon: Icons.emoji_events_outlined,
-              label: 'Conquistas e Medalhas',
-              color: const Color(0xFFF59E0B),
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const smoking_progress.MyProgressSmoking(),
-                  ),
-                );
-              },
-            ),
             const SizedBox(height: 12),
           ],
         ),
@@ -701,6 +852,89 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
       context,
       MaterialPageRoute(
         builder: (_) => const SmokingNotificationsScreen(),
+      ),
+    );
+  }
+
+  void _openSavingsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SavingsDetailScreen(
+          settings: settings ??
+              SmokingSettingsModel(
+                dailyCigarettes: 20,
+                pricePerPack: 10.0,
+                cigarettesPerPack: 20,
+                currency: 'BRL',
+                startDate: DateTime.now(),
+              ),
+          isActive: _gamificationRunning,
+        ),
+      ),
+    );
+  }
+
+  void _openCigarettesAvoidedScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CigarettesAvoidedDetailScreen(
+          settings: settings ??
+              SmokingSettingsModel(
+                dailyCigarettes: 20,
+                pricePerPack: 10.0,
+                cigarettesPerPack: 20,
+                currency: 'BRL',
+                startDate: DateTime.now(),
+              ),
+          isActive: _gamificationRunning,
+        ),
+      ),
+    );
+  }
+
+  void _openBreathingScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SmokingBreathingScreen(),
+      ),
+    );
+  }
+
+  void _openDiaryScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SmokingDiaryScreen(),
+      ),
+    );
+  }
+
+  void _openSosScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SmokingSosScreen(),
+      ),
+    );
+  }
+
+  void _openTriggersScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SmokingTriggersScreen(),
+      ),
+    );
+  }
+
+  void _openAchievementsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const smoking_progress.MyProgressSmoking(),
       ),
     );
   }
@@ -743,63 +977,56 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
 
     return SmokingCelebrationWidget(
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                colorScheme.surface,
-                colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Header com botão ?
-                StopSmokingHeaderWidget(
-                  niche: _niche,
-                  onBackPressed: () => Navigator.pop(context),
-                  onHelpPressed: () => SmokingInfoDialog.show(context),
-                ),
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header com botão ?
+              StopSmokingHeaderWidget(
+                niche: _niche,
+                onBackPressed: () => Navigator.pop(context),
+                onHelpPressed: () => SmokingInfoDialog.show(context),
+              ),
 
-                // Nova Barra de Ações Superior (4 botões modernos e padronizados)
-                SmokingTopActionBar(
-                  isModuleActive: _gamificationRunning,
-                  onOpenCheckIn: _openCheckInManager,
-                  onOpenNotifications: _openNotificationsScreen,
-                  onOpenStatistics: _showStatisticsMenu,
-                  onToggleModule: () {
-                    if (_gamificationRunning) {
-                      _desativarNichoMonitoramento();
-                    } else {
-                      _ativarNichoMonitoramento();
-                    }
-                  },
-                ),
+              // Nova Barra de Ações Superior (4 botões: Check-in, Lembretes, Estatísticas, Conquistas)
+              SmokingTopActionBar(
+                onOpenCheckIn: _openCheckInManager,
+                onOpenNotifications: _openNotificationsScreen,
+                onOpenStatistics: _showStatisticsMenu,
+                onOpenAchievements: _openAchievementsScreen,
+              ),
 
-                // Conteúdo Principal Scrollável e Limpo
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    child: SmokingDashboardHero(
-                      isModuleActive: _gamificationRunning,
-                      settings: settings,
-                      checkinTime: _checkinTime,
-                      earnedInsignias: gamificationState.earnedInsignias,
-                      earnedMedalhas: gamificationState.earnedMedalhas,
-                      onOpenConsumptionSettings: _openConsumptionBottomSheet,
-                      onOpenCheckInManager: _openCheckInManager,
-                      onOpenStatistics: _showStatisticsMenu,
-                      onActivateModule: _ativarNichoMonitoramento,
-                    ),
+              // Conteúdo Principal Scrollável e Limpo
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  child: SmokingDashboardHero(
+                    isModuleActive: _gamificationRunning,
+                    settings: settings,
+                    checkinTime: _checkinTime,
+                    earnedInsignias: gamificationState.earnedInsignias,
+                    earnedMedalhas: gamificationState.earnedMedalhas,
+                    onOpenConsumptionSettings: _openConsumptionBottomSheet,
+                    onOpenCheckInManager: _openCheckInManager,
+                    onOpenSavings: _openSavingsScreen,
+                    onOpenCigarettesAvoided: _openCigarettesAvoidedScreen,
+                    onOpenBreathing: _openBreathingScreen,
+                    onOpenDiary: _openDiaryScreen,
+                    onOpenSos: _openSosScreen,
+                    onOpenTriggers: _openTriggersScreen,
+                    onToggleModule: () {
+                      if (_gamificationRunning) {
+                        _desativarNichoMonitoramento();
+                      } else {
+                        _ativarNichoMonitoramento();
+                      }
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
