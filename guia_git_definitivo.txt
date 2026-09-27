@@ -1,0 +1,165 @@
+===============================================================================
+               GUIA DEFINITIVO DE GIT & WORKFLOW PROFISSIONAL
+===============================================================================
+
+-------------------------------------------------------------------------------
+1. A REGRA MENTAL DE OURO (GRAVE ISSO)
+-------------------------------------------------------------------------------
+O ciclo básico de qualquer desenvolvedor inteligente é:
+  Mexeu -> Olhou (diff/status) -> Gostou? (commit)
+                               -> Ficou ruim? (descarte/reset)
+
+NUNCA passe horas codando sem commitar. Faça commits pequenos e atômicos.
+Commit é "checkpoint de videogame": se morrer no chefe da fase, você volta
+para o checkpoint seguro sem perder o jogo todo.
+
+
+-------------------------------------------------------------------------------
+2. INSPECIONAR: "O QUE ESTÁ ACONTECENDO AGORA?"
+-------------------------------------------------------------------------------
+# Ver quais arquivos foram alterados, criados ou deletados
+git status
+
+# Ver linha por linha o que mudou nos arquivos (antes de adicionar pro commit)
+git diff
+
+# Ver o que mudou apenas em um arquivo específico
+git diff caminho/do/arquivo.ext
+
+# Ver histórico recente de commits de forma limpa e em uma linha por commit
+git log --oneline -n 10
+
+# Ver o gráfico visual das branches no terminal
+git log --graph --oneline --all -n 15
+
+
+-------------------------------------------------------------------------------
+3. SALVAR CHECKPOINTS (COMMITS PROFISSIONAIS)
+-------------------------------------------------------------------------------
+# Adicionar tudo o que foi alterado para a "fila" de salvamento (staging)
+git add .
+
+# Adicionar apenas um arquivo específico
+git add caminho/do/arquivo.ext
+
+# Gravar o checkpoint com uma mensagem descritiva
+git commit -m "tipo(escopo): breve resumo do que foi feito"
+
+# Boas práticas de mensagens (Padrão Conventional Commits):
+# - feat:      nova funcionalidade  -> git commit -m "feat(auth): adicionar login com biometria"
+# - fix:       correcao de bug      -> git commit -m "fix(perfil): corrigir avatar cortado"
+# - refactor:  melhoria interna     -> git commit -m "refactor: migrar service para clean architecture"
+# - docs:      documentacao/scripts -> git commit -m "docs: adicionar instrucoes de build"
+# - style:     ajustes visuais/ui   -> git commit -m "style(home): ajustar espacamento dos botoes"
+
+
+-------------------------------------------------------------------------------
+4. O FLUXO DE TRABALHO PROFISSIONAL (WORKFLOW DE BRANCHES)
+-------------------------------------------------------------------------------
+A branch 'main' é sagrada. Ela é a versão estável e utilizável do seu produto.
+Você NUNCA programa direto na 'main'. Trabalhe sempre em branches dedicadas!
+
+PASSO A PASSO PARA QUALQUER NOVA TAREFA:
+
+1) Garanta que sua 'main' está atualizada:
+   git switch main
+   git pull
+
+2) Crie uma branch para trabalhar na tarefa:
+   git switch -c feature/nome-da-funcionalidade
+   (ou para correções):
+   git switch -c fix/nome-do-bug
+
+3) Trabalhe nela, mexa no código, faça quantos commits precisar:
+   git add .
+   git commit -m "feat: primeira parte da funcionalidade"
+   git add .
+   git commit -m "feat: concluir testes da funcionalidade"
+
+4) Testou tudo e ficou perfeito? Leve para a 'main':
+   git switch main
+   git merge feature/nome-da-funcionalidade
+   git push origin main
+
+5) Apague a branch temporária (já foi integrada, não precisa mais ocupar espaço):
+   git branch -d feature/nome-da-funcionalidade
+
+
+-------------------------------------------------------------------------------
+5. DEU RUIM! COMO CANCELAR, VOLTAR ATRÁS E LIMPAR SEM PÂNICO
+-------------------------------------------------------------------------------
+CENÁRIO A: "Mexi no código agora, quebrou tudo e eu quero jogar fora as mudanças não salvas"
+   # Descarta as mudanças em todos os arquivos modificados (não commitados)
+   git restore .
+
+CENÁRIO B: "Quero descartar as mudanças de apenas um arquivo que editei errado"
+   git restore caminho/do/arquivo.ext
+
+CENÁRIO C: "Fiz um monte de besteira e quero forçar o código a voltar exatamente pro último commit"
+   git reset --hard HEAD
+   (ATENÇÃO: apaga tudo que você alterou desde o último commit)
+
+CENÁRIO D: "A branch que criei deu um bug insolúvel e quero jogá-la inteira no lixo"
+   1) Saia da branch defeituosa e volte para a main:
+      git switch main
+   2) Exclua a branch com erro sem dó nem piedade:
+      git branch -D feature/tarefa-que-deu-ruim
+   (Pronto! A sua main continua intacta e limpa, sem nenhum resquício do bug).
+
+CENÁRIO E: "Preciso mudar de branch rapidinho, mas não quero commitar código pela metade"
+   # Guarda as mudanças numa gaveta temporária (stash)
+   git stash
+   # Quando voltar para a branch e quiser suas mudanças de volta:
+   git stash pop
+
+
+-------------------------------------------------------------------------------
+6. VERSÕES DO APP (TAGS VS BRANCHES)
+-------------------------------------------------------------------------------
+REGRA IMPORTANTE:
+NUNCA crie branches com nomes de versão (ex: projeto_0.0.1, projeto_0.0.2).
+Branches são linhas de desenvolvimento vivas. Versões são fotos no tempo!
+
+Para congelar uma versão do produto, use TAGS na 'main':
+
+# 1) Estando na 'main' após os testes:
+git switch main
+
+# 2) Criar uma tag anotada de versão:
+git tag -a v1.0.0 -m "Release versao 1.0.0"
+
+# 3) Enviar a tag para o GitHub:
+git push origin v1.0.0
+
+# Ver todas as tags existentes:
+git tag -l -n1
+
+
+-------------------------------------------------------------------------------
+7. TRABALHANDO COM O GITHUB (SINCRONIZAÇÃO)
+-------------------------------------------------------------------------------
+# Baixar commits novos do GitHub para a sua branch atual
+git pull
+
+# Enviar seus novos commits locais para o GitHub
+git push origin main
+
+# Enviar uma branch nova que só existe localmente para o GitHub
+git push -u origin feature/nome-da-funcionalidade
+
+# Ver quais repositórios remotos estão configurados
+git remote -v
+
+
+-------------------------------------------------------------------------------
+8. OS MANDAMENTOS DO GIT (O QUE NUNCA FAZER)
+-------------------------------------------------------------------------------
+1. NUNCA faça commits com mensagens genéricas demais como "." ou "asdasd".
+   Seu "eu" do futuro precisa entender o que foi feito.
+2. NUNCA comite senhas, chaves de API secretas ou arquivos .env.
+   Coloque sempre esses arquivos no seu .gitignore!
+3. NUNCA use 'git push --force' na branch main a menos que saiba exatamente
+   o que está fazendo e já tenha feito um backup prévio (tag/branch de archive).
+4. NUNCA tente resolver conflitos monstruosos colando código antigo por cima de
+   código novo refatorado. Entenda o que mudou no diff antes de decidir.
+===============================================================================
