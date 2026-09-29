@@ -41,11 +41,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       return;
     }
 
-    final validation = await PasswordValidationService.validateNewPassword(newPass);
+    final validation = PasswordValidationService.validate(newPass);
     if (!validation.isValid) {
-      if (mounted) {
-        SnackBarHelper.showError(context, validation.errorMessage!);
-      }
+      SnackBarHelper.showError(context, validation.errorMessage!);
       return;
     }
 

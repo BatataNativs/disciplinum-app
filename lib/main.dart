@@ -46,24 +46,8 @@ void main() async {
     
     final startupData = await AppBootstrap.initialize();
 
-    // Aguarda o Supabase restaurar a sessão antes de subir o app.
-    // Isso garante que currentUserIdProvider terá o UUID real desde o início,
-    // eliminando a race condition que causava saves com 'guest_user'.
-    // Timeout de 4s: se não houver sessão salva (usuário não logado), continua normalmente.
-    if (Supabase.instance.client.auth.currentSession == null) {
-      try {
-        await Supabase.instance.client.auth.onAuthStateChange
-            .where((e) => e.event == AuthChangeEvent.initialSession || e.session != null)
-            .first
-            .timeout(const Duration(seconds: 4));
-        LoggerService.instance.d('✅ Supabase: sessão restaurada antes do runApp');
-      } catch (_) {
-        // Timeout: usuário não está logado, continua normalmente em modo guest
-        LoggerService.instance.d('⚠️ Supabase: nenhuma sessão encontrada (modo guest ou não logado)');
-      }
-    } else {
-      LoggerService.instance.d('✅ Supabase: sessão já disponível imediatamente');
-    }
+    // Arquitetura 100% Local-First: autenticação e dados carregados instantaneamente do ObjectBox
+    LoggerService.instance.d('✅ Inicialização Local-First concluída imediatamente');
     
     runApp(
       ProviderScope(
@@ -120,7 +104,7 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
     ref.watch(themeControllerProvider);
     final themeController = ref.read(themeControllerProvider.notifier);
     final seenOnboarding = ref.watch(seenOnboardingProvider);
-    final authService = ref.watch(authServiceProvider); // Observa auth para reconstruir
+    ref.watch(authServiceProvider); // Observa auth para reconstruir
     
     return GlobalAchievementListener(
       child: AuthNavigationListener(
@@ -129,9 +113,7 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
           navigatorKey: AppLockNavigationService.navigatorKey, // Key para App Lock
           theme: themeController.themeData, // Tema dinâmico baseado no tema selecionado
           debugShowCheckedModeBanner: false,
-          // Se usuário está logado, vai para AuthWrapper (que leva para Home)
-          // Se não viu onboarding e não está logado, vai para onboarding
-          initialRoute: (seenOnboarding || authService.currentUser != null)
+          initialRoute: seenOnboarding
               ? AppRouter.authWrapper
               : AppRouter.onboarding,
           onGenerateRoute: AppRouter.generateRoute,

@@ -15,6 +15,7 @@ import 'package:disciplinum/core/database/entities/gamification_progress.dart';
 import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
 import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
 import 'package:disciplinum/core/storage/entities/user_choices_entity.dart';
+import 'package:disciplinum/core/database/entities/app_preference.dart';
 
 /// Versão do formato de backup — incrementar se a estrutura mudar.
 const int _kBackupVersion = 1;
@@ -131,6 +132,7 @@ class LocalBackupService {
     final books = store.box<ReadingBookEntity>().getAll();
     final checkins = store.box<DailyCheckin>().getAll();
     final userChoices = store.box<UserChoicesEntity>().getAll();
+    final preferences = store.box<AppPreference>().getAll();
 
     final payload = {
       'version': _kBackupVersion,
@@ -142,6 +144,7 @@ class LocalBackupService {
         'reading_books': books.map(_serializeBook).toList(),
         'daily_checkins': checkins.map(_serializeCheckin).toList(),
         'user_choices': userChoices.map(_serializeUserChoices).toList(),
+        'preferences': preferences.map((p) => {'key': p.key, 'value': p.value}).toList(),
       },
     };
 
@@ -250,6 +253,7 @@ class LocalBackupService {
       _restoreBooks(store, data['reading_books']);
       _restoreCheckins(store, data['daily_checkins']);
       _restoreUserChoices(store, data['user_choices']);
+      _restorePreferences(store, data['preferences']);
     });
 
     LoggerService.instance.i('✅ Backup restaurado com sucesso (versão $version)');
@@ -355,6 +359,24 @@ class LocalBackupService {
         ..createdAt = _parseDate(m['createdAt'])
         ..updatedAt = _parseDate(m['updatedAt']);
       box.put(e);
+    }
+  }
+
+  void _restorePreferences(Store store, dynamic raw) {
+    if (raw == null) return;
+    final box = store.box<AppPreference>();
+    for (final m in (raw as List)) {
+      final key = m['key'] as String?;
+      final value = m['value'] as String?;
+      if (key != null && value != null) {
+        final existing = box.query(AppPreference_.key.equals(key)).build().findFirst();
+        if (existing != null) {
+          existing.value = value;
+          box.put(existing);
+        } else {
+          box.put(AppPreference(key: key, value: value));
+        }
+      }
     }
   }
 

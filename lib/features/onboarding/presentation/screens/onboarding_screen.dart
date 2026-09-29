@@ -4,8 +4,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
-import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/features/settings/presentation/screens/how_it_works_screen.dart';
 
@@ -713,11 +711,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       if (mounted) Navigator.pop(context);
       return;
     }
-    final prefs =
-        ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
-    await prefs.setBool('seen_onboarding', true);
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, AppRouter.welcome);
+    Navigator.pushReplacementNamed(context, AppRouter.initialQuestions);
   }
 
   Future<void> _handleSkipAction() async {

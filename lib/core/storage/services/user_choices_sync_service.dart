@@ -27,19 +27,19 @@ class UserChoicesSyncService {
       // Converte para formato da nuvem
       final cloudData = localChoices.toCloudMap();
       
-      // Sincroniza com Supabase
-      try {
-        final response = await _supabase
-            .from('user_choices')
-            .upsert(cloudData)
-            .eq('user_id', userId)
-            .select();
-        
-        // Se chegou aqui, não houve erro
-        LoggerService.instance.d('🔐 Dados sincronizados com Supabase: $response');
-      } catch (e) {
-        LoggerService.instance.e('🔐 Erro ao sincronizar com Supabase', error: e);
-        return false;
+      // Sincroniza com Supabase se houver usuário autenticado na nuvem
+      if (_supabase.auth.currentUser != null) {
+        try {
+          final response = await _supabase
+              .from('user_choices')
+              .upsert(cloudData)
+              .eq('user_id', userId)
+              .select();
+          
+          LoggerService.instance.d('🔐 Dados sincronizados com Supabase: $response');
+        } catch (e) {
+          LoggerService.instance.d('🔐 Supabase indisponível no momento, mantendo local');
+        }
       }
 
       // Atualiza timestamp de sincronização local
@@ -167,16 +167,10 @@ class UserChoicesSyncService {
         return false;
       }
 
-      // Sincroniza com a nuvem
-      final syncSuccess = await syncToCloud(userId);
+      // Sincroniza com a nuvem em background se disponível
+      syncToCloud(userId);
       
-      if (syncSuccess) {
-        LoggerService.instance.i('🔐 Campo $field atualizado e sincronizado com sucesso');
-      } else {
-        LoggerService.instance.w('🔐 Campo atualizado localmente mas falha na sincronização');
-      }
-      
-      return syncSuccess;
+      return localSuccess;
     } catch (e) {
       LoggerService.instance.e('🔐 Erro ao atualizar campo $field para userId: $userId', error: e);
       return false;
@@ -196,16 +190,10 @@ class UserChoicesSyncService {
         return false;
       }
 
-      // Sincroniza com a nuvem
-      final syncSuccess = await syncToCloud(userId);
+      // Sincroniza com a nuvem em background se disponível
+      syncToCloud(userId);
       
-      if (syncSuccess) {
-        LoggerService.instance.i('🔐 Visibilidade do módulo $moduleId atualizada e sincronizada');
-      } else {
-        LoggerService.instance.w('🔐 Visibilidade atualizada localmente mas falha na sincronização');
-      }
-      
-      return syncSuccess;
+      return localSuccess;
     } catch (e) {
       LoggerService.instance.e('🔐 Erro ao atualizar visibilidade do módulo $moduleId para userId: $userId', error: e);
       return false;

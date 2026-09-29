@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
@@ -6,8 +7,9 @@ import 'package:disciplinum/shared/models/user_niche_time.dart';
 import 'package:disciplinum/features/iap/domain/entities/user_entitlement.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
-import 'package:disciplinum/core/network/network_health_service.dart';
-import 'package:disciplinum/core/network/connectivity_fallback.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/storage/entities/daily_checkin_entity.dart';
+import 'package:disciplinum/objectbox.g.dart';
 
 // Imports para sincronização de módulos (gamificação + estado)
 import 'package:disciplinum/features/modules/smoking/domain/repositories/smoking_module_repository.dart';
@@ -29,157 +31,95 @@ import 'package:disciplinum/features/modules/digital_detox/data/repositories/dig
 class CloudSyncService {
   final SupabaseClient supabase;
   final ObjectBoxPreferencesRepository? prefsRepo;
-  final ConnectivityFallback _fallback = ConnectivityFallback();
 
   CloudSyncService({
     required this.supabase,
     this.prefsRepo,
   });
 
-  // --- MÉTODOS AUXILIARES ---
-
-  String _timestampUtc() {
-    return DateTime.now().toUtc().toIso8601String();
-  }
-
-  String _localTimestamp() {
-    return _timestampUtc();
-  }
-
-  Future<T?> _retryOperation<T>(
-    Future<T> Function() operation, {
-    int maxRetries = 3,
-  }) async {
-    // Verificar saúde da rede antes de tentar
-    final networkHealth = NetworkHealthService();
-    final canAttempt = await networkHealth.shouldAttemptNetworkOperation();
-    if (!canAttempt) {
-      LoggerService.instance.w('Rede não está saudável, pulando operação de sincronização');
-      return null;
-    }
-
-    for (int i = 0; i < maxRetries; i++) {
-      try {
-        return await operation();
-      } catch (e) {
-        final isNetworkError = e.toString().contains('SocketException') ||
-                              e.toString().contains('ClientException') ||
-                              e.toString().contains('Failed host lookup') ||
-                              e.toString().contains('No address associated with hostname');
-        
-        if (isNetworkError) {
-          LoggerService.instance.w('Erro de DNS/rede detectado na tentativa ${i + 1}: ${e.toString().substring(0, 100)}...');
-          
-          // Para erros de DNS, esperar mais tempo e tentar apenas 2 vezes
-          if (i >= 1) {
-            LoggerService.instance.e('DNS falhou após 2 tentativas, desistindo da operação');
-            return null;
-          }
-          
-          await Future.delayed(Duration(seconds: (i + 1) * 3));
-          
-          // Tentar verificar conectividade novamente
-          await networkHealth.checkConnectivity();
-        } else {
-          LoggerService.instance.w('Tentativa ${i + 1} falhou, tentando novamente...');
-          await Future.delayed(Duration(seconds: i + 1));
-        }
-      }
-    }
-    return null;
-  }
-
   Future<String?> _getUserId() async {
+    if (prefsRepo != null) {
+      final savedId = await prefsRepo!.getString('user_id');
+      if (savedId != null && savedId.isNotEmpty) return savedId;
+    }
     final user = supabase.auth.currentUser;
     if (user != null) return user.id;
-    
-    // Fallback para o Isar se o usuário não estiver na sessão do Supabase (ex: persistência local)
-    if (prefsRepo != null) {
-      return await prefsRepo!.getString('user_id');
-    }
-    return null;
+    return 'local_user';
   }
 
-  // --- APPS ---
+  // --- APPS (100% ObjectBox Preferences) ---
   Future<void> addUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_apps').insert({
-        'user_id': userId,
-        'niche_id': nicheId.id,
-        'app_package': package,
-      });
-    });
+    if (prefsRepo != null) {
+      final key = 'user_niche_apps_${nicheId.id}';
+      final current = await prefsRepo!.getStringList(key) ?? [];
+      if (!current.contains(package)) {
+        final updated = List<String>.from(current)..add(package);
+        await prefsRepo!.setStringList(key, updated);
+      }
+    }
   }
 
   Future<void> removeUserNicheApp({
     required NicheId nicheId,
     required String package,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_apps').delete().match({
-        'user_id': userId,
-        'niche_id': nicheId.id,
-        'app_package': package,
-      });
-    });
+    if (prefsRepo != null) {
+      final key = 'user_niche_apps_${nicheId.id}';
+      final current = await prefsRepo!.getStringList(key) ?? [];
+      final updated = List<String>.from(current)..remove(package);
+      await prefsRepo!.setStringList(key, updated);
+    }
   }
 
   Future<List<UserNicheApp>> loadUserNicheApps({
     required NicheId nicheId,
   }) async {
-    return await _retryOperation(() async {
-          final userId = await _getUserId();
-          if (userId == null) return <UserNicheApp>[];
-          final result = await supabase
-              .from('user_niche_apps')
-              .select('user_id, niche_id, app_package')
-              .eq('user_id', userId)
-              .eq('niche_id', nicheId.id);
-          return (result as List)
-              .map((row) => UserNicheApp.fromJson(row))
-              .toList();
-        }) ??
-        [];
+    final userId = await _getUserId() ?? 'local_user';
+    if (prefsRepo != null) {
+      final list = await prefsRepo!.getStringList('user_niche_apps_${nicheId.id}');
+      if (list != null) {
+        return list.map((pkg) => UserNicheApp(
+          userId: userId,
+          nicheId: nicheId.id,
+          appPackage: pkg,
+        )).toList();
+      }
+    }
+    return [];
   }
 
   Future<void> removeAllAppsForNiche({
     required NicheId nicheId,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_apps').delete().match({
-        'user_id': userId,
-        'niche_id': nicheId.id,
-      });
-    });
+    if (prefsRepo != null) {
+      await prefsRepo!.remove('user_niche_apps_${nicheId.id}');
+    }
   }
 
-  // --- HORÁRIOS ---
+  // --- HORÁRIOS (100% ObjectBox Preferences) ---
   Future<void> addUserNicheTime({
     required int nicheId,
     required int hour,
     required int minute,
     String? phrase,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_times').insert({
-        'user_id': userId,
-        'niche_id': nicheId,
-        'hour': hour,
-        'minute': minute,
-        'phrase': phrase,
-      });
-    });
+    final userId = await _getUserId() ?? 'local_user';
+    final entry = UserNicheTime(
+      userId: userId,
+      nicheId: nicheId,
+      hour: hour,
+      minute: minute,
+      phrase: phrase,
+    );
+    if (prefsRepo != null) {
+      final key = 'user_niche_times_$nicheId';
+      final current = await prefsRepo!.getStringList(key) ?? [];
+      final updated = List<String>.from(current)..add(jsonEncode(entry.toJson()));
+      await prefsRepo!.setStringList(key, updated);
+    }
   }
 
   Future<void> removeUserNicheTime({
@@ -187,78 +127,60 @@ class CloudSyncService {
     required int hour,
     required int minute,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_times').delete().match({
-        'user_id': userId,
-        'niche_id': nicheId,
-        'hour': hour,
-        'minute': minute,
-      });
-    });
+    if (prefsRepo != null) {
+      final key = 'user_niche_times_$nicheId';
+      final current = await prefsRepo!.getStringList(key) ?? [];
+      final updated = current.where((s) {
+        try {
+          final map = jsonDecode(s) as Map<String, dynamic>;
+          return !(map['hour'] == hour && map['minute'] == minute);
+        } catch (_) {
+          return true;
+        }
+      }).toList();
+      await prefsRepo!.setStringList(key, updated);
+    }
   }
 
   Future<List<UserNicheTime>> loadUserNicheTimes({
     required int nicheId,
   }) async {
-    final operationKey = 'user_niche_times_$nicheId';
-    
-    return await _fallback.executeWithFallback<List<UserNicheTime>>(
-      operationKey,
-      () async {
-        // Operação na nuvem
-        final result = await _retryOperation<List<UserNicheTime>>(() async {
-          final userId = await _getUserId();
-          if (userId == null) return <UserNicheTime>[];
-          final data = await supabase
-              .from('user_niche_times')
-              .select('user_id, niche_id, hour, minute, phrase')
-              .eq('user_id', userId)
-              .eq('niche_id', nicheId);
-          return (data as List)
-              .map((row) => UserNicheTime.fromJson(row))
-              .toList();
-        });
-        return result ?? [];
-      },
-      () {
-        // Fallback local (ler do Isar/SharedPreferences se disponível)
-        // Por enquanto, retorna lista vazia
-        return <UserNicheTime>[];
-      },
-    ) ?? [];
+    if (prefsRepo != null) {
+      final list = await prefsRepo!.getStringList('user_niche_times_$nicheId');
+      if (list != null) {
+        return list.map((s) {
+          try {
+            return UserNicheTime.fromJson(jsonDecode(s) as Map<String, dynamic>);
+          } catch (_) {
+            return null;
+          }
+        }).whereType<UserNicheTime>().toList();
+      }
+    }
+    return [];
   }
 
   Future<void> removeAllTimesForNiche({
     required int nicheId,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_niche_times').delete().match({
-        'user_id': userId,
-        'niche_id': nicheId,
-      });
-    });
+    if (prefsRepo != null) {
+      await prefsRepo!.remove('user_niche_times_$nicheId');
+    }
   }
 
-  // --- STATUS E MEDALHAS ---
+  // --- STATUS E MEDALHAS (100% ObjectBox Preferences) ---
   Future<UserModuleStatus?> loadModuleStatus(NicheId nicheId) async {
-    return await _retryOperation<UserModuleStatus?>(() async {
-      final userId = await _getUserId();
-      if (userId == null) return null;
-
-      final data = await supabase
-          .from('user_module_status')
-          .select()
-          .eq('user_id', userId)
-          .eq('niche_id', nicheId.id)
-          .maybeSingle();
-
-      if (data == null) return null;
-      return UserModuleStatus.fromJson(data);
-    });
+    if (prefsRepo != null) {
+      final jsonStr = await prefsRepo!.getString('user_module_status_${nicheId.id}');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        try {
+          return UserModuleStatus.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+        } catch (e) {
+          LoggerService.instance.w('Erro ao ler UserModuleStatus local: $e');
+        }
+      }
+    }
+    return null;
   }
 
   Future<void> saveModuleStatus({
@@ -270,54 +192,35 @@ class CloudSyncService {
     List<String>? earnedInsignias,
     bool forceClearMedal = false,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
+    final userId = await _getUserId() ?? 'local_user';
+    final existing = await loadModuleStatus(nicheId);
 
-      final Map<String, dynamic> partialData = {
-        'user_id': userId,
-        'niche_id': nicheId.id,
-        'is_active': isModuleActive,
-        'last_updated': _localTimestamp(),
-      };
+    final status = UserModuleStatus(
+      userId: userId,
+      nicheId: nicheId.id,
+      isModuleActive: isModuleActive,
+      consecutiveDays: consecutiveDays ?? existing?.consecutiveDays ?? 0,
+      focusPeriodsRespected: focusPeriodsRespected ?? existing?.focusPeriodsRespected,
+      lastUpdated: DateTime.now().toUtc(),
+      maxMedal: forceClearMedal ? null : (maxMedal ?? existing?.maxMedal),
+      earnedInsignias: earnedInsignias ?? existing?.earnedInsignias ?? [],
+    );
 
-      if (consecutiveDays != null) {
-        partialData['consecutive_days'] = consecutiveDays;
-      }
-
-      if (focusPeriodsRespected != null) {
-        partialData['focus_periods_respected'] = focusPeriodsRespected;
-      }
-
-      if (forceClearMedal) {
-        partialData['max_medal'] = null;
-      } else if (maxMedal != null) {
-        partialData['max_medal'] = maxMedal;
-      }
-
-      if (earnedInsignias != null) {
-        partialData['earned_insignias'] = earnedInsignias;
-      }
-
-      await supabase.from('user_module_status').upsert(
-            partialData,
-            onConflict: 'user_id, niche_id',
-          );
-    });
+    if (prefsRepo != null) {
+      await prefsRepo!.setString(
+        'user_module_status_${nicheId.id}',
+        jsonEncode(status.toJson()),
+      );
+    }
   }
 
+  // --- SINCRONIZAÇÃO GLOBAL (100% Local-First) ---
   Future<bool> syncNow() async {
     try {
-      final userId = await _getUserId();
-      if (userId == null) {
-        LoggerService.instance.w('Sincronização abortada: Usuário não autenticado.');
-        return false;
-      }
-
-      LoggerService.instance.i('Iniciando sincronização global para o usuário $userId...');
+      final userId = await _getUserId() ?? 'local_user';
+      LoggerService.instance.i('Iniciando sincronização local para o usuário $userId...');
       
-      // === SINCRONIZAÇÃO DOS MÓDULOS (dados reais de gamificação) ===
-      // Cada módulo tem seu próprio repository que sincroniza com ObjectBox + Supabase
+      // Sincronização dos repositórios de módulos (ObjectBox puro)
       await _syncModule(SmokingModuleRepository.instance, userId, 'smoking');
       await _syncModule(ReadingModuleRepository.instance, userId, 'reading');
       await _syncModule(MoneySavingModuleRepository.instance, userId, 'money_saving');
@@ -328,8 +231,7 @@ class CloudSyncService {
       await _syncModule(ProcrastinationModuleRepository.instance, userId, 'procrastination');
       await _syncModule(SpendingModuleRepository.instance, userId, 'spending');
       
-      // === SINCRONIZAÇÃO DE DADOS ESPECÍFICOS (livros, refeições, intervalos) ===
-      // Dados que usam user_module_settings com module_id específico
+      // Sincronização de dados específicos
       await _syncSpecificData(
         () => ReadingRepository().performFullSync(userId),
         'reading_books',
@@ -346,141 +248,85 @@ class CloudSyncService {
         () => DigitalDetoxConfigRepository.instance.performFullSync(),
         'digital_detox_config',
       );
-      
-      // === SINCRONIZAÇÃO LEGADA (user_module_status, apps, horários) ===
-      for (final nicheId in NicheId.values) {
-        try {
-          // 1. Sincronizar Status do Módulo (legado)
-          await loadModuleStatus(nicheId);
 
-          // 2. Sincronizar Apps do Nicho
-          await loadUserNicheApps(nicheId: nicheId);
-          
-          // 3. Sincronizar Horários
-          await loadUserNicheTimes(nicheId: nicheId.id);
-        } catch (e) {
-          LoggerService.instance.e('Erro ao sincronizar nicho ${nicheId.id}', error: e);
-          // Continua para o próximo nicho em vez de abortar tudo
-        }
-      }
-
-      // 4. Sincronizar Entitlements
-      await loadEntitlements();
-
-      // 5. Salvar timestamp da sincronização na nuvem (para continuidade entre dispositivos)
       final now = DateTime.now();
       await saveLastSyncTimestamp(now);
-      
-      // Também salvar localmente para referência rápida
-      if (prefsRepo != null) {
-        await prefsRepo!.setString('last_sync_timestamp', now.toIso8601String());
-      }
 
-      LoggerService.instance.i('Sincronização global concluída com sucesso. Timestamp: $now');
+      LoggerService.instance.i('Sincronização local concluída com sucesso. Timestamp: $now');
       return true;
     } catch (e) {
-      LoggerService.instance.e('Erro crítico durante a sincronização global', error: e);
+      LoggerService.instance.e('Erro durante a sincronização local', error: e);
       return false;
     }
   }
 
-  /// Sincroniza um módulo específico chamando seu fullSync()
   Future<void> _syncModule(dynamic repository, String userId, String moduleName) async {
     try {
-      LoggerService.instance.d('🔄 Sincronizando módulo: $moduleName');
-      final result = await repository.fullSync(userId);
-      
-      // Log detalhado do estado sincronizado
-      final isActive = result.isModuleActive ?? false;
-      final hasRemoteData = result.updatedAt != null && result.updatedAt!.isAfter(DateTime(2020));
-      LoggerService.instance.i('✅ Módulo $moduleName sincronizado: isActive=$isActive, hasData=$hasRemoteData, updatedAt=${result.updatedAt}');
+      LoggerService.instance.d('🔄 Verificando módulo local: $moduleName');
+      await repository.fullSync(userId);
     } catch (e, stackTrace) {
-      // Se o módulo não existir na nuvem ou der erro, loga detalhadamente
-      LoggerService.instance.w('⚠️ Módulo $moduleName não sincronizado: $e');
+      LoggerService.instance.w('⚠️ Módulo $moduleName: $e');
       LoggerService.instance.d('StackTrace: $stackTrace');
     }
   }
 
-  /// Sincroniza dados específicos de um módulo (livros, refeições, intervalos)
   Future<void> _syncSpecificData(Future<void> Function() syncFn, String dataName) async {
     try {
-      LoggerService.instance.d('🔄 Sincronizando dados: $dataName');
+      LoggerService.instance.d('🔄 Verificando dados locais: $dataName');
       await syncFn();
-      LoggerService.instance.d('✅ Dados sincronizados: $dataName');
     } catch (e) {
-      // Se os dados não existirem na nuvem ou der erro, apenas loga e continua
-      LoggerService.instance.d('⚠️ Dados $dataName não sincronizados (pode ser novo): $e');
+      LoggerService.instance.d('⚠️ Dados $dataName: $e');
     }
   }
 
-  // --- DAILY CHECKINS (Smoking, Binge Eating, etc.) ---
-  
+  // --- DAILY CHECKINS (100% ObjectBox DailyCheckin) ---
   Future<void> saveDailyCheckin({
     required NicheId nicheId,
     required String dateStr,
   }) async {
-    final tableName = _getCheckinTableForNiche(nicheId);
-    if (tableName == null) return;
-
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-
-      await supabase.from(tableName).upsert(
-        {
-          'user_id': userId,
-          'check_date': dateStr,
-        },
-        onConflict: 'user_id, check_date',
-        ignoreDuplicates: true,
-      );
-    });
-  }
-
-  Future<List<String>> loadDailyCheckins(NicheId nicheId) async {
-    final tableName = _getCheckinTableForNiche(nicheId);
-    if (tableName == null) return [];
-
-    return await _retryOperation(() async {
-          final userId = await _getUserId();
-          if (userId == null) return <String>[];
-          
-          final result = await supabase
-              .from(tableName)
-              .select('check_date')
-              .eq('user_id', userId)
-              .order('check_date', ascending: true);
-
-          return (result as List)
-              .map((row) => row['check_date'] as String)
-              .toList();
-        }) ??
-        [];
-  }
-
-  Future<void> clearDailyCheckins(NicheId nicheId) async {
-    final tableName = _getCheckinTableForNiche(nicheId);
-    if (tableName == null) return;
-
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from(tableName).delete().eq('user_id', userId);
-    });
-  }
-
-  String? _getCheckinTableForNiche(NicheId nicheId) {
-    switch (nicheId) {
-      case NicheId.smoking:
-        return 'smoking_daily_checkins';
-      case NicheId.diet:
-        return 'binge_daily_checkins';
-      default:
-        return null;
+    try {
+      final store = ObjectBoxService.instance.store;
+      final box = store.box<DailyCheckin>();
+      final nicheIdDate = '${nicheId.index}_$dateStr';
+      final existing = box.query(DailyCheckin_.nicheIdDate.equals(nicheIdDate)).build().findFirst();
+      if (existing == null) {
+        box.put(DailyCheckin.create(
+          nicheId: nicheId,
+          dateStr: dateStr,
+        ));
+        LoggerService.instance.d('Checkin salvo localmente no ObjectBox: $nicheIdDate');
+      }
+    } catch (e) {
+      LoggerService.instance.w('Erro ao salvar checkin no ObjectBox: $e');
     }
   }
 
-  // --- ENTITLEMENTS ---
+  Future<List<String>> loadDailyCheckins(NicheId nicheId) async {
+    try {
+      final store = ObjectBoxService.instance.store;
+      final box = store.box<DailyCheckin>();
+      final checkins = box.query(DailyCheckin_.nicheIdIndex.equals(nicheId.index)).build().find();
+      final dates = checkins.map((c) => c.dateStr).toList()..sort();
+      return dates;
+    } catch (e) {
+      LoggerService.instance.w('Erro ao ler checkins do ObjectBox: $e');
+      return [];
+    }
+  }
+
+  Future<void> clearDailyCheckins(NicheId nicheId) async {
+    try {
+      final store = ObjectBoxService.instance.store;
+      final box = store.box<DailyCheckin>();
+      final checkins = box.query(DailyCheckin_.nicheIdIndex.equals(nicheId.index)).build().find();
+      box.removeMany(checkins.map((c) => c.id).toList());
+      LoggerService.instance.d('Checkins limpos localmente no ObjectBox para o nicho ${nicheId.name}');
+    } catch (e) {
+      LoggerService.instance.w('Erro ao limpar checkins no ObjectBox: $e');
+    }
+  }
+
+  // --- ENTITLEMENTS (100% Local ObjectBox Preferences) ---
   Future<void> addEntitlement({
     required String entitlementType,
     int? nicheId,
@@ -488,168 +334,98 @@ class CloudSyncService {
     DateTime? expiresAt,
     Map<String, dynamic>? metadata,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      await supabase.from('user_entitlements').insert({
-        'user_id': userId,
-        'entitlement_type': entitlementType,
-        'niche_id': nicheId,
-        'source': source,
-        'expires_at': expiresAt?.toIso8601String(),
-        'metadata': metadata ?? {},
-      });
-    });
+    if (prefsRepo == null) return;
+    final userId = await _getUserId() ?? 'local_user';
+    final entitlement = UserEntitlement(
+      id: '${entitlementType}_${nicheId ?? 0}_${DateTime.now().millisecondsSinceEpoch}',
+      userId: userId,
+      entitlementType: entitlementType,
+      nicheId: nicheId,
+      source: source,
+      createdAt: DateTime.now(),
+      expiresAt: expiresAt,
+      metadata: metadata ?? {},
+    );
+
+    final current = await loadEntitlements();
+    final updated = List<UserEntitlement>.from(current)..add(entitlement);
+    final jsonList = updated.map((e) => jsonEncode(e.toJson())).toList();
+    await prefsRepo!.setStringList('local_user_entitlements', jsonList);
   }
 
   Future<void> removeEntitlement({
     required String entitlementType,
     int? nicheId,
   }) async {
-    await _retryOperation(() async {
-      final userId = await _getUserId();
-      if (userId == null) return;
-      final matchData = <String, Object>{
-        'user_id': userId,
-        'entitlement_type': entitlementType,
-      };
-      if (nicheId != null) {
-        matchData['niche_id'] = nicheId;
-      }
-      await supabase.from('user_entitlements').delete().match(matchData);
-    });
+    if (prefsRepo == null) return;
+    final current = await loadEntitlements();
+    final updated = current.where((e) {
+      final matchType = e.entitlementType == entitlementType;
+      final matchNiche = nicheId == null || e.nicheId == nicheId;
+      return !(matchType && matchNiche);
+    }).toList();
+    final jsonList = updated.map((e) => jsonEncode(e.toJson())).toList();
+    await prefsRepo!.setStringList('local_user_entitlements', jsonList);
   }
 
   Future<List<UserEntitlement>> loadEntitlements({
     String? entitlementType,
     int? nicheId,
   }) async {
-    return await _retryOperation(() async {
-          final userId = await _getUserId();
-          if (userId == null) return <UserEntitlement>[];
+    if (prefsRepo == null) return [];
+    final jsonList = await prefsRepo!.getStringList('local_user_entitlements');
+    if (jsonList == null) return [];
 
-          var query = supabase
-              .from('user_entitlements')
-              .select()
-              .eq('user_id', userId);
+    final list = jsonList.map((s) {
+      try {
+        return UserEntitlement.fromJson(jsonDecode(s) as Map<String, dynamic>);
+      } catch (_) {
+        return null;
+      }
+    }).whereType<UserEntitlement>().where((e) => e.isValid).toList();
 
-          if (entitlementType != null) {
-            query = query.eq('entitlement_type', entitlementType);
-          }
-
-          if (nicheId != null) {
-            query = query.eq('niche_id', nicheId);
-          }
-
-          final result = await query;
-          return (result as List)
-              .map((row) => UserEntitlement.fromJson(row))
-              .where((entitlement) => entitlement.isValid)
-              .toList();
-        }) ??
-        [];
+    var filtered = list;
+    if (entitlementType != null) {
+      filtered = filtered.where((e) => e.entitlementType == entitlementType).toList();
+    }
+    if (nicheId != null) {
+      filtered = filtered.where((e) => e.nicheId == nicheId).toList();
+    }
+    return filtered;
   }
 
-  /// Sincroniza entitlements, idealmente chamado pelo IapService ou GamificationService
   Future<void> syncAllEntitlements({
     required Future<void> Function(NicheId, String type) onUnlock,
   }) async {
     try {
-      final userId = await _getUserId();
-      if (userId == null) return;
-
-      LoggerService.instance.i('Sincronizando entitlements do usuário...');
-      final cloudEntitlements = await loadEntitlements();
-      
-      final notificationEntitlements = cloudEntitlements.where((e) => e.entitlementType == 'notification');
-      for (final entitlement in notificationEntitlements) {
+      final entitlements = await loadEntitlements();
+      for (final entitlement in entitlements) {
         if (entitlement.nicheId != null) {
           final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
-          if (nicheId != null) await onUnlock(nicheId, 'notification');
-        }
-      }
-    
-      final motivationEntitlements = cloudEntitlements.where((e) => e.entitlementType == 'motivation');
-      for (final entitlement in motivationEntitlements) {
-        if (entitlement.nicheId != null) {
-          final nicheId = NicheId.tryFromInt(entitlement.nicheId!);
-          if (nicheId != null) await onUnlock(nicheId, 'motivation');
+          if (nicheId != null) {
+            await onUnlock(nicheId, entitlement.entitlementType);
+          }
         }
       }
     } catch (e) {
-      LoggerService.instance.e('Erro na sincronização de entitlements', error: e);
+      LoggerService.instance.e('Erro ao sincronizar entitlements locais', error: e);
     }
   }
 
-  // --- SYNC TIMESTAMP (Para continuidade entre dispositivos) ---
-
-  /// Salva a data da última sincronização na nuvem
+  // --- SYNC TIMESTAMP ---
   Future<void> saveLastSyncTimestamp(DateTime timestamp) async {
-    try {
-      final userId = await _getUserId();
-      if (userId == null) {
-        LoggerService.instance.w('Não foi possível salvar timestamp: usuário não autenticado');
-        return;
-      }
-
-      await supabase.from('user_module_settings').upsert({
-        'user_id': userId,
-        'module_id': 'global', // Módulo especial para metadados
-        'setting_key': 'last_sync_timestamp',
-        'setting_value': timestamp.toIso8601String(),
-        'updated_at': _localTimestamp(),
-      }, onConflict: 'user_id, module_id, setting_key');
-
-      LoggerService.instance.i('☁️ Timestamp de sync salvo na nuvem: $timestamp');
-    } on PostgrestException catch (e) {
-      if (e.code == 'PGRST204') {
-        // Schema cache desatualizado - coluna ainda não visível na API
-        LoggerService.instance.w('⚠️ Schema cache desatualizado. Aguardando refresh do PostgREST...');
-      } else {
-        LoggerService.instance.w('Erro ao salvar timestamp na nuvem: $e');
-      }
-    } catch (e) {
-      LoggerService.instance.w('Erro ao salvar timestamp na nuvem: $e');
+    if (prefsRepo != null) {
+      await prefsRepo!.setString('last_sync_timestamp', timestamp.toIso8601String());
     }
   }
 
-  /// Carrega a data da última sincronização da nuvem
   Future<DateTime?> loadLastSyncTimestamp() async {
-    try {
-      final userId = await _getUserId();
-      if (userId == null) {
-        LoggerService.instance.w('Não foi possível carregar timestamp: usuário não autenticado');
-        return null;
+    if (prefsRepo != null) {
+      final str = await prefsRepo!.getString('last_sync_timestamp');
+      if (str != null && str.isNotEmpty) {
+        return DateTime.tryParse(str);
       }
-
-      final response = await supabase
-          .from('user_module_settings')
-          .select('setting_value')
-          .eq('user_id', userId)
-          .eq('module_id', 'global')
-          .eq('setting_key', 'last_sync_timestamp')
-          .maybeSingle();
-
-      if (response != null && response['setting_value'] != null) {
-        final timestamp = DateTime.parse(response['setting_value']);
-        LoggerService.instance.i('☁️ Timestamp de sync carregado da nuvem: $timestamp');
-        return timestamp;
-      }
-
-      LoggerService.instance.d('Nenhum timestamp encontrado na nuvem');
-      return null;
-    } on PostgrestException catch (e) {
-      if (e.code == 'PGRST204') {
-        // Schema cache desatualizado - coluna ainda não visível na API
-        LoggerService.instance.w('⚠️ Schema cache desatualizado. Aguardando refresh do PostgREST...');
-      } else {
-        LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
-      }
-      return null;
-    } catch (e) {
-      LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
-      return null;
     }
+    return null;
   }
-
 }

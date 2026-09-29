@@ -6,7 +6,9 @@ import 'package:disciplinum/features/home/presentation/screens/home_screen.dart'
 import 'package:disciplinum/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:disciplinum/features/onboarding/presentation/screens/welcome_screen.dart';
 
-/// AuthWrapper gerencia o fluxo de autenticação.
+import 'package:disciplinum/features/auth/presentation/screens/biometric_lock_screen.dart';
+
+/// AuthWrapper gerencia o fluxo de autenticação e proteção biométrica.
 /// A sincronização inicial é tratada na HomeScreen com overlay esmaecido.
 class AuthWrapperWithoutHomeValues extends ConsumerStatefulWidget {
   const AuthWrapperWithoutHomeValues({super.key});
@@ -15,9 +17,58 @@ class AuthWrapperWithoutHomeValues extends ConsumerStatefulWidget {
   ConsumerState<AuthWrapperWithoutHomeValues> createState() => _AuthWrapperWithoutHomeValuesState();
 }
 
-class _AuthWrapperWithoutHomeValuesState extends ConsumerState<AuthWrapperWithoutHomeValues> {
+class _AuthWrapperWithoutHomeValuesState extends ConsumerState<AuthWrapperWithoutHomeValues>
+    with WidgetsBindingObserver {
   bool _wasLoading = false;
   bool _isVerifying = false;
+  bool _biometricChecked = false;
+  bool _isBiometricEnabled = false;
+  bool _isBiometricUnlocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkBiometrics();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      if (_isBiometricEnabled) {
+        setState(() {
+          _isBiometricUnlocked = false;
+        });
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      _checkBiometrics();
+    }
+  }
+
+  Future<void> _checkBiometrics() async {
+    try {
+      final bioService = ref.read(biometricAuthServiceProvider);
+      final enabled = await bioService.isBiometricLockEnabled();
+      if (mounted) {
+        setState(() {
+          _isBiometricEnabled = enabled;
+          _biometricChecked = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _biometricChecked = true;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +105,7 @@ class _AuthWrapperWithoutHomeValuesState extends ConsumerState<AuthWrapperWithou
     }
 
     // Prioridade 2: Loader ou Verificação
-    if (authService.isLoading || _isVerifying) {
+    if (authService.isLoading || _isVerifying || !_biometricChecked) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -64,6 +115,19 @@ class _AuthWrapperWithoutHomeValuesState extends ConsumerState<AuthWrapperWithou
     final currentUserId = authService.currentUser?.id;
     
     if (currentUserId != null) {
+      // Se biometria estiver ativada e ainda não desbloqueada
+      if (_isBiometricEnabled && !_isBiometricUnlocked) {
+        return BiometricLockScreen(
+          onUnlocked: () {
+            if (mounted) {
+              setState(() {
+                _isBiometricUnlocked = true;
+              });
+            }
+          },
+        );
+      }
+
       LoggerService.instance.d('AuthWrapper: Usuário logado ($currentUserId) -> HomeScreen');
       // Logado -> Home (a sincronização inicial acontece lá com overlay)
       return const HomeScreen();

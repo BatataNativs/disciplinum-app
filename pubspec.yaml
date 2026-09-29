@@ -45,7 +45,6 @@ dependencies:
   
   # Utilitários
   equatable: ^2.0.5
-  crypto: ^3.0.6
   
   # Backend e Auth (Supabase + Google)
   supabase_flutter: ^2.12.4
@@ -90,6 +89,7 @@ dependencies:
   # Logging profissional
   logger: ^2.0.2
   font_awesome_flutter: ^11.0.0
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:

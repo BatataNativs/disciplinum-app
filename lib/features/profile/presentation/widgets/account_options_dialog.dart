@@ -28,10 +28,12 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    _loadBiometricState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 350),
       vsync: this,
@@ -151,6 +153,47 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
     );
   }
 
+  Future<void> _loadBiometricState() async {
+    final bioService = ref.read(biometricAuthServiceProvider);
+    final enabled = await bioService.isBiometricLockEnabled();
+    if (mounted) setState(() => _biometricEnabled = enabled);
+  }
+
+  Future<void> _toggleBiometric() async {
+    final bioService = ref.read(biometricAuthServiceProvider);
+    final next = !_biometricEnabled;
+    if (next) {
+      final available = await bioService.isBiometricAvailable();
+      if (!available) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Biometria não disponível ou não configurada no dispositivo.'),
+            ),
+          );
+        }
+        return;
+      }
+      final authenticated = await bioService.authenticate(
+        localizedReason: 'Confirme sua biometria para ativar o bloqueio',
+      );
+      if (!authenticated) return;
+    }
+    await bioService.setBiometricLockEnabled(next);
+    if (mounted) {
+      setState(() => _biometricEnabled = next);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            next
+                ? 'Bloqueio por biometria ativado!'
+                : 'Bloqueio por biometria desativado.',
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildStandardActions(ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -169,9 +212,19 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
             },
           ),
           _buildListTile(
+            icon: FontAwesomeIcons.fingerprint,
+            title: 'Bloqueio por Biometria',
+            subtitle: _biometricEnabled
+                ? 'Ativado (digital/rosto)'
+                : 'Desativado (toque para ativar)',
+            iconColor: Colors.blue.shade700,
+            iconBgColor: Colors.blue.withValues(alpha: 0.1),
+            onTap: _toggleBiometric,
+          ),
+          _buildListTile(
             icon: FontAwesomeIcons.database,
-            title: 'Backup e Sincronização',
-            subtitle: 'Salvar local (JSON) ou na nuvem',
+            title: 'Backup e Restauração',
+            subtitle: 'Exportar ou importar dados locais (JSON)',
             iconColor: Colors.teal.shade700,
             iconBgColor: Colors.teal.withValues(alpha: 0.1),
             onTap: () {
@@ -187,7 +240,7 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
           _buildListTile(
             icon: FontAwesomeIcons.rightFromBracket,
             title: 'Sair',
-            subtitle: 'Fazer logout',
+            subtitle: 'Desconectar conta',
             iconColor: Colors.orange.shade700,
             iconBgColor: Colors.orange.withValues(alpha: 0.1),
             onTap: () {

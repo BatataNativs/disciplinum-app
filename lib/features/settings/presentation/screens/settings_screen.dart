@@ -77,10 +77,46 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _soundEnabled = NotificationService.soundEnabled;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    _loadBiometricState();
+  }
+
+  Future<void> _loadBiometricState() async {
+    final bioService = ref.read(biometricAuthServiceProvider);
+    final enabled = await bioService.isBiometricLockEnabled();
+    if (mounted) setState(() => _biometricEnabled = enabled);
+  }
+
+  Future<void> _toggleBiometrics(bool value) async {
+    final bioService = ref.read(biometricAuthServiceProvider);
+    if (value) {
+      final available = await bioService.isBiometricAvailable();
+      if (!available) {
+        if (mounted) {
+          EnhancedSnackBarHelper.showError(
+            context,
+            'Biometria não disponível ou não configurada no dispositivo.',
+          );
+        }
+        return;
+      }
+      final authenticated = await bioService.authenticate(
+        localizedReason: 'Confirme sua biometria para ativar o bloqueio',
+      );
+      if (!authenticated) return;
+    }
+    await bioService.setBiometricLockEnabled(value);
+    if (mounted) {
+      setState(() => _biometricEnabled = value);
+      EnhancedSnackBarHelper.showSuccess(
+        context,
+        value ? 'Bloqueio por biometria ativado com sucesso!' : 'Bloqueio por biometria desativado.',
+      );
+    }
   }
 
   // --- AÇÕES DE CONFIGURAÇÃO ---
@@ -675,6 +711,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       iconColor: Colors.teal.shade400,
                       iconBgColor: Colors.teal.withValues(alpha: 0.1),
                       onTap: NotificationService.openNotificationSettings,
+                    ),
+                  ]),
+                  sectionHeader('Segurança e Acesso'),
+                  settingContainer([
+                    buildSettingSwitch(
+                      icon: _biometricEnabled
+                          ? Icons.fingerprint_rounded
+                          : Icons.lock_outline_rounded,
+                      title: 'Bloqueio por biometria',
+                      subtitle: _biometricEnabled
+                          ? 'Exigir digital/rosto ao abrir o aplicativo'
+                          : 'Desativado (acesso direto)',
+                      iconColor: Colors.blueAccent.shade400,
+                      iconBgColor: Colors.blueAccent.withValues(alpha: 0.1),
+                      value: _biometricEnabled,
+                      onChanged: _toggleBiometrics,
                     ),
                   ]),
                   sectionHeader('Suporte e Feedback'),

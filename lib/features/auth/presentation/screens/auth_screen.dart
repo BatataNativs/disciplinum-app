@@ -73,7 +73,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         return;
       }
 
-      final validation = await PasswordValidationService.validateNewPassword(
+      final validation = PasswordValidationService.validate(
         _passwordController.text,
       );
       if (!validation.isValid) {

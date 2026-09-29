@@ -27,38 +27,15 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
   }
 
   Future<void> _loadLastSyncDate() async {
-    DateTime? lastSyncDateTime;
-    String? source;
-    
-    // 1. Tenta carregar da NUVEM primeiro (para continuidade entre dispositivos)
-    try {
-      final cloudTimestamp = await ref.read(cloudSyncServiceProvider).loadLastSyncTimestamp();
-      if (cloudTimestamp != null) {
-        lastSyncDateTime = cloudTimestamp;
-        source = 'nuvem';
-        LoggerService.instance.d('☁️ Data de sync carregada da nuvem: $cloudTimestamp');
+    final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
+    final lastSync = await prefs.getString('last_sync_timestamp');
+    if (lastSync != null && mounted) {
+      final lastSyncDateTime = DateTime.tryParse(lastSync);
+      if (lastSyncDateTime != null) {
+        setState(() {
+          _lastSyncDate = DateFormat('dd/MM/yyyy HH:mm').format(lastSyncDateTime);
+        });
       }
-    } catch (e) {
-      LoggerService.instance.w('Erro ao carregar timestamp da nuvem: $e');
-    }
-    
-    // 2. Se não achou na nuvem, tenta carregar do LOCAL
-    if (lastSyncDateTime == null) {
-      final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
-      final lastSync = await prefs.getString('last_sync_timestamp');
-      if (lastSync != null) {
-        lastSyncDateTime = DateTime.parse(lastSync);
-        source = 'local';
-        LoggerService.instance.d('💾 Data de sync carregada do local: $lastSyncDateTime');
-      }
-    }
-    
-    // 3. Atualiza a UI se encontrou alguma data
-    if (lastSyncDateTime != null && mounted) {
-      setState(() {
-        _lastSyncDate = DateFormat('dd/MM/yyyy HH:mm').format(lastSyncDateTime!);
-      });
-      LoggerService.instance.i('📅 Data de sync exibida (fonte: $source): $_lastSyncDate');
     }
   }
 
@@ -67,37 +44,6 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     final prefs = ObjectBoxPreferencesRepository(ObjectBoxService.instance.store);
     await prefs.setString('last_sync_timestamp', now);
     _loadLastSyncDate();
-  }
-
-  Future<void> _handleAction(String type, Future<bool> Function() action) async {
-    setState(() => _isProcessing = true);
-    
-    try {
-      LoggerService.instance.i('Iniciando operação de $type...');
-      final success = await action();
-      
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-
-      if (success) {
-        await _saveLastSyncDate();
-        if (!mounted) return;
-        EnhancedSnackBarHelper.showSuccess(
-          context, 
-          type == 'backup' 
-            ? 'Backup realizado com sucesso!' 
-            : 'Dados sincronizados com sucesso!'
-        );
-      } else {
-        if (!mounted) return;
-        EnhancedSnackBarHelper.showError(context, 'Falha na operação. Verifique sua conexão.');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        EnhancedSnackBarHelper.showError(context, 'Erro inesperado: $e');
-      }
-    }
   }
 
   Future<void> _handleLocalBackupAction(String type, Future<BackupResult> Function() action) async {
@@ -111,6 +57,8 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
       setState(() => _isProcessing = false);
 
       if (result.success) {
+        await _saveLastSyncDate();
+        if (!mounted) return;
         if (type == 'export') {
           EnhancedSnackBarHelper.showSuccess(
             context, 
@@ -142,7 +90,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Sincronização'),
+        title: const Text('Backup e Restauração'),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -201,46 +149,16 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-                    _buildHeader(colorScheme),
-                    const SizedBox(height: 30),
-                    
-                    // Seção de Nuvem
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Text(
-                        'NUVEM (SUPABASE)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                    _buildSyncCard(
-                      title: 'Fazer Backup Agora',
-                      description: 'Envia seus dados locais para a nuvem de forma segura.',
-                      icon: Icons.cloud_upload_outlined,
-                      gradientColors: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                      onTap: () => _handleAction('backup', () => ref.read(cloudSyncServiceProvider).syncNow()),
-                    ),
                     const SizedBox(height: 12),
-                    _buildSyncCard(
-                      title: 'Sincronizar com Nuvem',
-                      description: 'Mescla dados locais com a nuvem. Ideal para múltiplos dispositivos.',
-                      icon: Icons.sync_rounded,
-                      gradientColors: const [Color(0xFF10B981), Color(0xFF14B8A6)],
-                      onTap: () => _handleAction('sync', () => ref.read(cloudSyncServiceProvider).syncNow()),
-                    ),
-                    
+                    _buildHeader(colorScheme),
+                    const SizedBox(height: 24),
+                    _buildPrivacyBanner(colorScheme),
                     const SizedBox(height: 24),
                     
-                    // Seção Local
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
                       child: Text(
-                        'BACKUP LOCAL',
+                        'GERENCIAR BACKUPS LOCAIS',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -250,18 +168,18 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                       ),
                     ),
                     _buildSyncCard(
-                      title: 'Exportar para JSON',
-                      description: 'Exporta todas as suas informações locais e compartilha o arquivo.',
+                      title: 'Exportar Backup (JSON)',
+                      description: 'Gera um arquivo completo com seus hábitos e histórico para salvar no Drive, e-mail ou armazenamento local.',
                       icon: Icons.file_download_outlined,
-                      gradientColors: const [Color(0xFFFF8A65), Color(0xFFFF5722)],
+                      gradientColors: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                       onTap: () => _handleLocalBackupAction('export', () => ref.read(localBackupServiceProvider).exportAndShare()),
                     ),
                     const SizedBox(height: 12),
                     _buildSyncCard(
-                      title: 'Restaurar de JSON',
-                      description: 'Seleciona e restaura um arquivo de backup local (.json).',
+                      title: 'Restaurar de Arquivo',
+                      description: 'Importa um arquivo de backup local (.json) e restaura todos os seus dados no aplicativo.',
                       icon: Icons.file_upload_outlined,
-                      gradientColors: const [Color(0xFF4FC3F7), Color(0xFF0288D1)],
+                      gradientColors: const [Color(0xFF10B981), Color(0xFF14B8A6)],
                       onTap: () => _handleLocalBackupAction('import', () => ref.read(localBackupServiceProvider).importFromDevice()),
                     ),
                     
@@ -372,14 +290,14 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
             ],
           ),
           child: Icon(
-            Icons.cloud_done_outlined,
+            Icons.shield_rounded,
             size: 40,
-            color: colorScheme.onSurface,
+            color: colorScheme.primary,
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          'Salve e sincronize \nseus dados',
+          'Backup dos seus dados',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 28,
@@ -390,7 +308,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Escolha entre salvar na nuvem ou exportar localmente em formato JSON.',
+          'Seus dados pertencem a você e ficam armazenados localmente no seu aparelho.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
@@ -399,6 +317,61 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPrivacyBanner(ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF10B981).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.verified_user_rounded,
+              color: Color(0xFF10B981),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '100% Local e Privado',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Nenhum dado pessoal, hábito ou anotação é enviado para a nuvem. Suas informações nunca saem deste aparelho sem a sua autorização.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -550,8 +523,8 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
                   const SizedBox(width: 8),
                   Text(
                     _lastSyncDate != null
-                        ? 'Sincronizado em $_lastSyncDate'
-                        : 'Nenhuma sincronização ainda',
+                        ? 'Último backup em $_lastSyncDate'
+                        : 'Nenhum backup realizado ainda',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -576,7 +549,7 @@ class _SyncBackupScreenState extends ConsumerState<SyncBackupScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Dados sincronizados de forma segura',
+                'Armazenamento local seguro e sob seu controle',
                 style: TextStyle(
                   fontSize: 11,
                   color: colorScheme.onSurface.withValues(alpha: 0.24),

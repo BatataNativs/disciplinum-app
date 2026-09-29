@@ -30,10 +30,13 @@ import 'package:disciplinum/features/iap/presentation/screens/lojinha_screen.dar
 import 'package:disciplinum/features/app_lock/presentation/screens/app_lock_screen.dart';
 import 'package:disciplinum/features/app_lock/domain/entities/app_lock_event.dart';
 
+import 'package:disciplinum/features/onboarding/presentation/screens/initial_questions_screen.dart';
+
 class AppRouter {
   static const homeGuest = '/home_guest';
   static const String home = '/';
   static const String onboarding = '/onboarding';
+  static const String initialQuestions = '/initial_questions';
   static const String welcome = '/welcome';
   static const String authWrapper = '/auth_wrapper';
   static const String nicheDetail = '/niche_detail';
@@ -54,6 +57,11 @@ class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case AppRouter.initialQuestions:
+        return FastMaterialPageRoute(
+          builder: (_) => const InitialQuestionsScreen(),
+        );
+
       case AppRouter.welcome:
         return FastMaterialPageRoute(builder: (_) => const WelcomeScreen());
 

@@ -1,6 +1,6 @@
 package com.disciplinum.app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
@@ -14,7 +14,7 @@ import com.disciplinum.app.TimerOverlayManager
 import com.disciplinum.app_lock.AppLockService
 import com.disciplinum.channels.AppLockMethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val ACCESSIBILITY_EVENT_CHANNEL = "com.disciplinum.app/accessibility"
     private val ACCESSIBILITY_METHOD_CHANNEL = "com.disciplinum.app/accessibility_methods"
 

@@ -728,9 +728,9 @@ class _HowItWorksScreenState extends State<HowItWorksScreen> {
                         delay: 2000.ms,
                       ),
                       _buildModuleItem(
-                        icon: Icons.cloud,
-                        title: 'Backup na Nuvem',
-                        description: 'Seus dados sincronizados com segurança',
+                        icon: Icons.shield_rounded,
+                        title: 'Privacidade e Backup',
+                        description: 'Dados 100% locais com exportação segura',
                         delay: 2100.ms,
                       ),
                       _buildModuleItem(

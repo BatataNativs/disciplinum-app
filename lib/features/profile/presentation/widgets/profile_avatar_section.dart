@@ -1,9 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/features/auth/data/datasources/avatar_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
-
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 
 class ProfileAvatarSection extends ConsumerStatefulWidget {
@@ -21,34 +20,48 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
   Future<void> _changeAvatar() async {
     if (_loadingAvatar) return;
 
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
-    if (userId.isEmpty) return;
-
     final file = await AvatarService.pickAvatar();
 
     if (file != null) {
       setState(() => _loadingAvatar = true);
-      final ok = await AvatarService.uploadAvatar(userId: userId, file: file);
+      final localPath = await AvatarService.saveAvatarLocally(file: file);
 
       if (!mounted) return;
-      await ref.read(authServiceProvider.notifier).loadUserProfile();
+
+      if (localPath != null) {
+        await ref
+            .read(authServiceProvider.notifier)
+            .updateProfile(avatarUrl: localPath);
+      }
 
       if (!mounted) return;
       setState(() {
         _loadingAvatar = false;
-        if (ok) {
+        if (localPath != null) {
           _avatarRefreshToken++;
         }
       });
 
-      if (ok) {
+      if (localPath != null) {
         EnhancedSnackBarHelper.showSuccess(
             context, 'Foto de perfil atualizada!');
       } else {
         EnhancedSnackBarHelper.showError(
-            context, 'Erro ao enviar foto de perfil!');
+            context, 'Erro ao salvar foto de perfil!');
       }
     }
+  }
+
+  ImageProvider? _getAvatarProvider(String? path) {
+    if (path == null || path.isEmpty) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return NetworkImage('$path?v=$_avatarRefreshToken');
+    }
+    final file = File(path);
+    if (file.existsSync()) {
+      return FileImage(file);
+    }
+    return null;
   }
 
   @override
@@ -60,7 +73,6 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
         ? (authService.userProfile?['name'] ?? 'Usuário')
         : 'Usuário Anônimo';
 
-    // Usa userProfile diretamente (persiste na tabela users)
     final showAvatarConfig = authService.userProfile?['show_avatar'] ?? true;
     final String? currentAvatarUrl = authService.userProfile?['avatar_url'];
     const double avatarRadius = 70.0;
@@ -86,28 +98,24 @@ class _ProfileAvatarSectionState extends ConsumerState<ProfileAvatarSection> {
                     );
                   }
 
+                  final avatarImage = _getAvatarProvider(currentAvatarUrl);
+
                   return CircleAvatar(
                     radius: avatarRadius,
                     backgroundColor: theme.colorScheme.primaryContainer,
                     foregroundColor: theme.colorScheme.onPrimaryContainer,
-                    backgroundImage: (currentAvatarUrl != null &&
-                            currentAvatarUrl.isNotEmpty)
-                        ? NetworkImage(
-                            '$currentAvatarUrl?v=$_avatarRefreshToken',
+                    backgroundImage: avatarImage,
+                    child: avatarImage == null
+                        ? Text(
+                            userName.isNotEmpty
+                                ? userName[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
                           )
                         : null,
-                    child:
-                        (currentAvatarUrl == null || currentAvatarUrl.isEmpty)
-                            ? Text(
-                                userName.isNotEmpty
-                                    ? userName[0].toUpperCase()
-                                    : 'U',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : null,
                   );
                 }),
         ),
