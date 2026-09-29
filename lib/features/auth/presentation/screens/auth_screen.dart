@@ -8,6 +8,7 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/core/auth/password_validation_service.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final int initialAuthMode;
@@ -66,10 +67,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       _showSnack('Senha deve ter pelo menos 8 caracteres');
       return;
     }
-    if (_authMode == 1 &&
-        _passwordController.text != _confirmPasswordController.text) {
-      _showSnack('As senhas não conferem');
-      return;
+    if (_authMode == 1) {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        _showSnack('As senhas não conferem');
+        return;
+      }
+
+      final validation = await PasswordValidationService.validateNewPassword(
+        _passwordController.text,
+      );
+      if (!validation.isValid) {
+        _showSnack(validation.errorMessage!, isError: true);
+        return;
+      }
     }
 
     bool success;

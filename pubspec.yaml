@@ -45,6 +45,7 @@ dependencies:
   
   # Utilitários
   equatable: ^2.0.5
+  crypto: ^3.0.6
   
   # Backend e Auth (Supabase + Google)
   supabase_flutter: ^2.12.4

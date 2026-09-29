@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/core/utils/snackbar_helper.dart';
+import 'package:disciplinum/core/auth/password_validation_service.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -37,6 +38,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
     if (newPass != confirmPass) {
       SnackBarHelper.showError(context, 'As senhas não conferem');
+      return;
+    }
+
+    final validation = await PasswordValidationService.validateNewPassword(newPass);
+    if (!validation.isValid) {
+      if (mounted) {
+        SnackBarHelper.showError(context, validation.errorMessage!);
+      }
       return;
     }
 
