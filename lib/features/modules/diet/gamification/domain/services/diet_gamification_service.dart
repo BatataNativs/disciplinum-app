@@ -188,12 +188,6 @@ class DietGamificationService implements ModuleGamificationInterface {
   /// Obtém o contador de insignias Disciplinum
   int get disciplinumCount => _currentState?.disciplinumCount ?? 0;
 
-  /// Sincroniza com o Supabase
-  Future<void> syncWithSupabase() async {
-    if (_currentState != null) {
-      await _repository.syncWithSupabase(_currentState!);
-    }
-  }
 
   /// Atualiza o estado atual com base nos serviços
   Future<void> _updateCurrentState() async {

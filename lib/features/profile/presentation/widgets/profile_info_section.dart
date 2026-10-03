@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
-
 class ProfileInfoSection extends ConsumerWidget {
   const ProfileInfoSection({super.key});
 
@@ -15,6 +14,9 @@ class ProfileInfoSection extends ConsumerWidget {
         : 'Usuário Anônimo';
 
     // Usa userProfile diretamente (persiste na tabela users)
+    final userEmail = (authService.currentUser?.email != null && authService.currentUser!.email.isNotEmpty)
+        ? authService.currentUser!.email
+        : (authService.userProfile?['email'] as String? ?? '');
     final showEmail = authService.userProfile?['show_email'] ?? true;
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -59,7 +61,7 @@ class ProfileInfoSection extends ConsumerWidget {
           ),
 
           // EMAIL
-          if (authService.isAuthenticated && showEmail)
+          if (authService.isAuthenticated && showEmail && userEmail.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: Container(
@@ -78,14 +80,25 @@ class ProfileInfoSection extends ConsumerWidget {
                     width: 1.5,
                   ),
                 ),
-                child: Text(
-                  authService.currentUser?.email ?? '',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                    color: colorScheme.primary,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.email_outlined,
+                      size: 15,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      userEmail,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

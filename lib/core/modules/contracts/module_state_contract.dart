@@ -3,7 +3,7 @@
 /// Este contrato define o "DNA" comum entre todos os módulos, sem
 /// centralizar a lógica de negócio. Cada módulo mantém sua independência
 /// mas segue uma estrutura padronizada para facilitar:
-/// - Sincronização com Supabase
+/// - Sincronização e persistência
 /// - Auditoria de conformidade
 /// - Evolução do schema (versionamento)
 /// 
@@ -13,7 +13,7 @@ abstract class ModuleStateContract {
   /// 
   /// Usado para:
   /// - Roteamento de sync
-  /// - Nomeação de tabelas no Supabase
+  /// - Chaves de identificação e mapeamento
   /// - Logging e analytics
   String get moduleId;
 
@@ -30,7 +30,7 @@ abstract class ModuleStateContract {
   /// Timestamp da última atualização
   DateTime get updatedAt;
 
-  /// Serializa o estado para JSON (para Supabase)
+  /// Serializa o estado para JSON (para exportação/backup)
   /// 
   /// Deve incluir todos os campos obrigatórios do contrato
   /// mais os campos específicos do módulo.
@@ -47,7 +47,7 @@ abstract class ModuleStateContract {
   /// ```
   Map<String, dynamic> toJson();
 
-  /// Serializa o estado para Map (para Isar/Local)
+  /// Serializa o estado para Map (para armazenamento local)
   /// 
   /// Geralmente delega para [toJson] mas permite
   /// otimizações específicas para storage local.

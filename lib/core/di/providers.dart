@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/storage/local_storage_service.dart';
 import 'package:disciplinum/core/modules/sync/sync_validation_service.dart';
@@ -18,6 +17,7 @@ import 'package:disciplinum/infrastructure/backup/local_backup_service.dart';
 import 'package:disciplinum/infrastructure/iap/iap_service.dart' as iap;
 import 'package:disciplinum/infrastructure/iap/domain/repositories/iap_entitlement_repository.dart';
 import 'package:disciplinum/core/auth/biometric_auth_service.dart';
+import 'package:disciplinum/core/auth/biometric_lock_controller.dart';
 import 'package:disciplinum/features/auth/data/repositories/local_auth_repository.dart';
 import 'package:disciplinum/features/auth/domain/repositories/auth_repository.dart';
 import 'package:disciplinum/features/auth/domain/entities/auth_state.dart' as auth_state;
@@ -239,10 +239,32 @@ final biometricAuthServiceProvider = Provider<BiometricAuthService>((ref) {
   return BiometricAuthService(prefs: prefs);
 });
 
+/// Provider para BiometricLockController
+final biometricLockControllerProvider =
+    StateNotifierProvider<BiometricLockController, BiometricLockState>((ref) {
+  final bioService = ref.watch(biometricAuthServiceProvider);
+  return BiometricLockController(bioService, ref);
+});
+
 /// Provider para obter o userId atual do usuário autenticado
 final currentUserIdProvider = Provider<String>((ref) {
   final authState = ref.watch(authServiceProvider);
   return authState.currentUser?.id ?? 'local_user';
+});
+
+/// Provider para obter o gênero configurado no perfil local ('Feminino', 'Masculino', etc.)
+final userGenderProvider = Provider<String?>((ref) {
+  final authState = ref.watch(authServiceProvider);
+  final fromMetadata = authState.currentUser?.metadata?['gender'] as String?;
+  if (fromMetadata != null && fromMetadata.isNotEmpty) {
+    return fromMetadata;
+  }
+  final fromProfile = authState.userProfile?['gender'] as String?;
+  if (fromProfile != null && fromProfile.isNotEmpty) {
+    return fromProfile;
+  }
+  final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
+  return prefs.getStringSync('local_profile_gender');
 });
 
 /// Provider para ObjectBoxPreferencesRepository
@@ -403,7 +425,6 @@ final smokingGamificationRepositoryProvider = Provider<SmokingGamificationReposi
 final cloudSyncServiceProvider = Provider<CloudSyncService>((ref) {
   final prefs = ref.watch(objectboxPreferencesRepositoryProvider);
   return CloudSyncService(
-    supabase: Supabase.instance.client,
     prefsRepo: prefs,
   );
 });

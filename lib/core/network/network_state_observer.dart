@@ -50,7 +50,7 @@ final autoSyncOnNetworkChangeProvider = Provider<void>((ref) {
       final logger = LoggerService.instance;
       logger.i('🌐 Dispositivo online - Disparando sincronização automática');
 
-      // Aqui você pode adicionar a lógica de sync quando tiver o Supabase configurado
+      // Lógica de sincronização quando aplicável
       // final syncService = ref.read(moduleSyncServiceProvider);
       // await syncService.processPendingSyncs();
     }

@@ -6,7 +6,7 @@ import 'package:disciplinum/main.dart' as app;
 /// Testes de integração para sincronização de módulos
 ///
 /// Estes testes verificam:
-/// 1. Todos os 9 módulos conseguem sincronizar com Supabase
+/// 1. Todos os 9 módulos possuem persistência e integridade
 /// 2. Resolução de conflitos funciona corretamente
 /// 3. Fila de sync offline processa quando online
 void main() {

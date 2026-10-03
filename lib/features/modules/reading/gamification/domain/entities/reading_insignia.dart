@@ -71,7 +71,7 @@ extension ReadingInsigniaEntityExtension on ReadingInsigniaEntity {
   String get requirementDescription {
     switch (this) {
       case ReadingInsigniaEntity.madeira:
-        return 'Ative o módulo Leitura';
+        return 'Ativar o módulo Leitura';
       case ReadingInsigniaEntity.ferro:
         return '2% lido do primeiro livro';
       case ReadingInsigniaEntity.aluminio:

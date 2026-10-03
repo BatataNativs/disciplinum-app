@@ -23,7 +23,7 @@ class NotificationScheduler {
   /// Obtém horários de check-in/notificações para um módulo específico
   /// NOTA: Apenas Smoking tem check-in diário.
   /// 
-  /// Busca horários da cloud (Supabase) com fallback local (ObjectBox)
+  /// Busca horários configurados via ObjectBox
   Future<List<String>> _getModuleCheckInTimes(NicheId nicheId) async {
     if (nicheId == NicheId.smoking) {
       try {

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_module_state.dart';
 import 'package:disciplinum/features/modules/binge_eating/gamification/domain/repositories/binge_eating_gamification_repository.dart';
+import 'package:disciplinum/features/modules/binge_eating/gamification/domain/services/binge_eating_celebration_service.dart';
 
 /// Estado da gamificação do Binge Eating
 class BingeEatingGamificationState {
@@ -52,10 +53,24 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
     try {
       final gamification = await _repository.getBingeEatingState();
       if (gamification != null) {
+        BingeEatingModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveBingeEatingState(effectiveGamification);
+          BingeEatingCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Compulsão Alimentar',
+            assetPath: 'assets/gamification/insignias/binge_eating/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -71,10 +86,22 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
     
     try {
       final currentState = state.gamification ?? BingeEatingModuleState.initial();
-      final newState = currentState.copyWith(isModuleActive: true);
+      final earnedInsignias = List<String>.from(currentState.earnedInsignias);
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+        earnedInsignias.add('madeira');
+      }
+      final newState = currentState.copyWith(
+        isModuleActive: true,
+        earnedInsignias: earnedInsignias,
+      );
       
       await _repository.saveBingeEatingState(newState);
-      await _repository.syncWithSupabase(newState);
+      await BingeEatingCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Compulsão Alimentar',
+        assetPath: 'assets/gamification/insignias/binge_eating/madeira.png',
+      );
       
       await loadGamification();
     } catch (e) {
@@ -91,7 +118,6 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
       final newState = currentState.copyWith(isModuleActive: false);
       
       await _repository.saveBingeEatingState(newState);
-      await _repository.syncWithSupabase(newState);
       
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
@@ -104,7 +130,7 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearBingeEatingState();
       
@@ -112,13 +138,11 @@ class BingeEatingGamificationNotifier extends StateNotifier<BingeEatingGamificat
       final initialState = BingeEatingModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveBingeEatingState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveBingeEatingState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

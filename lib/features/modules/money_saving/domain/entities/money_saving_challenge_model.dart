@@ -201,7 +201,7 @@ class MoneySavingChallengeModel {
     }
   }
 
-  /// Serializa para JSON (Supabase e SharedPreferences)
+  /// Serializa para JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,

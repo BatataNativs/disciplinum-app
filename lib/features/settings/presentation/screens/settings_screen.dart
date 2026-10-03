@@ -86,13 +86,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadBiometricState() async {
-    final bioService = ref.read(biometricAuthServiceProvider);
-    final enabled = await bioService.isBiometricLockEnabled();
-    if (mounted) setState(() => _biometricEnabled = enabled);
+    final isEnabled = ref.read(biometricLockControllerProvider).isEnabled;
+    if (mounted) setState(() => _biometricEnabled = isEnabled);
   }
 
   Future<void> _toggleBiometrics(bool value) async {
     final bioService = ref.read(biometricAuthServiceProvider);
+    final bioController = ref.read(biometricLockControllerProvider.notifier);
     if (value) {
       final available = await bioService.isBiometricAvailable();
       if (!available) {
@@ -109,7 +109,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
       if (!authenticated) return;
     }
-    await bioService.setBiometricLockEnabled(value);
+    await bioController.setEnabled(value);
     if (mounted) {
       setState(() => _biometricEnabled = value);
       EnhancedSnackBarHelper.showSuccess(

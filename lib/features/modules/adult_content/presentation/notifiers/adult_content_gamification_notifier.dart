@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/repositories/adult_content_gamification_repository.dart';
+import 'package:disciplinum/features/modules/adult_content/gamification/domain/services/adult_content_celebration_service.dart';
 
 /// Estado da gamificação do Adult Content
 class AdultContentGamificationState {
@@ -49,10 +50,24 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
     try {
       final gamification = await _repository.getAdultContentState();
       if (gamification != null) {
+        AdultContentModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveAdultContentState(effectiveGamification);
+          AdultContentCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Jejum 18+',
+            assetPath: 'assets/gamification/insignias/adult_content/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -68,7 +83,7 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
       final currentState = state.gamification ?? AdultContentModuleState.initial();
       // Concede insígnia Madeira se ainda não tiver
       final earnedInsignias = List<String>.from(currentState.earnedInsignias);
-      if (!earnedInsignias.contains('madeira')) {
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
         earnedInsignias.add('madeira');
       }
       final newState = currentState.copyWith(
@@ -76,7 +91,12 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
         earnedInsignias: earnedInsignias,
       );
       await _repository.saveAdultContentState(newState);
-      await _repository.syncWithSupabase(newState);
+      await AdultContentCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Jejum 18+',
+        assetPath: 'assets/gamification/insignias/adult_content/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -89,7 +109,6 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
       final currentState = state.gamification ?? AdultContentModuleState.initial();
       final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveAdultContentState(newState);
-      await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -100,7 +119,7 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearAdultContentState();
       
@@ -108,13 +127,11 @@ class AdultContentGamificationNotifier extends StateNotifier<AdultContentGamific
       final initialState = AdultContentModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveAdultContentState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveAdultContentState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

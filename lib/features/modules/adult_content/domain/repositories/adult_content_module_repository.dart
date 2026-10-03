@@ -7,7 +7,6 @@ import 'package:disciplinum/core/modules/contracts/module_repository_contract.da
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_module_state.dart';
 import 'package:disciplinum/features/modules/adult_content/gamification/domain/entities/adult_content_gamification_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Adult Content implementando ModuleRepositoryContract
 class AdultContentModuleRepository implements ModuleRepositoryContract<AdultContentModuleState> {
@@ -141,107 +140,22 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
 
   @override
   Future<AdultContentModuleState> syncToRemote(String userId, AdultContentModuleState state) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) throw Exception('Usuário não autenticado');
-
-      await supabase.from('adult_content_gamification_states').upsert(
-        {
-          'user_id': currentUserId,
-          'state_data': state.toJson(),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id',
-      );
-
-      LoggerService.instance.gamification('☁️ AdultContentModuleState sincronizado');
-      _setStatus(RepositoryStatus.ready);
-      return state;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao sincronizar: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.syncToRemote,
-        originalError: e,
-      );
-    }
+    return state;
   }
 
   @override
   Future<AdultContentModuleState?> loadFromRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) return null;
-
-      final response = await supabase
-          .from('adult_content_gamification_states')
-          .select('state_data')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      _setStatus(RepositoryStatus.ready);
-      
-      if (response != null && response['state_data'] != null) {
-        return AdultContentModuleState.fromJson(response['state_data']);
-      }
-      return null;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao carregar do remoto: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.loadFromRemote,
-        originalError: e,
-      );
-    }
+    return null;
   }
 
   @override
   Future<bool> existsRemote(String userId) async {
-    try {
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      if (currentUserId == null) return false;
-
-      final response = await supabase
-          .from('adult_content_gamification_states')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-      return response != null;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   @override
   Future<void> deleteRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.busy);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId != null) {
-        await supabase.from('adult_content_gamification_states').delete().eq('user_id', currentUserId);
-      }
-      LoggerService.instance.gamification('🗑️ AdultContentModuleState remoto deletado');
-      _setStatus(RepositoryStatus.ready);
-    } catch (e) {
-      _setStatus(RepositoryStatus.error);
-      throw RepositoryException(
-        message: 'Erro ao deletar remotamente: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.deleteRemote,
-        originalError: e,
-      );
-    }
+    // No-op em modo 100% local
   }
 
   @override
@@ -257,59 +171,18 @@ class AdultContentModuleRepository implements ModuleRepositoryContract<AdultCont
 
   @override
   Future<AdultContentModuleState> fullSync(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final local = await loadLocal(userId);
-      final remote = await loadFromRemote(userId);
-
-      AdultContentModuleState result;
-      if (local == null && remote == null) {
-        result = AdultContentModuleState();
-        await saveLocal(result);
-        await syncToRemote(userId, result);
-      } else if (local == null && remote != null) {
-        result = remote;
-        await saveLocal(result);
-      } else if (local != null && remote == null) {
-        result = local;
-        await syncToRemote(userId, result);
-      } else {
-        result = await resolveConflict(local!, remote!);
-        await saveLocal(result);
-        await syncToRemote(userId, result);
-      }
-
-      LoggerService.instance.gamification('🔄 AdultContentModuleState full sync completo');
-      _setStatus(RepositoryStatus.ready);
-      return result;
-    } catch (e) {
-      _setStatus(RepositoryStatus.error);
-      throw RepositoryException(
-        message: 'Erro no full sync: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.fullSync,
-        originalError: e,
-      );
-    }
+    final local = await loadLocal(userId);
+    return local ?? AdultContentModuleState();
   }
 
   @override
   Future<bool> hasDivergence(String userId) async {
-    try {
-      final local = await loadLocal(userId);
-      final remote = await loadFromRemote(userId);
-      if (local == null && remote == null) return false;
-      if (local == null || remote == null) return true;
-      return local.updatedAt != remote.updatedAt;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   @override
   Future<void> clearAll(String userId) async {
     await deleteLocal(userId);
-    await deleteRemote(userId);
     LoggerService.instance.gamification('🧹 AdultContentModuleState completamente limpo');
   }
 

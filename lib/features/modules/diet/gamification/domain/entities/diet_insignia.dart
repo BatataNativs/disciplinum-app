@@ -65,7 +65,7 @@ enum DietInsignia {
   String get requirementDescription {
     switch (this) {
       case DietInsignia.madeira:
-        return 'Ative o módulo Dieta';
+        return 'Ativar o módulo Dieta';
       case DietInsignia.ferro:
         return '1 dia com check-in positivo';
       case DietInsignia.aluminio:

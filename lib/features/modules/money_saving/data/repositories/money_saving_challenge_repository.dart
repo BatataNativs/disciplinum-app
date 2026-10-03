@@ -2,7 +2,6 @@ import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repositório específico para desafios de economia usando ObjectBox
 class MoneySavingChallengeRepository {
@@ -11,13 +10,14 @@ class MoneySavingChallengeRepository {
   
   MoneySavingChallengeRepository._internal();
 
+  static const String _defaultUserId = 'local_user';
+
   Box<MoneySavingChallengeEntity> get _box => ObjectBoxService.instance.store.box<MoneySavingChallengeEntity>();
   Box<MoneySavingGridCellEntity> get _cellsBox => ObjectBoxService.instance.store.box<MoneySavingGridCellEntity>();
 
   Future<List<MoneySavingChallengeEntity>> getAllChallenges() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final query = _box.query(MoneySavingChallengeEntity_.userId.equals(userId)).order(MoneySavingChallengeEntity_.createdAt, flags: Order.descending).build();
+      final query = _box.query(MoneySavingChallengeEntity_.userId.equals(_defaultUserId)).order(MoneySavingChallengeEntity_.createdAt, flags: Order.descending).build();
       final result = query.find();
       query.close();
       return result;
@@ -41,9 +41,8 @@ class MoneySavingChallengeRepository {
 
   Future<MoneySavingChallengeEntity?> getActiveChallenge() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
       final query = _box.query(
-        MoneySavingChallengeEntity_.userId.equals(userId)
+        MoneySavingChallengeEntity_.userId.equals(_defaultUserId)
           .and(MoneySavingChallengeEntity_.isActive.equals(true))
       ).build();
       final result = query.findFirst();
@@ -94,7 +93,7 @@ class MoneySavingChallengeRepository {
 
   Future<void> setActiveChallenge(String challengeId, bool isActive) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      final userId = _defaultUserId;
       
       // Desativa todos os desafios do usuário
       final queryActive = _box.query(
@@ -136,7 +135,7 @@ class MoneySavingChallengeRepository {
 
   Future<void> clearAll() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      final userId = _defaultUserId;
       
       final query = _box.query(MoneySavingChallengeEntity_.userId.equals(userId)).build();
       final ids = query.findIds();

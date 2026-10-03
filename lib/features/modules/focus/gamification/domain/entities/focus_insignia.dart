@@ -109,7 +109,7 @@ extension FocusInsigniaExtension on FocusInsignia {
   String get requirementDescription {
     switch (this) {
       case FocusInsignia.madeira:
-        return 'Ative o módulo de Foco';
+        return 'Ativar o módulo de Foco';
       case FocusInsignia.ferro:
         return '1 período de foco respeitado';
       case FocusInsignia.aluminio:

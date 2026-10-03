@@ -14,7 +14,8 @@ class BiometricLockScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BiometricLockScreen> createState() => _BiometricLockScreenState();
+  ConsumerState<BiometricLockScreen> createState() =>
+      _BiometricLockScreenState();
 }
 
 class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
@@ -56,6 +57,9 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
     });
 
     try {
+      ref
+          .read(biometricLockControllerProvider.notifier)
+          .setAuthenticating(true);
       final bioService = ref.read(biometricAuthServiceProvider);
       final success = await bioService.authenticate(
         localizedReason: 'Confirme sua identidade para acessar o Disciplinum',
@@ -68,7 +72,8 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
         HapticFeedback.vibrate();
         if (mounted) {
           setState(() {
-            _errorMessage = 'Autenticação não concluída. Toque para tentar novamente.';
+            _errorMessage =
+                'Autenticação não concluída. Toque para tentar novamente.';
           });
         }
       }
@@ -79,6 +84,9 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
         });
       }
     } finally {
+      ref
+          .read(biometricLockControllerProvider.notifier)
+          .setAuthenticating(false);
       if (mounted) {
         setState(() => _isAuthenticating = false);
       }
@@ -88,6 +96,7 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
   Future<void> _logout() async {
     final authController = ref.read(authServiceProvider.notifier);
     await authController.logout();
+    ref.read(biometricLockControllerProvider.notifier).unlock();
     if (mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil(
         AppRouter.authWrapper,
@@ -106,10 +115,11 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
         backgroundColor: colorScheme.surface,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
             child: Column(
               children: [
-                const Spacer(),
+                const SizedBox(height: 32),
                 // Animated Fingerprint Icon
                 ScaleTransition(
                   scale: _pulseAnimation,
@@ -144,7 +154,7 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
                 Text(
                   'Disciplinum Bloqueado',
                   textAlign: TextAlign.center,

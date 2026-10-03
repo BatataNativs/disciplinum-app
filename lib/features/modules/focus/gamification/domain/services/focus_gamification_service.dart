@@ -176,8 +176,7 @@ class FocusGamificationService implements ModuleGamificationInterface {
       final moduleData = {'respectedPeriods': _currentState!.respectedPeriods};
       await _medalhaService.checkForNewMedalhas(moduleData);
       
-      // Sincroniza com Supabase
-      await _repository.syncWithSupabase(_currentState!);
+      // Salva estado
       
       LoggerService.instance.gamification('Verificação de conquistas concluída');
     } catch (e) {

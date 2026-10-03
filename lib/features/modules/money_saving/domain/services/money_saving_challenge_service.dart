@@ -3,19 +3,13 @@ import 'package:uuid/uuid.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_challenge_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Serviço para persistência do Desafio da Poupança - VERSÃO RIVERPOD
-/// Service puro sem ChangeNotifier - estado gerenciado pelo controller
-/// Suporta armazenamento local (ObjectBoxPreferencesRepository) e cloud (Supabase)
-/// Suporta múltiplos desafios simultâneos.
+/// Serviço para persistência do Desafio da Poupança - VERSÃO RIVERPOD (100% Local-First)
 class MoneySavingChallengeService {
   static const String _localKey = 'money_saving_challenge_list_data';
   static const String _oldLocalKey = 'money_saving_challenge_data';
-  static const String _moduleId = 'money_saving_challenge';
 
   final ObjectBoxPreferencesRepository _prefs;
-  final SupabaseClient _supabase = Supabase.instance.client;
   final _uuid = const Uuid();
 
   List<MoneySavingChallengeModel> _challenges = [];
@@ -34,49 +28,19 @@ class MoneySavingChallengeService {
   List<MoneySavingChallengeModel> get challengesList => _challenges;
   double get totalContributions => activeChallenge?.totalSaved ?? 0.0;
 
-  /// Carrega os desafios do usuário (cloud primeiro, fallback para local)
+  /// Carrega os desafios do usuário localmente
   Future<List<MoneySavingChallengeModel>> getChallenges(
       {bool forceRefresh = false}) async {
     if (_initialized && !forceRefresh) return _challenges;
 
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      List<MoneySavingChallengeModel> fetchedChallenges = [];
-
-      // Se não tem usuário logado, usa armazenamento local
-      if (userId == null) {
-        fetchedChallenges = await _getLocalChallenges();
-      } else {
-        // Tenta carregar do Supabase
-        final response = await _supabase
-            .from('user_module_settings')
-            .select()
-            .eq('user_id', userId)
-            .eq('module_id', _moduleId)
-            .maybeSingle();
-
-        if (response != null && response['settings'] != null) {
-          final settings = response['settings'] as Map<String, dynamic>;
-          final challengesJson = settings['challenges'] as List<dynamic>?;
-          if (challengesJson != null) {
-            fetchedChallenges = challengesJson
-                .map((c) => MoneySavingChallengeModel.fromJson(c))
-                .toList();
-          }
-        } else {
-          // Fallback para local se não encontrou no cloud
-          fetchedChallenges = await _getLocalChallenges();
-        }
-      }
-
-      _challenges = fetchedChallenges;
+      _challenges = await _getLocalChallenges();
       _updateActiveChallenge();
       _initialized = true;
       return _challenges;
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar desafios: $e');
-      // Fallback para local em caso de erro
-      _challenges = await _getLocalChallenges();
+      _challenges = [];
       _updateActiveChallenge();
       _initialized = true;
       return _challenges;
@@ -251,38 +215,12 @@ class MoneySavingChallengeService {
 
   Future<void> _saveChallenges() async {
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      
-      if (userId != null) {
-        // Salva no Supabase
-        await _supabase
-            .from('user_module_settings')
-            .upsert({
-              'user_id': userId,
-              'module_id': _moduleId,
-              'settings': {
-                'challenges': _challenges.map((c) => c.toJson()).toList(),
-              },
-              'updated_at': DateTime.now().toIso8601String(),
-            });
-      }
-
-      // Sempre salva localmente como backup
       await _prefs.setString(
         _localKey,
         jsonEncode(_challenges.map((c) => c.toJson()).toList()),
       );
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar desafios: $e');
-      // Apenas salva localmente em caso de erro
-      try {
-        await _prefs.setString(
-          _localKey,
-          jsonEncode(_challenges.map((c) => c.toJson()).toList()),
-        );
-      } catch (localError) {
-        LoggerService.instance.e('Erro ao salvar localmente: $localError');
-      }
+      LoggerService.instance.e('Erro ao salvar desafios localmente: $e');
     }
   }
 

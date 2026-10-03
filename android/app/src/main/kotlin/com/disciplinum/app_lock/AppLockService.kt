@@ -1,11 +1,11 @@
 package com.disciplinum.app_lock
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -33,7 +33,7 @@ class AppLockService : MethodCallHandler {
         }
     }
 
-    private var currentActivity: FlutterActivity? = null
+    private var currentActivity: Activity? = null
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
@@ -100,7 +100,7 @@ class AppLockService : MethodCallHandler {
     }
 
     /// Define a activity atual (chamado pelo MainActivity)
-    fun setCurrentActivity(activity: FlutterActivity?) {
+    fun setCurrentActivity(activity: Activity?) {
         currentActivity = activity
     }
 }

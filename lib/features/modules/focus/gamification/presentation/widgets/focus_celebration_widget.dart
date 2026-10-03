@@ -185,15 +185,8 @@ class _FocusCelebrationWidgetState extends State<FocusCelebrationWidget>
   }
 
   void _showConquestDialog(String title, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _ConquestDialog(
-        title: title,
-        message: message,
-        onDismiss: () => Navigator.of(context).pop(),
-      ),
-    );
+    if (!mounted) return;
+    LoggerService.instance.gamification('🏆 Conquista registrada no módulo focus: $title - $message (diálogo gerenciado pelo GlobalAchievementListener)');
   }
 
   String _getOrdinalNumber(int number) {

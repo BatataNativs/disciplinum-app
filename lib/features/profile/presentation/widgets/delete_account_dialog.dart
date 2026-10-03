@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:disciplinum/app/router/app_router.dart';
 import 'package:disciplinum/shared/widgets/shared_widgets.dart';
 
-class DeleteAccountDialog extends StatelessWidget {
+class DeleteAccountDialog extends ConsumerWidget {
   final AuthController authService;
 
   const DeleteAccountDialog({
@@ -12,7 +14,7 @@ class DeleteAccountDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AppDialog(
@@ -27,10 +29,10 @@ class DeleteAccountDialog extends StatelessWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
-                  const Color(0xFFEF4444),
-                  const Color.fromARGB(255, 183, 18, 18),
+                  Color(0xFFEF4444),
+                  Color.fromARGB(255, 183, 18, 18),
                 ],
               ),
               borderRadius: BorderRadius.circular(30),
@@ -75,14 +77,19 @@ class DeleteAccountDialog extends StatelessWidget {
           onPressed: () async {
             Navigator.pop(context); // Fecha o diálogo
 
+            // Desativa bloqueio biométrico imediatamente
+            try {
+              await ref.read(biometricLockControllerProvider.notifier).setEnabled(false);
+            } catch (_) {}
+
             final success =
                 await authService.deleteAccount(); // ✅ Agora recebe um bool
 
             if (context.mounted) {
               if (success) {
-                // ✅ Só redireciona se a exclusão for bem-sucedida
+                // ✅ Redireciona para a WelcomeScreen limpando toda a pilha
                 Navigator.of(context).pushNamedAndRemoveUntil(
-                  AppRouter.authWrapper,
+                  AppRouter.welcome,
                   (route) => false,
                 );
               } else {

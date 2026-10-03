@@ -5,7 +5,6 @@ import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_module_state.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Reading implementando ModuleRepositoryContract
 class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleState> {
@@ -154,104 +153,24 @@ class ReadingModuleRepository implements ModuleRepositoryContract<ReadingModuleS
 
   @override
   Future<ReadingModuleState> syncToRemote(String userId, ReadingModuleState state) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) throw Exception('Usuário não autenticado');
-
-      await supabase.from('reading_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      LoggerService.instance.gamification('☁️ ReadingModuleState sincronizado');
-      _setStatus(RepositoryStatus.ready);
-      return state;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao sincronizar: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.syncToRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
+    return state;
   }
 
   @override
   Future<ReadingModuleState?> loadFromRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) return null;
-
-      final response = await supabase
-          .from('reading_gamification_states')
-          .select('state_data')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      _setStatus(RepositoryStatus.ready);
-      
-      if (response != null && response['state_data'] != null) {
-        return ReadingModuleState.fromJson(response['state_data']);
-      }
-      return null;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao carregar do remoto: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.loadFromRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
+    return null;
   }
 
   @override
   Future<bool> existsRemote(String userId) async {
-    try {
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      if (currentUserId == null) return false;
-
-      final response = await supabase
-          .from('reading_gamification_states')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-      return response != null;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   @override
   Future<void> deleteRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.busy);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId != null) {
-        await supabase.from('reading_gamification_states').delete().eq('user_id', currentUserId);
-      }
-      LoggerService.instance.gamification('🗑️ ReadingModuleState remoto deletado');
-      _setStatus(RepositoryStatus.ready);
-    } catch (e) {
-      _setStatus(RepositoryStatus.error);
-      throw RepositoryException(
-        message: 'Erro ao deletar remotamente: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.deleteRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
   }
 
   @override

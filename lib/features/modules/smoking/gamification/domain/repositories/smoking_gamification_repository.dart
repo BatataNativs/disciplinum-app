@@ -1,13 +1,10 @@
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
-import 'package:disciplinum/core/database/supabase_migration_checker.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/objectbox.g.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repositório ObjectBox para gamificação do módulo Smoking
-/// Gerencia persistência do estado de gamificação usando ObjectBox + Supabase
+/// Repositório ObjectBox para gamificação do módulo Smoking (100% Local-First)
 class SmokingGamificationRepository {
   static SmokingGamificationRepository? _instance;
   static SmokingGamificationRepository get instance => _instance ??= SmokingGamificationRepository._();
@@ -106,11 +103,11 @@ class SmokingGamificationRepository {
         isModuleActive: true,
         dailyCost: dailyCost,
         packCost: packCost,
+        earnedInsignias: const ['madeira'],
       );
       
       await saveSmokingState(initialState);
-      await syncWithSupabase(initialState);
-      LoggerService.instance.gamification('✅ Estado resetado para ativo e sincronizado com Supabase: isModuleActive=true, dailyCost=$dailyCost');
+      LoggerService.instance.gamification('✅ Estado resetado para ativo: isModuleActive=true, dailyCost=$dailyCost, insignias=[madeira]');
     } catch (e) {
       LoggerService.instance.e('Erro ao forçar reset do estado', error: e);
     }
@@ -141,102 +138,9 @@ class SmokingGamificationRepository {
     }
   }
 
-  /// Sincroniza com Supabase (cloud sync)
-  Future<void> syncWithSupabase(SmokingModuleState state) async {
-    try {
-      // Verifica se Supabase está disponível antes de sincronizar
-      if (!await supabaseAvailable) {
-        LoggerService.instance.w('⚠️ Supabase não disponível - pulando sincronização');
-        return;
-      }
-      
-      // Converte para entity e depois para JSON
-      final entity = SmokingGamificationEntity();
-      entity.earnedInsigniasList = state.earnedInsignias;
-      entity.earnedMedalhasList = state.earnedMedalhas;
-      entity.consecutivePositiveDays = state.consecutivePositiveDays;
-      entity.disciplinumCount = state.disciplinumCount;
-      entity.lastPositiveCheckIn = state.lastPositiveCheckIn;
-      entity.startDate = state.startDate;
-      entity.dailyCost = state.dailyCost;
-      entity.packCost = state.packCost;
-      entity.isModuleActive = state.isModuleActive;
-      entity.touch();
-      
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
-      
-      if (userId != null) {
-        await supabase.from('smoking_gamification_states').upsert({
-          'user_id': userId,
-          'state_data': entity.toJson(),
-          'updated_at': DateTime.now().toIso8601String(),
-        }, onConflict: 'user_id');
-        LoggerService.instance.gamification('☁️ Estado Smoking sincronizado com Supabase');
-      }
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar estado Smoking com Supabase', error: e);
-    }
-  }
-
-  /// Carrega estado do Supabase
-  Future<SmokingModuleState?> loadFromSupabase() async {
-    try {
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
-      
-      if (userId != null) {
-        final response = await supabase
-            .from('smoking_gamification_states')
-            .select('state_data')
-            .eq('user_id', userId)
-            .maybeSingle();
-        
-        if (response != null && response['state_data'] != null) {
-          final entity = SmokingGamificationEntity.fromJson(response['state_data']);
-          LoggerService.instance.gamification('🌐 Supabase: isModuleActive=${entity.isModuleActive}, dailyCost=${entity.dailyCost}');
-          
-          // Converte diretamente da entidade para o estado do módulo
-          return SmokingModuleState(
-            createdAt: entity.createdAt,
-            updatedAt: entity.updatedAt,
-            earnedInsignias: entity.earnedInsigniasList,
-            earnedMedalhas: entity.earnedMedalhasList,
-            consecutivePositiveDays: entity.consecutivePositiveDays,
-            disciplinumCount: entity.disciplinumCount,
-            lastPositiveCheckIn: entity.lastPositiveCheckIn,
-            startDate: entity.startDate,
-            dailyCost: entity.dailyCost,
-            packCost: entity.packCost,
-            isModuleActive: entity.isModuleActive,
-          );
-        }
-      }
-      return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Smoking do Supabase', error: e);
-      return null;
-    }
-  }
-
   /// Inicializa o repositório
   Future<void> initialize() async {
-    try {
-      // Verifica se o Supabase está pronto para uso
-      final migrationOk = await SupabaseMigrationChecker.instance.ensureMigration();
-      if (!migrationOk) {
-        LoggerService.instance.w('⚠️ Supabase não está migrado - usando apenas ObjectBox local');
-      }
-      
-      LoggerService.instance.gamification('SmokingGamificationRepository inicializado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao inicializar SmokingGamificationRepository', error: e);
-    }
-  }
-
-  /// Verifica se Supabase está disponível
-  Future<bool> get supabaseAvailable async {
-    return await SupabaseMigrationChecker.instance.checkMigrationStatus() == MigrationStatus.complete;
+    LoggerService.instance.gamification('SmokingGamificationRepository inicializado (100% Local-First)');
   }
 
   /// Retorna dados de gamificação para notificações motivacionais

@@ -1,10 +1,9 @@
-﻿import 'package:disciplinum/core/database/objectbox_service.dart';
+import 'package:disciplinum/core/database/objectbox_service.dart';
 import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/spending_config_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repositorio especifico para configuracoes de Spending usando ObjectBox
+/// Repositorio especifico para configuracoes de Spending usando ObjectBox (100% Local-First)
 class SpendingConfigRepository {
   static SpendingConfigRepository? _instance;
   static SpendingConfigRepository get instance =>
@@ -12,18 +11,18 @@ class SpendingConfigRepository {
 
   SpendingConfigRepository._internal();
 
+  static const String _defaultUserId = 'local_user';
+
   Box<SpendingConfigEntity> get _box =>
       ObjectBoxService.instance.store.box<SpendingConfigEntity>();
 
   Future<SpendingConfigEntity?> getConfig() async {
     try {
-      final userId =
-          Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
       final query =
-          _box.query(SpendingConfigEntity_.userId.equals(userId)).build();
+          _box.query(SpendingConfigEntity_.userId.equals(_defaultUserId)).build();
       final result = query.findFirst();
       query.close();
-      return result;
+      return result ?? _box.getAll().firstOrNull;
     } catch (e, stackTrace) {
       LoggerService.instance.e('Erro ao carregar configuracao do Spending',
           error: e, stackTrace: stackTrace);
@@ -47,7 +46,7 @@ class SpendingConfigRepository {
     }
   }
 
-  Future<SpendingConfigEntity> getOrCreateConfig(String userId) async {
+  Future<SpendingConfigEntity> getOrCreateConfig([String userId = _defaultUserId]) async {
     try {
       final existing = await getConfig();
       if (existing != null) return existing;
@@ -173,63 +172,7 @@ class SpendingConfigRepository {
     }
   }
 
-  Future<void> syncWithSupabase(SpendingConfigEntity config) async {
-    try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) return;
-      final data = {
-        'user_id': userId,
-        'module_id': 'spending',
-        'is_module_active': config.isModuleActive,
-        'monthly_budget': config.monthlyBudget,
-        'currency': config.currency,
-        'enable_notifications': config.enableNotifications,
-        'reminder_day': config.reminderDay,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-      await Supabase.instance.client.from('user_module_settings').upsert(data, onConflict: 'user_id, module_id');
-      LoggerService.instance.i('Configuracao Spending sincronizada com Supabase');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar Spending com Supabase', error: e);
-    }
-  }
-
-  Future<SpendingConfigEntity?> loadFromSupabase() async {
-    try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) return null;
-      final response = await Supabase.instance.client
-          .from('user_module_settings').select()
-          .eq('user_id', userId).eq('module_id', 'spending').maybeSingle();
-      if (response == null) return null;
-      return SpendingConfigEntity(
-        userId: userId,
-        isModuleActive: response['is_module_active'] ?? false,
-        monthlyBudget: (response['monthly_budget'] as num?)?.toDouble() ?? 0.0,
-        currency: response['currency'] ?? 'R\$',
-        enableNotifications: response['enable_notifications'] ?? true,
-        reminderDay: response['reminder_day'] ?? 1,
-      );
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar Spending do Supabase', error: e);
-      return null;
-    }
-  }
-
   Future<SpendingConfigEntity> performFullSync() async {
-    try {
-      final cloudConfig = await loadFromSupabase();
-      if (cloudConfig != null) { await saveConfig(cloudConfig); return cloudConfig; }
-      final localConfig = await getConfig();
-      if (localConfig != null) { await syncWithSupabase(localConfig); return localConfig; }
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      final newConfig = SpendingConfigEntity(userId: userId);
-      await saveConfig(newConfig);
-      return newConfig;
-    } catch (e) {
-      LoggerService.instance.e('Erro na sincronizacao completa Spending', error: e);
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
-      return SpendingConfigEntity(userId: userId);
-    }
+    return await getOrCreateConfig();
   }
 }

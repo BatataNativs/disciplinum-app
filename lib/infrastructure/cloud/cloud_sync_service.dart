@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/entities/user_module_status.dart';
 import 'package:disciplinum/shared/models/user_niche_app.dart';
@@ -29,11 +28,9 @@ import 'package:disciplinum/features/modules/focus/data/repositories/focus_inter
 import 'package:disciplinum/features/modules/digital_detox/data/repositories/digital_detox_config_repository.dart';
 
 class CloudSyncService {
-  final SupabaseClient supabase;
   final ObjectBoxPreferencesRepository? prefsRepo;
 
   CloudSyncService({
-    required this.supabase,
     this.prefsRepo,
   });
 
@@ -42,8 +39,6 @@ class CloudSyncService {
       final savedId = await prefsRepo!.getString('user_id');
       if (savedId != null && savedId.isNotEmpty) return savedId;
     }
-    final user = supabase.auth.currentUser;
-    if (user != null) return user.id;
     return 'local_user';
   }
 

@@ -1,16 +1,14 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
-/// Serviço de Analytics para o Disciplinum
-/// Usa a tabela user_behavior_events do Supabase
+/// Serviço de Analytics Local para o Disciplinum
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   static AnalyticsService get instance => _instance;
   
-  final SupabaseClient _supabase = Supabase.instance.client;
   final Uuid _uuid = const Uuid();
   String? _sessionId;
+  String? _currentUserId = 'local_user';
   
   AnalyticsService._internal() {
     generateNewSessionId();
@@ -27,7 +25,8 @@ class AnalyticsService {
 
   /// Define o usuário atual para analytics
   void setCurrentUser(String? userId) {
-    LoggerService.instance.analytics('User set for analytics', {'user_id': userId});
+    _currentUserId = userId ?? 'local_user';
+    LoggerService.instance.analytics('User set for analytics', {'user_id': _currentUserId});
   }
 
   /// Dispose do serviço de analytics
@@ -35,7 +34,7 @@ class AnalyticsService {
     LoggerService.instance.analytics('Analytics service disposed', {});
   }
 
-  /// Rastreia evento de comportamento do usuário
+  /// Rastreia evento de comportamento do usuário localmente
   Future<void> trackBehaviorEvent({
     required String eventType,
     int? moduleNicheId,
@@ -44,18 +43,6 @@ class AnalyticsService {
     try {
       final userId = _getCurrentUserId();
       if (userId == null) return;
-
-      final data = {
-        'user_id': userId,
-        'event_type': eventType,
-        'module_niche_id': moduleNicheId,
-        'event_data': eventData ?? {},
-        'session_id': _sessionId,
-      };
-
-      await _supabase
-          .from('user_behavior_events')
-          .insert(data);
 
       LoggerService.instance.analytics(eventType, {
         'module_id': moduleNicheId,
@@ -227,54 +214,20 @@ class AnalyticsService {
 
   /// Obtém estatísticas do usuário
   Future<Map<String, dynamic>> getUserStats() async {
-    try {
-      final userId = _getCurrentUserId();
-      if (userId == null) return {};
-
-      final response = await _supabase
-          .from('user_behavior_events')
-          .select('event_type, created_at')
-          .eq('user_id', userId);
-
-      // Calcular estatísticas básicas
-      final totalEvents = response.length;
-      final today = DateTime.now();
-      final todayEvents = response.where((event) {
-        final createdAt = DateTime.parse(event['created_at']);
-        return createdAt.year == today.year && 
-               createdAt.month == today.month && 
-               createdAt.day == today.day;
-      }).length;
-
-      return {
-        'total_events': totalEvents,
-        'today_events': todayEvents,
-        'session_id': _sessionId,
-      };
-    } catch (e) {
-      LoggerService.instance.e('Failed to get user stats', error: e);
-      return {};
-    }
+    return {
+      'total_events': 0,
+      'today_events': 0,
+      'session_id': _sessionId,
+    };
   }
 
   /// Limpa eventos antigos (manutenção)
   Future<void> cleanupOldEvents({int daysToKeep = 90}) async {
-    try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: daysToKeep));
-      
-      await _supabase
-          .from('user_behavior_events')
-          .delete()
-          .lt('created_at', cutoffDate.toIso8601String());
-
-      LoggerService.instance.i('Cleaned up analytics events older than $daysToKeep days');
-    } catch (e) {
-      LoggerService.instance.e('Failed to cleanup old events', error: e);
-    }
+    LoggerService.instance.i('Local analytics maintenance completed');
   }
 
-  /// Verifica se usuário está autenticado
+  /// Retorna usuário atual
   String? _getCurrentUserId() {
-    return _supabase.auth.currentUser?.id;
+    return _currentUserId;
   }
 }

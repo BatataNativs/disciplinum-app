@@ -23,7 +23,7 @@ O Disciplinum evoluiu para uma arquitetura híbrida:
 1. **Camada Base**: Modular Monolith com Contratos (Fases 1-4)
    - Contratos Dart para consistência estrutural
    - Sync Service para offline-first
-   - Supabase + Isar para persistência
+   - ObjectBox + Isar para persistência
 
 2. **Camada Plugin**: Arquitetura Plugin Independente (Fases 5-8) ✅ Implementado
    - Cada módulo é um plugin autônomo
@@ -38,7 +38,7 @@ O Disciplinum evoluiu para uma arquitetura híbrida:
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              Core (Compartilhado)                    │   │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │   │
-│  │  │   Isar      │  │  Riverpod    │  │  Supabase   │  │   │
+│  │  │   Isar      │  │  Riverpod    │  │  ObjectBox   │  │   │
 │  │  │  (Local DB) │  │  (State)     │  │  (Remote)   │  │   │
 │  │  └─────────────┘  └──────────────┘  └─────────────┘  │   │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │   │
@@ -152,7 +152,7 @@ class SmokingGamificationEntity {
 }
 ```
 
-### Supabase (Banco Remoto)
+### ObjectBox (Banco Remoto)
 
 ```sql
 -- Tabela padronizada para cada módulo
@@ -193,7 +193,7 @@ CREATE POLICY "Users can only see their own data"
                     │ HTTPS
                     ▼
 ┌──────────────────────────────────────────┐
-│           Supabase                       │
+│           ObjectBox                       │
 │  ┌──────────────────────────────────┐  │
 │  │  PostgreSQL + JSONB States        │  │
 │  └──────────────────────────────────┘  │
@@ -230,7 +230,7 @@ final smokingModuleStateProvider = StateNotifierProvider<SmokingModuleNotifier, 
 
 // Provider de autenticação
 final currentUserIdProvider = Provider<String>((ref) {
-  final user = ref.watch(supabaseUserProvider);
+  final user = ref.watch(objectboxUserProvider);
   return user?.id ?? 'guest_user';
 });
 
@@ -308,7 +308,7 @@ final readingGamificationNotifierProvider = StateNotifierProvider.family<
 
 ### Autenticação
 
-- **Supabase Auth**: JWT tokens
+- **ObjectBox Auth**: JWT tokens
 - **Guest Mode**: ID temporário para uso sem login
 - **RLS**: Row Level Security garante isolamento de dados
 
@@ -352,7 +352,7 @@ flutter analyze
 - [ ] Implementa `ModuleRepositoryContract`
 - [ ] Tem `schemaVersion` >= 1
 - [ ] JSON segue estrutura padronizada
-- [ ] RLS ativo no Supabase
+- [ ] RLS ativo no ObjectBox
 - [ ] Triggers de `updated_at` configurados
 
 ## 🚀 Fluxo de Desenvolvimento
@@ -362,7 +362,7 @@ flutter analyze
 1. **Criar estrutura de diretórios**
 2. **Implementar contratos** (State, Repository, Events)
 3. **Criar migração SQL** (tabela + RLS)
-4. **Implementar repository** (Isar + Supabase)
+4. **Implementar repository** (ObjectBox)
 5. **Criar Notifier** (Riverpod)
 6. **Criar UI** (Screens + Widgets)
 7. **Validar** (`full_compliance_audit.dart`)

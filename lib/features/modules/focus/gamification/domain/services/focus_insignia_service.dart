@@ -62,7 +62,7 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
   String getInsigniaRequirement(String insigniaId) {
     switch (insigniaId) {
       case 'madeira':
-        return 'Ative o módulo de Foco';
+        return 'Ativar o módulo de Foco';
       case 'ferro':
         return '1 período de foco respeitado';
       case 'aluminio':
@@ -204,28 +204,16 @@ class FocusInsigniaService implements ModuleInsigniaInterface {
       await FocusGamificationRepository.instance.saveFocusState(state);
       _currentState = state;
       
-      LoggerService.instance.gamification('Estado Focus salvo com Isar');
+      LoggerService.instance.gamification('Estado Focus salvo com ObjectBox');
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Focus com Isar', error: e);
+      LoggerService.instance.e('Erro ao salvar estado Focus com ObjectBox', error: e);
     }
   }
 
   /// Carrega o estado salvo
   Future<void> loadState() async {
     try {
-      // Tenta carregar do Isar local primeiro
       _currentState = await FocusGamificationRepository.instance.getFocusState();
-      
-      // Se não encontrar local, tenta do Supabase
-      if (_currentState == null) {
-        _currentState = await FocusGamificationRepository.instance.loadFromSupabase();
-        
-        // Se encontrou no Supabase, salva localmente
-        if (_currentState != null) {
-          await _saveState(_currentState!);
-        }
-      }
-      
       LoggerService.instance.gamification('Estado Focus carregado');
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar estado Focus', error: e);

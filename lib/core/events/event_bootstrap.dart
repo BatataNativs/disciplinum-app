@@ -1,5 +1,4 @@
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/analytics/analytics_service.dart';
 import 'package:disciplinum/core/events/events/gamification_event_emitter.dart';
 
@@ -13,48 +12,26 @@ class EventBootstrap {
     if (_isInitialized) return;
 
     try {
-      // Tentar atualizar a sessão se existir, mas não falhar se não houver
-      try {
-        await Supabase.instance.client.auth.refreshSession();
-      } catch (e) {
-        // Ignorar erro de sessão ausente durante a inicialização
-        LoggerService.instance
-            .d('EventBootstrap: Nenhuma sessão ativa para atualizar');
-      }
+      const defaultUserId = 'local_user';
+      AnalyticsService.instance.setCurrentUser(defaultUserId);
+      GamificationEventEmitter.setCurrentUser(defaultUserId);
 
-      // Configurar usuário atual nos serviços de eventos
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        AnalyticsService.instance.setCurrentUser(user.id);
-        GamificationEventEmitter.setCurrentUser(user.id);
+      // Gerar nova sessão para analytics
+      AnalyticsService.instance.generateNewSessionId();
+      GamificationEventEmitter.setCurrentSession(
+          AnalyticsService.instance.sessionId);
 
-        // Gerar nova sessão para analytics
-        AnalyticsService.instance.generateNewSessionId();
-        GamificationEventEmitter.setCurrentSession(
-            AnalyticsService.instance.sessionId);
-
-        LoggerService.instance.system(
-            'EventBootstrap: Event system initialized for user ${user.id}');
-      } else {
-        // Usuário anônimo - gerar sessão temporária
-        AnalyticsService.instance.generateNewSessionId();
-        GamificationEventEmitter.setCurrentSession(
-            AnalyticsService.instance.sessionId);
-
-        LoggerService.instance.system(
-            'EventBootstrap: Event system initialized for anonymous user');
-      }
+      LoggerService.instance.system(
+          'EventBootstrap: Event system initialized locally');
 
       _isInitialized = true;
     } catch (e) {
       LoggerService.instance
           .e('EventBootstrap: Error initializing event system: $e');
-      // Não falhar completamente se eventos não inicializarem
     }
   }
 
   /// Atualiza o usuário atual nos serviços de eventos
-  /// Chamado após login/logout
   static Future<void> updateUser(String? userId) async {
     AnalyticsService.instance.setCurrentUser(userId);
     GamificationEventEmitter.setCurrentUser(userId);
@@ -68,7 +45,7 @@ class EventBootstrap {
         'EventBootstrap: User updated to $userId with session ${AnalyticsService.instance.sessionId}');
   }
 
-  /// Limpa os serviços de eventos (chamado no logout)
+  /// Limpa os serviços de eventos
   static void dispose() {
     AnalyticsService.instance.dispose();
     _isInitialized = false;

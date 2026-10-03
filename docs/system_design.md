@@ -71,7 +71,7 @@ lib/
 │   └── onboarding/               # Onboarding flow
 ├── infrastructure/               # External integrations
 │   ├── ads/                      # AdMob integration
-│   ├── cloud/                     # Supabase sync
+│   ├── cloud/                     # ObjectBox sync
 │   ├── iap/                       # In-app purchases
 │   ├── monitoring/               # App monitoring
 │   ├── notifications/            # Push notifications
@@ -97,7 +97,7 @@ lib/
 - **Language**: Dart 3.x
 - **State Management**: Riverpod (flutter_riverpod)
 - **Local Database**: Isar 3.x (Object Database)
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Backend**: ObjectBox Local-First (100% Offline)
 - **Analytics**: Firebase Analytics + Crashlytics
 - **Ads**: Google Mobile Ads (AdMob)
 
@@ -105,9 +105,9 @@ lib/
 
 - **State Management**: flutter_riverpod
 - **Persistence**: isar, isar_flutter_libs
-- **Networking**: dio, supabase_flutter
+- **Networking**: dio
 - **Local Notifications**: flutter_local_notifications
-- **Authentication**: supabase_auth
+- **Authentication**: objectbox_auth
 - **In-App Purchases**: in_app_purchase
 - **Device Info**: device_info_plus, platform_device_info
 - **Permissions**: permission_handler
@@ -143,7 +143,7 @@ modules/{module_name}/
 ### 1. User Action Flow
 
 ```text
-User Action → UI Widget → Controller/Notifier → Domain Service → Repository → Isar/Supabase
+User Action → UI Widget → Controller/Notifier → Domain Service → Repository → ObjectBox
 ```
 
 ### 2. App Lock Flow
@@ -181,12 +181,12 @@ User Action → Module Notifier → Gamification Notifier → Repository → Isa
 - **Primary Database**: Isar Object Database
 - **Collections**: Each module has its own @collection entities
 - **Queries**: Optimized with indexes for fast lookups
-- **Sync**: Background sync with Supabase when online
+- **Sync**: Background sync with ObjectBox when online
 
-### Cloud Storage (Supabase)
+### Cloud Storage (ObjectBox)
 
-- **Authentication**: Supabase Auth
-- **Database**: PostgreSQL via Supabase
+- **Authentication**: ObjectBox Auth
+- **Database**: PostgreSQL via ObjectBox
 - **Storage**: User data backup and sync
 - **Real-time**: Not currently used (planned)
 
@@ -222,7 +222,7 @@ User Action → Module Notifier → Gamification Notifier → Repository → Isa
 
 ### Authentication
 
-- **Supabase Auth**: JWT-based authentication
+- **ObjectBox Auth**: JWT-based authentication
 - **Session Management**: Secure token storage
 - **Offline Support**: Local auth fallback
 
@@ -279,7 +279,7 @@ User Action → Module Notifier → Gamification Notifier → Repository → Isa
 ### Integration Tests
 
 - **End-to-End**: Test complete user flows
-- **API Integration**: Test Supabase integration
+- **API Integration**: Test ObjectBox integration
 - **Platform Integration**: Test native services
 
 ## Deployment
@@ -314,7 +314,7 @@ User Action → Module Notifier → Gamification Notifier → Repository → Isa
 
 ### Planned Features
 
-1. **Real-time Sync**: WebSocket integration with Supabase
+1. **Real-time Sync**: WebSocket integration with ObjectBox
 2. **Machine Learning**: Habit prediction and recommendations
 3. **Social Features**: Community challenges and leaderboards
 4. **Advanced Analytics**: Detailed usage insights

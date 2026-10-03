@@ -1,6 +1,5 @@
 import 'package:disciplinum/features/modules/adult_content/data/repositories/adult_content_config_repository.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/entities/adult_content_config_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
 
@@ -125,7 +124,7 @@ class AdultContentServiceLocal {
 
   Future<void> saveConfig(AdultContentConfig config) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       
       final entity = AdultContentConfigEntity(
         userId: userId,

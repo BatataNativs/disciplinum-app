@@ -118,7 +118,7 @@ class AppMonitoringService {
 
     await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
-    // ✅ Persistir estado de monitoramento com Isar
+    // ✅ Persistir estado de monitoramento com ObjectBox
     await _sessionPersistence.saveMonitoringState(
       activeNicheId: nicheId,
       isMonitoringActive: true,
@@ -180,7 +180,7 @@ class AppMonitoringService {
 
     await _prefsRepo.setBool(_prefsNotificationsPausedKey, notificationsPaused);
 
-    // Limpar estado de monitoramento com Isar
+    // Limpar estado de monitoramento com ObjectBox
     await _sessionPersistence.clearMonitoringState();
 
     await _stopForegroundService();
@@ -195,7 +195,7 @@ class AppMonitoringService {
 
       await _saveHeartbeat();
       
-      // ✅ Atualizar heartbeat no Isar a cada 60 segundos
+      // ✅ Atualizar heartbeat no ObjectBox a cada 60 segundos
       if (timer.tick % 60 == 0) {
         await _sessionPersistence.updateHeartbeat();
       }
@@ -348,11 +348,11 @@ class AppMonitoringService {
   }
 
   Future<void> restoreSession() async {
-    // ✅ Primeiro tentar recuperar do Isar
+    // ✅ Primeiro tentar recuperar do ObjectBox
     final monitoringState = await _sessionPersistence.getMonitoringState();
     
     if (monitoringState != null && monitoringState.isMonitoringActive) {
-      LoggerService.instance.i('Recuperando estado de monitoramento do Isar');
+      LoggerService.instance.i('Recuperando estado de monitoramento do ObjectBox');
       
       currentNicheId = monitoringState.activeNicheId;
       monitoredApps = List<String>.from(monitoringState.monitoredApps);
@@ -377,7 +377,7 @@ class AppMonitoringService {
       return;
     }
     
-    // Fallback para SharedPreferences (legado) - agora migrado para Isar via _prefsRepo
+    // Fallback para SharedPreferences (legado) - agora migrado para ObjectBox via _prefsRepo
     
     // Restore niche
     final savedId = await _prefsRepo.getInt(_prefsActiveNicheKey);
@@ -465,7 +465,7 @@ class AppMonitoringService {
       // SAIU do app monitorado E não há carência ativa no buffer
       // ou se ele voltou para o Disciplinum.
 
-      // ✅ Marcar sessão como inativa com Isar
+      // ✅ Marcar sessão como inativa com ObjectBox
       await _sessionPersistence.markSessionInactive(packageName);
 
       _violationStartByApp.remove(packageName);
@@ -603,7 +603,7 @@ class AppMonitoringService {
       LoggerService.instance.w('DESATIVANDO módulo ${niche.name} por violação de overlay');
     }
 
-    // Persistir sessão de violação com Isar
+    // Persistir sessão de violação com ObjectBox
     await _sessionPersistence.saveDetectionSession(
       packageName: packageName,
       nicheId: currentNicheId!,

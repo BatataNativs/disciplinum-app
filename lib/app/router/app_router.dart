@@ -247,8 +247,13 @@ class AppRouter {
           );
         }
 
-        if (settings.name == '/login' || settings.name == '/signup') {
-          final mode = settings.name == '/signup' ? 1 : 0;
+        if (settings.name == AppRouter.auth ||
+            settings.name == '/auth' ||
+            settings.name == '/login' ||
+            settings.name == '/signup') {
+          final mode = (settings.arguments is int)
+              ? (settings.arguments as int)
+              : (settings.name == '/login' ? 0 : 1);
           return FastMaterialPageRoute(
             builder: (_) => AuthScreen(initialAuthMode: mode),
           );

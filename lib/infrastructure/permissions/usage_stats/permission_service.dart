@@ -331,6 +331,8 @@ class PermissionService {
         return true; // Adult Content monitora apps
       case NicheId.bingeEating:
         return true; // Binge Eating monitora apps
+      case NicheId.digitalDetox:
+        return true; // Digital Detox bloqueia apps de redes sociais
       case NicheId.procrastination:
         return false; // Procrastination NÃO monitora apps (apenas gerencia tarefas)
       default:

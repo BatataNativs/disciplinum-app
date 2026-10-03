@@ -26,7 +26,7 @@ class DietGamificationEntity {
     this.isModuleActive = false,
   }) : createdAt = DateTime.now();
 
-  /// Converte de DietModuleState para Isar entity
+  /// Converte de DietModuleState para ObjectBox entity
   factory DietGamificationEntity.fromModuleState(
     String userId, 
     Map<String, dynamic> moduleState

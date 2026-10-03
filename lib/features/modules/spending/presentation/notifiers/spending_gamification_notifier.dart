@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/spending/domain/entities/spending_module_state.dart';
 import 'package:disciplinum/features/modules/spending/gamification/domain/repositories/spending_gamification_repository.dart';
+import 'package:disciplinum/features/modules/spending/gamification/domain/services/spending_celebration_service.dart';
 
 /// Estado da gamificação do Spending
 class SpendingGamificationState {
@@ -49,10 +50,24 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
     try {
       final gamification = await _repository.getSpendingState();
       if (gamification != null) {
+        SpendingModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveSpendingState(effectiveGamification);
+          SpendingCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Controle de Gastos',
+            assetPath: 'assets/gamification/insignias/spending/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -68,7 +83,7 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
       final currentState = state.gamification ?? SpendingModuleState.initial();
       // Concede insígnia Madeira se ainda não tiver
       final earnedInsignias = List<String>.from(currentState.earnedInsignias);
-      if (!earnedInsignias.contains('madeira')) {
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
         earnedInsignias.add('madeira');
       }
       final newState = currentState.copyWith(
@@ -76,7 +91,12 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
         earnedInsignias: earnedInsignias,
       );
       await _repository.saveSpendingState(newState);
-      await _repository.syncWithSupabase(newState);
+      await SpendingCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Controle de Gastos',
+        assetPath: 'assets/gamification/insignias/spending/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -89,7 +109,6 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
       final currentState = state.gamification ?? SpendingModuleState.initial();
       final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveSpendingState(newState);
-      await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -100,7 +119,7 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearSpendingState();
       
@@ -108,13 +127,11 @@ class SpendingGamificationNotifier extends StateNotifier<SpendingGamificationSta
       final initialState = SpendingModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveSpendingState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveSpendingState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

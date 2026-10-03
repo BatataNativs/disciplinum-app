@@ -128,7 +128,7 @@ extension BingeEatingInsigniaExtension on BingeEatingInsignia {
   String get requirementDescription {
     switch (this) {
       case BingeEatingInsignia.madeira:
-        return 'Ative o módulo Binge Eating';
+        return 'Ativar o módulo Compulsão Alimentar';
       case BingeEatingInsignia.ferro:
         return '1 dia com check-in positivo';
       case BingeEatingInsignia.aluminio:

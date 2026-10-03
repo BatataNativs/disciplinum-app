@@ -3,7 +3,7 @@ enum DigitalDetoxInsignia {
     name: 'madeira',
     nameBr: 'Madeira',
     asset: 'assets/gamification/insignias/digitalDetox/madeira.png',
-    requirementDescription: 'Ative o módulo',
+    requirementDescription: 'Ativar o módulo Jejum Digital',
   ),
   ferro(
     name: 'ferro',

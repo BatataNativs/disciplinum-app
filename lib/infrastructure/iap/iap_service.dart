@@ -169,7 +169,7 @@ class IapService extends StateNotifier<IapState> {
   /// Carrega os entitlements salvos
   Future<void> _loadEntitlements() async {
     try {
-      // Carregar do repositório Isar puro
+      // Carregar do repositório ObjectBox
       final darkModeEntitlement = await _repository.getEntitlement(productIdDarkMode);
       final pinkThemeEntitlement = await _repository.getEntitlement(productIdPinkTheme);
       final halloweenThemeEntitlement = await _repository.getEntitlement(productIdHalloweenTheme);
@@ -188,7 +188,7 @@ class IapService extends StateNotifier<IapState> {
         isMotivationPhrasesUnlocked: motivationPhrasesEntitlement?.isValid ?? false,
       );
 
-      LoggerService.instance.i('Entitlements carregados do Isar puro');
+      LoggerService.instance.i('Entitlements carregados do ObjectBox');
     } catch (e) {
       state = state.copyWith(error: 'Falha ao carregar entitlements: $e');
       LoggerService.instance.e('Erro ao carregar entitlements', error: e);
@@ -210,7 +210,7 @@ class IapService extends StateNotifier<IapState> {
         isMotivationPhrasesUnlocked: false,
       );
 
-      LoggerService.instance.i('Todos os entitlements foram resetados no Isar puro');
+      LoggerService.instance.i('Todos os entitlements foram resetados no ObjectBox');
     } catch (e) {
       state = state.copyWith(error: 'Falha ao resetar entitlements: $e');
       LoggerService.instance.e('Erro ao resetar entitlements', error: e);
@@ -269,7 +269,7 @@ class IapService extends StateNotifier<IapState> {
         verificationToken: purchase.purchaseID,
       );
 
-      // Salvar no repositório Isar puro
+      // Salvar no repositório ObjectBox
       await _repository.saveEntitlement(entitlement);
 
       // Atualizar estado

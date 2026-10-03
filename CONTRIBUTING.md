@@ -111,26 +111,19 @@ class NewModuleState implements ModuleStateContract {
 }
 ```
 
-### Passo 3: Criar Migração SQL
+### Passo 3: Criar Entidade e Repositório ObjectBox
 
-```sql
--- supabase/migrations/XXX_create_new_module_gamification_states.sql
-CREATE TABLE new_module_gamification_states (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  state_data JSONB NOT NULL DEFAULT '{}',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id)
-);
+```dart
+@Entity()
+class NewModuleGamificationEntity {
+  @Id()
+  int id = 0;
 
-ALTER TABLE new_module_gamification_states ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can only see their own new_module data" 
-  ON new_module_gamification_states FOR SELECT 
-  USING (auth.uid() = user_id);
-
--- ... outras policies
+  List<String> earnedInsignias = [];
+  List<String> earnedMedalhas = [];
+  int streak = 0;
+  DateTime lastUpdated = DateTime.now();
+}
 ```
 
 ### Passo 4: Validar
@@ -268,8 +261,7 @@ Abra uma issue com:
 
 - [Clean Architecture - Uncle Bob](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [Riverpod Documentation](https://riverpod.dev/docs/getting_started)
-- [Isar Documentation](https://isar.dev/docs/tutorials/quickstart)
-- [Supabase Documentation](https://supabase.com/docs)
+- [ObjectBox Documentation](https://docs.objectbox.io/)
 
 ## ❓ Dúvidas?
 

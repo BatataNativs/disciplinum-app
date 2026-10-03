@@ -168,23 +168,23 @@ extension SpendingInsigniaEntityExtension on SpendingInsigniaEntity {
   String get requirementDescription {
     switch (this) {
       case SpendingInsigniaEntity.madeira:
-        return 'Ative o módulo Controle de Gastos';
+        return 'Ativar o módulo Controle de Gastos';
       case SpendingInsigniaEntity.ferro:
-        return 'Pague todas as contas por 1 mês';
+        return 'Pagar todas as contas por 1 mês';
       case SpendingInsigniaEntity.aluminio:
-        return 'Pague todas as contas por 2 meses';
+        return 'Pagar todas as contas por 2 meses';
       case SpendingInsigniaEntity.latao:
-        return 'Pague todas as contas por 3 meses';
+        return 'Pagar todas as contas por 3 meses';
       case SpendingInsigniaEntity.bronze:
-        return 'Pague todas as contas por 4 meses';
+        return 'Pagar todas as contas por 4 meses';
       case SpendingInsigniaEntity.prata:
-        return 'Pague todas as contas por 6 meses';
+        return 'Pagar todas as contas por 6 meses';
       case SpendingInsigniaEntity.ouro:
-        return 'Pague todas as contas por 8 meses';
+        return 'Pagar todas as contas por 8 meses';
       case SpendingInsigniaEntity.diamante:
-        return 'Pague todas as contas por 10 meses';
+        return 'Pagar todas as contas por 10 meses';
       case SpendingInsigniaEntity.disciplinum:
-        return 'Pague todas as contas por 12 meses';
+        return 'Pagar todas as contas por 12 meses';
     }
   }
 

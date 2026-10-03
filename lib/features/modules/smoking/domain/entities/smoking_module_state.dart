@@ -185,7 +185,7 @@ class SmokingModuleState implements ModuleStateContract {
   /// Verifica se tem streak significativo (7+ dias)
   bool get hasSignificantStreak => consecutivePositiveDays >= 7;
 
-  /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Factory para criar a partir de JSON
   /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory SmokingModuleState.fromJson(Map<String, dynamic> json) {
     // Helper para ler campo em snake_case ou camelCase

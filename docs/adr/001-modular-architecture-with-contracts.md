@@ -8,7 +8,7 @@
 O Disciplinum possui 9 módulos independentes (Smoking, Focus, Diet, Money Saving, Reading, Binge Eating, Adult Content, Procrastination, Spending), cada um com:
 - Domínio de negócio completamente diferente
 - Regras de gamificação específicas
-- Persistência local (Isar) e remota (Supabase)
+- Persistência local (ObjectBox)
 - Ciclo de vida e eventos próprios
 
 O desafio arquitetural era garantir **consistência estrutural** sem **centralização de lógica**.
@@ -56,7 +56,7 @@ abstract class ModuleRepositoryContract<T> {
 
 ### Estrutura JSON Padronizada
 
-Todo `state_data` no Supabase segue:
+Todo `state_data` serializado segue:
 
 ```json
 {
@@ -103,7 +103,7 @@ Todo `state_data` no Supabase segue:
 ## Implementation
 
 - **2026-04-02** - Contratos criados em `lib/core/modules/contracts/`
-- **2026-04-02** - Migrações SQL padronizadas no Supabase
+- **2026-04-02** - Estrutura de dados padronizada
 - **2026-04-02** - Script de auditoria implementado
 - **Next** - Atualizar todos os 9 módulos para implementar contratos
 

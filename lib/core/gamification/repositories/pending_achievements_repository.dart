@@ -84,19 +84,28 @@ class PendingAchievementsRepository {
     }
   }
 
-  /// Obtém todas as conquistas pendentes de um usuário
-  Future<List<PendingAchievementEntity>> getPendingAchievements(String userId) async {
+  /// Obtém todas as conquistas pendentes de um usuário ou dispositivo local
+  Future<List<PendingAchievementEntity>> getPendingAchievements([String? userId]) async {
     try {
       await initialize();
 
       final query = _box.query(
-        PendingAchievementEntity_.userId.equals(userId)
-          .and(PendingAchievementEntity_.wasShown.equals(false))
+        PendingAchievementEntity_.wasShown.equals(false)
       ).order(PendingAchievementEntity_.earnedAt, flags: Order.descending).build();
       final pending = query.find();
       query.close();
 
-      return pending;
+      if (userId == null || userId.isEmpty || userId == 'guest_user' || userId == 'local_user') {
+        return pending;
+      }
+
+      // Se um userId específico foi fornecido, retorna do usuário OU conquistas locais
+      return pending.where((a) => 
+        a.userId == userId || 
+        a.userId == 'local_user' || 
+        a.userId == 'guest_user' || 
+        a.userId.isEmpty
+      ).toList();
     } catch (e) {
       LoggerService.instance.e('❌ Erro ao obter conquistas pendentes', error: e);
       return [];

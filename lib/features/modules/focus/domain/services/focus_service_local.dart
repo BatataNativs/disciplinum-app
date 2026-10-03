@@ -4,7 +4,6 @@ import 'package:disciplinum/features/modules/focus/data/repositories/focus_inter
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_config_entity.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Configurações do Focus
 class FocusConfig {
@@ -124,7 +123,7 @@ class FocusServiceLocal {
 
   Future<void> saveConfig(FocusConfig config) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       
       final entity = FocusConfigEntity(userId: userId);
       

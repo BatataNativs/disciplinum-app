@@ -11,7 +11,7 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
-    - "**/*.g.dart"  # Ignora arquivos gerados automaticamente pelo Isar/build_runner
+    - "**/*.g.dart"  # Ignora arquivos gerados automaticamente pelo ObjectBox/build_runner
     - "**/*.freezed.dart"
 
 linter:

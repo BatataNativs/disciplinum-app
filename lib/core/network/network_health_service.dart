@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/config/app_config.dart';
 import 'package:disciplinum/core/network/dns_resolver.dart';
 
 /// Serviço para verificar saúde da conexão de rede
@@ -33,17 +32,10 @@ class NetworkHealthService {
     _healthCheckTimer = null;
   }
 
-  /// Verifica conectividade com Supabase usando resolução DNS avançada
+  /// Verifica conectividade de internet usando resolução DNS avançada
   Future<bool> checkConnectivity() async {
     try {
-      if (AppConfig.supabaseUrl.isEmpty) {
-        _logFailure('URL Supabase não configurada', isConfigError: true);
-        return false;
-      }
-
-      // Extrair hostname da URL
-      final uri = Uri.parse(AppConfig.supabaseUrl);
-      final host = uri.host;
+      const host = 'one.one.one.one';
       
       // Usar DnsResolver para resolução robusta
       final addresses = await DnsResolver().resolveHost(host);

@@ -1,7 +1,7 @@
 /// Contrato para repositories de estado de módulos
 ///
 /// Define a interface mínima para acesso a dados,
-/// abstraindo a fonte (Isar local, Supabase remoto, cache, etc).
+/// abstraindo a fonte (ObjectBox local, backend remoto, cache, etc).
 ///
 /// Cada módulo implementa seu próprio repository seguindo
 /// este contrato, permitindo:
@@ -19,9 +19,9 @@ abstract class ModuleRepositoryContract<T extends Object> {
   /// Libera recursos do repository
   Future<void> dispose();
 
-  // ==================== OPERAÇÕES LOCAIS (ISAR) ====================
+  // ==================== OPERAÇÕES LOCAIS (OBJECTBOX) ====================
 
-  /// Salva estado localmente (Isar)
+  /// Salva estado localmente (ObjectBox)
   ///
   /// Deve ser rápido e não bloquear UI.
   /// Retorna o estado salvo (pode ter campos atualizados como id).
@@ -41,14 +41,14 @@ abstract class ModuleRepositoryContract<T extends Object> {
   /// Lista todos os estados locais (para debug/admin)
   Future<List<T>> listAllLocal();
 
-  // ==================== OPERAÇÕES REMOTAS (SUPABASE) ====================
+  // ==================== OPERAÇÕES REMOTAS ====================
 
-  /// Sincroniza estado com Supabase (upsert)
+  /// Sincroniza estado com backend remoto (upsert)
   ///
   /// Deve tratar conflitos e erros de rede.
   Future<T> syncToRemote(String userId, T state);
 
-  /// Carrega estado do Supabase
+  /// Carrega estado remoto
   ///
   /// Retorna null se não encontrado ou erro.
   Future<T?> loadFromRemote(String userId);

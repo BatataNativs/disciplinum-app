@@ -18,8 +18,6 @@ import 'package:disciplinum/shared/repositories/niche_repository.dart';
 import 'package:disciplinum/shared/repositories/niche_category_repository.dart';
 import 'package:disciplinum/shared/components/navigation/bottom_nav_bar.dart';
 import 'package:disciplinum/infrastructure/monitoring/installed_app_service.dart';
-import 'package:disciplinum/features/modules/smoking/gamification/presentation/widgets/smoking_celebration_widget.dart';
-import 'package:disciplinum/core/gamification/presentation/widgets/global_celebration_widget.dart';
 
 // ============================================================================
 // HOME SCREEN DESIGN SYSTEM
@@ -775,7 +773,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-
   @override
   void dispose() {
     _confettiController.dispose();
@@ -880,19 +877,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   String _moduleVisibilityKey(NicheId nicheId) => nicheId.name;
 
-  bool _isModuleHidden(
-      NicheId nicheId, Map<String, bool> moduleVisibility) {
+  bool _isModuleHidden(NicheId nicheId, Map<String, bool> moduleVisibility) {
     return moduleVisibility[_moduleVisibilityKey(nicheId)] == false;
   }
 
-Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
-    
+  Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
     await ref
         .read(userChoicesControllerProvider)
         .updateModuleVisibility(_moduleVisibilityKey(nicheId), isVisible);
-        
-    ref.invalidate(userChoicesProvider); 
-}
+
+    ref.invalidate(userChoicesProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -902,22 +897,24 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
     final currentTheme = ref.watch(themeControllerProvider);
     final isPinkTheme = currentTheme == AppTheme.pink;
     final isHalloweenTheme = currentTheme == AppTheme.halloween;
+    final userGender = ref.watch(userGenderProvider);
+    final isFemale = userGender?.trim().toLowerCase() == 'feminino';
+    final welcomeTitle = isFemale ? 'Bem-vinda!' : 'Bem-vindo!';
     final userChoicesAsync = ref.watch(userChoicesProvider);
-    final moduleVisibility =
-        userChoicesAsync.valueOrNull?.moduleVisibility ?? const <String, bool>{};
+    final moduleVisibility = userChoicesAsync.valueOrNull?.moduleVisibility ??
+        const <String, bool>{};
     final hiddenModules = NicheId.values
         .where((nicheId) => _isModuleHidden(nicheId, moduleVisibility))
         .toList();
 
-    debugPrint('📱 [HomeScreen] Build chamado! Mapa de visibilidade atual: $moduleVisibility');
+    debugPrint(
+        '📱 [HomeScreen] Build chamado! Mapa de visibilidade atual: $moduleVisibility');
 
-    return GlobalCelebrationWidget(
-      child: SmokingCelebrationWidget(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
               colors: [
                 colorScheme.surface,
                 colorScheme.surfaceContainerHighest,
@@ -990,8 +987,8 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
                           bottom: 16,
                         ),
                         child: PremiumHeaderCard(
-                          title: 'Bem-vindo de volta!',
-                          subtitle: 'Sua jornada de disciplina continua aqui',
+                          title: welcomeTitle,
+                          subtitle: 'Sua jornada de disciplina começa aqui',
                           leading: Image.asset('assets/logo.png', height: 48),
                           borderColor: HomeColors.primary,
                         )
@@ -1066,12 +1063,9 @@ Future<void> _toggleModuleVisibility(NicheId nicheId, bool isVisible) async {
                 ),
               ],
             ),
-            bottomNavigationBar:
-                const DisciplinumBottomNavBar(currentIndex: 0),
+            bottomNavigationBar: const DisciplinumBottomNavBar(currentIndex: 0),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildActiveModulesSection(

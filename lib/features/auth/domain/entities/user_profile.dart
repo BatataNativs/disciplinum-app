@@ -13,7 +13,7 @@ class UserProfile {
     this.showAvatar = true,
   });
 
-  // Facilita a integração com os dados retornados pelo Supabase
+  // Cria perfil a partir de mapa de dados
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       name: map['name'] ?? 'Usuário Disciplinum',

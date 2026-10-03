@@ -168,23 +168,23 @@ extension ProcrastinationInsigniaEntityExtension on ProcrastinationInsigniaEntit
   String get requirementDescription {
     switch (this) {
       case ProcrastinationInsigniaEntity.madeira:
-        return 'Ative o módulo Evitar Procrastinação';
+        return 'Ativar o módulo Evitar Procrastinação';
       case ProcrastinationInsigniaEntity.ferro:
-        return 'Conclua todas as tarefas por 1 dia';
+        return 'Concluir todas as tarefas por 1 dia';
       case ProcrastinationInsigniaEntity.aluminio:
-        return 'Conclua todas as tarefas por 2 dias';
+        return 'Concluir todas as tarefas por 2 dias';
       case ProcrastinationInsigniaEntity.latao:
-        return 'Conclua todas as tarefas por 3 dias';
+        return 'Concluir todas as tarefas por 3 dias';
       case ProcrastinationInsigniaEntity.bronze:
-        return 'Conclua todas as tarefas por 5 dias';
+        return 'Concluir todas as tarefas por 5 dias';
       case ProcrastinationInsigniaEntity.prata:
-        return 'Conclua todas as tarefas por 12 dias';
+        return 'Concluir todas as tarefas por 12 dias';
       case ProcrastinationInsigniaEntity.ouro:
-        return 'Conclua todas as tarefas por 18 dias';
+        return 'Concluir todas as tarefas por 18 dias';
       case ProcrastinationInsigniaEntity.diamante:
-        return 'Conclua todas as tarefas por 25 dias';
+        return 'Concluir todas as tarefas por 25 dias';
       case ProcrastinationInsigniaEntity.disciplinum:
-        return 'Conclua todas as tarefas por 30 dias';
+        return 'Concluir todas as tarefas por 30 dias';
     }
   }
 

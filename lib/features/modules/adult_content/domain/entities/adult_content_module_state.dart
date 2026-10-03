@@ -135,7 +135,7 @@ class AdultContentModuleState implements ModuleStateContract {
     );
   }
 
-  /// Factory para criar a partir de JSON (ex: do Supabase)
+  /// Factory para criar a partir de JSON
   /// Compatível com JSONs antigos (camelCase) e novos (snake_case)
   factory AdultContentModuleState.fromJson(Map<String, dynamic> json) {
     // Helper para ler campo em snake_case ou camelCase

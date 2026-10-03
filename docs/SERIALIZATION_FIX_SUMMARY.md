@@ -130,7 +130,7 @@ Se houver dados salvos anteriormente no formato incorreto, pode ser necessário 
 - Desinstalar/reinstalar o app no device, OU
 - Usar `ObjectBoxDataCleanup.cleanupAffectedEntities()` (arquivo criado em `lib/core/database/`)
 
-### 3. Verificar Supabase
+### 3. Verificar ObjectBox
 Dados sincronizados na nuvem devem ser naturalmente corrigidos quando:
 - `syncToRemote` salva usando `state.toJson()` (ModuleState) → ✅ Já correto
 - `loadFromRemote` carrega usando `ModuleState.fromJson()` → ✅ Já correto

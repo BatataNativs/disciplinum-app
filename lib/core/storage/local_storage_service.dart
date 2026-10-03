@@ -44,7 +44,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
     } else if (value is int) {
       await _prefs.setInt(key, value);
     } else if (value is double) {
-      // IsarPreferencesRepository não tem setDouble, converter para String
+      // ObjectBoxPreferencesRepository armazena como String, converter double
       await _prefs.setString(key, value.toString());
     } else if (value is bool) {
       await _prefs.setBool(key, value);

@@ -26,7 +26,7 @@ abstract class ModuleStateContract {
   DateTime get createdAt;     // ISO8601
   DateTime get updatedAt;     // ISO8601
   
-  Map<String, dynamic> toJson();  // Para Supabase
+  Map<String, dynamic> toJson();  // Para ObjectBox
   Map<String, dynamic> toMap();   // Para Isar
   
   List<ProgressMetricContract> get progressMetrics;
@@ -36,7 +36,7 @@ abstract class ModuleStateContract {
 
 ### 2. Estrutura JSON Padrão (OBRIGATÓRIO)
 
-Todo `state_data` no Supabase deve seguir este formato:
+Todo `state_data` no ObjectBox deve seguir este formato:
 
 ```json
 {
@@ -135,7 +135,7 @@ Todo módulo deve implementar este ciclo:
 │     └── Carrega estado local (Isar) ou cria novo          │
 ├─────────────────────────────────────────────────────────────┤
 │  2. loadFromRemote()                                      │
-│     └── Se online, carrega do Supabase                    │
+│     └── Se online, carrega do ObjectBox                    │
 ├─────────────────────────────────────────────────────────────┤
 │  3. resolveConflict()                                     │
 │     └── Local vs Remoto (last-write-wins)                │
@@ -147,7 +147,7 @@ Todo módulo deve implementar este ciclo:
 │     └── Atualiza métricas e verifica conquistas          │
 ├─────────────────────────────────────────────────────────────┤
 │  6. persist()                                             │
-│     └── Salva local (Isar) e sync remoto (Supabase)       │
+│     └── Salva local (Isar) e sync remoto (ObjectBox)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -157,7 +157,7 @@ Todo módulo deve implementar este ciclo:
 
 Antes de considerar um módulo "pronto", verifique:
 
-### Backend (Supabase)
+### Armazenamento (ObjectBox)
 - [ ] Tabela `{module}_gamification_states` existe
 - [ ] Campos: `id`, `user_id`, `state_data`, `created_at`, `updated_at`
 - [ ] `state_data` tem `DEFAULT '{}'`
@@ -205,7 +205,7 @@ Quando precisar alterar a estrutura do estado:
 
 1. **Incremente** `schemaVersion` (ex: 1 → 2)
 2. **Documente** a mudança em `docs/schemas/state_data_v{version}.md`
-3. **Implemente** migração no Supabase se necessário
+3. **Implemente** migração no ObjectBox se necessário
 4. **Atualize** o `fromJson()` para lidar com versões antigas
 
 Exemplo de compatibilidade retroativa:
@@ -241,7 +241,7 @@ factory FocusModuleState.fromJson(Map<String, dynamic> json) {
 { "sessions_completed": 10, "current_stage": "silver" }
 ```
 
-❌ **Nunca** acesse Isar/Supabase direto da UI:
+❌ **Nunca** acesse ObjectBox direto da UI:
 ```dart
 // ERRADO - na UI
 await isar.focusGamifications.put(state);  // 🔴 NÃO!
@@ -308,7 +308,7 @@ static const List<BaseStage> myStages = [
 ## 📚 Recursos Relacionados
 
 - [Contratos Dart](lib/core/modules/contracts/) - Código fonte dos contratos
-- [Migrações SQL](../supabase/migrations/) - Estrutura do backend
+- [Migrações SQL](../objectbox/migrations/) - Estrutura do backend
 - [FocusModuleState](lib/features/modules/focus/domain/entities/focus_module_state.dart) - Exemplo de implementação
 
 ---

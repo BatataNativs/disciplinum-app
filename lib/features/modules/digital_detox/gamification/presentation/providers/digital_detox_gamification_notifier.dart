@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/gamification/services/achievement_notification_service.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/entities/digital_detox_gamification_entity.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_gamification_repository.dart';
 import 'package:disciplinum/features/modules/digital_detox/gamification/domain/repositories/digital_detox_fasting_break_domain_repository.dart';
@@ -70,13 +71,36 @@ class DigitalDetoxGamificationNotifier extends StateNotifier<DigitalDetoxGamific
         LoggerService.instance.w('Aviso: falha ao sincronizar config do Digital Detox: $e');
       }
 
-      final gamification = _repository.getByUserId(userId);
+      var gamification = _repository.getByUserId(userId);
       if (gamification == null) {
         // Criar nova gamificação se não existir
-        final newGamification = DigitalDetoxGamificationEntity(userId: userId);
+        final newGamification = DigitalDetoxGamificationEntity(
+          userId: userId,
+          earnedInsignias: jsonEncode(['Madeira']),
+        );
         await _repository.save(newGamification);
         state = DigitalDetoxGamificationState(gamification: newGamification, isLoading: false, errorMessage: '', availableBreaks: []);
       } else {
+        // Auto-recuperação: se o módulo estiver ativo mas não tiver a insígnia Madeira
+        if (gamification.isModuleActive) {
+          final list = gamification.earnedInsigniasList;
+          final hasMadeira = list.any((i) => i.toLowerCase().contains('madeira'));
+          if (!hasMadeira) {
+            final updatedList = [...list, 'Madeira'];
+            gamification = gamification.copyWith(
+              earnedInsignias: jsonEncode(updatedList),
+              updatedAt: DateTime.now(),
+            );
+            await _repository.save(gamification);
+            await AchievementNotificationService.instance.showInsigniaNotification(
+              moduleId: 'digitalDetox',
+              insigniaId: 'madeira',
+              insigniaName: 'Madeira',
+              insigniaDescription: 'Começou a jornada de Desintoxicação Digital',
+              assetPath: 'assets/gamification/insignias/digitalDetox/madeira.png',
+            );
+          }
+        }
         final availableBreaks = _fastingBreakRepository.getActiveForUser(userId);
         state = DigitalDetoxGamificationState(gamification: gamification, isLoading: false, errorMessage: '', availableBreaks: availableBreaks);
       }
@@ -91,12 +115,27 @@ class DigitalDetoxGamificationNotifier extends StateNotifier<DigitalDetoxGamific
       final currentGamification = state.gamification;
       if (currentGamification == null) return;
       
+      final list = currentGamification.earnedInsigniasList;
+      final hasMadeira = list.any((i) => i.toLowerCase().contains('madeira'));
+      final updatedList = hasMadeira ? list : [...list, 'Madeira'];
+
       final updatedGamification = currentGamification.copyWith(
         isModuleActive: true,
+        earnedInsignias: jsonEncode(updatedList),
         updatedAt: DateTime.now(),
       );
       
       await _repository.save(updatedGamification);
+      
+      if (!hasMadeira) {
+        await AchievementNotificationService.instance.showInsigniaNotification(
+          moduleId: 'digitalDetox',
+          insigniaId: 'madeira',
+          insigniaName: 'Madeira',
+          insigniaDescription: 'Começou a jornada de Desintoxicação Digital',
+          assetPath: 'assets/gamification/insignias/digitalDetox/madeira.png',
+        );
+      }
       
       // Recarregar estado
       await loadGamification(userId);
@@ -192,7 +231,7 @@ class DigitalDetoxGamificationNotifier extends StateNotifier<DigitalDetoxGamific
       if (currentGamification == null) return;
       
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
-      final hasMadeira = currentGamification.earnedInsigniasList.contains('Madeira');
+      final hasMadeira = currentGamification.earnedInsigniasList.any((i) => i.toLowerCase().contains('madeira'));
       
       // Cria estado inicial preservando Madeira se existia
       final initialState = DigitalDetoxGamificationEntity(

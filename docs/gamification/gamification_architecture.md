@@ -24,7 +24,7 @@
 3. [Tipos de Módulos](#tipos-de-módulos)
 4. [Fluxo de Detecção de Conquistas](#fluxo-de-detecção-de-conquistas)
 5. [Arquitetura por Módulo](#arquitetura-por-módulo)
-6. [Persistência (ObjectBox + Supabase)](#persistência-objectbox--supabase)
+6. [Persistência (ObjectBox)](#persistência-objectbox--objectbox)
 7. [Dependências do Projeto](#dependências-do-projeto)
 8. [Notificações e CelebraГУes](#notificaГУes-e-celebraГУes)
 
@@ -36,7 +36,7 @@ O sistema de gamificação do Disciplinum é composto por **10 módulos independ
 
 - **Arquitetura Plugin** - Módulos 100% independentes
 - **Persistência local** via ObjectBox
-- **Sincronização em nuvem** via Supabase
+- **Sincronização em nuvem** via ObjectBox
 - **Sistema de insígnias** (conquistas imediatas)
 - **Sistema de medalhas** (conquistas acumulativas)
 - **Estado Riverpod puro** - StateNotifier por módulo
@@ -56,7 +56,7 @@ O sistema de gamificação do Disciplinum é composto por **10 módulos independ
 │   │  │ • Estado do módulo  │                      └──────────────────┘  │   │
 │   │  │ • Insígnias         │                                            │   │
 │   │  │ • Medalhas          │       (Manual)       ┌──────────────────┐  │   │
-│   │  │ • Streaks           │ <──────────────────> │   SUPABASE ☁️    │  │   │
+│   │  │ • Streaks           │ <──────────────────> │  BACKUP REMOTO   │  │   │
 │   │  └─────────────────────┘         Sync         │ (Cloud Backup)   │  │   │
 │   │                                               └──────────────────┘  │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
@@ -266,14 +266,14 @@ O sistema verifica periodicamente (quando o app abre) se marcos de tempo foram a
 │  SE "NÃO FUMEI":                                                            │
 │  ├─ ✅ Incrementa streak (dias consecutivos)                                 │
 │  ├─ 💾 Salva no ObjectBox                                                    │
-│  ├─ ☁️ Sincroniza com Supabase                                               │
+│  ├─ ☁️ Salva no ObjectBox                                               │
 │  └─ 🎯 Verifica se atingiu marco para nova insígnia                          │
 │                                                                             │
 │  SE "FUMEI":                                                                │
 │  ├─ ❌ Reseta streak para 0                                                  │
 │  ├─ 📝 Registra recaída (para estatísticas)                                  │
 │  ├─ 💾 Salva no ObjectBox                                                    │
-│  └─ ☁️ Sincroniza com Supabase                                               │
+│  └─ ☁️ Salva no ObjectBox                                               │
 │                                                                             │
 │  ARQUIVOS RELACIONADOS:                                                     │
 │  ├─ smoking_checkin_section.dart        (UI do check-in)                     │
@@ -325,7 +325,7 @@ O sistema verifica periodicamente (quando o app abre) se marcos de tempo foram a
 │              │  │ │   └─ Se atingiu: awardInsignia()  │                   │
 │              │  │ └─ awardInsignia(id)                │                   │
 │              │  │     ├─ Salva no ObjectBox           │                   │
-│              │  │     ├─ Sincroniza com Supabase     │                   │
+│              │  │     ├─ Salva no ObjectBox     │                   │
 │              │  │     └─ Chama CelebrationService    │                   │
 │              │  └─────────────────────────────────────┘                   │
 │              └────────────┬────────────────────┘                          │
@@ -346,7 +346,7 @@ O sistema verifica periodicamente (quando o app abre) se marcos de tempo foram a
 │              │  │ │   └─ Se suficiente: awardMedalha()│                   │
 │              │  │ └─ awardMedalha(id)               │                   │
 │              │  │     ├─ Salva no ObjectBox         │                   │
-│              │  │     ├─ Sincroniza com Supabase   │                   │
+│              │  │     ├─ Salva no ObjectBox   │                   │
 │              │  │     └─ Chama CelebrationService  │                   │
 │              │  └─────────────────────────────────────┘                   │
 │              └────────────┬────────────────────┘                          │
@@ -447,8 +447,8 @@ O Disciplinum adota uma arquitetura **Local-First**, priorizando o armazenamento
    - Todos os dados, estados dos módulos, progresso de gamificação (medalhas/insígnias), históricos de check-ins e escolhas do usuário são salvos localmente e de forma síncrona em boxes do ObjectBox.
    - O funcionamento do aplicativo é 100% offline e independente de rede por padrão.
 
-2. **Sincronização em Nuvem sob Demanda (Supabase):**
-   - O processo de sincronização com o Supabase **não é automático** na inicialização do app ou durante a navegação.
+2. **Sincronização em Nuvem sob Demanda (ObjectBox):**
+   - O processo de sincronização com o ObjectBox **não é automático** na inicialização do app ou durante a navegação.
    - O usuário aciona manualmente o upload ou a mesclagem de dados (sincronização) por meio de botões específicos nas configurações do app.
    - A autenticação (e-mail/senha ou Google) é opcional e serve principalmente para o vínculo de conta se o usuário desejar usar a sincronização em nuvem.
 
@@ -482,15 +482,15 @@ class SmokingGamificationRepository {
   }
   
   // ═══════════════════════════════════════════════════════════
-  // PERSISTÊNCIA EM NUVEM - Supabase (Disparado sob demanda pelo CloudSyncService)
+  // PERSISTÊNCIA EM NUVEM - ObjectBox (Disparado sob demanda pelo CloudSyncService)
   // ═══════════════════════════════════════════════════════════
   
-  Future<void> syncWithSupabase(SmokingModuleState state) async {
-    final supabase = Supabase.instance.client;
-    final userId = supabase.auth.currentUser?.id;
+  Future<void> saveState(SmokingModuleState state) async {
+    final objectbox = ObjectBox.instance.client;
+    final userId = objectbox.auth.currentUser?.id;
     
     if (userId != null) {
-      await supabase.from('smoking_gamification_states').upsert({
+      await objectbox.from('smoking_gamification_states').upsert({
         'user_id': userId,
         'state_data': entity.toJson(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -498,8 +498,8 @@ class SmokingGamificationRepository {
     }
   }
   
-  Future<SmokingModuleState?> loadFromSupabase() async {
-    final response = await supabase
+  Future<SmokingModuleState?> loadState() async {
+    final response = await objectbox
         .from('smoking_gamification_states')
         .select('state_data')
         .eq('user_id', userId)
@@ -514,9 +514,9 @@ class SmokingGamificationRepository {
 }
 ```
 
-### Todos os Módulos com ObjectBox + Supabase + Backup JSON
+### Todos os Módulos com ObjectBox + Backup JSON
 
-| Módulo | Repository | Tabela Supabase | Entity ObjectBox |
+| Módulo | Repository | Tabela ObjectBox | Entity ObjectBox |
 |--------|------------|-----------------|------------------|
 | 🚭 Smoking | `SmokingGamificationRepository` | `smoking_daily_checkins` & settings | `SmokingGamificationEntity` |
 | 📱 Focus | `FocusGamificationRepository` | `focus_intervals` & settings | `FocusGamificationEntity` & `FocusIntervalEntity` |
@@ -549,7 +549,7 @@ class SmokingGamificationRepository {
 - **path_provider:** ^2.1.4 - Acesso a diretórios do sistema
 
 #### Backend e Autenticação
-- **supabase_flutter:** ^2.12.4 - Backend as a Service e autenticação
+- **:** ^2.12.4 - Backend as a Service e autenticação
 - **google_sign_in:** ^7.2.0 - Autenticação Google
 
 #### Firebase
@@ -735,7 +735,7 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 │  ┌───────────────────────────────────────────────────────────────────────┐  │
 │  │  ✅ Todos os módulos têm:                                            │  │
 │  │     • ObjectBox (persistência local)                                  │  │
-│  │     • Supabase (sincronização cloud)                                  │  │
+│  │     • ObjectBox (sincronização cloud)                                  │  │
 │  │     • Insígnias e Medalhas                                            │  │
 │  │     • Arquitetura Plugin independente                                 │  │
 │  │     • StateNotifier Riverpod puro                                     │  │
@@ -749,7 +749,7 @@ return GlobalAchievementListener(      // ← Verifica e mostra dialogs
 ## Checklist de Implementação
 
 - [x] ObjectBox configurado para todos os módulos
-- [x] Supabase sincronização para todos os módulos
+- [x] ObjectBox sincronização para todos os módulos
 - [x] Sistema de insígnias (10 módulos)
 - [x] Sistema de medalhas (10 módulos)
 - [x] Arquitetura Plugin implementada (10 módulos)

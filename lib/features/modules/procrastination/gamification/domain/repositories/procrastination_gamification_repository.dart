@@ -4,11 +4,8 @@ import 'package:disciplinum/objectbox.g.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/entities/procrastination_gamification_entity.dart';
-import 'package:disciplinum/features/modules/procrastination/gamification/domain/services/procrastination_migration_checker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repositório para gerenciar o estado de gamificação do módulo Procrastination
-/// Implementa persistência local com ObjectBox e sincronização com Supabase
+/// Repositório 100% Local-First com ObjectBox para Procrastinação
 class ProcrastinationGamificationRepository {
   static ProcrastinationGamificationRepository? _instance;
   static ProcrastinationGamificationRepository get instance => _instance ??= ProcrastinationGamificationRepository._();
@@ -20,7 +17,7 @@ class ProcrastinationGamificationRepository {
   /// Salva o estado localmente usando ObjectBox
   Future<void> saveProcrastinationState(ProcrastinationModuleState state) async {
     try {
-      final entity = ProcrastinationGamificationEntity.fromModuleState('procrastination_user', state);
+      final entity = ProcrastinationGamificationEntity.fromModuleState('local_user', state);
       
       final existingEntity = _box.get(1);
       if (existingEntity != null) {
@@ -40,7 +37,7 @@ class ProcrastinationGamificationRepository {
   /// Carrega o estado salvo localmente
   Future<ProcrastinationModuleState?> getProcrastinationState() async {
     try {
-      final entity = _box.get(1); // Pega o primeiro registro (id=1)
+      final entity = _box.get(1);
       
       if (entity != null) {
         final state = entity.toModuleState();
@@ -66,95 +63,20 @@ class ProcrastinationGamificationRepository {
     }
   }
 
-  /// Sincroniza com Supabase (upload)
-  Future<void> syncWithSupabase(ProcrastinationModuleState state) async {
-    try {
-      final isReady = await ProcrastinationMigrationChecker.instance.ensureMigration();
-      if (!isReady) {
-        LoggerService.instance.w('Supabase não está pronto para sincronização');
-        return;
-      }
-
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        LoggerService.instance.w('Usuário não autenticado para sincronização');
-        return;
-      }
-
-      final data = state.toJson();
-      data['user_id'] = userId;
-
-      await Supabase.instance.client.from('procrastination_gamification_states').upsert({
-        'user_id': userId,
-        'state_data': data,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      LoggerService.instance.gamification('Estado Procrastination sincronizado com Supabase');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar estado Procrastination com Supabase', error: e);
-    }
-  }
-
-  /// Carrega do Supabase (download)
-  Future<ProcrastinationModuleState?> loadFromSupabase() async {
-    try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        LoggerService.instance.w('Usuário não autenticado para carregar dados');
-        return null;
-      }
-
-      final response = await Supabase.instance.client
-          .from('procrastination_gamification_states')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (response != null && response['state_data'] != null) {
-        final stateData = Map<String, dynamic>.from(response['state_data']);
-        final state = ProcrastinationModuleState.fromJson(stateData);
-        LoggerService.instance.gamification('Estado Procrastination carregado do Supabase');
-        return state;
-      }
-
-      LoggerService.instance.gamification('Estado Procrastination não encontrado no Supabase');
-      return null;
-    } catch (e) {
-      LoggerService.instance.e('Erro ao carregar estado Procrastination do Supabase', error: e);
-      return null;
-    }
-  }
-
-  /// Sincronização bidirecional completa
+  /// Sincronização local completa
   Future<ProcrastinationModuleState> performFullSync() async {
     try {
-      // Tenta carregar do Supabase primeiro
-      ProcrastinationModuleState? supabaseState = await loadFromSupabase();
-      
-      if (supabaseState != null) {
-        // Salva localmente e retorna
-        await saveProcrastinationState(supabaseState);
-        return supabaseState;
-      }
-      
-      // Se não encontrou no Supabase, carrega localmente
       ProcrastinationModuleState? localState = await getProcrastinationState();
-      
       if (localState != null) {
-        // Envia para o Supabase
-        await syncWithSupabase(localState);
         return localState;
       }
       
-      // Se não encontrou em nenhum lugar, retorna estado inicial
       LoggerService.instance.gamification('Criando estado inicial Procrastination');
       final initialState = ProcrastinationModuleState.initial();
       await saveProcrastinationState(initialState);
       return initialState;
     } catch (e) {
-      LoggerService.instance.e('Erro na sincronização completa Procrastination', error: e);
-      // Fallback para estado inicial
+      LoggerService.instance.e('Erro na inicialização Procrastination', error: e);
       return ProcrastinationModuleState.initial();
     }
   }
@@ -163,10 +85,7 @@ class ProcrastinationGamificationRepository {
   Future<void> resetProgress() async {
     try {
       final resetState = ProcrastinationModuleState.initial();
-      
       await saveProcrastinationState(resetState);
-      await syncWithSupabase(resetState);
-      
       LoggerService.instance.gamification('Progresso Procrastination resetado');
     } catch (e) {
       LoggerService.instance.e('Erro ao resetar progresso Procrastination', error: e);
@@ -214,18 +133,7 @@ class ProcrastinationGamificationRepository {
 
   /// Inicializa o repositório
   Future<void> initialize() async {
-    try {
-      // Verifica se o Supabase está pronto para uso
-      final migrationOk = await ProcrastinationMigrationChecker.instance.ensureMigration();
-      if (!migrationOk) {
-        LoggerService.instance.w('⚠️ Supabase não está migrado - usando apenas Isar local');
-      }
-      
-      LoggerService.instance.gamification('ProcrastinationGamificationRepository inicializado');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao inicializar ProcrastinationGamificationRepository', error: e);
-      rethrow;
-    }
+    LoggerService.instance.gamification('ProcrastinationGamificationRepository inicializado localmente');
   }
 
   /// Verifica se há dados locais
@@ -239,49 +147,13 @@ class ProcrastinationGamificationRepository {
     }
   }
 
-  /// Força sincronização manual
+  /// Força sincronização
   Future<bool> forceSync() async {
-    try {
-      final localState = await getProcrastinationState();
-      
-      if (localState != null) {
-        await syncWithSupabase(localState);
-        LoggerService.instance.gamification('Sincronização forçada Procrastination concluída');
-        return true;
-      }
-      
-      LoggerService.instance.w('Não há dados locais para sincronizar Procrastination');
-      return false;
-    } catch (e) {
-      LoggerService.instance.e('Erro na sincronização forçada Procrastination', error: e);
-      return false;
-    }
+    return true;
   }
 
-  /// Limpa todos os dados (local e cloud)
+  /// Limpa todos os dados
   Future<void> clearAllData() async {
-    try {
-      // Limpa dados locais
-      await clearProcrastinationState();
-      
-      // Tenta limpar dados do Supabase
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        try {
-          await Supabase.instance.client
-              .from('procrastination_gamification_states')
-              .delete()
-              .eq('user_id', userId);
-          
-          LoggerService.instance.gamification('Dados do Supabase Procrastination limpos');
-        } catch (e) {
-          LoggerService.instance.w('Erro ao limpar dados do Supabase Procrastination: $e');
-        }
-      }
-      
-      LoggerService.instance.gamification('Todos os dados Procrastination limpos');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao limpar todos os dados Procrastination', error: e);
-    }
+    await clearProcrastinationState();
   }
 }

@@ -19,7 +19,7 @@ Cada módulo de hábito (Leitura, Economia de Dinheiro, Parar de Fumar, etc.) op
 Este design garante:
 - **Zero acoplamento** entre módulos
 - **Persistência independente** por módulo (ObjectBox)
-- **Sincronização na nuvem** via Supabase
+- **Sincronização na nuvem** via ObjectBox
 - **Ativação/desativação flexível**
 - **Adição fácil de novos módulos**
 
@@ -553,9 +553,9 @@ class DigitalDetoxGamificationEntity { ... }
 // ... (todos os 10 módulos)
 ```
 
-### Sincronização na Nuvem (Supabase)
+### Persistência Local (ObjectBox)
 
-Os dados de gamificação são sincronizados com Supabase para backup e sincronização entre dispositivos:
+Os dados de gamificação são sincronizados com ObjectBox para backup e sincronização entre dispositivos:
 
 ```dart
 class GamificationSyncService {
@@ -563,7 +563,7 @@ class GamificationSyncService {
     final localData = await _repository.getGamification(userId);
     if (localData == null) return;
 
-    await supabase.from('${moduleId}_gamification_states').upsert({
+    await objectbox.from('${moduleId}_gamification_states').upsert({
       'user_id': userId,
       'state_data': localData.toJson(),
       'updated_at': DateTime.now().toIso8601String(),
@@ -571,7 +571,7 @@ class GamificationSyncService {
   }
 
   Future<void> syncFromCloud(String userId, String moduleId) async {
-    final response = await supabase
+    final response = await objectbox
         .from('${moduleId}_gamification_states')
         .select('state_data')
         .eq('user_id', userId)
@@ -805,7 +805,7 @@ final readingGamificationStateProvider = Provider<
 
 ## Conclusão
 
-O Sistema de Gamificação do Disciplinum usa uma arquitetura modular baseada em plugins que permite que cada módulo de hábito tenha seu próprio sistema de gamificação independente enquanto mantém consistência em toda a aplicação. O uso de ObjectBox para persistência local, Riverpod para gerenciamento de estado e Supabase para sincronização na nuvem fornece um sistema flexível e escalável que pode ser estendido com novos módulos e conquistas.
+O Sistema de Gamificação do Disciplinum usa uma arquitetura modular baseada em plugins que permite que cada módulo de hábito tenha seu próprio sistema de gamificação independente enquanto mantém consistência em toda a aplicação. O uso de ObjectBox para persistência local, Riverpod para gerenciamento de estado e ObjectBox para sincronização na nuvem fornece um sistema flexível e escalável que pode ser estendido com novos módulos e conquistas.
 
 **Benefícios Principais:**
 - **Zero acoplamento** entre módulos

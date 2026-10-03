@@ -109,14 +109,14 @@ UI (Presentation) → Controller → Service → Repository → DataSource
 
 ### Core Services
 - **LoggerService**: Logging estruturado com níveis (debug, info, warning, error)
-- **AnalyticsService**: Event tracking e métricas via Supabase
+- **AnalyticsService**: Event tracking e métricas via ObjectBox
 - **NavigationService**: Navegação centralizada com helpers
 - **EventBus**: Comunicação desacoplada entre features
 
 ### Infrastructure
 - **ModuleRepository**: Abstração de dados de módulos
 - **LocalModuleDatasource**: Cache local com SharedPreferences
-- **CloudModuleDatasource**: Sincronização Supabase
+- **CloudModuleDatasource**: Sincronização ObjectBox
 - **IsarService**: Banco de dados local rápido
 
 ### Features
@@ -161,7 +161,7 @@ features/nova_feature/
 - **UserModuleState**: Estado dos módulos ativos
 - **DetectionSession**: Sessões de monitoramento
 
-### **Remoto (Supabase)**
+### **Remoto (ObjectBox)**
 - **user_module_status**: Status dos módulos (sem colunas de XP)
 - **user_behavior_events**: Eventos para analytics
 - **Migrations**: Controle de versão do schema

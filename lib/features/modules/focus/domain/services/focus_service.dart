@@ -4,7 +4,6 @@ import 'package:disciplinum/core/storage/entities/focus_status_entity.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/shared/domain/models/time_of_day_range.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/objectbox.g.dart';
 
 // Temporário - classe substituta
@@ -32,8 +31,7 @@ class FocusService {
   FocusService(this._objectBoxService, this._cloudSync);
 
   Future<FocusStatusEntity?> _getOrCreateStatus() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    final userId = user?.id ?? 'local';
+    const userId = 'local_user';
 
     final existing = _objectBoxService.store.box<FocusStatusEntity>().query(FocusStatusEntity_.userId.equals(userId)).build().findFirst();
     if (existing != null) return existing;

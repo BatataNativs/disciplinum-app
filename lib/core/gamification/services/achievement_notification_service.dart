@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/core/gamification/repositories/pending_achievements_repository.dart';
@@ -231,18 +230,8 @@ class AchievementNotificationService {
     }
   }
 
-  /// Obtém ID do usuário atual do Supabase Auth
+  /// Obtém ID do usuário local
   Future<String> _getCurrentUserId() async {
-    try {
-      final currentUser = Supabase.instance.client.auth.currentUser;
-      if (currentUser != null && currentUser.id.isNotEmpty) {
-        return currentUser.id;
-      }
-    } catch (e) {
-      LoggerService.instance.w('⚠️ Erro ao obter userId do Supabase', error: e);
-    }
-    
-    // Fallback para guest_user quando não há usuário autenticado
-    return 'guest_user';
+    return 'local_user';
   }
 }

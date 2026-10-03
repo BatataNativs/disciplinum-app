@@ -4,7 +4,7 @@
 
 | Fase | Descrição | Status | Progresso |
 |------|-----------|--------|-----------|
-| 1 | Backend Supabase | ✅ | 100% |
+| 1 | Persistência ObjectBox | ✅ | 100% |
 | 2 | Contratos Dart | ✅ | 100% |
 | 3 | Sync Service | ✅ | 100% |
 | 4 | Exemplos & Docs | ✅ | 100% |
@@ -17,7 +17,7 @@
 
 ---
 
-## ✅ FASE 1: Backend Supabase
+## ✅ FASE 1: Persistência ObjectBox
 
 ### Migrações Criadas
 
@@ -237,14 +237,14 @@ await notifier.activateModule();
 
 ## 🚀 Como Usar
 
-### 1. Aplicar Migrações (Supabase)
+### 1. Aplicar Migrações (ObjectBox)
 
 ```bash
-supabase migration up
+objectbox migration up
 ```
 
 Ou via dashboard:
-- Acesse `supabase/migrations/`
+- Acesse `objectbox/migrations/`
 - Execute em ordem cronológica
 
 ### 2. Implementar Plugin em Novo Módulo
@@ -295,7 +295,7 @@ dart scripts/audit_module_compliance.dart --all
 
 ## ⚠️ Avisos Importantes
 
-1. **Migrações precisam ser aplicadas manualmente** no Supabase
+1. **Migrações precisam ser aplicadas manualmente** no ObjectBox
 2. **build_runner precisa ser executado** se SyncQueueItem for adicionada ao Isar
 3. **Módulos existentes precisam ser atualizados** para implementar contratos
 4. **Testar em staging antes** de aplicar migrações em produção

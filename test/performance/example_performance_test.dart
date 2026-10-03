@@ -39,7 +39,7 @@ void main() {
     expect(stopwatch.elapsedMilliseconds, lessThan(50));
   });
 
-  test('performance: query Isar deve ser < 20ms', () async {
+  test('performance: query ObjectBox deve ser < 20ms', () async {
     // Arrange
     final stopwatch = Stopwatch()..start();
 

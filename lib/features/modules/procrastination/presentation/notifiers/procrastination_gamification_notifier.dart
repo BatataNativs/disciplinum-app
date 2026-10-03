@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_module_state.dart';
 import 'package:disciplinum/features/modules/procrastination/gamification/domain/repositories/procrastination_gamification_repository.dart';
+import 'package:disciplinum/features/modules/procrastination/gamification/domain/services/procrastination_celebration_service.dart';
 
 /// Estado da gamificação do Procrastination
 class ProcrastinationGamificationState {
@@ -49,10 +50,24 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
     try {
       final gamification = await _repository.getProcrastinationState();
       if (gamification != null) {
+        ProcrastinationModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveProcrastinationState(effectiveGamification);
+          ProcrastinationCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Produtividade',
+            assetPath: 'assets/gamification/insignias/procrastination/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -68,7 +83,7 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
       final currentState = state.gamification ?? ProcrastinationModuleState.initial();
       // Concede insígnia Madeira se ainda não tiver
       final earnedInsignias = List<String>.from(currentState.earnedInsignias);
-      if (!earnedInsignias.contains('madeira')) {
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
         earnedInsignias.add('madeira');
       }
       final newState = currentState.copyWith(
@@ -76,7 +91,12 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
         earnedInsignias: earnedInsignias,
       );
       await _repository.saveProcrastinationState(newState);
-      await _repository.syncWithSupabase(newState);
+      await ProcrastinationCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Produtividade',
+        assetPath: 'assets/gamification/insignias/procrastination/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -89,7 +109,6 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
       final currentState = state.gamification ?? ProcrastinationModuleState.initial();
       final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveProcrastinationState(newState);
-      await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -100,7 +119,7 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearProcrastinationState();
       
@@ -108,13 +127,11 @@ class ProcrastinationGamificationNotifier extends StateNotifier<ProcrastinationG
       final initialState = ProcrastinationModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveProcrastinationState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveProcrastinationState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

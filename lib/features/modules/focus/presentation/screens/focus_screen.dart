@@ -262,7 +262,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       nicheId: _niche.nicheId,
       isModuleActive: true,
     );
-    // Persiste também no Isar local
+    // Persiste também no ObjectBox local
     ref.read(focusControllerLocalProvider.notifier).setModuleActive(true);
     // Incrementa streak ao iniciar ciclo de gamificação
     final focusController = ref.read(focusControllerLocalProvider.notifier);

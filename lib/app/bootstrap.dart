@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:disciplinum/core/storage/local_storage_service.dart';
@@ -32,12 +31,11 @@ class AppBootstrap {
     try {
       // Inicialização sequencial dos serviços independentes
       // Cada método já tem seu próprio tratamento de erro
-      await _initSupabase();
       await _initAds();
       await _initTheme();
 
       // Inicializar serviços que dependem de outros (sequencial)
-      await _initServices();  // Inicializa Isar
+      await _initServices();  // Inicializa serviços locais
       
       // Inicializar serviços que dependem do ObjectBox
       await _initNotifications();
@@ -70,22 +68,6 @@ class AppBootstrap {
       }
       // Storage é crítico, relançar erro
       rethrow;
-    }
-  }
-
-  /// Inicializa o Supabase
-  static Future<void> _initSupabase() async {
-    try {
-      await Supabase.initialize(
-        url: AppConfig.supabaseUrl,
-        publishableKey: AppConfig.supabaseAnonKey,
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        LoggerService.instance.e('Error initializing Supabase', error: e);
-      }
-      // Supabase é crítico para cloud sync, mas app pode funcionar offline
-      // Não relançar erro, apenas logar
     }
   }
 

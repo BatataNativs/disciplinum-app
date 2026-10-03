@@ -1,7 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service_local.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Tela de configuracao de horarios do Controle de Gastos
 class SpendingTimeSettingsScreen extends StatefulWidget {
@@ -24,8 +23,7 @@ class _SpendingTimeSettingsScreenState
   bool _isLoading = true;
   bool _hasChanges = false;
 
-  String get _userId =>
-      Supabase.instance.client.auth.currentUser?.id ?? 'guest_user';
+  String get _userId => 'local_user';
 
   @override
   void initState() {

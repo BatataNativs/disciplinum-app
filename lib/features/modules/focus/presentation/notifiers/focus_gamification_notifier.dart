@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/focus/domain/entities/focus_module_state.dart';
 import 'package:disciplinum/features/modules/focus/gamification/domain/repositories/focus_gamification_repository.dart';
+import 'package:disciplinum/features/modules/focus/gamification/domain/services/focus_celebration_service.dart';
 
 /// Estado da gamificação do Focus
 class FocusGamificationState {
@@ -52,10 +53,24 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
     try {
       final gamification = await _repository.getFocusState();
       if (gamification != null) {
+        FocusModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveFocusState(effectiveGamification);
+          FocusCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Foco',
+            assetPath: 'assets/gamification/insignias/focus/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -71,7 +86,7 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
       final currentState = state.gamification ?? FocusModuleState.initial();
       // Concede insígnia Madeira se ainda não tiver
       final earnedInsignias = List<String>.from(currentState.earnedInsignias);
-      if (!earnedInsignias.contains('madeira')) {
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
         earnedInsignias.add('madeira');
       }
       final newState = currentState.copyWith(
@@ -79,7 +94,12 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
         earnedInsignias: earnedInsignias,
       );
       await _repository.saveFocusState(newState);
-      await _repository.syncWithSupabase(newState);
+      await FocusCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Foco',
+        assetPath: 'assets/gamification/insignias/focus/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -92,7 +112,6 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
       final currentState = state.gamification ?? FocusModuleState.initial();
       final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveFocusState(newState);
-      await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -114,10 +133,8 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
           earnedInsignias: ['madeira'],
         );
         await _repository.saveFocusState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveFocusState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();
@@ -177,7 +194,6 @@ class FocusGamificationNotifier extends StateNotifier<FocusGamificationState> {
       );
       
       await _repository.saveFocusState(updated);
-      await _repository.syncWithSupabase(updated);
       await loadGamification();
       
       return achievementUnlocked;

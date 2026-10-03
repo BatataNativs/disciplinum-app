@@ -1,6 +1,6 @@
 import 'dart:async';
+// ignore_for_file: unused_element
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
 import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
@@ -59,41 +59,12 @@ class _ProcrastinationCelebrationWidgetState extends State<ProcrastinationCelebr
 
   void _showInsigniaCelebration(String insigniaId, String insigniaName) {
     if (!mounted) return;
-
-    _confettiController.play();
-    HapticFeedback.heavyImpact();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _InsigniaCelebrationDialog(
-        insigniaName: insigniaName,
-        onClose: () => Navigator.of(context).pop(),
-      ),
-    );
-
-    LoggerService.instance.gamification('🎊 Diálogo de celebração exibido: $insigniaName');
+    LoggerService.instance.gamification('🎊 Conquista registrada no módulo procrastination: $insigniaName (diálogo gerenciado pelo GlobalAchievementListener)');
   }
 
   void _showMedalhaCelebration(String medalhaId, String medalhaName) {
     if (!mounted) return;
-
-    _confettiController.play();
-    HapticFeedback.heavyImpact();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      HapticFeedback.heavyImpact();
-    });
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _MedalhaCelebrationDialog(
-        medalhaName: medalhaName,
-        onClose: () => Navigator.of(context).pop(),
-      ),
-    );
-
-    LoggerService.instance.gamification('🏆 Diálogo de medalha exibido: $medalhaName');
+    LoggerService.instance.gamification('🏆 Medalha registrada no módulo procrastination: $medalhaName (diálogo gerenciado pelo GlobalAchievementListener)');
   }
 
   @override

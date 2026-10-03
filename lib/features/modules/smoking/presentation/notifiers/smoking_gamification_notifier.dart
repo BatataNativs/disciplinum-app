@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/core/di/providers.dart' show cloudSyncServiceProvider;
@@ -65,36 +67,39 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       LoggerService.instance.gamification('📦 ObjectBox: isModuleActive=${gamification?.isModuleActive}, dailyCost=${gamification?.dailyCost}, consecutiveDays=${gamification?.consecutivePositiveDays}');
       
       if (gamification != null) {
+        SmokingModuleState effectiveGamification = gamification;
+        // Auto-recuperação: se o módulo está ativo mas não possui a insígnia Madeira (ex: ativado antes da correção), concede e salva
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.contains('madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveSmokingState(effectiveGamification);
+          LoggerService.instance.gamification('🪵 Insígnia Madeira auto-recuperada e salva no ObjectBox para o módulo ativo');
+
+          SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: SmokingInsigniaEntity.madeira.name,
+            insigniaName: SmokingInsigniaEntity.madeira.nameBr,
+            insigniaDescription: SmokingInsigniaEntity.madeira.requirementDescription,
+            assetPath: SmokingInsigniaEntity.madeira.asset,
+          );
+        }
+
         // Usa o estado do ObjectBox
         state = state.copyWith(
-          gamification: gamification,
+          gamification: effectiveGamification,
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
-        LoggerService.instance.gamification('✅ Estado carregado do ObjectBox: isModuleActive=${gamification.isModuleActive}, dailyCost=${gamification.dailyCost}');
+        LoggerService.instance.gamification('✅ Estado carregado do ObjectBox: isModuleActive=${effectiveGamification.isModuleActive}, dailyCost=${effectiveGamification.dailyCost}, insignias=${effectiveGamification.earnedInsignias}');
       } else {
-        // Se não tem estado local, tenta carregar do Supabase
-        LoggerService.instance.gamification('🌐 Tentando carregar do Supabase...');
-        final cloudState = await _repository.loadFromSupabase();
-        
-        if (cloudState != null) {
-          await _repository.saveSmokingState(cloudState);
-          state = state.copyWith(
-            gamification: cloudState,
-            isLoading: false,
-            isModuleActive: cloudState.isModuleActive,
-          );
-          LoggerService.instance.gamification('✅ Estado carregado do Supabase: isModuleActive=${cloudState.isModuleActive}, dailyCost=${cloudState.dailyCost}');
-        } else {
-          // Se não tem em nenhum lugar, NÃO cria estado automaticamente
-          // Aguarda sync ou ativação manual
-          state = state.copyWith(
-            gamification: null,
-            isLoading: false,
-            isModuleActive: false,
-          );
-          LoggerService.instance.gamification('⏳ Nenhum estado encontrado. Aguardando sync ou ativação manual.');
-        }
+        // Se não tem estado local, NÃO cria estado automaticamente
+        // Aguarda ativação manual
+        state = state.copyWith(
+          gamification: null,
+          isLoading: false,
+          isModuleActive: false,
+        );
+        LoggerService.instance.gamification('⏳ Nenhum estado encontrado. Aguardando ativação.');
       }
     } catch (e) {
       LoggerService.instance.e('❌ Erro no loadGamification', error: e);
@@ -121,8 +126,17 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         packCost: packCost,
         earnedInsignias: const ['madeira'], // Insígnia Madeira ao ativar o módulo
       );
+
+      // Salva explicitamente no repositório para garantir integridade local
+      await _repository.saveSmokingState(initialState);
       
-      await _repository.syncWithSupabase(initialState);
+      // Dispara celebração de conquista para a insígnia Madeira
+      await SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: SmokingInsigniaEntity.madeira.name,
+        insigniaName: SmokingInsigniaEntity.madeira.nameBr,
+        insigniaDescription: SmokingInsigniaEntity.madeira.requirementDescription,
+        assetPath: SmokingInsigniaEntity.madeira.asset,
+      );
       
       // Também atualiza o user_module_status para manter consistência com CloudSyncService
       await _cloudSync.saveModuleStatus(
@@ -131,7 +145,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       );
       LoggerService.instance.gamification('☁️ user_module_status atualizado: is_active=true');
       
-      // Atualiza o estado local diretamente sem recarregar
+      // Atualiza o estado local diretamente
       state = state.copyWith(
         gamification: initialState,
         isLoading: false,
@@ -163,7 +177,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         );
         
         await _repository.saveSmokingState(updated);
-        await _repository.syncWithSupabase(updated);
         LoggerService.instance.gamification('🛑 Progresso resetado: mantida apenas Madeira=$hasMadeira, medalhas zeradas');
       }
       
@@ -179,7 +192,7 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         isModuleActive: false, 
         isLoading: false
       );
-      LoggerService.instance.gamification('🛑 Módulo desativado, sincronizado e progresso resetado (Madeira mantida)');
+      LoggerService.instance.gamification('🛑 Módulo desativado e progresso resetado (Madeira mantida)');
     } catch (e) {
       LoggerService.instance.e('❌ Erro em deactivateModule', error: e);
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -212,7 +225,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       );
       
       await _repository.saveSmokingState(initialState);
-      await _repository.syncWithSupabase(initialState);
       
       LoggerService.instance.gamification('✅ Progresso resetado mantendo Madeira=$hasMadeira, medalhas zeradas, isModuleActive=$wasActive');
       
@@ -243,7 +255,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       );
       
       await _repository.saveSmokingState(updated);
-      await _repository.syncWithSupabase(updated);
       await loadGamification();
     } catch (e) {
       LoggerService.instance.e('❌ Erro em setCustomMessages', error: e);
@@ -266,7 +277,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
       );
       
       await _repository.saveSmokingState(updated);
-      await _repository.syncWithSupabase(updated);
       await loadGamification();
     } catch (e) {
       LoggerService.instance.e('❌ Erro em setCustomMainMessage', error: e);

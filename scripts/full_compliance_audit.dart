@@ -194,14 +194,9 @@ class FullComplianceAuditor {
       }
     }
     
-    // Verificar uso de Isar
-    if (!content.contains('IsarService.instance.database')) {
-      errors.add('Não usa IsarService.instance.database');
-    }
-    
-    // Verificar uso de Supabase
-    if (!content.contains('Supabase.instance.client')) {
-      errors.add('Não usa Supabase.instance.client');
+    // Verificar uso de ObjectBox
+    if (!content.contains('ObjectBoxService.instance')) {
+      errors.add('Não usa ObjectBoxService.instance');
     }
     
     return ContractCheck(

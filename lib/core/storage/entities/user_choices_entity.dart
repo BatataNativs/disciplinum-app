@@ -83,7 +83,7 @@ class UserChoicesEntity {
     moduleVisibilityJson = jsonEncode(value);
   }
 
-  /// Converte para Map para sincronização com Supabase
+  /// Converte para Map para exportação/backup
   Map<String, dynamic> toCloudMap() {
     return {
       'user_id': userId,

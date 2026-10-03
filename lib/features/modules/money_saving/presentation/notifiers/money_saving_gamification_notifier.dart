@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/repositories/money_saving_gamification_repository.dart';
+import 'package:disciplinum/features/modules/money_saving/gamification/domain/services/money_saving_celebration_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
@@ -47,7 +48,24 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      final moduleState = await _repository.getMoneySavingState();
+      var moduleState = await _repository.getMoneySavingState();
+      
+      // Auto-recuperação: Se o módulo estiver ativo mas não possuir a insígnia Madeira
+      if (moduleState != null && moduleState.isModuleActive) {
+        final hasMadeira = moduleState.earnedInsignias.any((i) => i.toLowerCase() == 'madeira');
+        if (!hasMadeira) {
+          final updatedInsignias = [...moduleState.earnedInsignias, 'Madeira'];
+          moduleState = moduleState.copyWith(earnedInsignias: updatedInsignias);
+          await _repository.saveMoneySavingState(moduleState);
+          await MoneySavingCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Começou o Desafio da Economia',
+            assetPath: 'assets/gamification/insignias/moneySaving/madeira.png',
+          );
+        }
+      }
+
       state = state.copyWith(moduleState: moduleState, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -165,12 +183,16 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     try {
       final current = state.moduleState ?? MoneySavingModuleState();
       final currentInsignias = current.earnedInsignias;
-      if (!currentInsignias.contains(insigniaId)) {
+      if (!currentInsignias.any((i) => i.toLowerCase() == insigniaId.toLowerCase())) {
         final newInsignias = [...currentInsignias, insigniaId];
         final updated = current.copyWith(
           earnedInsignias: newInsignias,
         );
         await _repository.saveMoneySavingState(updated);
+        await MoneySavingCelebrationService.instance.celebrarInsigniaConquistada(
+          insigniaId: insigniaId.toLowerCase(),
+          insigniaName: insigniaId,
+        );
         await loadGamification(); // Recarrega para atualizar o estado
       }
     } catch (e) {
@@ -182,12 +204,16 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     try {
       final current = state.moduleState ?? MoneySavingModuleState();
       final currentMedalhas = current.earnedMedalhas;
-      if (!currentMedalhas.contains(medalhaId)) {
+      if (!currentMedalhas.any((m) => m.toLowerCase() == medalhaId.toLowerCase())) {
         final newMedalhas = [...currentMedalhas, medalhaId];
         final updated = current.copyWith(
           earnedMedalhas: newMedalhas,
         );
         await _repository.saveMoneySavingState(updated);
+        await MoneySavingCelebrationService.instance.celebrarMedalhaConquistada(
+          medalhaId: medalhaId.toLowerCase(),
+          medalhaName: medalhaId,
+        );
         await loadGamification(); // Recarrega para atualizar o estado
       }
     } catch (e) {
@@ -199,7 +225,7 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.moduleState;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearMoneySavingState();
       
@@ -210,10 +236,8 @@ class MoneySavingGamificationNotifier extends StateNotifier<MoneySavingGamificat
           earnedInsignias: ['Madeira'],
         );
         await _repository.saveMoneySavingState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveMoneySavingState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

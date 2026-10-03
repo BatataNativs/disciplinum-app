@@ -9,18 +9,15 @@ import 'package:uuid/uuid.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_model.dart';
 // NOTA: GamificationService removido - agora usando ProcrastinationGamificationController via ProviderContainer
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/storage/objectbox_preferences_repository.dart';
 
 class ProcrastinationService extends ChangeNotifier {
-  static const String _moduleId = 'procrastination';
   static const String _localKey = 'procrastination_data';
   static const String _listsKey = 'procrastination_lists';
 
   // NOTA: ProcrastinationGamificationController acessado via ProviderContainer quando necessário
   // Não armazenamos a instância diretamente para evitar conflitos com ChangeNotifier
   final ObjectBoxPreferencesRepository _prefs;
-  final SupabaseClient _supabase = Supabase.instance.client;
 
   // Armazena todas as tarefas indexadas por listId
   Map<String, List<ProcrastinationTask>> _tasksByList = {};
@@ -84,60 +81,7 @@ class ProcrastinationService extends ChangeNotifier {
       }
     }
 
-    // 3. Tenta carregar da nuvem se estiver logado
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        await _checkMidnightReset();
-        return;
-      }
-
-      final response = await _supabase
-          .from('user_module_settings')
-          .select()
-          .eq('user_id', userId)
-          .eq('module_id', _moduleId)
-          .maybeSingle();
-
-      if (response != null && response['module_data'] != null) {
-        final cloudJson = response['module_data'];
-        final Map<String, dynamic> decoded =
-            cloudJson is String ? jsonDecode(cloudJson) : cloudJson;
-
-        // Carrega listas da cloud
-        if (decoded['lists'] != null) {
-          _lists = (decoded['lists'] as List)
-              .map((e) => TaskList.fromJson(e))
-              .toList();
-        }
-
-        // Carrega tarefas por lista
-        if (decoded['tasks_by_list'] != null) {
-          _tasksByList = {};
-          final tasksData = decoded['tasks_by_list'] as Map<String, dynamic>;
-          tasksData.forEach((listId, tasks) {
-            _tasksByList[listId] = (tasks as List)
-                .map((e) => ProcrastinationTask.fromJson(e))
-                .toList();
-          });
-        }
-
-        // Mantém compatibilidade com sistema antigo
-        if (decoded['days'] != null) {
-          final daysData = decoded['days'] as Map<String, dynamic>;
-          _days = daysData.map((key, value) =>
-              MapEntry(key, ProcrastinationDay.fromJson(value)));
-        }
-
-        await _saveAllLocal();
-        notifyListeners();
-      }
-
-      await _checkMidnightReset();
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar com nuvem (load)', error: e);
-      await _checkMidnightReset();
-    }
+    await _checkMidnightReset();
   }
 
   /// Migra tarefas do sistema antigo (por dia) para o novo sistema (por lista)
@@ -230,29 +174,6 @@ class ProcrastinationService extends ChangeNotifier {
     final encoded = jsonEncode(jsonData);
 
     await _prefs.setString(_localKey, encoded);
-
-    // Salva cloud
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final cloudData = {
-        'days': jsonData,
-        'lists': _lists.map((l) => l.toJson()).toList(),
-        'tasks_by_list': _tasksByList.map(
-          (key, value) => MapEntry(key, value.map((t) => t.toJson()).toList()),
-        ),
-      };
-
-      await _supabase.from('user_module_settings').upsert({
-        'user_id': userId,
-        'module_id': _moduleId,
-        'module_data': cloudData,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id, module_id');
-    } catch (e) {
-      LoggerService.instance.e('Erro ao sincronizar com nuvem (save)', error: e);
-    }
   }
 
   String _dateKey(DateTime date) {

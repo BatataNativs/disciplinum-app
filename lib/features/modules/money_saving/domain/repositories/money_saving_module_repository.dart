@@ -7,7 +7,6 @@ import 'package:disciplinum/core/modules/contracts/module_repository_contract.da
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/modules/money_saving/gamification/domain/entities/money_saving_gamification_entity.dart';
 import 'package:disciplinum/features/modules/money_saving/domain/entities/money_saving_module_state.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Repository do módulo Money Saving implementando ModuleRepositoryContract
 class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavingModuleState> {
@@ -146,107 +145,24 @@ class MoneySavingModuleRepository implements ModuleRepositoryContract<MoneySavin
 
   @override
   Future<MoneySavingModuleState> syncToRemote(String userId, MoneySavingModuleState state) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) throw Exception('Usuário não autenticado');
-
-      await supabase.from('money_saving_gamification_states').upsert(
-        {
-          'user_id': currentUserId,
-          'state_data': state.toJson(),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id',
-      );
-
-      LoggerService.instance.gamification('☁️ MoneySavingModuleState sincronizado');
-      _setStatus(RepositoryStatus.ready);
-      return state;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao sincronizar: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.syncToRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
+    return state;
   }
 
   @override
   Future<MoneySavingModuleState?> loadFromRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) return null;
-
-      final response = await supabase
-          .from('money_saving_gamification_states')
-          .select('state_data')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      _setStatus(RepositoryStatus.ready);
-      
-      if (response != null && response['state_data'] != null) {
-        return MoneySavingModuleState.fromJson(response['state_data']);
-      }
-      return null;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao carregar do remoto: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.loadFromRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
+    return null;
   }
 
   @override
   Future<bool> existsRemote(String userId) async {
-    try {
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      if (currentUserId == null) return false;
-
-      final response = await supabase
-          .from('money_saving_gamification_states')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-      return response != null;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   @override
   Future<void> deleteRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.busy);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId != null) {
-        await supabase.from('money_saving_gamification_states').delete().eq('user_id', currentUserId);
-      }
-      LoggerService.instance.gamification('🗑️ MoneySavingModuleState remoto deletado');
-      _setStatus(RepositoryStatus.ready);
-    } catch (e) {
-      _setStatus(RepositoryStatus.error);
-      throw RepositoryException(
-        message: 'Erro ao deletar remotamente: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.deleteRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
   }
 
   @override

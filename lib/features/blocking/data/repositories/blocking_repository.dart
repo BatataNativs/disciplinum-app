@@ -6,6 +6,6 @@ class BlockingRepository {
   }
 
   Future<void> saveBlockedApp(BlockedApp app) async {
-    // Salvar regra no Supabase/Local
+    // Salvar regra localmente
   }
 }

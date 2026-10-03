@@ -162,8 +162,7 @@ class SmokingGamificationService implements ModuleGamificationInterface {
       final moduleData = {'earnedInsignias': _currentState!.earnedInsignias};
       await _medalhaService.checkForNewMedalhas(moduleData);
       
-      // Sincroniza com Supabase
-      await _repository.syncWithSupabase(_currentState!);
+      // Salva estado
       
       LoggerService.instance.gamification('Verificação de conquistas concluída');
     } catch (e) {
@@ -297,7 +296,7 @@ class SmokingGamificationService implements ModuleGamificationInterface {
     try {
       _customMessages[moduleId] = List<String>.from(messages);
       
-      // Persiste no Isar através do repositório
+      // Persiste no ObjectBox através do repositório
       if (_currentState != null) {
         final updatedState = _currentState!.copyWith(
           customMessages: _customMessages,

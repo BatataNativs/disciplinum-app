@@ -117,9 +117,9 @@ class FocusMedalService implements ModuleMedalhaInterface {
       );
       
       await FocusGamificationRepository.instance.saveFocusState(currentState);
-      LoggerService.instance.gamification('Estado Focus salvo com Isar');
+      LoggerService.instance.gamification('Estado Focus salvo com ObjectBox');
     } catch (e) {
-      LoggerService.instance.e('Erro ao salvar estado Focus com Isar', error: e);
+      LoggerService.instance.e('Erro ao salvar estado Focus com ObjectBox', error: e);
     }
   }
 

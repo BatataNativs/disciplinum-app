@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/gamification/repositories/pending_achievements_repository.dart';
 import 'package:disciplinum/core/gamification/entities/pending_achievement_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:disciplinum/shared/widgets/celebration/confetti_celebration_widget.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
 /// Provider global para o userId atual do usuário autenticado
@@ -85,49 +84,12 @@ class _GlobalCelebrationWidgetState extends ConsumerState<GlobalCelebrationWidge
     }
   }
 
-  /// Exibe o dialog de celebração apropriado
+  /// Exibe o dialog de celebração apropriado (gerenciado pelo GlobalAchievementListener)
   Future<void> _showCelebrationDialog(PendingAchievementEntity achievement) async {
-    final context = this.context;
-    
-    if (achievement.type == 'insignia') {
-      // Celebração de insígnia
-      CelebrationHelper.showInsigniaCelebration(
-        context,
-        insigniaName: achievement.achievementName,
-        insigniaDescription: achievement.achievementDescription,
-        assetPath: achievement.assetPath,
-        accentColor: _getModuleColor(achievement.moduleId),
-      );
-    } else if (achievement.type == 'medalha') {
-      // Celebração de medalha
-      CelebrationHelper.showMedalhaCelebration(
-        context,
-        medalhaName: achievement.achievementName,
-        medalhaDescription: achievement.achievementDescription,
-        assetPath: achievement.assetPath,
-      );
-    }
-
-    // Pequena pausa entre dialogs
-    await Future.delayed(const Duration(milliseconds: 500));
+    LoggerService.instance.gamification('🎉 Conquista verificada: ${achievement.achievementName} (diálogo gerenciado pelo GlobalAchievementListener)');
   }
 
-  /// Obtém cor do módulo para personalizar a celebração
-  Color _getModuleColor(String moduleId) {
-    final colors = {
-      'smoking': const Color(0xFF10B981), // Verde
-      'focus': const Color(0xFF6366F1),    // Indigo
-      'diet': const Color(0xFFF59E0B),    // Amarelo
-      'spending': const Color(0xFFEF4444), // Vermelho
-      'adultContent': const Color(0xFF8B5CF6), // Roxo
-      'moneySavingChallenge': const Color(0xFF10B981), // Verde
-      'procrastination': const Color(0xFF3B82F6), // Azul
-      'reading': const Color(0xFFF97316), // Laranja
-      'bingeEating': const Color(0xFFEC4899), // Rosa
-    };
-    
-    return colors[moduleId.toLowerCase()] ?? const Color(0xFF6366F1);
-  }
+
 
   @override
   Widget build(BuildContext context) {

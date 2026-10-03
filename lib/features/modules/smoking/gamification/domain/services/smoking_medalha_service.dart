@@ -297,14 +297,13 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     };
   }
 
-  /// Salva o estado atual usando Isar + Supabase
+  /// Salva o estado atual usando ObjectBox
   Future<void> _saveState(SmokingModuleState state) async {
     try {
-      // Salva localmente com Isar
+      // Salva localmente com ObjectBox
       await SmokingGamificationRepository.instance.saveSmokingState(state);
       
-      // Sincroniza com Supabase
-      await SmokingGamificationRepository.instance.syncWithSupabase(state);
+      // Salva estado
       
       _currentState = state;
     } catch (e) {
@@ -312,23 +311,10 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     }
   }
 
-  /// Carrega o estado salvo usando Isar + Supabase
+  /// Carrega o estado salvo usando ObjectBox
   Future<void> loadState() async {
     try {
-      // Tenta carregar do Isar local primeiro
       _currentState = await SmokingGamificationRepository.instance.getSmokingState();
-      
-      // Se não encontrar local, tenta do Supabase
-      if (_currentState == null) {
-        _currentState = await SmokingGamificationRepository.instance.loadFromSupabase();
-        
-        // Se encontrou no Supabase, salva localmente
-        if (_currentState != null) {
-          await SmokingGamificationRepository.instance.saveSmokingState(_currentState!);
-        }
-      }
-      
-      // Se ainda não encontrou, usa estado padrão
       _currentState ??= SmokingModuleState();
     } catch (e) {
       LoggerService.instance.e('Erro ao carregar estado medalhas Smoking', error: e);

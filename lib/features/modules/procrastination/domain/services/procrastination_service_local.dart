@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/procrastination/data/repositories/procrastination_config_repository.dart';
 import 'package:disciplinum/features/modules/procrastination/domain/entities/procrastination_config_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 /// Configurações de controle de procrastinação
@@ -141,7 +140,7 @@ class ProcrastinationServiceLocal {
 
   Future<void> saveConfig(ProcrastinationConfig config) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       
       final entity = ProcrastinationConfigEntity(userId: userId);
       

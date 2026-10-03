@@ -7,6 +7,7 @@ import 'package:disciplinum/features/auth/domain/entities/auth_credentials.dart'
 import 'package:disciplinum/features/auth/domain/entities/auth_state.dart';
 import 'package:disciplinum/features/auth/domain/entities/user.dart' as auth;
 import 'package:disciplinum/features/auth/domain/repositories/auth_repository.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repository;
@@ -30,6 +31,8 @@ class AuthController extends StateNotifier<AuthState> {
   String? get errorMessage => state.errorMessage;
   bool get hasError => state.errorMessage != null;
   bool get isAuthenticated => state.isAuthenticated;
+
+  bool get isGoogleAccount => false;
 
   bool get isProfileComplete {
     final user = currentUser;
@@ -56,6 +59,30 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<bool> login(String email, String password) =>
       signInWithEmail(email: email, password: password);
+
+  Future<bool> loginWithBiometrics() async {
+    try {
+      _setLoading(true);
+      _clearError();
+      final user = await _repository.loginWithBiometrics();
+      if (user != null) {
+        final profile = await _loadUserProfile(user.id);
+        state = state.copyWith(
+          currentUser: user,
+          userProfile: profile,
+        );
+        return true;
+      }
+      _setError('Nenhum usuário cadastrado para biometria.');
+      return false;
+    } catch (e) {
+      _logger.e('AuthController: Erro no login biométrico', error: e);
+      _setError('Falha na autenticação biométrica.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
 
   Future<bool> signup(String email, String password, String name) =>
       signUpWithEmail(email: email, password: password, name: name);
@@ -154,8 +181,34 @@ class AuthController extends StateNotifier<AuthState> {
       _clearError();
       state = state.copyWith(isSocialLoginInProgress: true);
 
+      String email = '';
+      String? name;
+      String? photoUrl;
+
+      if (authType == AuthType.google) {
+        try {
+          await GoogleSignIn.instance.initialize();
+          final account = await GoogleSignIn.instance.authenticate();
+          email = account.email;
+          name = account.displayName;
+          photoUrl = account.photoUrl;
+        } catch (e) {
+          _logger.e('Erro ao autenticar com Google SignIn', error: e);
+          final errorStr = e.toString();
+          if (errorStr.contains('Account reauth failed')) {
+            _setError('A conta Google selecionada precisa de confirmação/reautenticação nas configurações do aparelho.');
+          } else if (errorStr.contains('canceled')) {
+            _setError('Login com o Google cancelado.');
+          } else {
+            _setError('Não foi possível autenticar com a Conta Google: $e');
+          }
+          return false;
+        }
+      }
+
       final credentials = AuthCredentials.forSocial(
-        email: '',
+        email: email,
+        name: name,
         authType: authType,
       );
       final result = await _repository.signInWithSocial(credentials);
@@ -164,6 +217,9 @@ class AuthController extends StateNotifier<AuthState> {
         if (result.user == null) {
           state = const AuthState();
         } else {
+          if (photoUrl != null && photoUrl.isNotEmpty) {
+            await _repository.updateProfile(result.user!.id, avatarUrl: photoUrl);
+          }
           final profile = await _loadUserProfile(result.user!.id);
 
           state = state.copyWith(
@@ -234,8 +290,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<bool> updateProfile({
     String? name,
+    String? email,
     String? avatarUrl,
     String? bio,
+    String? gender,
     bool? showAvatar,
     bool? showEmail,
   }) async {
@@ -252,8 +310,10 @@ class AuthController extends StateNotifier<AuthState> {
       final updatedUser = await _repository.updateProfile(
         user.id,
         name: name,
+        email: email,
         avatarUrl: avatarUrl,
         bio: bio,
+        gender: gender,
         showAvatar: showAvatar,
         showEmail: showEmail,
       );

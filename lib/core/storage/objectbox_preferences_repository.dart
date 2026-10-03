@@ -4,7 +4,7 @@ import 'package:disciplinum/core/database/entities/app_preference.dart';
 import 'package:disciplinum/objectbox.g.dart';
 
 /// Repositório para gerenciar preferências do app usando ObjectBox
-/// Substituto moderno para o SharedPreferences e IsarPreferencesRepository
+/// Substituto moderno para o SharedPreferences
 class ObjectBoxPreferencesRepository {
   final Store _store;
 
@@ -23,15 +23,18 @@ class ObjectBoxPreferencesRepository {
   }
 
   Future<String?> getString(String key) async {
-    final pref = _box.query(AppPreference_.key.equals(key)).build().findFirst();
+    return getStringSync(key);
+  }
+
+  String? getStringSync(String key) {
+    final query = _box.query(AppPreference_.key.equals(key)).build();
+    final pref = query.findFirst();
+    query.close();
     return pref?.value;
   }
 
   Future<void> deleteByKey(String key) async {
-    final existing = _box.query(AppPreference_.key.equals(key)).build().findFirst();
-    if (existing != null) {
-      _box.remove(existing.id);
-    }
+    await remove(key);
   }
 
   Future<void> setBool(String key, bool value) async {
@@ -69,9 +72,11 @@ class ObjectBoxPreferencesRepository {
   }
 
   Future<void> remove(String key) async {
-    final existing = _box.query(AppPreference_.key.equals(key)).build().findFirst();
-    if (existing != null) {
-      _box.remove(existing.id);
+    final query = _box.query(AppPreference_.key.equals(key)).build();
+    final ids = query.findIds();
+    query.close();
+    if (ids.isNotEmpty) {
+      _box.removeMany(ids);
     }
   }
 

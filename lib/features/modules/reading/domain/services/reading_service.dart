@@ -8,7 +8,6 @@ import 'package:disciplinum/features/modules/reading/domain/entities/reading_mod
 import 'package:disciplinum/core/database/entities/reading_book_entity.dart';
 import 'package:disciplinum/features/modules/reading/gamification/data/repositories/reading_gamification_repository.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
 import 'package:disciplinum/infrastructure/permissions/notifications/notification_service.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
@@ -57,7 +56,7 @@ class ReadingService {
     required ReadingTheme theme,
     String? author,
   }) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+    const userId = 'local_user';
     final entity = ReadingBookEntity.create(
       userId: userId,
       title: title,
@@ -148,7 +147,7 @@ class ReadingService {
 
   Future<void> _loadBooks() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       final entities = await _repository.getBooks(userId);
       _books = entities.map((e) {
         final List<ReadingLog> logs = [];
@@ -243,7 +242,7 @@ class ReadingService {
 
   /// Obtém o horário de notificação salvo (retorna null se não houver lembrete)
   Future<TimeOfDay?> getSavedNotificationTime() async {
-    // Implementado usando IsarPreferencesRepository
+    // Implementado usando ObjectBoxPreferencesRepository
     final hour = await _prefs.getInt('reading_notification_hour');
     final minute = await _prefs.getInt('reading_notification_minute');
     // Se não houver horário salvo, retorna null

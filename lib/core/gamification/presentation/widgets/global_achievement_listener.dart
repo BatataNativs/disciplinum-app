@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:confetti/confetti.dart';
 import 'package:disciplinum/core/gamification/repositories/pending_achievements_repository.dart';
 import 'package:disciplinum/core/gamification/entities/pending_achievement_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
-import 'package:disciplinum/shared/widgets/celebration/confetti_celebration_widget.dart';
+import 'package:disciplinum/features/app_lock/infrastructure/services/navigation_service.dart';
 
 /// Provider para stream de conquistas pendentes
 /// 
@@ -120,7 +122,11 @@ class _GlobalAchievementListenerState extends ConsumerState<GlobalAchievementLis
     _isShowing = true;
     final achievement = _queue.removeAt(0);
 
-    await _showCelebrationDialog(achievement);
+    try {
+      await _showCelebrationDialog(achievement);
+    } catch (e) {
+      LoggerService.instance.e('❌ Erro ao exibir dialog de celebração', error: e);
+    }
 
     // Após fechar o dialog, marca como exibida e mostra o próximo
     if (mounted) {
@@ -134,195 +140,22 @@ class _GlobalAchievementListenerState extends ConsumerState<GlobalAchievementLis
     }
   }
 
-  /// Exibe o dialog de celebração
+  /// Exibe o dialog de celebração via showDialog limpo e sem vazamentos
   Future<void> _showCelebrationDialog(PendingAchievementEntity achievement) async {
-    if (!mounted) return;
+    final navContext = AppLockNavigationService.currentContext ?? (mounted ? context : null);
+    if (navContext == null) return;
 
-    final context = this.context;
-    final overlay = Overlay.of(context);
-
-    // Cria um overlay entry para mostrar o dialog por cima de tudo
-    final overlayEntry = OverlayEntry(
-      builder: (context) => Material(
-        color: Colors.black54,
-        child: Center(
-          child: _buildCelebrationContent(achievement),
+    await showDialog<void>(
+      context: navContext,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: _CelebrationDialogContent(
+          achievement: achievement,
+          accentColor: _getModuleColor(achievement.moduleId),
+          onClose: () => Navigator.of(dialogContext).pop(),
         ),
-      ),
-    );
-
-    overlay.insert(overlayEntry);
-
-    // Aguarda até que o usuário feche (implementado no widget)
-    await Future.delayed(const Duration(milliseconds: 100));
-    
-    // Remove após interação
-    await _waitForDismiss(overlayEntry);
-  }
-
-  /// Aguarda o usuário interagir com o dialog
-  Future<void> _waitForDismiss(OverlayEntry entry) async {
-    // O dialog ficará visível até ser removido pelo usuário clicar OK
-    // O Navigator.pop no botão remove automaticamente o overlay
-    await Future.delayed(const Duration(seconds: 5)); // Timeout de segurança
-    if (mounted) {
-      entry.remove();
-    }
-  }
-
-  /// Constrói o conteúdo da celebração
-  Widget _buildCelebrationContent(PendingAchievementEntity achievement) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final accentColor = _getModuleColor(achievement.moduleId);
-
-    return Container(
-      margin: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.3),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // Confetes animados
-            Positioned.fill(
-              child: ConfettiCelebrationWidget(
-                child: const SizedBox.expand(),
-              ),
-            ),
-            // Conteúdo
-            Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Ícone/Imagem da conquista
-                  _buildAchievementIcon(achievement, accentColor),
-                  const SizedBox(height: 20),
-                  // Título
-                  Text(
-                    achievement.type == 'medalha' ? '🏆 Nova Medalha!' : '⭐ Nova Conquista!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Nome da conquista
-                  Text(
-                    achievement.achievementName,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: accentColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Descrição
-                  if (achievement.achievementDescription != null)
-                    Text(
-                      achievement.achievementDescription!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  const SizedBox(height: 24),
-                  // Botão OK
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 4,
-                      ),
-                      onPressed: () {
-                        // Fecha o overlay atual
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text(
-                        'Incrível! 🎉',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Constrói o ícone da conquista
-  Widget _buildAchievementIcon(PendingAchievementEntity achievement, Color accentColor) {
-    if (achievement.assetPath != null && achievement.assetPath!.isNotEmpty) {
-      // Tenta carregar imagem
-      return Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: accentColor.withValues(alpha: 0.2),
-          border: Border.all(
-            color: accentColor,
-            width: 3,
-          ),
-        ),
-        child: ClipOval(
-          child: Image.asset(
-            achievement.assetPath!,
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallbackIcon(achievement, accentColor),
-          ),
-        ),
-      );
-    }
-    
-    return _buildFallbackIcon(achievement, accentColor);
-  }
-
-  /// Ícone fallback quando não há imagem
-  Widget _buildFallbackIcon(PendingAchievementEntity achievement, Color accentColor) {
-    final icon = achievement.type == 'medalha' ? Icons.emoji_events : Icons.stars;
-    
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: accentColor.withValues(alpha: 0.2),
-        border: Border.all(
-          color: accentColor,
-          width: 3,
-        ),
-      ),
-      child: Icon(
-        icon,
-        size: 50,
-        color: accentColor,
       ),
     );
   }
@@ -334,16 +167,243 @@ class _GlobalAchievementListenerState extends ConsumerState<GlobalAchievementLis
       'focus': const Color(0xFF6366F1),
       'diet': const Color(0xFFF59E0B),
       'spending': const Color(0xFFEF4444),
-      'adultContent': const Color(0xFF8B5CF6),
-      'moneySavingChallenge': const Color(0xFF10B981),
+      'adultcontent': const Color(0xFF8B5CF6),
+      'adult_content': const Color(0xFF8B5CF6),
+      'moneysavingchallenge': const Color(0xFF10B981),
       'money_saving': const Color(0xFF10B981),
       'procrastination': const Color(0xFF3B82F6),
       'reading': const Color(0xFFF97316),
-      'bingeEating': const Color(0xFFEC4899),
+      'bingeeating': const Color(0xFFEC4899),
       'binge_eating': const Color(0xFFEC4899),
+      'digitaldetox': const Color(0xFF06B6D4),
+      'digital_detox': const Color(0xFF06B6D4),
     };
     
     return colors[moduleId.toLowerCase()] ?? const Color(0xFF6366F1);
+  }
+}
+
+/// Conteúdo do dialog de celebração com confetes e feedback tátil
+class _CelebrationDialogContent extends StatefulWidget {
+  final PendingAchievementEntity achievement;
+  final Color accentColor;
+  final VoidCallback onClose;
+
+  const _CelebrationDialogContent({
+    required this.achievement,
+    required this.accentColor,
+    required this.onClose,
+  });
+
+  @override
+  State<_CelebrationDialogContent> createState() => _CelebrationDialogContentState();
+}
+
+class _CelebrationDialogContentState extends State<_CelebrationDialogContent> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 4));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _confettiController.play();
+        HapticFeedback.heavyImpact();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.topCenter,
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: widget.accentColor.withValues(alpha: 0.5),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.accentColor.withValues(alpha: 0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildAchievementIcon(widget.achievement, widget.accentColor),
+                const SizedBox(height: 20),
+                Text(
+                  widget.achievement.type == 'medalha' ? '🏆 Nova Medalha!' : 'Nova Conquista!',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _formatItemName(widget.achievement.achievementName, widget.achievement.type),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: widget.accentColor,
+                  ),
+                ),
+                if (widget.achievement.achievementDescription != null &&
+                    widget.achievement.achievementDescription!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _formatRequirement(widget.achievement.achievementDescription!),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.75),
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                    ),
+                    onPressed: widget.onClose,
+                    child: const Text(
+                      'Ok 🎉',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Confetes no topo do dialog
+        Positioned(
+          top: 0,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              Colors.green,
+              Colors.blue,
+              Colors.pink,
+              Colors.orange,
+              Colors.purple,
+              Colors.yellow,
+              Colors.cyan,
+              Colors.amber,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatItemName(String name, String type) {
+    final cleanName = name.trim();
+    if (type.toLowerCase() == 'medalha') {
+      if (cleanName.toLowerCase().startsWith('medalha:')) return cleanName;
+      return 'Medalha: $cleanName';
+    } else {
+      if (cleanName.toLowerCase().startsWith('insígnia:') ||
+          cleanName.toLowerCase().startsWith('insignia:')) {
+        return cleanName;
+      }
+      return 'Insígnia: $cleanName';
+    }
+  }
+
+  String _formatRequirement(String description) {
+    var desc = description.trim();
+    if (desc.toLowerCase().startsWith('requisito:')) {
+      desc = desc.substring('requisito:'.length).trim();
+    }
+    final conversions = {
+      'Ative ': 'Ativar ',
+      'Pague ': 'Pagar ',
+      'Conclua ': 'Concluir ',
+      'Complete ': 'Completar ',
+      'Alcance ': 'Alcançar ',
+      'Fique ': 'Ficar ',
+      'Leia ': 'Ler ',
+      'Economize ': 'Economizar ',
+      'Mantenha ': 'Manter ',
+      'Registre ': 'Registrar ',
+      'Evite ': 'Evitar ',
+      'Bloqueie ': 'Bloquear ',
+      'Desafie ': 'Desafiar ',
+    };
+    for (final entry in conversions.entries) {
+      if (desc.startsWith(entry.key)) {
+        desc = '${entry.value}${desc.substring(entry.key.length)}';
+        break;
+      }
+    }
+    return 'Requisito: $desc';
+  }
+
+  Widget _buildAchievementIcon(PendingAchievementEntity achievement, Color accentColor) {
+    if (achievement.assetPath != null && achievement.assetPath!.isNotEmpty) {
+      return SizedBox(
+        width: 100,
+        height: 100,
+        child: Image.asset(
+          achievement.assetPath!,
+          width: 100,
+          height: 100,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _buildFallbackIcon(achievement, accentColor),
+        ),
+      );
+    }
+    
+    return _buildFallbackIcon(achievement, accentColor);
+  }
+
+  Widget _buildFallbackIcon(PendingAchievementEntity achievement, Color accentColor) {
+    final icon = achievement.type == 'medalha' ? Icons.emoji_events : Icons.military_tech;
+    
+    return SizedBox(
+      width: 100,
+      height: 100,
+      child: Icon(
+        icon,
+        size: 72,
+        color: accentColor,
+      ),
+    );
   }
 }
 

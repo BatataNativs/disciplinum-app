@@ -13,7 +13,7 @@ import 'package:disciplinum/features/app_lock/domain/services/app_lock_service.d
 import 'package:disciplinum/features/app_lock/infrastructure/services/navigation_service.dart';
 import 'package:disciplinum/core/gamification/presentation/widgets/global_achievement_listener.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:disciplinum/features/auth/presentation/widgets/biometric_lock_guardian.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,15 +86,8 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
       AppLockService.setContainer(container);
       
       // A sessão já foi aguardada no main() antes do runApp.
-      // Disparamos a sincronização diretamente aqui.
+      // Sincroniza configurações locais do App Lock
       AppLockSyncService.instance.syncAllConfigs();
-
-      // Também escuta eventos futuros (login/logout) para manter o nativo sincronizado
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-        if (data.session != null) {
-          AppLockSyncService.instance.syncAllConfigs();
-        }
-      });
     });
   }
 
@@ -106,18 +99,23 @@ class _DisciplinumAppState extends ConsumerState<DisciplinumApp> {
     final seenOnboarding = ref.watch(seenOnboardingProvider);
     ref.watch(authServiceProvider); // Observa auth para reconstruir
     
-    return GlobalAchievementListener(
-      child: AuthNavigationListener(
-        child: MaterialApp(
-          title: 'Disciplinum',
-          navigatorKey: AppLockNavigationService.navigatorKey, // Key para App Lock
-          theme: themeController.themeData, // Tema dinâmico baseado no tema selecionado
-          debugShowCheckedModeBanner: false,
-          initialRoute: seenOnboarding
-              ? AppRouter.authWrapper
-              : AppRouter.onboarding,
-          onGenerateRoute: AppRouter.generateRoute,
-        ),
+    return AuthNavigationListener(
+      child: MaterialApp(
+        title: 'Disciplinum',
+        navigatorKey: AppLockNavigationService.navigatorKey, // Key para App Lock
+        theme: themeController.themeData, // Tema dinâmico baseado no tema selecionado
+        debugShowCheckedModeBanner: false,
+        initialRoute: seenOnboarding
+            ? AppRouter.authWrapper
+            : AppRouter.onboarding,
+        onGenerateRoute: AppRouter.generateRoute,
+        builder: (context, child) {
+          return GlobalAchievementListener(
+            child: BiometricLockGuardian(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          );
+        },
       ),
     );
   }

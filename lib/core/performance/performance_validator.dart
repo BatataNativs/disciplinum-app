@@ -80,7 +80,7 @@ class PerformanceValidator {
   }
 
   static void _generateReport(Map<String, PerformanceResult> results) {
-    LoggerService.instance.i('\n📊 RELATÓRIO DE PERFORMANCE - SERVIÇOS ISAR');
+    LoggerService.instance.i('\n📊 RELATÓRIO DE PERFORMANCE - SERVIÇOS OBJECTBOX');
     LoggerService.instance.i('=' * 60);
     
     int passed = 0;

@@ -7,9 +7,8 @@ import 'package:disciplinum/core/modules/contracts/module_repository_contract.da
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_gamification_entity.dart';
 import 'package:disciplinum/objectbox.g.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repository do módulo Smoking implementando ModuleRepositoryContract
+/// Repository do módulo Smoking implementando ModuleRepositoryContract (100% Local-First)
 class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleState> {
   static SmokingModuleRepository? _instance;
   static SmokingModuleRepository get instance => _instance ??= SmokingModuleRepository._();
@@ -150,118 +149,26 @@ class SmokingModuleRepository implements ModuleRepositoryContract<SmokingModuleS
 
   @override
   Future<SmokingModuleState> syncToRemote(String userId, SmokingModuleState state) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId == null) throw Exception('Usuário não autenticado');
-
-      await supabase.from('smoking_gamification_states').upsert({
-        'user_id': currentUserId,
-        'state_data': state.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      LoggerService.instance.gamification('☁️ SmokingModuleState sincronizado');
-      _setStatus(RepositoryStatus.ready);
-      return state;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      throw RepositoryException(
-        message: 'Erro ao sincronizar: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.syncToRemote,
-        originalError: e,
-      );
-    }
+    // 100% Local-First: nada a sincronizar remotamente
+    _setStatus(RepositoryStatus.ready);
+    return state;
   }
 
   @override
   Future<SmokingModuleState?> loadFromRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.syncing);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      LoggerService.instance.gamification('🌐 loadFromRemote: userIdParam=$userId, currentUserId=$currentUserId');
-      
-      if (currentUserId == null) {
-        LoggerService.instance.w('⚠️ loadFromRemote: currentUserId é null, abortando');
-        return null;
-      }
-      
-      if (currentUserId != userId) {
-        LoggerService.instance.w('⚠️ loadFromRemote: currentUserId($currentUserId) != userId($userId)');
-      }
-
-      final response = await supabase
-          .from('smoking_gamification_states')
-          .select('state_data')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      _setStatus(RepositoryStatus.ready);
-      
-      if (response != null && response['state_data'] != null) {
-        final state = SmokingModuleState.fromJson(response['state_data']);
-        LoggerService.instance.gamification('✅ loadFromRemote: dados carregados - isModuleActive=${state.isModuleActive}, updatedAt=${state.updatedAt}');
-        return state;
-      }
-      
-      LoggerService.instance.gamification('⚠️ loadFromRemote: nenhum dado encontrado na nuvem');
-      return null;
-    } catch (e) {
-      _setStatus(RepositoryStatus.offline);
-      LoggerService.instance.e('❌ loadFromRemote erro: $e');
-      throw RepositoryException(
-        message: 'Erro ao carregar do remoto: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.loadFromRemote,
-        originalError: e,
-      );
-    }
+    // 100% Local-First: dados lidos exclusivamente do ObjectBox
+    _setStatus(RepositoryStatus.ready);
+    return null;
   }
 
   @override
   Future<bool> existsRemote(String userId) async {
-    try {
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      if (currentUserId == null) return false;
-
-      final response = await supabase
-          .from('smoking_gamification_states')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-      return response != null;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   @override
   Future<void> deleteRemote(String userId) async {
-    try {
-      _setStatus(RepositoryStatus.busy);
-      final supabase = Supabase.instance.client;
-      final currentUserId = supabase.auth.currentUser?.id;
-      
-      if (currentUserId != null) {
-        await supabase.from('smoking_gamification_states').delete().eq('user_id', currentUserId);
-      }
-      LoggerService.instance.gamification('🗑️ SmokingModuleState remoto deletado');
-      _setStatus(RepositoryStatus.ready);
-    } catch (e) {
-      _setStatus(RepositoryStatus.error);
-      throw RepositoryException(
-        message: 'Erro ao deletar remotamente: $e',
-        moduleId: moduleId,
-        operation: RepositoryOperation.deleteRemote,
-        originalError: e,
-      );
-    }
+    _setStatus(RepositoryStatus.ready);
   }
 
   @override

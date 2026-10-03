@@ -34,7 +34,7 @@ class MoneySavingGamificationEntity {
     this.isModuleActive = false,
   }) : createdAt = DateTime.now();
 
-  /// Converte de MoneySavingModuleState para Isar entity
+  /// Converte de MoneySavingModuleState para ObjectBox entity
   factory MoneySavingGamificationEntity.fromModuleState(MoneySavingModuleState moduleState) {
     return MoneySavingGamificationEntity(
       userId: '', // Definido pelo repositório

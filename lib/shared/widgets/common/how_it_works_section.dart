@@ -55,7 +55,7 @@ class HowItWorksSection extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Privacidade Local-First: seus dados ficam salvos apenas no seu aparelho por padrão. Para segurança ou troca de dispositivo, faça Backup (local ou na nuvem) na tela de Perfil.',
+                  'Privacidade Local-First: seus dados ficam salvos exclusivamente no seu aparelho. Para segurança ou troca de dispositivo, você pode gerar ou restaurar um Backup nas Configurações.',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.3,

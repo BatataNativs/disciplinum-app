@@ -10,56 +10,41 @@ O Disciplinum é um app mobile que precisa funcionar mesmo sem internet:
 - Dados de gamificação não podem ser perdidos
 - Experiência deve ser fluida independente da rede
 
-O desafio: garantir **consistência de dados** entre dispositivo local (Isar) e nuvem (Supabase) com **resolução de conflitos** quando houver divergências.
+O desafio: garantir **consistência de dados** e persistência local confiável através de **ObjectBox** como fonte única de verdade no dispositivo.
 
 ## Decision
 
-Adotar estratégia **Offline-First com Last-Write-Wins**:
+Adotar estratégia **100% Local-First com ObjectBox**:
 
-1. **Fonte de verdade primária**: Banco local (Isar)
-2. **Sincronização**: Background quando online
-3. **Conflitos**: Resolvido por timestamp (quem escreveu por último, ganha)
-4. **Fila offline**: Operações enfileiradas quando offline
+1. **Fonte de verdade primária**: Banco local de alta performance (ObjectBox)
+2. **Resiliência**: Zero dependência de conexão remota para operação integral
+3. **Persistência desacoplada**: Cada módulo gerencia suas entidades locais
 
 ## Consequences
 
 ### Positive
 
-- ✅ **UX fluida** - App funciona sem internet
-- ✅ **Baixa latência** - Leituras são sempre locais
-- ✅ **Resiliência** - Dados persistem mesmo offline
-- ✅ **Simplicidade** - Last-write-wins é fácil de entender
+- ✅ **UX fluida** - App funciona 100% sem internet
+- ✅ **Baixa latência** - Leituras e gravações síncronas/rápidas locais
+- ✅ **Privacidade e autonomia** - Dados residem diretamente no dispositivo do usuário
+- ✅ **Simplicidade operacional** - Sem gargalos ou falhas decorrentes de serviços remotos
 
 ### Negative
 
-- ⚠️ **Perda de dados possível** - Escritas simultâneas perdem uma
-- ⚠️ **Não é merge inteligente** - Conflitos de campo não são resolvidos
-- ⚠️ **Clock skew** - Diferença de horário entre dispositivos causa problemas
+- ⚠️ **Multi-dispositivo** - Sincronização entre múltiplos aparelhos requer exportação/backup manual
 
 ## Implementation
 
-### Arquitetura de Sync
+### Arquitetura Local-First
 
 ```
 ┌─────────────────────────────────────────┐
 │              Flutter App                │
 ├─────────────────────────────────────────┤
-│  ┌─────────┐    ┌───────────────┐      │
-│  │  Isar   │◄──►│  Sync Service │      │
-│  │ (Local) │    │               │      │
-│  └─────────┘    └───────┬───────┘      │
-│                         │              │
-│  ┌──────────────────────┴─────────┐    │
-│  │      Offline Queue (Isar)      │    │
-│  └────────────────────────────────┘    │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│           Supabase (PostgreSQL)         │
-│         ┌──────────────────┐          │
-│         │ gamification_states│          │
-│         └──────────────────┘          │
+│  ┌──────────────┐    ┌───────────────┐  │
+│  │  ObjectBox   │◄──►│ StateNotifier │  │
+│  │   (Local)    │    │  (Riverpod)   │  │
+│  └──────────────┘    └───────────────┘  │
 └─────────────────────────────────────────┘
 ```
 

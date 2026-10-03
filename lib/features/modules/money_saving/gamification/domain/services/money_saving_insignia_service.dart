@@ -67,7 +67,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
       );
       
       await updateState(updatedState);
-      await _repository.syncWithSupabase(updatedState);
     }
 
     return awardedInsignias;
@@ -93,7 +92,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     );
 
     await updateState(updatedState);
-    await _repository.syncWithSupabase(updatedState);
 
     LoggerService.instance.gamification('🏆 Insignia concedida: ${insignia.name}');
     return true;
@@ -119,7 +117,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
     );
 
     await updateState(updatedState);
-    await _repository.syncWithSupabase(updatedState);
 
     LoggerService.instance.gamification('🗑️ Insignia revogada: ${insignia.name}');
     return true;
@@ -197,7 +194,6 @@ class MoneySavingInsigniaService implements ModuleInsigniaInterface {
       );
 
       await updateState(updatedState);
-      await _repository.syncWithSupabase(updatedState);
 
       LoggerService.instance.gamification('🗑️ Insignias resetadas (preservando inicial)');
     } catch (e) {

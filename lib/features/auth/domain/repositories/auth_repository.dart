@@ -13,13 +13,16 @@ abstract class AuthRepository {
   Future<User> updateProfile(
     String userId, {
     String? name,
+    String? email,
     String? avatarUrl,
     String? bio,
+    String? gender,
     bool? showEmail,
     bool? showAvatar,
   });
 
   Future<User?> getCurrentUser();
+  Future<User?> loginWithBiometrics();
 
   Future<Map<String, dynamic>?> getUserProfile(String userId);
 

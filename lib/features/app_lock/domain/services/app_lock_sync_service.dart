@@ -3,7 +3,6 @@ import 'package:disciplinum/features/modules/digital_detox/domain/services/digit
 import 'package:disciplinum/features/modules/binge_eating/domain/services/binge_eating_service_local.dart';
 import 'package:disciplinum/features/modules/adult_content/domain/services/adult_content_service_local.dart';
 import 'package:disciplinum/features/modules/spending/domain/services/spending_service_local.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 
 
@@ -18,11 +17,7 @@ class AppLockSyncService {
   /// Sincroniza todas as configurações de módulos para o Android nativo
   Future<void> syncAllConfigs() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        LoggerService.instance.w('AppLockSyncService: Usuário não logado, abortando sincronização.');
-        return;
-      }
+      const userId = 'local_user';
 
       final List<Map<String, dynamic>> configs = [];
       final Set<String> allMonitoredApps = {};

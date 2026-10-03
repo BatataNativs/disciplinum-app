@@ -168,7 +168,7 @@ extension AdultContentInsigniaEntityExtension on AdultContentInsigniaEntity {
   String get requirementDescription {
     switch (this) {
       case AdultContentInsigniaEntity.madeira:
-        return 'Ative o módulo Jejum 18+';
+        return 'Ativar o módulo Jejum 18+';
       case AdultContentInsigniaEntity.ferro:
         return '1 dia no Jejum 18+';
       case AdultContentInsigniaEntity.aluminio:

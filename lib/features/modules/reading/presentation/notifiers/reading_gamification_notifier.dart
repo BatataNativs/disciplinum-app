@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/reading/gamification/domain/entities/reading_gamification_entity.dart';
 import 'package:disciplinum/features/modules/reading/gamification/data/repositories/reading_gamification_repository.dart'
     as decentralized;
+import 'package:disciplinum/features/modules/reading/gamification/domain/services/reading_celebration_service.dart';
 
 class ReadingGamificationState {
   final ReadingGamificationEntity? gamification;
@@ -43,6 +44,18 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
     
     try {
       final gamification = await _repository.getReadingState();
+      if (gamification != null) {
+        if (gamification.isModuleActive && !gamification.earnedInsigniasList.any((i) => i.toLowerCase() == 'madeira')) {
+          gamification.earnedInsigniasList = [...gamification.earnedInsigniasList, 'madeira'];
+          await _repository.saveReadingState(gamification);
+          ReadingCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Leitura',
+            assetPath: 'assets/gamification/insignias/reading/madeira.png',
+          );
+        }
+      }
       state = state.copyWith(gamification: gamification, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -70,12 +83,12 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
   Future<void> resetProgress() async {
     try {
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsigniasList.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsigniasList.any((i) => i.toLowerCase() == 'madeira') ?? false;
 
       final initialState = ReadingGamificationEntity();
       initialState.id = 1;
       if (hasMadeira) {
-        initialState.earnedInsigniasList = ['Madeira'];
+        initialState.earnedInsigniasList = ['madeira'];
       }
 
       await _repository.saveReadingState(initialState);
@@ -97,12 +110,18 @@ class ReadingGamificationNotifier extends StateNotifier<ReadingGamificationState
 
       // Concede insígnia Madeira se ainda não tiver
       final earnedInsignias = updatedState.earnedInsigniasList;
-      if (!earnedInsignias.contains('madeira')) {
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
         earnedInsignias.add('madeira');
         updatedState.earnedInsigniasList = earnedInsignias;
       }
 
       await _repository.saveReadingState(updatedState);
+      await ReadingCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Leitura',
+        assetPath: 'assets/gamification/insignias/reading/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(error: e.toString());

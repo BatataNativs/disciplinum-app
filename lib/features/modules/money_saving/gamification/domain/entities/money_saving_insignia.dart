@@ -180,7 +180,7 @@ enum MoneySavingInsignia {
   String get requirementDescription {
     switch (this) {
       case MoneySavingInsignia.madeira:
-        return 'Ative o módulo Desafio da Poupança';
+        return 'Ativar o módulo Desafio da Poupança';
       case MoneySavingInsignia.ferro:
         return '5% da grid de um desafio preenchida';
       case MoneySavingInsignia.aluminio:

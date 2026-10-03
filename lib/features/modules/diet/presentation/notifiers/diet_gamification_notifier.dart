@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/features/modules/diet/domain/entities/diet_module_state.dart';
 import 'package:disciplinum/features/modules/diet/gamification/domain/repositories/diet_gamification_repository.dart';
+import 'package:disciplinum/features/modules/diet/gamification/domain/services/diet_celebration_service.dart';
 
 /// Estado da gamificação do Diet
 class DietGamificationState {
@@ -49,10 +50,24 @@ class DietGamificationNotifier extends StateNotifier<DietGamificationState> {
     try {
       final gamification = await _repository.getDietState();
       if (gamification != null) {
+        DietModuleState effectiveGamification = gamification;
+        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+          effectiveGamification = effectiveGamification.copyWith(
+            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+          );
+          await _repository.saveDietState(effectiveGamification);
+          DietCelebrationService.instance.celebrarInsigniaConquistada(
+            insigniaId: 'madeira',
+            insigniaName: 'Madeira',
+            insigniaDescription: 'Configurou e ativou o módulo Dieta',
+            assetPath: 'assets/gamification/insignias/diet/madeira.png',
+          );
+        }
+
         state = state.copyWith(
-          gamification: gamification, 
+          gamification: effectiveGamification, 
           isLoading: false,
-          isModuleActive: gamification.isModuleActive,
+          isModuleActive: effectiveGamification.isModuleActive,
         );
       } else {
         state = state.copyWith(isLoading: false, isModuleActive: false);
@@ -66,9 +81,21 @@ class DietGamificationNotifier extends StateNotifier<DietGamificationState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentState = state.gamification ?? DietModuleState.initial();
-      final newState = currentState.copyWith(isModuleActive: true);
+      final earnedInsignias = List<String>.from(currentState.earnedInsignias);
+      if (!earnedInsignias.any((i) => i.toLowerCase() == 'madeira')) {
+        earnedInsignias.add('madeira');
+      }
+      final newState = currentState.copyWith(
+        isModuleActive: true,
+        earnedInsignias: earnedInsignias,
+      );
       await _repository.saveDietState(newState);
-      await _repository.syncWithSupabase(newState);
+      await DietCelebrationService.instance.celebrarInsigniaConquistada(
+        insigniaId: 'madeira',
+        insigniaName: 'Madeira',
+        insigniaDescription: 'Configurou e ativou o módulo Dieta',
+        assetPath: 'assets/gamification/insignias/diet/madeira.png',
+      );
       await loadGamification();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -81,7 +108,6 @@ class DietGamificationNotifier extends StateNotifier<DietGamificationState> {
       final currentState = state.gamification ?? DietModuleState.initial();
       final newState = currentState.copyWith(isModuleActive: false);
       await _repository.saveDietState(newState);
-      await _repository.syncWithSupabase(newState);
       state = state.copyWith(isModuleActive: false, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -92,7 +118,7 @@ class DietGamificationNotifier extends StateNotifier<DietGamificationState> {
     try {
       // Preserva a insígnia Madeira (incentivo para tentar novamente)
       final current = state.gamification;
-      final hasMadeira = current?.earnedInsignias.contains('Madeira') ?? false;
+      final hasMadeira = current?.earnedInsignias.any((i) => i.toLowerCase() == 'madeira') ?? false;
       
       await _repository.clearDietState();
       
@@ -100,13 +126,11 @@ class DietGamificationNotifier extends StateNotifier<DietGamificationState> {
       final initialState = DietModuleState.initial();
       if (hasMadeira) {
         final stateWithMadeira = initialState.copyWith(
-          earnedInsignias: ['Madeira'],
+          earnedInsignias: ['madeira'],
         );
         await _repository.saveDietState(stateWithMadeira);
-        await _repository.syncWithSupabase(stateWithMadeira);
       } else {
         await _repository.saveDietState(initialState);
-        await _repository.syncWithSupabase(initialState);
       }
       
       await loadGamification();

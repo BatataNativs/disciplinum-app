@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/binge_eating/data/repositories/binge_eating_config_repository.dart';
 import 'package:disciplinum/features/modules/binge_eating/domain/entities/binge_eating_config_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
 
@@ -168,7 +167,7 @@ class BingeEatingServiceLocal {
 
   Future<void> saveConfig(BingeEatingConfig config) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       
       final entity = BingeEatingConfigEntity(
         userId: userId,

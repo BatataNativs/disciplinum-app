@@ -135,6 +135,34 @@ class FocusCelebrationService {
     }
   }
 
+  /// Dispara celebração de conquista de insígnia
+  Future<void> celebrarInsigniaConquistada({
+    required String insigniaId,
+    required String insigniaName,
+    String? insigniaDescription,
+    String? assetPath,
+  }) async {
+    try {
+      LoggerService.instance.gamification('⭐ Iniciando celebração de insígnia Focus: $insigniaName');
+      
+      await _dispararConfetes(tipo: 'insignia');
+      await _dispararFeedbackHaptico();
+      await _dispararSomConquista();
+      
+      await AchievementNotificationService.instance.showInsigniaNotification(
+        moduleId: 'focus',
+        insigniaId: insigniaId,
+        insigniaName: insigniaName,
+        insigniaDescription: insigniaDescription,
+        assetPath: assetPath,
+      );
+      
+      LoggerService.instance.gamification('✅ Celebração de insígnia Focus concluída');
+    } catch (e) {
+      LoggerService.instance.e('Erro na celebração de insígnia Focus', error: e);
+    }
+  }
+
   /// Dispara celebração de conquista de insígnia Disciplinum
   Future<void> celebrarDisciplinumConquistado({
     required int disciplinumCount,

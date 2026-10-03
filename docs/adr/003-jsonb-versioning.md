@@ -138,7 +138,6 @@ class SchemaVersionValidator {
 - [Module Contract Guide](../docs/MODULE_CONTRACT_GUIDE.md)
 - ADR 002: DNA Contract
 - `lib/core/modules/contracts/module_state_contract.dart`
-- `supabase/migrations/20260402151000_add_schema_versioning_to_gamification.sql`
 
 ## Quote
 

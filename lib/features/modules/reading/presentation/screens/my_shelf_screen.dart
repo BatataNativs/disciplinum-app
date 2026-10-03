@@ -48,7 +48,7 @@ class MyShelfScreen extends ConsumerWidget {
 
     return Consumer(
       builder: (context, ref, child) {
-        // Implementar quando Isar estiver integrado
+        // Implementar quando ObjectBox estiver integrado
         // Por enquanto, usar booksToShow do ReadingService
         final activeBooks = booksToShow;
         

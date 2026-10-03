@@ -5,6 +5,7 @@ import 'package:disciplinum/features/auth/presentation/controllers/auth_controll
 class EditProfileDialog extends ConsumerStatefulWidget {
   final AuthController authService;
   final String initialName;
+  final String initialEmail;
   final String initialBio;
   final bool initialShowEmail;
   final bool initialShowAvatar;
@@ -13,6 +14,7 @@ class EditProfileDialog extends ConsumerStatefulWidget {
     super.key,
     required this.authService,
     required this.initialName,
+    required this.initialEmail,
     required this.initialBio,
     required this.initialShowEmail,
     required this.initialShowAvatar,
@@ -24,6 +26,7 @@ class EditProfileDialog extends ConsumerStatefulWidget {
 
 class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   late TextEditingController _nameController;
+  late TextEditingController _emailController;
   late TextEditingController _bioController;
   late bool _showEmail;
   late bool _showAvatar;
@@ -33,6 +36,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
+    _emailController = TextEditingController(text: widget.initialEmail);
     _bioController = TextEditingController(text: widget.initialBio);
     _showEmail = widget.initialShowEmail;
     _showAvatar = widget.initialShowAvatar;
@@ -41,6 +45,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     _bioController.dispose();
     super.dispose();
   }
@@ -76,7 +81,8 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
             _buildHeader(colorScheme),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,6 +92,14 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
                       label: 'Nome',
                       hint: 'Seu nome de exibição',
                       icon: Icons.person_outline_rounded,
+                      colorScheme: colorScheme,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'E-mail',
+                      hint: 'seu_email@exemplo.com',
+                      icon: Icons.email_outlined,
                       colorScheme: colorScheme,
                     ),
                     const SizedBox(height: 20),
@@ -166,7 +180,10 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     required TextEditingController controller,
     required String label,
     required String hint,
-    required IconData icon,
+    IconData? icon,
+    Widget? customPrefixIcon,
+    bool isReadOnly = false,
+    String? helperText,
     required ColorScheme colorScheme,
     int maxLines = 1,
   }) {
@@ -185,25 +202,41 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          readOnly: isReadOnly,
           enabled: !_isLoading,
           style: TextStyle(
             fontSize: 15,
-            color: colorScheme.onSurface,
+            color: isReadOnly
+                ? colorScheme.onSurface.withValues(alpha: 0.75)
+                : colorScheme.onSurface,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-            prefixIcon: maxLines == 1
-                ? Icon(icon, color: colorScheme.onSurfaceVariant, size: 20)
-                : Padding(
-                    padding: const EdgeInsets.only(bottom: 48), // Alinha o ícone no topo para multiline
-                    child: Icon(icon, color: colorScheme.onSurfaceVariant, size: 20),
-                  ),
+            helperText: helperText,
+            helperStyle: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.primary,
+            ),
+            prefixIcon: customPrefixIcon ??
+                (icon != null
+                    ? (maxLines == 1
+                        ? Icon(icon, color: colorScheme.onSurfaceVariant, size: 20)
+                        : Padding(
+                            padding: const EdgeInsets.only(bottom: 48),
+                            child: Icon(icon,
+                                color: colorScheme.onSurfaceVariant, size: 20),
+                          ))
+                    : null),
             filled: true,
-            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            fillColor: isReadOnly
+                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.15)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -326,6 +359,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     try {
       final profileSuccess = await widget.authService.updateProfile(
         name: _nameController.text,
+        email: _emailController.text.trim(),
         bio: _bioController.text,
         showEmail: _showEmail,
         showAvatar: _showAvatar,
@@ -364,7 +398,8 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     }
   }
 
-  void _showSnackBar(BuildContext context, String message, Color color, IconData icon) {
+  void _showSnackBar(
+      BuildContext context, String message, Color color, IconData icon) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

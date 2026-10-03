@@ -70,7 +70,6 @@ class MoneySavingMedalService implements ModuleMedalhaInterface {
       );
       
       await updateState(updatedState);
-      await _repository.syncWithSupabase(updatedState);
     }
 
     return awardedMedalhas;
@@ -96,7 +95,6 @@ class MoneySavingMedalService implements ModuleMedalhaInterface {
     );
 
     await updateState(updatedState);
-    await _repository.syncWithSupabase(updatedState);
 
     LoggerService.instance.gamification('🏅 Medalha concedida: ${medalha.name}');
     return true;
@@ -122,7 +120,6 @@ class MoneySavingMedalService implements ModuleMedalhaInterface {
     );
 
     await updateState(updatedState);
-    await _repository.syncWithSupabase(updatedState);
 
     LoggerService.instance.gamification('🗑️ Medalha revogada: ${medalha.name}');
     return true;
@@ -196,7 +193,6 @@ class MoneySavingMedalService implements ModuleMedalhaInterface {
     );
 
     await updateState(updatedState);
-    await _repository.syncWithSupabase(updatedState);
 
     LoggerService.instance.gamification('🗑️ Todas as medalhas resetadas');
   }

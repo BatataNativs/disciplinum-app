@@ -35,13 +35,18 @@ abstract class BaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<User> updateProfile(String userId, {String? name, String? avatarUrl, String? bio, bool? showAvatar, bool? showEmail}) async {
+  Future<User> updateProfile(String userId, {String? name, String? email, String? avatarUrl, String? bio, String? gender, bool? showAvatar, bool? showEmail}) async {
     throw UnimplementedError('updateProfile not implemented');
   }
 
   @override
   Future<User?> getCurrentUser() async {
     throw UnimplementedError('getCurrentUser not implemented');
+  }
+
+  @override
+  Future<User?> loginWithBiometrics() async {
+    throw UnimplementedError('loginWithBiometrics not implemented');
   }
 
   @override

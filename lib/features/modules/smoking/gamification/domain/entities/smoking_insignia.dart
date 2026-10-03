@@ -192,7 +192,7 @@ extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
   String get requirementDescription {
     switch (this) {
       case SmokingInsigniaEntity.madeira:
-        return 'Ative o módulo Parar de Fumar';
+        return 'Ativar o módulo Parar de Fumar';
       case SmokingInsigniaEntity.ferro:
         return '1 dia sem fumar';
       case SmokingInsigniaEntity.aluminio:

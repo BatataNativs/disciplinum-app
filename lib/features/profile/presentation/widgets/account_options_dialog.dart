@@ -67,7 +67,8 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
             child: Dialog(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -154,13 +155,13 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
   }
 
   Future<void> _loadBiometricState() async {
-    final bioService = ref.read(biometricAuthServiceProvider);
-    final enabled = await bioService.isBiometricLockEnabled();
-    if (mounted) setState(() => _biometricEnabled = enabled);
+    final isEnabled = ref.read(biometricLockControllerProvider).isEnabled;
+    if (mounted) setState(() => _biometricEnabled = isEnabled);
   }
 
   Future<void> _toggleBiometric() async {
     final bioService = ref.read(biometricAuthServiceProvider);
+    final bioController = ref.read(biometricLockControllerProvider.notifier);
     final next = !_biometricEnabled;
     if (next) {
       final available = await bioService.isBiometricAvailable();
@@ -168,7 +169,8 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Biometria não disponível ou não configurada no dispositivo.'),
+              content: Text(
+                  'Biometria não disponível ou não configurada no dispositivo.'),
             ),
           );
         }
@@ -179,7 +181,7 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
       );
       if (!authenticated) return;
     }
-    await bioService.setBiometricLockEnabled(next);
+    await bioController.setEnabled(next);
     if (mounted) {
       setState(() => _biometricEnabled = next);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -303,7 +305,8 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final primaryTextColor = textColor ?? colorScheme.onSurface;
-    final secondaryTextColor = textColor?.withValues(alpha: 0.8) ?? colorScheme.onSurfaceVariant;
+    final secondaryTextColor =
+        textColor?.withValues(alpha: 0.8) ?? colorScheme.onSurfaceVariant;
 
     return Material(
       color: Colors.transparent,
@@ -364,6 +367,9 @@ class _AccountOptionsDialogState extends ConsumerState<AccountOptionsDialog>
       builder: (ctx) => EditProfileDialog(
         authService: widget.authService,
         initialName: userProfile?['name'] ?? '',
+        initialEmail: userProfile?['email'] ??
+            widget.authService.currentUser?.email ??
+            '',
         initialBio: userProfile?['bio'] ?? '',
         initialShowEmail: userProfile?['show_email'] ?? true,
         initialShowAvatar: userProfile?['show_avatar'] ?? true,

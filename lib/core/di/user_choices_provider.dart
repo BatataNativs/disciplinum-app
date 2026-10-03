@@ -3,12 +3,10 @@ import 'package:disciplinum/core/storage/entities/user_choices_entity.dart';
 import 'package:disciplinum/core/storage/repositories/user_choices_repository.dart';
 import 'package:disciplinum/core/storage/services/user_choices_sync_service.dart';
 import 'package:disciplinum/core/database/objectbox_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/di/providers.dart';
 
-/// Provider para gerenciar escolhas do usuário com persistência dual
-/// Combina ObjectBox (local) + Supabase (cloud) com Riverpod
+/// Provider para gerenciar escolhas do usuário com ObjectBox
 /// Provider para o ID do usuário atual
 final currentUserIdProvider = Provider<String>((ref) {
   final authService = ref.watch(authServiceProvider);
@@ -31,7 +29,6 @@ final userChoicesRepositoryProvider = Provider<UserChoicesRepository>((ref) {
 final userChoicesSyncServiceProvider = Provider<UserChoicesSyncService>((ref) {
   final repository = ref.watch(userChoicesRepositoryProvider);
   return UserChoicesSyncService(
-    Supabase.instance.client,
     repository,
   );
 });

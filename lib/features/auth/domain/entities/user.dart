@@ -22,8 +22,8 @@ class User extends Equatable {
     this.metadata,
   });
 
-  /// Cria usuário a partir de dados do Supabase (formato de mapa)
-  factory User.fromSupabaseUser(Map<String, dynamic> userData) {
+  /// Cria usuário a partir de mapa de dados
+  factory User.fromMap(Map<String, dynamic> userData) {
     return User(
       id: userData['id'] as String,
       email: userData['email'] as String,

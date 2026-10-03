@@ -18,9 +18,8 @@ import 'package:disciplinum/shared/widgets/lists/list_action_tile.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/spending/gamification/presentation/providers/spending_gamification_provider.dart';
 import 'package:disciplinum/features/app_lock/domain/services/app_lock_sync_service.dart';
-import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:disciplinum/infrastructure/permissions/usage_stats/permission_service.dart';
+import 'package:disciplinum/features/monitoring/presentation/screens/select_apps_screen.dart';
 
 class SpendingScreen extends ConsumerStatefulWidget {
   final String? heroTag;
@@ -42,7 +41,7 @@ class _SpendingScreenState extends ConsumerState<SpendingScreen> {
   late PageController _pageController;
   int _selectedIndex = 0;
 
-  String get _userId => Supabase.instance.client.auth.currentUser?.id ?? 'guest_user';
+  String get _userId => 'local_user';
 
   @override
   void initState() {

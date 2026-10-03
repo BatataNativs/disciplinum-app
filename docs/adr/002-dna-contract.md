@@ -75,7 +75,7 @@ abstract class ModuleStateContract {
   int get schemaVersion;         // Versionamento
   DateTime get createdAt;
   DateTime get updatedAt;
-  Map<String, dynamic> toJson(); // Para Supabase
+  Map<String, dynamic> toJson(); // Para serialização/backup
 }
 ```
 

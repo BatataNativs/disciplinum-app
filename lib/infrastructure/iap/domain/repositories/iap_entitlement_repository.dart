@@ -2,7 +2,7 @@ import 'package:disciplinum/infrastructure/iap/domain/entities/iap_entitlement.d
 import 'package:disciplinum/objectbox.g.dart';
 
 /// Repositório ObjectBox puro para entitlements IAP
-/// Substitui o uso genérico de Isar
+/// Gerencia a persistência local de compras e entitlements
 class IapEntitlementRepository {
   final Box<IapEntitlement> _box;
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:disciplinum/features/modules/reading/data/repositories/reading_config_repository.dart';
 import 'package:disciplinum/features/modules/reading/domain/entities/reading_config_entity.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Configurações do Reading
 class ReadingConfig {
@@ -156,7 +155,7 @@ class ReadingServiceLocal {
 
   Future<void> saveConfig(ReadingConfig config) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       
       final entity = ReadingConfigEntity(userId: userId);
       
@@ -315,7 +314,7 @@ class ReadingServiceLocal {
 
   Future<void> clearAllData() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? 'default_user';
+      const userId = 'local_user';
       await _repository.deleteConfig(userId);
       LoggerService.instance.i('Todos os dados do Reading foram limpos');
     } catch (e) {

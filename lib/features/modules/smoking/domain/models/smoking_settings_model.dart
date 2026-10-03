@@ -96,7 +96,7 @@ class SmokingSettingsModel {
   };
 
   factory SmokingSettingsModel.fromJson(Map<String, dynamic> json) => SmokingSettingsModel(
-    // Campos atuais (do Supabase user_module_settings)
+    // Configurações do módulo
     dailyCigarettes: json['smoking_packs_per_day']?.toInt() ?? json['dailyCigarettes']?.toInt() ?? 20,
     pricePerPack: json['smoking_pack_price']?.toDouble() ?? json['pricePerPack']?.toDouble() ?? 10.0,
     cigarettesPerPack: json['cigarettesPerPack']?.toInt() ?? 20,
