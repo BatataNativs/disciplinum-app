@@ -212,29 +212,6 @@ extension AdultContentInsigniaEntityExtension on AdultContentInsigniaEntity {
     }
   }
 
-  /// Obtém a categoria da insígnia
-  String get category {
-    switch (this) {
-      case AdultContentInsigniaEntity.madeira:
-        return 'Inicial';
-      case AdultContentInsigniaEntity.ferro:
-      case AdultContentInsigniaEntity.aluminio:
-        return 'Básica';
-      case AdultContentInsigniaEntity.latao:
-      case AdultContentInsigniaEntity.bronze:
-        return 'Intermediária';
-      case AdultContentInsigniaEntity.prata:
-      case AdultContentInsigniaEntity.ouro:
-        return 'Avançada';
-      case AdultContentInsigniaEntity.diamante:
-      case AdultContentInsigniaEntity.disciplinum:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a insígnia é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta insígnia
   String get themeColor {
     switch (this) {

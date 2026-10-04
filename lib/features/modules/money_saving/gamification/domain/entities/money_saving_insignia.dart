@@ -1,63 +1,54 @@
 /// Insignias do módulo Money Saving Challenge
 /// Baseadas em percentual da grid de desafio preenchida
 enum MoneySavingInsignia {
-  // Nível 1: Inicial
   madeira(
     'Madeira',
     'Início da Jornada. Ativou o módulo Desafio da Poupança!',
     0,
   ),
   
-  // Nível 2: Básico
   ferro(
     'Ferro',
     '5% da grid de um desafio preenchida. Primeiros passos!',
     5,
   ),
   
-  // Nível 3: Intermediário
   aluminio(
     'Alumínio',
     '10% da grid de um desafio preenchida. Bom progresso!',
     10,
   ),
   
-  // Nível 4: Comprometido
   latao(
     'Latão',
     '15% da grid de um desafio preenchida. Continue assim!',
     15,
   ),
   
-  // Nível 5: Bronze
   bronze(
     'Bronze',
     '20% da grid de um desafio preenchida. Metade do caminho!',
     20,
   ),
   
-  // Nível 6: Prata
   prata(
     'Prata',
     '40% da grid de um desafio preenchida. Quase lá!',
     40,
   ),
   
-  // Nível 7: Ouro
   ouro(
     'Ouro',
     '60% da grid de um desafio preenchida. Excelente!',
     60,
   ),
   
-  // Nível 8: Diamante
   diamante(
     'Diamante',
     '80% da grid de um desafio preenchida. Quase completo!',
     80,
   ),
   
-  // Nível 9: Disciplinum
   disciplinum(
     'Disciplinum',
     '100% da grid de um desafio preenchida. Desafio completo!',

@@ -212,29 +212,6 @@ extension SpendingInsigniaEntityExtension on SpendingInsigniaEntity {
     }
   }
 
-  /// Obtém a categoria da insígnia
-  String get category {
-    switch (this) {
-      case SpendingInsigniaEntity.madeira:
-        return 'Inicial';
-      case SpendingInsigniaEntity.ferro:
-      case SpendingInsigniaEntity.aluminio:
-        return 'Básica';
-      case SpendingInsigniaEntity.latao:
-      case SpendingInsigniaEntity.bronze:
-        return 'Intermediária';
-      case SpendingInsigniaEntity.prata:
-      case SpendingInsigniaEntity.ouro:
-        return 'Avançada';
-      case SpendingInsigniaEntity.diamante:
-      case SpendingInsigniaEntity.disciplinum:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a insígnia é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta insígnia
   String get themeColor {
     switch (this) {

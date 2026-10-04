@@ -121,23 +121,6 @@ extension AdultContentMedalEntityExtension on AdultContentMedalEntity {
     }
   }
 
-  /// Obtém a categoria da medalha
-  String get category {
-    switch (this) {
-      case AdultContentMedalEntity.bronze:
-        return 'Básica';
-      case AdultContentMedalEntity.prata:
-        return 'Intermediária';
-      case AdultContentMedalEntity.ouro:
-        return 'Avançada';
-      case AdultContentMedalEntity.diamante:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a medalha é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta medalha
   String get themeColor {
     switch (this) {

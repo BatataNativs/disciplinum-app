@@ -65,7 +65,7 @@ class SmokingCheckinService {
         // 2. Após registrar check-in, atualiza gamificação
         // Carrega todos os check-ins para calcular dias consecutivos
         final allCheckins = await loadCheckins();
-        final consecutiveDays = _calculateConsecutiveDays(allCheckins);
+        final consecutiveDays = calculateConsecutiveDays(allCheckins);
         
         // Atualiza insígnias, medalhas e marcos de saúde
         await _insigniaService.updateFromCheckIns(consecutiveDays);
@@ -84,24 +84,35 @@ class SmokingCheckinService {
   }
 
   /// Calcula dias consecutivos a partir de uma lista de check-ins
-  int _calculateConsecutiveDays(List<DateTime> checkins) {
+  int calculateConsecutiveDays(List<DateTime> checkins) {
     if (checkins.isEmpty) return 0;
     
-    // Ordena check-ins do mais recente para o mais antigo
-    final sorted = checkins.toList()..sort((a, b) => b.compareTo(a));
+    // Normaliza datas para ano-mês-dia (sem horas) e remove duplicatas
+    final normalizedDates = checkins
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
     
-    // Conta dias consecutivos a partir de hoje
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    var expectedDate = today;
+    
+    // Se o check-in de hoje ainda não foi feito, mas tem o de ontem, o streak continua ativo
+    if (!normalizedDates.contains(today)) {
+      final yesterday = today.subtract(const Duration(days: 1));
+      if (normalizedDates.contains(yesterday)) {
+        expectedDate = yesterday;
+      } else {
+        return 0;
+      }
+    }
+    
     int consecutive = 0;
-    var currentDate = DateTime.now();
-    
-    for (final checkin in sorted) {
-      final checkinDate = DateTime(checkin.year, checkin.month, checkin.day);
-      final expectedDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
-      
+    for (final checkinDate in normalizedDates) {
       if (checkinDate.isAtSameMomentAs(expectedDate)) {
         consecutive++;
-        currentDate = currentDate.subtract(const Duration(days: 1));
-      } else {
+        expectedDate = expectedDate.subtract(const Duration(days: 1));
+      } else if (checkinDate.isBefore(expectedDate)) {
         break;
       }
     }

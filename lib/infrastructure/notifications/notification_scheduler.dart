@@ -128,9 +128,9 @@ class NotificationScheduler {
         if (nicheId == NicheId.smoking) {
           payload = nicheId.id.toString();
           actions = [
-            const AndroidNotificationAction(actionIdSim, 'Sim!',
+            const AndroidNotificationAction(actionIdSim, 'Não fumei',
                 showsUserInterface: true, cancelNotification: true),
-            const AndroidNotificationAction(actionIdNao, 'Não, tive recaída',
+            const AndroidNotificationAction(actionIdNao, 'Tive recaída',
                 showsUserInterface: true, cancelNotification: true),
           ];
         } else if (nicheId == NicheId.bingeEating) {
@@ -146,8 +146,7 @@ class NotificationScheduler {
         String body = "Mensagem padrão do check-in"; // Temporário
 
         if (nicheId == NicheId.smoking) {
-          body =
-              'Manteve-se disciplinado hoje? \n\nLembre-se de conferir seu progresso no app 🚀.';
+          body = 'Você conseguiu manter-se sem fumar hoje?';
         } else if (nicheId == NicheId.bingeEating) {
           body =
               'Você resistiu às tentações de delivery hoje? \n\nMarque "resisti" e registre seu progresso no app 🚀.';

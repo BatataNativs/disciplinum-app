@@ -58,7 +58,7 @@ extension MoneySavingMedalEntityExtension on MoneySavingMedalEntity {
       case MoneySavingMedalEntity.prata:
         return 'Segundo desafio concluído - você está no caminho certo!';
       case MoneySavingMedalEntity.ouro:
-        return 'Terceiro desafio concluído - maestria em economia!';
+        return 'Terceiro desafio concluído com excelência em economia!';
       case MoneySavingMedalEntity.diamante:
         return 'Quarto desafio concluído - lenda da poupança!';
     }
@@ -120,23 +120,6 @@ extension MoneySavingMedalEntityExtension on MoneySavingMedalEntity {
         return '💎';
     }
   }
-
-  /// Obtém a categoria da medalha
-  String get category {
-    switch (this) {
-      case MoneySavingMedalEntity.bronze:
-        return 'Básica';
-      case MoneySavingMedalEntity.prata:
-        return 'Intermediária';
-      case MoneySavingMedalEntity.ouro:
-        return 'Avançada';
-      case MoneySavingMedalEntity.diamante:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a medalha é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
 
   /// Obtém a cor do tema para esta medalha
   String get themeColor {

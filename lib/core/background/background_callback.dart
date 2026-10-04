@@ -408,9 +408,6 @@ Future<void> _checkDailyStreaksInBackground() async {
       final batchNotifier = BatchedAchievementNotifier();
       batchNotifier.clear();
 
-      // Verifica se há streaks prestes a quebrar (último check-in há mais de 20h)
-      await _checkStreaksAboutToBreak();
-
       // Verifica marcos de streak alcançados
       await _checkStreakMilestones(batchNotifier);
 
@@ -426,62 +423,6 @@ Future<void> _checkDailyStreaksInBackground() async {
 
   if (!success) {
     LoggerService.instance.e('❌ Falha ao verificar streaks após múltiplas tentativas');
-  }
-}
-
-/// Verifica se há streaks prestes a quebrar
-Future<void> _checkStreaksAboutToBreak() async {
-  try {
-    final warningThreshold = DateTime.now().subtract(const Duration(hours: 20));
-    final streaksAtRisk = <String>[];
-
-    // Verifica Smoking
-    try {
-      final smokingState = await SmokingGamificationRepository.instance.getSmokingState();
-      if (smokingState != null && 
-          smokingState.isModuleActive && 
-          smokingState.consecutivePositiveDays > 0 &&
-          (smokingState.lastPositiveCheckIn == null || 
-           smokingState.lastPositiveCheckIn!.isBefore(warningThreshold))) {
-        streaksAtRisk.add('🔥 Smoking: ${smokingState.consecutivePositiveDays} dias em risco!');
-      }
-    } catch (_) {}
-
-    // Verifica Reading
-    try {
-      final readingState = await ReadingGamificationRepository.instance.getReadingState();
-      if (readingState != null && 
-          readingState.isModuleActive && 
-          readingState.consecutiveDays > 0 &&
-          (readingState.lastReadingDate == null || 
-           readingState.lastReadingDate!.isBefore(warningThreshold))) {
-        streaksAtRisk.add('📚 Reading: ${readingState.consecutiveDays} dias em risco!');
-      }
-    } catch (_) {}
-
-    // Verifica Diet
-    try {
-      final dietState = await DietGamificationRepository.instance.getDietState();
-      if (dietState != null && 
-          dietState.isModuleActive && 
-          dietState.consecutiveDays > 0 &&
-           dietState.lastUpdated.isBefore(warningThreshold)) {
-        streaksAtRisk.add('🥗 Diet: ${dietState.consecutiveDays} dias em risco!');
-      }
-    } catch (_) {}
-
-    // Envia notificação de alerta se houver streaks em risco
-    if (streaksAtRisk.isNotEmpty) {
-      await NotificationService.showNotification(
-        id: 9998,
-        title: '⚠️ Streaks em Risco!',
-        body: 'Você tem ${streaksAtRisk.length} streak(s) prestes a quebrar. Abra o app para manter!',
-        payload: 'streak_warning',
-      );
-    }
-
-  } catch (e) {
-    LoggerService.instance.e('Erro ao verificar streaks em risco', error: e);
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/di/providers.dart';
+import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
 import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_settings_model.dart';
@@ -64,6 +65,20 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadSettings();
+
+    EventBus.instance.listen<SmokingRelapseEvent>((event) {
+      if (mounted) {
+        _loadSettings();
+        _reloadCheckinData();
+      }
+    });
+
+    EventBus.instance.listen<ModuleCheckInEvent>((event) {
+      if (mounted && event.nicheId == NicheId.smoking.index) {
+        _loadSettings();
+        _reloadCheckinData();
+      }
+    });
   }
 
   @override
@@ -78,6 +93,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       if (mounted) {
+        _loadSettings();
         _reloadCheckinData();
       }
     }
@@ -338,9 +354,12 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
         settings != null ? (settings!.packPrice * settings!.packsPerDay) : 0.0;
     final packCost = settings?.packPrice ?? 0.0;
 
+    final quitDate = settings?.quitDate ?? _selectedDate;
+
     await ref.read(smokingGamificationNotifierProvider.notifier).activateModule(
           dailyCost: dailyCost,
           packCost: packCost,
+          startDate: quitDate,
         );
 
     if (mounted) {
@@ -617,7 +636,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'É o seu registro diário confirmando que você resistiu ao cigarro hoje, mantendo sua sequência ativa.',
+                                'É o seu registro diário para confirmar se conseguiu manter-se sem fumar até esse momento.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   height: 1.35,
@@ -664,7 +683,7 @@ class _StopSmokingScreenState extends ConsumerState<StopSmokingScreen>
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'No horário agendado, você receberá uma notificação direta para confirmar sua disciplina sem esforço.',
+                                'No horário configurado (sugere-se pouco antes de dormir), você receberá uma notificação com respostas rápidas para informar se não fumou ou se teve recaída.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   height: 1.35,

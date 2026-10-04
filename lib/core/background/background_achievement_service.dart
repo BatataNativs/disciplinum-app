@@ -201,25 +201,4 @@ class BackgroundAchievementService {
       LoggerService.instance.e('❌ Erro ao mostrar notificação de streak', error: e);
     }
   }
-
-  /// Mostra notificação de warning de streak prestes a quebrar
-  static Future<void> showStreakWarningNotification({
-    required String moduleName,
-    required int hoursLeft,
-  }) async {
-    try {
-      final notificationId = moduleName.hashCode % 1000 + 8000;
-
-      await NotificationService.showNotification(
-        id: notificationId,
-        title: '⏰ Não perca sua sequência!',
-        body: 'Você tem $hoursLeft horas para manter seu streak no módulo $moduleName!',
-        payload: 'streak_warning:$moduleName',
-      );
-
-      LoggerService.instance.i('📱 Notificação de warning enviada: $moduleName');
-    } catch (e) {
-      LoggerService.instance.e('❌ Erro ao mostrar notificação de warning', error: e);
-    }
-  }
 }

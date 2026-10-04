@@ -236,29 +236,6 @@ extension SmokingInsigniaEntityExtension on SmokingInsigniaEntity {
     }
   }
 
-  /// Obtém a categoria da insígnia
-  String get category {
-    switch (this) {
-      case SmokingInsigniaEntity.madeira:
-        return 'Inicial';
-      case SmokingInsigniaEntity.ferro:
-      case SmokingInsigniaEntity.aluminio:
-        return 'Básica';
-      case SmokingInsigniaEntity.latao:
-      case SmokingInsigniaEntity.bronze:
-        return 'Intermediária';
-      case SmokingInsigniaEntity.prata:
-      case SmokingInsigniaEntity.ouro:
-        return 'Avançada';
-      case SmokingInsigniaEntity.diamante:
-      case SmokingInsigniaEntity.disciplinum:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a insígnia é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta insígnia
   String get themeColor {
     switch (this) {

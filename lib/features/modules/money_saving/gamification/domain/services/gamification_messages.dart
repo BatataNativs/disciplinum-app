@@ -28,15 +28,18 @@ class MoneySavingGamificationMessages {
 
   /// Mensagens para insignias
   static const Map<String, String> insigniaMessages = {
-    'madeira': '🪵 Primeiro passo! Você começou sua jornada de economia!',
-    'ferro': '⚙️ Forjando disciplina! Seu hábito está se solidificando!',
-    'aluminio': '🔘 Leveza e consistência! Você está no caminho certo!',
-    'latao': '🔩 Resistência! Sua força de vontade é notável!',
-    'bronze': '🥉 Solidez! Você construiu uma base financeira firme!',
-    'prata': '🥈 Brilho! Sua disciplina financeira está brilhando!',
-    'ouro': '🥇 Prestígio! Você alcançou um nível de maestria!',
-    'diamante': '💎 Excepcional! Você é uma joia rara na economia!',
-    'disciplinum': '🏆 Mestre! Você alcançou o nível mais alto de disciplina!',
+    'madeira': '🪵 Módulo ativado. Início da sua jornada de economia.',
+    'ferro': '⚙️ Primeiros passos dados. O hábito começa a se formar.',
+    'aluminio': '🔘 Bom progresso. Mantendo a regularidade no desafio.',
+    'latao': '🔩 Constância mantida. Sua rotina de economia segue firme.',
+    'bronze':
+        '🥉 Base estabelecida. Uma parte importante do desafio foi concluída.',
+    'prata': '🥈 Avanço consistente. A disciplina financeira se consolida.',
+    'ouro': '🥇 Grande avanço. Reta final do desafio se aproximando.',
+    'diamante':
+        '💎 Quase concluído. Excelente controle financeiro demonstrado.',
+    'disciplinum':
+        '🏆 Um ciclo de desafio foi concluído. Parabéns por alcançar a insígnia Disciplinum!',
   };
 
   /// Mensagens para recaídas (gastos excessivos)

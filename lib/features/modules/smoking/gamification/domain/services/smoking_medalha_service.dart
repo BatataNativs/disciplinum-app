@@ -27,10 +27,8 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
       'description': entity.description,
       'requirementDescription': entity.requirementDescription,
       'emoji': entity.emoji,
-      'category': entity.category,
       'themeColor': entity.themeColor,
       'rarity': entity.rarity,
-      'isMaximumCategory': entity.isMaximumCategory,
       'isLegendary': entity.isLegendary,
     };
   }
@@ -281,18 +279,15 @@ class SmokingMedalhaService implements ModuleMedalhaInterface {
     
     final earned = await getEarnedMedalhaEntities();
     final byRarity = <String, int>{};
-    final byCategory = <String, int>{};
     
     for (final medalha in earned) {
       byRarity[medalha.rarity] = (byRarity[medalha.rarity] ?? 0) + 1;
-      byCategory[medalha.category] = (byCategory[medalha.category] ?? 0) + 1;
     }
     
     return {
       'totalEarned': earned.length,
       'totalAvailable': SmokingMedalEntity.values.length,
       'byRarity': byRarity,
-      'byCategory': byCategory,
       'completionPercentage': (earned.length / SmokingMedalEntity.values.length * 100),
     };
   }

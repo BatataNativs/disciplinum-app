@@ -121,23 +121,6 @@ extension ProcrastinationMedalEntityExtension on ProcrastinationMedalEntity {
     }
   }
 
-  /// Obtém a categoria da medalha
-  String get category {
-    switch (this) {
-      case ProcrastinationMedalEntity.bronze:
-        return 'Básica';
-      case ProcrastinationMedalEntity.prata:
-        return 'Intermediária';
-      case ProcrastinationMedalEntity.ouro:
-        return 'Avançada';
-      case ProcrastinationMedalEntity.diamante:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a medalha é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta medalha
   String get themeColor {
     switch (this) {

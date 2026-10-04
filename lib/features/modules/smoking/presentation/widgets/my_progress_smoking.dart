@@ -5,11 +5,24 @@ import 'package:disciplinum/features/modules/smoking/gamification/presentation/p
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
 
-class MyProgressSmoking extends ConsumerWidget {
+class MyProgressSmoking extends ConsumerStatefulWidget {
   const MyProgressSmoking({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyProgressSmoking> createState() => _MyProgressSmokingState();
+}
+
+class _MyProgressSmokingState extends ConsumerState<MyProgressSmoking> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(smokingGamificationNotifierProvider.notifier).loadGamification();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dias = ref.watch(smokingStreakProvider);
     final disciplinumCount = ref.watch(smokingDisciplinumCountProvider);
     final earnedInsignias = ref.watch(smokingEarnedInsigniasProvider);

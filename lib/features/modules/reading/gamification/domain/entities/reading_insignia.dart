@@ -188,29 +188,6 @@ extension ReadingInsigniaEntityExtension on ReadingInsigniaEntity {
     }
   }
 
-  /// Obtém a categoria da insígnia
-  String get category {
-    switch (this) {
-      case ReadingInsigniaEntity.madeira:
-        return 'Inicial';
-      case ReadingInsigniaEntity.ferro:
-      case ReadingInsigniaEntity.aluminio:
-        return 'Básica';
-      case ReadingInsigniaEntity.latao:
-      case ReadingInsigniaEntity.bronze:
-        return 'Intermediária';
-      case ReadingInsigniaEntity.prata:
-      case ReadingInsigniaEntity.ouro:
-        return 'Avançada';
-      case ReadingInsigniaEntity.diamante:
-      case ReadingInsigniaEntity.disciplinum:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a insígnia é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta insígnia
   String get themeColor {
     switch (this) {

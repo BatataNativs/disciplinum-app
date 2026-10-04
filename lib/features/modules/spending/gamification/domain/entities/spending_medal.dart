@@ -121,23 +121,6 @@ extension SpendingMedalEntityExtension on SpendingMedalEntity {
     }
   }
 
-  /// Obtém a categoria da medalha
-  String get category {
-    switch (this) {
-      case SpendingMedalEntity.bronze:
-        return 'Básica';
-      case SpendingMedalEntity.prata:
-        return 'Intermediária';
-      case SpendingMedalEntity.ouro:
-        return 'Avançada';
-      case SpendingMedalEntity.diamante:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a medalha é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta medalha
   String get themeColor {
     switch (this) {

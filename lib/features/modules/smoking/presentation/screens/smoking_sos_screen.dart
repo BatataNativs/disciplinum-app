@@ -7,6 +7,7 @@ import 'package:disciplinum/core/utils/enhanced_snackbar_helper.dart';
 import 'package:disciplinum/features/modules/smoking/domain/models/smoking_craving_record.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_breathing_screen.dart';
 import 'package:disciplinum/features/modules/smoking/presentation/screens/smoking_diary_screen.dart';
+import 'package:disciplinum/features/modules/smoking/presentation/notifiers/smoking_gamification_notifier.dart';
 
 class SmokingSosScreen extends ConsumerStatefulWidget {
   const SmokingSosScreen({super.key});
@@ -106,6 +107,9 @@ class _SmokingSosScreenState extends ConsumerState<SmokingSosScreen> {
         'Crise registrada. Mantenha o foco, cada minuto sem fumar é uma vitória!',
       );
     } else {
+      await ref.read(smokingServiceProvider).archiveAndReset();
+      await ref.read(smokingGamificationNotifierProvider.notifier).handleRelapse();
+      if (!mounted) return;
       EnhancedSnackBarHelper.showWarning(
         context,
         'Não desanime. Um deslize não apaga sua força. Recomece agora mesmo!',

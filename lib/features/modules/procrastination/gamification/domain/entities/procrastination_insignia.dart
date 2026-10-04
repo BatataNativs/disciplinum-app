@@ -212,29 +212,6 @@ extension ProcrastinationInsigniaEntityExtension on ProcrastinationInsigniaEntit
     }
   }
 
-  /// Obtém a categoria da insígnia
-  String get category {
-    switch (this) {
-      case ProcrastinationInsigniaEntity.madeira:
-        return 'Inicial';
-      case ProcrastinationInsigniaEntity.ferro:
-      case ProcrastinationInsigniaEntity.aluminio:
-        return 'Básica';
-      case ProcrastinationInsigniaEntity.latao:
-      case ProcrastinationInsigniaEntity.bronze:
-        return 'Intermediária';
-      case ProcrastinationInsigniaEntity.prata:
-      case ProcrastinationInsigniaEntity.ouro:
-        return 'Avançada';
-      case ProcrastinationInsigniaEntity.diamante:
-      case ProcrastinationInsigniaEntity.disciplinum:
-        return 'Máxima';
-    }
-  }
-
-  /// Verifica se a insígnia é de categoria máxima
-  bool get isMaximumCategory => category == 'Máxima';
-
   /// Obtém a cor do tema para esta insígnia
   String get themeColor {
     switch (this) {

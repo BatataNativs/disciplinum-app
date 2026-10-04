@@ -1,12 +1,19 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disciplinum/core/logging/logger_service.dart';
+import 'package:disciplinum/core/events/event_bus.dart';
 import 'package:disciplinum/features/modules/smoking/domain/entities/smoking_module_state.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_insignia.dart';
+import 'package:disciplinum/features/modules/smoking/gamification/domain/entities/smoking_medal.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/repositories/smoking_gamification_repository.dart';
 import 'package:disciplinum/features/modules/smoking/gamification/domain/services/smoking_celebration_service.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_service.dart';
+import 'package:disciplinum/features/modules/smoking/domain/services/smoking_checkin_service.dart';
+import 'package:disciplinum/features/streaks/domain/services/streak_calculator.dart';
 import 'package:disciplinum/infrastructure/cloud/cloud_sync_service.dart';
 import 'package:disciplinum/shared/models/enums/niche_id.dart';
-import 'package:disciplinum/core/di/providers.dart' show cloudSyncServiceProvider;
+import 'package:disciplinum/core/di/providers.dart'
+    show cloudSyncServiceProvider, smokingServiceProvider, smokingCheckinServiceProvider;
 
 /// Estado da gamificação do Smoking
 class SmokingGamificationState {
@@ -47,12 +54,34 @@ class SmokingGamificationState {
 class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState> {
   final SmokingGamificationRepository _repository;
   final CloudSyncService _cloudSync;
+  final SmokingService _smokingService;
+  final SmokingCheckinService _checkinService;
 
-  SmokingGamificationNotifier(this._repository, this._cloudSync) 
-      : super(const SmokingGamificationState()) {
+  SmokingGamificationNotifier(
+    this._repository, 
+    this._cloudSync,
+    this._smokingService,
+    this._checkinService,
+  ) : super(const SmokingGamificationState()) {
     LoggerService.instance.gamification('🎲 SmokingGamificationNotifier criado!');
-    // Carrega automaticamente ao criar
+    _registerEventListeners();
     _loadOnInit();
+  }
+
+  void _registerEventListeners() {
+    EventBus.instance.listen<ModuleCheckInEvent>((event) {
+      if (event.nicheId == NicheId.smoking.index) {
+        if (event.isPositive) {
+          loadGamification();
+        } else {
+          handleRelapse();
+        }
+      }
+    });
+
+    EventBus.instance.listen<SmokingRelapseEvent>((event) {
+      handleRelapse();
+    });
   }
   
   Future<void> _loadOnInit() async {
@@ -64,36 +93,133 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
     try {
       LoggerService.instance.gamification('🔄 loadGamification iniciado');
       final gamification = await _repository.getSmokingState();
-      LoggerService.instance.gamification('📦 ObjectBox: isModuleActive=${gamification?.isModuleActive}, dailyCost=${gamification?.dailyCost}, consecutiveDays=${gamification?.consecutivePositiveDays}');
+      LoggerService.instance.gamification(
+          '📦 ObjectBox: isModuleActive=${gamification?.isModuleActive}, dailyCost=${gamification?.dailyCost}, consecutiveDays=${gamification?.consecutivePositiveDays}');
       
       if (gamification != null) {
         SmokingModuleState effectiveGamification = gamification;
-        // Auto-recuperação: se o módulo está ativo mas não possui a insígnia Madeira (ex: ativado antes da correção), concede e salva
-        if (effectiveGamification.isModuleActive && !effectiveGamification.earnedInsignias.contains('madeira')) {
-          effectiveGamification = effectiveGamification.copyWith(
-            earnedInsignias: [...effectiveGamification.earnedInsignias, 'madeira'],
+        
+        // Se o módulo está ativo, calcula o streak atual e concede insígnias devidas
+        if (effectiveGamification.isModuleActive) {
+          bool stateChanged = false;
+          
+          // 1. Assegura startDate
+          if (effectiveGamification.startDate == null) {
+            final settings = await _smokingService.getSettings();
+            final quitDate = settings?.quitDate ?? settings?.startDate;
+            if (quitDate != null) {
+              effectiveGamification = effectiveGamification.copyWith(startDate: quitDate);
+              stateChanged = true;
+            } else {
+              effectiveGamification = effectiveGamification.copyWith(startDate: effectiveGamification.createdAt);
+              stateChanged = true;
+            }
+          }
+          
+          // 2. Garante a insígnia Madeira (ganha ao ativar o módulo)
+          final currentInsignias = List<String>.from(effectiveGamification.earnedInsignias);
+          if (!currentInsignias.contains('madeira')) {
+            currentInsignias.add('madeira');
+            stateChanged = true;
+            LoggerService.instance.gamification('🪵 Insígnia Madeira auto-recuperada');
+            SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+              insigniaId: SmokingInsigniaEntity.madeira.name,
+              insigniaName: SmokingInsigniaEntity.madeira.nameBr,
+              insigniaDescription: SmokingInsigniaEntity.madeira.requirementDescription,
+              assetPath: SmokingInsigniaEntity.madeira.asset,
+            );
+          }
+          
+          // 3. Calcula o streak de abstenção (dias sem fumar)
+          final effectiveStart = effectiveGamification.startDate ?? effectiveGamification.createdAt;
+          final abstinenceDays = StreakCalculator.instance.calculateAbstinenceStreak(
+            activationDate: effectiveStart,
+            lastRelapseDate: effectiveGamification.lastPositiveCheckIn != null &&
+                    effectiveGamification.lastPositiveCheckIn!.isAfter(effectiveStart)
+                ? effectiveGamification.lastPositiveCheckIn
+                : null,
           );
-          await _repository.saveSmokingState(effectiveGamification);
-          LoggerService.instance.gamification('🪵 Insígnia Madeira auto-recuperada e salva no ObjectBox para o módulo ativo');
-
-          SmokingCelebrationService.instance.celebrarInsigniaConquistada(
-            insigniaId: SmokingInsigniaEntity.madeira.name,
-            insigniaName: SmokingInsigniaEntity.madeira.nameBr,
-            insigniaDescription: SmokingInsigniaEntity.madeira.requirementDescription,
-            assetPath: SmokingInsigniaEntity.madeira.asset,
-          );
+          
+          // Verifica se há check-ins registrados que indiquem streak
+          int checkinStreak = 0;
+          try {
+            final checkins = await _checkinService.loadCheckins();
+            checkinStreak = _checkinService.calculateConsecutiveDays(checkins);
+          } catch (_) {}
+          
+          final calculatedDays = abstinenceDays > checkinStreak ? abstinenceDays : checkinStreak;
+          
+          if (calculatedDays != effectiveGamification.consecutivePositiveDays) {
+            effectiveGamification = effectiveGamification.copyWith(
+              consecutivePositiveDays: calculatedDays,
+            );
+            stateChanged = true;
+          }
+          
+          // 4. Concede insígnias desbloqueadas por dias sem fumar
+          for (final insignia in SmokingInsigniaEntity.values) {
+            if (insignia == SmokingInsigniaEntity.madeira) continue;
+            if (calculatedDays >= insignia.requiredDays && !currentInsignias.contains(insignia.name)) {
+              currentInsignias.add(insignia.name);
+              stateChanged = true;
+              
+              SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+                insigniaId: insignia.name,
+                insigniaName: insignia.nameBr,
+                insigniaDescription: insignia.requirementDescription,
+                assetPath: insignia.asset,
+              );
+              LoggerService.instance.gamification(
+                  '🎉 Insígnia ${insignia.nameBr} conquistada ($calculatedDays dias sem fumar)!');
+            }
+          }
+          
+          // 5. Calcula Disciplinum count e concede medalhas
+          int disciplinumCount = effectiveGamification.disciplinumCount;
+          if (currentInsignias.contains(SmokingInsigniaEntity.disciplinum.name)) {
+            final cycleCount = (calculatedDays ~/ 30).clamp(1, 999);
+            if (cycleCount > disciplinumCount) {
+              disciplinumCount = cycleCount;
+              stateChanged = true;
+            }
+          }
+          
+          final currentMedalhas = List<String>.from(effectiveGamification.earnedMedalhas);
+          for (final medalha in SmokingMedalEntity.values) {
+            if (medalha.canBeAwarded(currentInsignias) && !currentMedalhas.contains(medalha.name)) {
+              currentMedalhas.add(medalha.name);
+              stateChanged = true;
+              
+              SmokingCelebrationService.instance.celebrarMedalhaConquistada(
+                medalhaId: medalha.name,
+                medalhaName: medalha.nameBr,
+                medalhaDescription: medalha.benefitDescription,
+                assetPath: medalha.asset,
+              );
+              LoggerService.instance.gamification('🏅 Medalha ${medalha.nameBr} conquistada!');
+            }
+          }
+          
+          if (stateChanged) {
+            effectiveGamification = effectiveGamification.copyWith(
+              earnedInsignias: currentInsignias,
+              earnedMedalhas: currentMedalhas,
+              disciplinumCount: disciplinumCount,
+            );
+            await _repository.saveSmokingState(effectiveGamification);
+            LoggerService.instance.gamification(
+                '✅ Estado Smoking atualizado e salvo: dias=$calculatedDays, insignias=$currentInsignias');
+          }
         }
-
-        // Usa o estado do ObjectBox
+        
         state = state.copyWith(
           gamification: effectiveGamification,
           isLoading: false,
           isModuleActive: effectiveGamification.isModuleActive,
         );
-        LoggerService.instance.gamification('✅ Estado carregado do ObjectBox: isModuleActive=${effectiveGamification.isModuleActive}, dailyCost=${effectiveGamification.dailyCost}, insignias=${effectiveGamification.earnedInsignias}');
+        LoggerService.instance.gamification(
+            '✅ Estado carregado do ObjectBox: isModuleActive=${effectiveGamification.isModuleActive}, dailyCost=${effectiveGamification.dailyCost}, streak=${effectiveGamification.consecutivePositiveDays}, insignias=${effectiveGamification.earnedInsignias}');
       } else {
-        // Se não tem estado local, NÃO cria estado automaticamente
-        // Aguarda ativação manual
         state = state.copyWith(
           gamification: null,
           isLoading: false,
@@ -114,23 +240,52 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   }
 
   /// Ativa o módulo (cria estado inicial)
-  Future<void> activateModule({double dailyCost = 0.0, double packCost = 0.0}) async {
+  Future<void> activateModule({
+    double dailyCost = 0.0, 
+    double packCost = 0.0,
+    DateTime? startDate,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Usa forceResetToActive para limpar estado antigo e garantir persistência
       await _repository.forceResetToActive(dailyCost: dailyCost, packCost: packCost);
+      
+      final effectiveStart = startDate ?? DateTime.now();
+      final streak = StreakCalculator.instance.calculateAbstinenceStreak(activationDate: effectiveStart);
+      
+      final initialInsignias = <String>['madeira'];
+      for (final insignia in SmokingInsigniaEntity.values) {
+        if (insignia == SmokingInsigniaEntity.madeira) continue;
+        if (streak >= insignia.requiredDays) {
+          initialInsignias.add(insignia.name);
+        }
+      }
+      
+      int initialDisciplinumCount = 0;
+      if (initialInsignias.contains(SmokingInsigniaEntity.disciplinum.name)) {
+        initialDisciplinumCount = (streak ~/ 30).clamp(1, 999);
+      }
+      
+      final initialMedalhas = <String>[];
+      for (final medalha in SmokingMedalEntity.values) {
+        if (medalha.canBeAwarded(initialInsignias)) {
+          initialMedalhas.add(medalha.name);
+        }
+      }
       
       final initialState = SmokingModuleState.initial().copyWith(
         isModuleActive: true,
         dailyCost: dailyCost,
         packCost: packCost,
-        earnedInsignias: const ['madeira'], // Insígnia Madeira ao ativar o módulo
+        startDate: effectiveStart,
+        consecutivePositiveDays: streak,
+        earnedInsignias: initialInsignias,
+        earnedMedalhas: initialMedalhas,
+        disciplinumCount: initialDisciplinumCount,
       );
 
-      // Salva explicitamente no repositório para garantir integridade local
       await _repository.saveSmokingState(initialState);
       
-      // Dispara celebração de conquista para a insígnia Madeira
+      // Celebra Madeira
       await SmokingCelebrationService.instance.celebrarInsigniaConquistada(
         insigniaId: SmokingInsigniaEntity.madeira.name,
         insigniaName: SmokingInsigniaEntity.madeira.nameBr,
@@ -138,20 +293,31 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         assetPath: SmokingInsigniaEntity.madeira.asset,
       );
       
-      // Também atualiza o user_module_status para manter consistência com CloudSyncService
+      // Se já alcançou outras insígnias imediatamente (caso startDate seja no passado):
+      for (final insigniaName in initialInsignias) {
+        if (insigniaName == 'madeira') continue;
+        final ins = SmokingInsigniaEntity.values.firstWhere((i) => i.name == insigniaName);
+        await SmokingCelebrationService.instance.celebrarInsigniaConquistada(
+          insigniaId: ins.name,
+          insigniaName: ins.nameBr,
+          insigniaDescription: ins.requirementDescription,
+          assetPath: ins.asset,
+        );
+      }
+      
       await _cloudSync.saveModuleStatus(
         nicheId: NicheId.smoking,
         isModuleActive: true,
       );
       LoggerService.instance.gamification('☁️ user_module_status atualizado: is_active=true');
       
-      // Atualiza o estado local diretamente
       state = state.copyWith(
         gamification: initialState,
         isLoading: false,
         isModuleActive: true,
       );
-      LoggerService.instance.gamification('✅ Módulo ativado: isModuleActive=true, dailyCost=$dailyCost, packCost=$packCost, insignias=[madeira]');
+      LoggerService.instance.gamification(
+          '✅ Módulo ativado: isModuleActive=true, dailyCost=$dailyCost, packCost=$packCost, streak=$streak, insignias=$initialInsignias');
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -164,11 +330,12 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
     try {
       LoggerService.instance.gamification('🛑 deactivateModule chamado - resetando progresso mantendo apenas Madeira');
       final current = state.gamification;
+      SmokingModuleState? updated;
       if (current != null) {
         // Preserva apenas a insígnia Madeira, remove todas as outras e zera medalhas
         final hasMadeira = current.earnedInsignias.contains('madeira');
         
-        final updated = current.copyWith(
+        updated = current.copyWith(
           isModuleActive: false,
           earnedInsignias: hasMadeira ? ['madeira'] : [], // Mantém só Madeira
           earnedMedalhas: [], // Zera medalhas
@@ -180,17 +347,17 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         LoggerService.instance.gamification('🛑 Progresso resetado: mantida apenas Madeira=$hasMadeira, medalhas zeradas');
       }
       
-      // Também atualiza o user_module_status para manter consistência com CloudSyncService
       await _cloudSync.saveModuleStatus(
         nicheId: NicheId.smoking,
         isModuleActive: false,
       );
       LoggerService.instance.gamification('☁️ user_module_status atualizado: is_active=false');
       
+      // Preserva o estado com a insígnia Madeira em memória
       state = state.copyWith(
-        gamification: null,
+        gamification: updated,
         isModuleActive: false, 
-        isLoading: false
+        isLoading: false,
       );
       LoggerService.instance.gamification('🛑 Módulo desativado e progresso resetado (Madeira mantida)');
     } catch (e) {
@@ -199,10 +366,42 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
     }
   }
 
+  /// Processa recaída (reinicia streak e zera estatísticas do módulo, mantendo Madeira)
+  Future<void> handleRelapse() async {
+    try {
+      LoggerService.instance.gamification('⚠️ handleRelapse chamado');
+      final current = state.gamification ?? await _repository.getSmokingState();
+      if (current != null && current.isModuleActive) {
+        final hasMadeira = current.earnedInsignias.contains('madeira');
+        final now = DateTime.now();
+
+        // 1. Zera check-ins registrados (local e nuvem)
+        await _checkinService.clearAllCheckins();
+
+        // 2. Arquiva e reseta as estatísticas do módulo (tempo sem fumar, economia, cigarros evitados iniciam de agora)
+        await _smokingService.archiveAndReset();
+        
+        final updated = current.copyWith(
+          startDate: now,
+          lastPositiveCheckIn: now,
+          consecutivePositiveDays: 0,
+          earnedInsignias: hasMadeira ? ['madeira'] : [],
+          earnedMedalhas: [],
+          disciplinumCount: 0,
+        );
+        
+        await _repository.saveSmokingState(updated);
+        state = state.copyWith(gamification: updated);
+        LoggerService.instance.gamification('🔄 Relapse processado: streak resetado para 0, estatísticas zeradas, Madeira preservada');
+      }
+    } catch (e) {
+      LoggerService.instance.e('Erro ao processar relapse no Smoking', error: e);
+    }
+  }
+
   Future<void> resetProgress() async {
     try {
       LoggerService.instance.gamification('🔄 resetProgress chamado - limpando e resetando progresso');
-      // Preserva a insígnia Madeira e o status ativo (incentivo para tentar novamente)
       final current = state.gamification;
       final hasMadeira = current?.earnedInsignias.contains('madeira') ?? false;
       final wasActive = current?.isModuleActive ?? false;
@@ -211,14 +410,18 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
 
       LoggerService.instance.gamification('🔄 Preservando: isModuleActive=$wasActive, dailyCost=$dailyCost, hasMadeira=$hasMadeira');
       
+      // Zera check-ins e estatísticas de consumo
+      await _checkinService.clearAllCheckins();
+      await _smokingService.archiveAndReset();
+
       await _repository.clearSmokingState();
       
-      // Cria estado inicial preservando configurações importantes
       final initialState = SmokingModuleState.initial().copyWith(
         isModuleActive: wasActive,  // PRESERVA o status ativo!
         dailyCost: dailyCost,       // PRESERVA o custo diário!
         packCost: packCost,         // PRESERVA o custo do maço!
-        earnedInsignias: hasMadeira ? ['madeira'] : [], // Mantém só Madeira (minúsculo)
+        startDate: DateTime.now(),  // Reinicia contagem a partir de agora!
+        earnedInsignias: hasMadeira ? ['madeira'] : [], // Mantém só Madeira
         earnedMedalhas: [],         // ZERA medalhas
         disciplinumCount: 0,        // ZERA contador
         consecutivePositiveDays: 0, // ZERA streak
@@ -236,8 +439,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   }
 
   /// Salva mensagens customizadas para um nicho específico
-  /// [nicheId] - ID do nicho (ex: 'motivation_phrases')
-  /// [messages] - Lista de mensagens customizadas
   Future<void> setCustomMessages(String nicheId, List<String> messages) async {
     try {
       final current = state.gamification;
@@ -246,7 +447,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
         return;
       }
       
-      // Cria cópia do mapa de mensagens customizadas
       final updatedMessages = Map<String, List<String>>.from(current.customMessages);
       updatedMessages[nicheId] = messages;
       
@@ -263,7 +463,6 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   }
 
   /// Define a mensagem principal customizada
-  /// [message] - Mensagem principal
   Future<void> setCustomMainMessage(String message) async {
     try {
       final current = state.gamification;
@@ -285,12 +484,9 @@ class SmokingGamificationNotifier extends StateNotifier<SmokingGamificationState
   }
 
   /// Recarrega sessões de monitoramento ativas
-  /// Útil após atualizar mensagens ou configurações
   Future<void> reloadMonitoringSessions() async {
     try {
-      // Força recarregamento do estado
       await loadGamification();
-      
       LoggerService.instance.i('Sessões de monitoramento recarregadas');
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -308,6 +504,8 @@ final smokingGamificationNotifierProvider = StateNotifierProvider<
   return SmokingGamificationNotifier(
     SmokingGamificationRepository.instance,
     ref.read(cloudSyncServiceProvider),
+    ref.read(smokingServiceProvider),
+    ref.read(smokingCheckinServiceProvider),
   );
 });
 

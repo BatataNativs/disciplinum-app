@@ -381,7 +381,6 @@ class DisciplineMedal extends StatelessWidget {
 class DisciplineInsignia extends StatelessWidget {
   final String assetPath;
   final String label;
-  final String level;
   final Color accentColor;
   final bool isSupreme;
 
@@ -389,7 +388,6 @@ class DisciplineInsignia extends StatelessWidget {
     super.key,
     required this.assetPath,
     required this.label,
-    required this.level,
     this.accentColor = DisciplinumColors.primary,
     this.isSupreme = false,
   });
@@ -426,23 +424,6 @@ class DisciplineInsignia extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              level,
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 8.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-              ),
-            ),
-          ),
-          const SizedBox(height: 5),
           Container(
             width: 50,
             height: 50,
@@ -1464,7 +1445,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         ),
                       ),
                       child: Text(
-                        '9 Graus',
+                        '9 Insígnias',
                         style: TextStyle(
                           color: DisciplinumColors.primary,
                           fontSize: 10.5,
@@ -1482,7 +1463,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 3,
-                  childAspectRatio: 0.82,
+                  childAspectRatio: 0.92,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                   children: [
@@ -1490,63 +1471,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       assetPath:
                           'assets/gamification/insignias/smoking/madeira.png',
                       label: 'Madeira',
-                      level: 'NÍVEL 1',
                       accentColor: const Color(0xFFA07248),
                     ).animate().fadeIn(duration: 350.ms, delay: 300.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/ferro.png',
                       label: 'Ferro',
-                      level: 'NÍVEL 2',
                       accentColor: const Color(0xFF94A3B8),
                     ).animate().fadeIn(duration: 350.ms, delay: 350.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/aluminio.png',
                       label: 'Alumínio',
-                      level: 'NÍVEL 3',
                       accentColor: const Color(0xFFA5B4FC),
                     ).animate().fadeIn(duration: 350.ms, delay: 400.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/bronze.png',
                       label: 'Bronze',
-                      level: 'NÍVEL 4',
                       accentColor: const Color(0xFFD97706),
                     ).animate().fadeIn(duration: 350.ms, delay: 450.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/latao.png',
                       label: 'Latão',
-                      level: 'NÍVEL 5',
                       accentColor: const Color(0xFFFBBF24),
                     ).animate().fadeIn(duration: 350.ms, delay: 500.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/prata.png',
                       label: 'Prata',
-                      level: 'NÍVEL 6',
                       accentColor: const Color(0xFFE2E8F0),
                     ).animate().fadeIn(duration: 350.ms, delay: 550.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/ouro.png',
                       label: 'Ouro',
-                      level: 'NÍVEL 7',
                       accentColor: const Color(0xFFFFB703),
                     ).animate().fadeIn(duration: 350.ms, delay: 600.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/diamante.png',
                       label: 'Diamante',
-                      level: 'NÍVEL 8',
                       accentColor: const Color(0xFF38BDF8),
                     ).animate().fadeIn(duration: 350.ms, delay: 650.ms),
                     DisciplineInsignia(
                       assetPath:
                           'assets/gamification/insignias/smoking/disciplinum.png',
                       label: 'Disciplinum',
-                      level: 'MÁXIMO',
                       accentColor: DisciplinumColors.primary,
                       isSupreme: true,
                     )
