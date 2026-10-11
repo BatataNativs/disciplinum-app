@@ -163,3 +163,89 @@ git remote -v
 4. NUNCA tente resolver conflitos monstruosos colando código antigo por cima de
    código novo refatorado. Entenda o que mudou no diff antes de decidir.
 ===============================================================================
+
+
+9. CRIAR REPOSITÓRIO/VERSIONAMENTO GIT (COM GITHUB)
+
+1. Crie o repositório no GitHub
+
+No GitHub:
+
+New repository → coloque:
+
+Repository name: nome-do-projeto
+Description: sua descrição
+Público ou privado, como preferir
+Não marque Add a README file
+Não adicione .gitignore nem licença neste momento
+
+A ideia é deixar o repositório GitHub vazio, porque seu projeto já existe localmente.
+
+2. Abra o terminal dentro da pasta do projeto
+
+Por exemplo:
+
+cd "C:\Users\Douglas\Desktop\meu-projeto"
+
+ou abra a pasta no VS Code e use o terminal integrado.
+
+Depois:
+
+git init
+
+Isso transforma a pasta em um repositório Git local.
+
+3. Adicione os arquivos:
+git add .
+
+E faça o primeiro commit:
+
+git commit -m "Initial commit"
+4. Conecte o Git local ao GitHub
+
+Copie a URL do repositório que você acabou de criar no GitHub.
+
+Exemplo:
+
+git remote add origin https://github.com/SEU-USUARIO/nome-do-projeto.git
+
+Você pode conferir:
+
+git remote -v
+5. Defina a branch principal
+git branch -M main
+6. Envie para o GitHub 🚀
+git push -u origin main
+
+Pronto. A estrutura fica:
+
+Pasta do projeto
+      │
+      ▼
+   Git local
+      │
+      │ git push
+      ▼
+    GitHub
+
+E, a partir daí, seu fluxo cotidiano normalmente será só:
+
+git add .
+git commit -m "Descrição da alteração"
+git push
+⚠️ Uma coisa importante antes do git add .
+
+Se for projeto de programação, não saia fazendo git add . cegamente. Primeiro tenha um .gitignore adequado para não mandar coisas como:
+
+.env
+secrets/
+node_modules/
+build/
+.vscode/
+arquivos temporários
+chaves/API keys
+
+No seu caso, especialmente se for um projeto Flutter, o .gitignore é importante.
+
+Se você me disser qual é o projeto e a tecnologia (HTML/JS, Flutter, Python etc.), eu posso te passar o procedimento exato, incluindo o .gitignore, para você não correr o risco de subir lixo ou segredo para o GitHub.
+
